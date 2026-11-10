@@ -26,9 +26,13 @@ Run these yourself, once. The agent checks them before it starts and stops if on
 them first.
 
 ```bash
-# Node 22, the exact version in .node-version, through a version manager (fnm here; nvm or volta work the same)
-curl -fsSL https://fnm.vercel.app/install | bash && exec $SHELL
-fnm install 22 && fnm use 22 && node --version
+# Node 22 (.node-version has the exact release the site is tested with), from your system's own packages
+sudo dnf install -y nodejs22                                       # Fedora
+# brew install node@22 && brew link --overwrite node@22            # a Mac
+# Debian and Ubuntu package an older Node. Take the official build from nodejs.org instead: download the
+# Linux tar.xz for your machine from https://nodejs.org/en/download, check it against the SHASUMS256.txt
+# published beside it, unpack it into ~/.local and put ~/.local/bin on your PATH. Nothing is piped into a shell.
+node --version
 
 # git, podman (the browser tests run Playwright in a container), Python with Pillow and ImageMagick (the club's images)
 sudo dnf install -y git podman python3-pillow ImageMagick          # Fedora

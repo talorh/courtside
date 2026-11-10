@@ -12,7 +12,7 @@ The account's owner adds your email as a member of the club's Cloudflare account
 
 | Tool | Why | How |
 | --- | --- | --- |
-| Node 22, the exact version in .node-version | The Worker's tools, tests and scripts run on it | Any version manager, for instance fnm: fnm install 22 |
+| Node 22 (.node-version has the exact release the site is tested with) | The Worker's tools, tests and scripts run on it | The system's own package: nodejs22 on Fedora, node@22 from Homebrew on a Mac. Where the system's Node is older, the official build from nodejs.org, checked against its published checksum and unpacked into ~/.local. Never a script piped into a shell |
 | git | The code, its branches and the second folder | The system's own package |
 | podman | The browser test suite runs Playwright in a container, and the release won't run without it | On Fedora, sudo dnf install podman; on a Mac, brew install podman, then podman machine init and podman machine start |
 | The `cf` command line | Cloudflare's own CLI: staging deploys, the release's tokens, reading the account | `npm install -g cf` (with sudo where npm's global folder needs it). The project's own copy in node_modules is what the scripts run |
