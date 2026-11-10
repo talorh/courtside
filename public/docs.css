@@ -107,13 +107,13 @@ body.admin .docs-table th[scope="row"]{white-space:normal;color:var(--fg);font-s
 .k-person rect{stroke:var(--fg)}
 .k-edge rect{fill:var(--warn-soft);stroke:var(--warn-ink)}
 .k-worker rect{fill:var(--bar);stroke:var(--club)}
-.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:rgba(255,255,255,.78)}
 .k-store rect{fill:var(--club-soft);stroke:var(--club)}
 .k-service rect{stroke:var(--club)}
 .k-job rect{fill:var(--bg);stroke:var(--muted);stroke-dasharray:6 4}
 .k-stop rect{stroke:var(--live)}.k-stop .dg-t{fill:var(--live)}
 .k-done rect{fill:var(--club);stroke:var(--club)}
-.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:rgba(255,255,255,.85)}
 
 .dg-arrow{fill:none;stroke:var(--muted);stroke-width:1.6}
 .dg-arrow.dash{stroke:var(--club);stroke-dasharray:6 4}

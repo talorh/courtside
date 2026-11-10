@@ -7,13 +7,13 @@
 .k-person rect{stroke:#121513}
 .k-edge rect{fill:#FFF4D6;stroke:#7A5800}
 .k-worker rect{fill:#14274E;stroke:#2F6FDB}
-.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:rgba(255,255,255,.78)}
 .k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
 .k-service rect{stroke:#2F6FDB}
 .k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
 .k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
 .k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
-.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:rgba(255,255,255,.85)}
 .dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
 .dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
 .dg-head{fill:#5D6862}

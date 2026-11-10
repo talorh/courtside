@@ -20,16 +20,16 @@ describe("xlsx: one sheet Excel opens", () => {
 		expect(sheet).toContain("vs Lakeside &amp; Co &lt;A&gt;\nSat 31 Oct");
 		expect(sheetRows(file)).toEqual([["Week of", "Game"], ["Mon 26 Oct 2026", "Fri 30 Oct, 6:40pm · vs Lakeside & Co <A>\nSat 31 Oct"], ["Mon 2 Nov 2026", "bell gone"]]);
 	});
-	it("is in the Saints' colours: a bottle-green header row in white, rows banded in light green, a green tab", () => {
+	it("is in the Saints' colours from src/club.ts: a header row in the deep colour in white, rows banded in the pale tint, a tab in the bright one", () => {
 		const file = xlsxFile({ name: "x", columns: [{ title: "A", width: 10 }], rows: [["one"], ["two"], ["three"]] });
 		const parts = unzip(file);
 		const text = (name: string) => new TextDecoder().decode(parts.get(name)!.data);
 		const styles = text("xl/styles.xml");
-		expect(styles).toContain('<fgColor rgb="FF0A4A23"/>');
+		expect(styles).toContain('<fgColor rgb="FF14274E"/>');
 		expect(styles).toContain('<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>');
-		expect(styles).toContain('<fgColor rgb="FFEEF6F0"/>');
+		expect(styles).toContain('<fgColor rgb="FFE4ECFB"/>');
 		const sheet = text("xl/worksheets/sheet1.xml");
-		expect(sheet).toContain('<sheetPr><tabColor rgb="FF2A8F3D"/><pageSetUpPr fitToPage="1"/></sheetPr>');
+		expect(sheet).toContain('<sheetPr><tabColor rgb="FF2F6FDB"/><pageSetUpPr fitToPage="1"/></sheetPr>');
 		// Printed across one A4 page's width, landscape.
 		expect(sheet).toContain('<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>');
 		// Banded: the rows take turns, plain then light green.

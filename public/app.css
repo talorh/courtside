@@ -23,13 +23,13 @@
   --display:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
-  /* The coach's clipboard (notes-panel.ts): its green board, the maple court sheet, and the ink on it. */
-  --cb-board:#5FA874;--cb-edge:#4E9462;--cb-sheet:#F4E7CC;--cb-plank:#EADBBA;--cb-frame:#1C1C1C;--cb-ink:#0E0C08;--cb-muted:#3F3628;--cb-rule:#CDB993;--cb-chip:#1F5E33;--cb-green:#1A5530;--cb-field:#FFFDF7;--cb-fieldline:#B9A57F;--cb-shadow:0 14px 30px rgba(20,60,30,.28);
+  /* The coach's clipboard (notes-panel.ts): its board in the club's colour, the maple court sheet, and the ink on it. */
+  --cb-board:var(--club);--cb-edge:var(--club-ink);--cb-sheet:#F4E7CC;--cb-plank:#EADBBA;--cb-frame:#1C1C1C;--cb-ink:#0E0C08;--cb-muted:#3F3628;--cb-rule:#CDB993;--cb-chip:var(--club-ink);--cb-green:var(--club-ink);--cb-field:#FFFDF7;--cb-fieldline:#B9A57F;--cb-shadow:0 14px 30px rgba(0,0,0,.28);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--cb-board:#4E9462;--cb-edge:#3D7A4F;--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:#1F5E33;--cb-green:#1A5530;--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}}
+  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--cb-board:var(--club);--cb-edge:var(--club-ink);--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:var(--club-ink);--cb-green:var(--club-ink);--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}}
 :root[data-theme="dark"]{
-  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--cb-board:#4E9462;--cb-edge:#3D7A4F;--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:#1F5E33;--cb-green:#1A5530;--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}
+  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--cb-board:var(--club);--cb-edge:var(--club-ink);--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:var(--club-ink);--cb-green:var(--club-ink);--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
@@ -73,7 +73,7 @@ input[type=email],input[type=text],input[type=url],input[type=date],input[type=n
 .games{display:grid;gap:10px}
 .game{display:grid;grid-template-columns:150px 1fr auto;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;text-align:left;width:100%}
 .game:hover{border-color:var(--club)}
-.thumb{aspect-ratio:16/9;border-radius:8px;position:relative;overflow:hidden;background:#1d4a2c;max-width:100%}
+.thumb{aspect-ratio:16/9;border-radius:8px;position:relative;overflow:hidden;background:var(--bar);max-width:100%}
 .thumb::before{content:"";position:absolute;inset:18% 30%;border:2px solid rgba(255,255,255,.35);border-radius:50%}
 .thumb::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px solid rgba(255,255,255,.35)}
 .thumb .dur{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;font-family:var(--mono);font-size:11px;padding:1px 5px;border-radius:3px;z-index:1}
@@ -92,7 +92,7 @@ input[type=email],input[type=text],input[type=url],input[type=date],input[type=n
 
 /* Watch */
 .watch{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
-.player{aspect-ratio:16/9;max-width:100%;background:#123a22;border-radius:12px;position:relative;overflow:hidden;display:grid;place-items:center}
+.player{aspect-ratio:16/9;max-width:100%;background:var(--bar);border-radius:12px;position:relative;overflow:hidden;display:grid;place-items:center}
 .player .courtimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .side{display:grid;gap:14px}
 .side .panel{display:grid;gap:12px}
@@ -167,7 +167,7 @@ img{max-width:100%}
 .brand:hover .switchteam,.brand:focus-visible .switchteam{background:rgba(255,255,255,.26)}
 /* A small phone: no wider than the team's name, so Help, light or dark and sign out stay on its line. */
 @media (max-width:389px){.switchteam{font-size:11.5px;padding:1px 7px 1px 5px;gap:3px}.switchteam .ico{width:12px;height:12px}}
-.appnav a{color:#eaf5ed;padding:6px 10px;border-radius:6px;font-weight:600;font-size:14px;text-decoration:none}
+.appnav a{color:rgba(255,255,255,.92);padding:6px 10px;border-radius:6px;font-weight:600;font-size:14px;text-decoration:none}
 .appnav a[aria-current="page"]{color:#fff;background:rgba(255,255,255,.16)}
 .appnav a.big{flex:0 0 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--display);font-size:17px;font-weight:800;padding:10px 20px;border-radius:10px;border:2px solid rgba(255,255,255,.4);color:#fff;min-height:48px}
 .appnav a.big .ico{width:22px;height:22px;flex:none}
@@ -253,7 +253,7 @@ fieldset.clock select{width:auto}
 details.panel>summary.eyebrow{cursor:pointer}
 details.panel[open]>summary.eyebrow{margin-bottom:10px}
 .btn.danger{background:var(--live);border-color:var(--live);color:#fff}
-/* Coaches' private notes: the coach's clipboard (notes-panel.ts), a green board and its clip holding a maple court
+/* Coaches' private notes: the coach's clipboard (notes-panel.ts), a board in the club's colour and its clip holding a maple court
    sheet. The sheet stays light in dark mode, as a real one does, so its fields are light too. */
 .clipboard{position:relative;margin-top:16px;padding:34px 12px 10px;border-radius:22px;background:var(--cb-board);box-shadow:var(--cb-shadow),inset 0 0 0 1.5px var(--cb-edge);color:var(--cb-ink);color-scheme:light}
 .clipboard::before{content:"";position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:136px;height:42px;border-radius:12px 12px 18px 18px;background:linear-gradient(180deg,#F1F3F2,#959C98);box-shadow:0 4px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.6)}
@@ -485,14 +485,14 @@ a.btn.watchbtn:hover{opacity:.88}
 .appnav a.big.watch[aria-current="page"]{box-shadow:inset 0 0 0 3px var(--club)}
 /* Go live from this page: camera preview, and the same in full screen (landscape) with the controls along the bottom. */
 .player video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
-.live-wait{position:absolute;inset:0;display:grid;place-content:center;gap:6px;text-align:center;padding:16px;background:#0A4A23;color:#fff}
+.live-wait{position:absolute;inset:0;display:grid;place-content:center;gap:6px;text-align:center;padding:16px;background:var(--bar);color:#fff}
 .live-wait b{font-size:20px}
 .live-wait span{font-size:14px;opacity:.85}
 /* Full time, once End game is tapped: the Game break card's look (golive-slate.js) as a page, sized by the player's
    width so it reads the same on a phone and a TV. */
 .player:has(.live-over){container-type:inline-size}
 .live-over{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;color:#fff;padding:3cqw;background:radial-gradient(ellipse at center,#0D5A2B 0,#062E16 100%)}
-.live-over .court{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:#3DAA4A;stroke-width:9;stroke-linecap:round}
+.live-over .court{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--club);stroke-width:9;stroke-linecap:round}
 .live-over .dash{stroke-dasharray:24 20}
 .live-over>*{position:relative}
 .live-over .over-title{font-family:"Saira Semi Condensed",var(--display);font-weight:800;font-size:9cqw;line-height:1;letter-spacing:.02em;text-transform:uppercase}
@@ -634,7 +634,7 @@ fieldset.players label{padding:6px 10px;font-size:14px}
    strip with no links (a family's, holding only the switch) shows only there too. */
 .appnav .navsub .ico{display:none}
 .appnav .navsub:not(:has(a)){display:none}
-.viewswitch{display:none;background:none;border:0;cursor:pointer;color:#eaf5ed;padding:4px 10px;border-radius:6px;font-weight:600;font-size:12.5px;line-height:1.5}
+.viewswitch{display:none;background:none;border:0;cursor:pointer;color:rgba(255,255,255,.92);padding:4px 10px;border-radius:6px;font-weight:600;font-size:12.5px;line-height:1.5}
 .viewswitch:hover{background:rgba(255,255,255,.16)}
 .appnav{margin-left:0;flex-basis:100%}
 /* Pull down to refresh, in the Home Screen app (pull-refresh.js): a pill below the top of the screen. */
@@ -687,7 +687,7 @@ fieldset.players label{padding:6px 10px;font-size:14px}
 .m-dialog{display:grid;gap:12px;background:var(--surface);border-radius:16px;padding:14px}
 .m-actions{display:flex;justify-content:flex-end;gap:4px}
 /* Go live's camera screen */
-.m-cam{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:10px;overflow:hidden;background:#123a22;color:#fff;display:grid;align-content:end}
+.m-cam{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:10px;overflow:hidden;background:var(--bar);color:#fff;display:grid;align-content:end}
 .m-cam::before{content:"";position:absolute;inset:22% 34%;border:2px solid rgba(255,255,255,.3);border-radius:50%}
 .m-cam::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px solid rgba(255,255,255,.3)}
 .m-ctl{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:11.5px}

@@ -3,7 +3,7 @@
    panels, and one bold thing: Insights' scoreboard, in Teko (the jersey numbers' face). Loaded on admin pages only, after
    app.css, on its colour tokens, so light and dark come with them. No inline styles anywhere (the CSP). */
 
-:root{--a-amber:#F2B705;--a-spark:#7FD394;--a-radius:14px}
+:root{--a-amber:#F2B705;--a-spark:var(--club);--a-radius:14px}
 
 /* The frame: a sidebar on a computer, the page to its right; on a phone or tablet, a bar at the top. */
 body.admin{min-height:100vh;min-height:100dvh}
@@ -12,12 +12,12 @@ body.admin main.wrap{max-width:1800px;width:100%;padding-block:20px 64px;gap:20p
   position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
 .adminrow{display:flex;align-items:center;gap:8px;padding:8px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px))}
 .adminside .brand span{display:grid;line-height:1.1}
-.adminside .brand small{font-size:12px;font-weight:700;color:#cfe5d6}
+.adminside .brand small{font-size:12px;font-weight:700;color:rgba(255,255,255,.75)}
 .admintools{display:flex;align-items:center;gap:6px;margin-left:auto}
 .admintools .themebtn,.admintools .signoutbtn{margin-left:0}
 .adminnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:2px max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px))}
 .adminnav::-webkit-scrollbar{display:none}
-.adminnav a{flex:none;display:flex;align-items:center;gap:8px;color:#E6F2EA;text-decoration:none;padding:7px 12px;border-radius:10px;font-weight:700;font-size:14.5px}
+.adminnav a{flex:none;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.9);text-decoration:none;padding:7px 12px;border-radius:10px;font-weight:700;font-size:14.5px}
 .adminnav a:hover{background:rgba(255,255,255,.1)}
 .adminnav a[aria-current="page"]{background:#fff;color:var(--bar)}
 /* Keyboard focus shows on the green: white, not the site's green ring. */
@@ -44,7 +44,7 @@ body.admin main.wrap{max-width:1800px;width:100%;padding-block:20px 64px;gap:20p
 
   /* At the sidebar's foot, as on the team pages: the switch to the phone's view, then light or dark and sign out. In the
      phone's view on a computer, back to the desktop view beside them (public/view.js keeps the choice per device). */
-  html:not([data-view="mobile"]) .adminside > .viewswitch{order:3;display:flex;align-items:center;width:100%;margin-top:auto;padding:9px 12px;border-radius:10px;color:#E6F2EA;font-weight:700;font-size:15px;line-height:1.3;text-align:left}
+  html:not([data-view="mobile"]) .adminside > .viewswitch{order:3;display:flex;align-items:center;width:100%;margin-top:auto;padding:9px 12px;border-radius:10px;color:rgba(255,255,255,.9);font-weight:700;font-size:15px;line-height:1.3;text-align:left}
   html:not([data-view="mobile"]) .adminside > .viewswitch:hover{background:rgba(255,255,255,.1)}
   html[data-view="mobile"] .admintools .viewswitch{display:inline-block}
 }
@@ -83,7 +83,7 @@ tr.past td{color:var(--muted)}
 .boards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
 .scoreboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px 18px;align-content:start;padding:18px 22px 20px;border-radius:18px;color:#fff;
   background:radial-gradient(circle at 104% 50%,transparent 74px,rgba(255,255,255,.07) 75px 77px,transparent 78px),var(--bar)}
-.scoreboard .sbhead{grid-column:1/-1;margin:0 0 -4px;font-size:13px;font-weight:700;letter-spacing:.01em;color:#cfe5d6}
+.scoreboard .sbhead{grid-column:1/-1;margin:0 0 -4px;font-size:13px;font-weight:700;letter-spacing:.01em;color:rgba(255,255,255,.75)}
 /* On a wide screen each board's numbers sit in one row: three across, or four for a board with four. */
 @media (min-width:1400px){
   html:not([data-view="mobile"]) .boards .scoreboard{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 12px}
@@ -94,12 +94,12 @@ tr.past td{color:var(--muted)}
 .insightpair{display:grid;gap:16px;align-items:start}
 .sb{display:grid;gap:4px;min-width:0;align-content:start}
 .sb b{font-family:"Teko","Arial Narrow",sans-serif;font-weight:700;font-size:54px;line-height:.86;letter-spacing:.01em;font-variant-numeric:tabular-nums}
-.sb b small{font-size:26px;color:#cfe5d6;margin-left:3px}
-.sb>span{font-size:13.5px;font-weight:700;color:#E6F2EA}
+.sb b small{font-size:26px;color:rgba(255,255,255,.75);margin-left:3px}
+.sb>span{font-size:13.5px;font-weight:700;color:rgba(255,255,255,.9)}
 .sb .spark{display:block;width:100%;max-width:150px;height:22px;margin-top:4px}
 .sb .spark rect{fill:var(--a-spark)}
 .sb .spark rect.now{fill:#fff}
-.sb .delta{font-size:12.5px;color:#cfe5d6}
+.sb .delta{font-size:12.5px;color:rgba(255,255,255,.75)}
 @media (max-width:480px){.scoreboard{grid-template-columns:1fr 1fr;padding:14px 16px 16px;gap:14px 14px}.sb b{font-size:46px}}
 
 /* Needs attention: what's waiting for an admin, worst first, each with where it's dealt with. */
@@ -140,21 +140,21 @@ tr.past td{color:var(--muted)}
 .heat{margin:0;padding:16px;border:1px solid var(--line);border-radius:var(--a-radius);background:var(--surface);display:grid;gap:8px;min-width:0}
 .heat svg{width:100%;height:auto;display:block}
 .heat text{fill:var(--muted);font-size:9px;font-family:var(--body)}
-.heat .h0{fill:var(--bg)}.heat .h1{fill:#D3EDDA}.heat .h2{fill:#9ED4AC}.heat .h3{fill:#5DB373}.heat .h4{fill:#2A8F3D}.heat .h5{fill:#145C27}
+.heat .h0{fill:var(--bg)}.heat .h1{fill:color-mix(in srgb,var(--club) 18%,var(--bg))}.heat .h2{fill:color-mix(in srgb,var(--club) 40%,var(--bg))}.heat .h3{fill:color-mix(in srgb,var(--club) 62%,var(--bg))}.heat .h4{fill:color-mix(in srgb,var(--club) 85%,var(--bg))}.heat .h5{fill:#145C27}
 .heat g:hover rect{stroke:var(--fg);stroke-width:1}
 .heatkey{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
 .heatkey i{display:inline-block;width:14px;height:10px;border-radius:2px}
-.heatkey .h0{background:var(--bg);border:1px solid var(--line)}.heatkey .h1{background:#D3EDDA}.heatkey .h2{background:#9ED4AC}.heatkey .h3{background:#5DB373}.heatkey .h4{background:#2A8F3D}.heatkey .h5{background:#145C27}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .heat .h1,:root:not([data-theme="light"]) .heatkey .h1{fill:#173D24;background:#173D24}
-  :root:not([data-theme="light"]) .heat .h2,:root:not([data-theme="light"]) .heatkey .h2{fill:#1F6334;background:#1F6334}
-  :root:not([data-theme="light"]) .heat .h3,:root:not([data-theme="light"]) .heatkey .h3{fill:#2E8C49;background:#2E8C49}
-  :root:not([data-theme="light"]) .heat .h4,:root:not([data-theme="light"]) .heatkey .h4{fill:#4DB668;background:#4DB668}
-  :root:not([data-theme="light"]) .heat .h5,:root:not([data-theme="light"]) .heatkey .h5{fill:#8FDCA2;background:#8FDCA2}}
-:root[data-theme="dark"] .heat .h1,:root[data-theme="dark"] .heatkey .h1{fill:#173D24;background:#173D24}
-:root[data-theme="dark"] .heat .h2,:root[data-theme="dark"] .heatkey .h2{fill:#1F6334;background:#1F6334}
-:root[data-theme="dark"] .heat .h3,:root[data-theme="dark"] .heatkey .h3{fill:#2E8C49;background:#2E8C49}
-:root[data-theme="dark"] .heat .h4,:root[data-theme="dark"] .heatkey .h4{fill:#4DB668;background:#4DB668}
-:root[data-theme="dark"] .heat .h5,:root[data-theme="dark"] .heatkey .h5{fill:#8FDCA2;background:#8FDCA2}
+.heatkey .h0{background:var(--bg);border:1px solid var(--line)}.heatkey .h1{background:color-mix(in srgb,var(--club) 18%,var(--bg))}.heatkey .h2{background:color-mix(in srgb,var(--club) 40%,var(--bg))}.heatkey .h3{background:color-mix(in srgb,var(--club) 62%,var(--bg))}.heatkey .h4{background:color-mix(in srgb,var(--club) 85%,var(--bg))}.heatkey .h5{background:#145C27}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .heat .h1,:root:not([data-theme="light"]) .heatkey .h1{fill:color-mix(in srgb,var(--club) 22%,var(--bg));background:color-mix(in srgb,var(--club) 22%,var(--bg))}
+  :root:not([data-theme="light"]) .heat .h2,:root:not([data-theme="light"]) .heatkey .h2{fill:color-mix(in srgb,var(--club) 40%,var(--bg));background:color-mix(in srgb,var(--club) 40%,var(--bg))}
+  :root:not([data-theme="light"]) .heat .h3,:root:not([data-theme="light"]) .heatkey .h3{fill:color-mix(in srgb,var(--club) 60%,var(--bg));background:color-mix(in srgb,var(--club) 60%,var(--bg))}
+  :root:not([data-theme="light"]) .heat .h4,:root:not([data-theme="light"]) .heatkey .h4{fill:color-mix(in srgb,var(--club) 80%,var(--bg));background:color-mix(in srgb,var(--club) 80%,var(--bg))}
+  :root:not([data-theme="light"]) .heat .h5,:root:not([data-theme="light"]) .heatkey .h5{fill:color-mix(in srgb,var(--club) 100%,var(--bg));background:color-mix(in srgb,var(--club) 100%,var(--bg))}}
+:root[data-theme="dark"] .heat .h1,:root[data-theme="dark"] .heatkey .h1{fill:color-mix(in srgb,var(--club) 22%,var(--bg));background:color-mix(in srgb,var(--club) 22%,var(--bg))}
+:root[data-theme="dark"] .heat .h2,:root[data-theme="dark"] .heatkey .h2{fill:color-mix(in srgb,var(--club) 40%,var(--bg));background:color-mix(in srgb,var(--club) 40%,var(--bg))}
+:root[data-theme="dark"] .heat .h3,:root[data-theme="dark"] .heatkey .h3{fill:color-mix(in srgb,var(--club) 60%,var(--bg));background:color-mix(in srgb,var(--club) 60%,var(--bg))}
+:root[data-theme="dark"] .heat .h4,:root[data-theme="dark"] .heatkey .h4{fill:color-mix(in srgb,var(--club) 80%,var(--bg));background:color-mix(in srgb,var(--club) 80%,var(--bg))}
+:root[data-theme="dark"] .heat .h5,:root[data-theme="dark"] .heatkey .h5{fill:color-mix(in srgb,var(--club) 100%,var(--bg));background:color-mix(in srgb,var(--club) 100%,var(--bg))}
 
 /* A thin bar against a limit (a team's people, the site's), and a figure's bar in a row (Teams compared). */
 .meter{width:100%;height:6px;display:block}
@@ -356,7 +356,7 @@ textarea.msg{font-size:14px;line-height:1.5;border-style:dashed;resize:vertical}
 
 /* Costs, as cloud cost tools lay it out (dataviz skill): the kinds of cost in four hues validated together, light and
    dark (adjacent stacks: CVD and normal-vision separation pass; amber's relief is the legend and the months table). */
-:root{--k-shared:#6250D6;--k-storage:#2A8F3D;--k-viewing:#2A78D6;--k-uploads:#EDA100}
+:root{--k-shared:#6250D6;--k-storage:color-mix(in srgb,var(--club) 85%,var(--bg));--k-viewing:#2A78D6;--k-uploads:#EDA100}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k-shared:#9085E9;--k-storage:#3BA552;--k-viewing:#3987E5;--k-uploads:#C98500}}
 :root[data-theme="dark"]{--k-shared:#9085E9;--k-storage:#3BA552;--k-viewing:#3987E5;--k-uploads:#C98500}
 .k-shared{fill:var(--k-shared);background:var(--k-shared)}.k-storage{fill:var(--k-storage);background:var(--k-storage)}

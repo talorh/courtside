@@ -36,13 +36,13 @@
   html:not([data-view="mobile"]) body.desk .appnav .navmain,html:not([data-view="mobile"]) body.desk .appnav .navgrey{display:contents}
   html:not([data-view="mobile"]) body.desk .appnav a,html:not([data-view="mobile"]) body.desk .appnav a.big,html:not([data-view="mobile"]) body.desk .appnav a.big.up,html:not([data-view="mobile"]) body.desk .appnav a.big.watch,html:not([data-view="mobile"]) body.desk .appnav a.big.live,html:not([data-view="mobile"]) body.desk .appnav a.big.grey{
     flex:none;display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:0;width:100%;padding:9px 12px;border:0;border-radius:10px;
-    background:none;box-shadow:none;color:#E6F2EA;font-family:var(--body);font-weight:700;font-size:15px;line-height:1.3;text-align:left;text-decoration:none}
+    background:none;box-shadow:none;color:rgba(255,255,255,.9);font-family:var(--body);font-weight:700;font-size:15px;line-height:1.3;text-align:left;text-decoration:none}
   html:not([data-view="mobile"]) body.desk .appnav a:hover{background:rgba(255,255,255,.1)}
   html:not([data-view="mobile"]) body.desk .appnav a[aria-current="page"],html:not([data-view="mobile"]) body.desk .appnav a.big[aria-current="page"]{background:#fff;color:var(--bar);box-shadow:none}
   html:not([data-view="mobile"]) body.desk .appnav a .ico,html:not([data-view="mobile"]) body.desk .appnav a.big .ico{width:18px;height:18px;flex:none}
   html:not([data-view="mobile"]) body.desk .appnav a.live .ico{color:#FF8A8E}
   html:not([data-view="mobile"]) body.desk .appnav a.live[aria-current="page"] .ico{color:var(--live)}
-  html:not([data-view="mobile"]) body.desk .appnav a.up .ico{color:#7FD394}
+  html:not([data-view="mobile"]) body.desk .appnav a.up .ico{color:var(--club-soft)}
   html:not([data-view="mobile"]) body.desk .appnav a.up[aria-current="page"] .ico{color:var(--club)}
   /* The strip's links (a team manager's own, and an admin's), after a thin line (no heading). */
   html:not([data-view="mobile"]) body.desk .appnav .navsub{display:flex;flex-direction:column;gap:2px;flex-basis:auto;width:100%;border-top:1px solid rgba(255,255,255,.14);padding-top:12px;margin-top:10px}
@@ -60,7 +60,7 @@
   html:not([data-view="mobile"]) body.desk .faq,html:not([data-view="mobile"]) body.desk .duty-week,html:not([data-view="mobile"]) body.desk #families,html:not([data-view="mobile"]) body.desk #people,html:not([data-view="mobile"]) body.desk #notes,html:not([data-view="mobile"]) body.desk #confirm,html:not([data-view="mobile"]) body.desk #removals,html:not([data-view="mobile"]) body.desk .photogrid a,html:not([data-view="mobile"]) body.desk .helpgroup{scroll-margin-top:24px}
 
   /* The view switch: on a desktop screen, and only there, the one button that applies to the view now showing. */
-  html:not([data-view="mobile"]) body.desk .viewswitch[data-view-to="mobile"]{grid-area:view;align-self:end;display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:10px;color:#E6F2EA;font-weight:700;font-size:15px;line-height:1.3;text-align:left}
+  html:not([data-view="mobile"]) body.desk .viewswitch[data-view-to="mobile"]{grid-area:view;align-self:end;display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:10px;color:rgba(255,255,255,.9);font-weight:700;font-size:15px;line-height:1.3;text-align:left}
   html:not([data-view="mobile"]) body.desk .viewswitch[data-view-to="mobile"]:hover{background:rgba(255,255,255,.1)}
   html[data-view="mobile"] body.desk .viewswitch[data-view-to="desktop"]{display:inline-block}
   /* A family's strip holds only that button, so it shows here (app.css hides a strip with no links). */

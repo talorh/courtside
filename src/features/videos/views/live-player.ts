@@ -33,7 +33,7 @@ function appPlayer(player: string, isLive: boolean): SafeHtml {
 }
 
 export function livePlayer(live: LiveView): SafeHtml {
-	// Full time: the Game break card's look (bottle green, court lines, the club's logo), so the game ends as it paused.
+	// Full time: the Game break card's look (the club's deep colour, court lines, the club's logo), so the game ends as it paused.
 	if (live.ended) {
 		return html`<div class="player"><div class="live-over" role="status">${COURT}<span class="over-title">Full time</span><img src="/club-mark.webp" alt=""><b>The live stream has ended</b><span class="over-note">It's being saved and will be ready to watch here in about 20 to 25 minutes.</span></div></div>`;
 	}
