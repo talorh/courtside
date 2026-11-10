@@ -1,0 +1,5 @@
+{
+  "id": "large",
+  "neverRequireSignedURLs": false,
+  "options": { "fit": "scale-down", "width": 1600, "height": 1600, "metadata": "none" }
+}

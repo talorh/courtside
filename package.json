@@ -1,0 +1,41 @@
+{
+	"name": "courtside",
+	"license": "Apache-2.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "cf dev",
+		"build": "cf build",
+		"deploy": "echo \"Deploy with: npm run release (it runs every check first)\" && exit 1",
+		"typecheck": "cf workers types && tsc && tsc -p tests",
+		"test": "vitest run",
+		"check": "npm run typecheck && npm test && npm run loc && npm run rules",
+		"loc": "node scripts/check-loc.mjs",
+		"rules": "node scripts/check-rules.mjs",
+		"e2e": "node scripts/e2e.mjs",
+		"release": "node --experimental-strip-types --no-warnings scripts/release.mjs",
+		"docs": "node --experimental-strip-types --no-warnings scripts/export-docs.mjs",
+		"admin": "node scripts/admin.mjs",
+		"club": "node scripts/club.mjs",
+		"deploy:builds": "node --experimental-strip-types --no-warnings scripts/deploy-from-builds.mjs",
+		"restore-d1": "node --experimental-strip-types --no-warnings scripts/restore-d1.mjs",
+		"maintenance": "node --experimental-strip-types --no-warnings scripts/maintenance.mjs",
+		"staging": "node scripts/staging.mjs",
+		"join": "node scripts/join.mjs"
+	},
+	"devDependencies": {
+		"@cloudflare/vite-plugin": "2.0.0-beta.v.12",
+		"@types/node": "^26.6.5",
+		"cf": "^1.0.0-beta.26",
+		"playwright": "1.56.1",
+		"typescript": "^7.0.2",
+		"vite": "^8.3.0",
+		"vitest": "^5.0.4"
+	},
+	"dependencies": {
+		"@cloudflare/containers": "^0.3.7",
+		"aws4fetch": "^1.0.20",
+		"jose": "^6.2.12",
+		"zod": "^4.6.7"
+	}
+}

@@ -1,0 +1,11 @@
+{
+  "value": {
+    "strict_transport_security": {
+      "enabled": true,
+      "max_age": 31536000,
+      "include_subdomains": true,
+      "preload": true,
+      "nosniff": false
+    }
+  }
+}

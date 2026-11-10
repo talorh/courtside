@@ -1,0 +1,11 @@
+[
+  {
+    "allowed": {
+      "origins": ["https://staging-<worker>.<subdomain>.workers.dev"],
+      "methods": ["PUT", "GET", "HEAD"],
+      "headers": ["content-type"]
+    },
+    "exposeHeaders": ["ETag"],
+    "maxAgeSeconds": 3600
+  }
+]

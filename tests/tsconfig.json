@@ -1,0 +1,6 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": { "types": ["node"] },
+	"include": ["./**/*.ts", "../src", "../maintenance", "../join", "../.cloudflare/types"],
+	"exclude": ["../maintenance/cloudflare.config.ts", "../maintenance/vite.config.ts", "../maintenance/node_modules", "../join/cloudflare.config.ts", "../join/vite.config.ts", "../join/node_modules"]
+}

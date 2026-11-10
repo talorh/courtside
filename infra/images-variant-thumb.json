@@ -1,0 +1,5 @@
+{
+  "id": "thumb",
+  "neverRequireSignedURLs": false,
+  "options": { "fit": "cover", "width": 512, "height": 512, "metadata": "none" }
+}

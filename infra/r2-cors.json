@@ -1,0 +1,11 @@
+[
+  {
+    "allowed": {
+      "origins": ["https://<domain>"],
+      "methods": ["PUT", "GET", "HEAD"],
+      "headers": ["content-type"]
+    },
+    "exposeHeaders": ["ETag"],
+    "maxAgeSeconds": 3600
+  }
+]

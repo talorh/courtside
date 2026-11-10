@@ -1,0 +1,11 @@
+# Local development only. Copy to .dev.vars (git-ignored). Plain dev values live in cloudflare.config.ts (mode "development").
+STREAM_KEY_ID=dev
+STREAM_KEY_JWK=<base64 JWK, see docs/plans/2026-10-15-v1-01-foundation.md Task 1>
+R2_ACCESS_KEY_ID=dev
+R2_SECRET_ACCESS_KEY=dev
+# Every secret needs a value, or the Worker refuses to start. Stream calls fail with "dev" (pages carry on without them).
+STREAM_API_TOKEN=dev
+# Insights' Cloudflare figures: the read-only courtside-insights-read token. With "dev", Insights says they couldn't be read.
+CF_INSIGHTS_TOKEN=dev
+# The sign-in page's Turnstile: Cloudflare's always-passes test secret (its site key is in cloudflare.config.ts).
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA

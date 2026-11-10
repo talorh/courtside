@@ -1,0 +1,13 @@
+{
+  "description": "<domain> managed WAF (Free plan default, made explicit)",
+  "rules": [
+    {
+      "description": "Cloudflare Managed Free Ruleset (same as the Free plan default)",
+      "expression": "true",
+      "action": "execute",
+      "action_parameters": {
+        "id": "77454fe2d30c4220b5701f6fdfb893ba"
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "type": "TXT",
+  "name": "<domain>",
+  "content": "\"v=spf1 include:_spf.mx.cloudflare.net ~all\"",
+  "ttl": 1,
+  "comment": "Only Cloudflare Email Routing relays as <domain> (security@); DMARC p=reject stands"
+}

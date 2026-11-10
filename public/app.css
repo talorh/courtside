@@ -1,0 +1,880 @@
+/* Courtside. Matches the Saints club site: bottle-green bar, near-white page, white cards with
+   striped green header bands, bright green buttons, Manrope throughout. */
+/* Fonts are served from this site (not Google) so pages don't wait on another server. Manrope is one variable file
+   for all weights. Latin covers English and most accents; latin-ext only downloads if a page uses rarer letters. */
+@font-face{font-family:"Manrope";font-style:normal;font-weight:400 800;font-display:swap;src:url(/fonts/manrope-v20-latin.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:400 800;font-display:swap;src:url(/fonts/manrope-v20-latin-ext.woff2) format("woff2");unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/jetbrainsmono-v24-latin.woff2) format("woff2");unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:500;font-display:swap;src:url(/fonts/jetbrainsmono-v24-latin-ext.woff2) format("woff2");unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"Saira Semi Condensed";font-style:normal;font-weight:800;font-display:swap;src:url(/fonts/saira-semi-condensed-800-latin.woff2) format("woff2");unicode-range:U+0000-00FF}
+@font-face{font-family:"Teko";font-style:normal;font-weight:700;font-display:swap;src:url(/fonts/teko-700-latin.woff2) format("woff2");unicode-range:U+0000-00FF}
+:root{
+  /* --bar, --bar-line, --club, --club-ink and --club-soft come from /club.css. */
+  --black:#0E110F;
+  --bg:#F6F7F6;          /* near-white page */
+  --surface:#FFFFFF;
+  --fg:#121513;
+  --muted:#5D6862;
+  --line:#E1E5E2;
+  --live:#D9262C;
+  --live-deep:#C21F25;   /* the live bar: white words on it read at 5.9:1 */
+  --warn-soft:#FFF4D6;
+  --warn-ink:#7A5800;
+  --display:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  /* The coach's clipboard (notes-panel.ts): its green board, the maple court sheet, and the ink on it. */
+  --cb-board:#5FA874;--cb-edge:#4E9462;--cb-sheet:#F4E7CC;--cb-plank:#EADBBA;--cb-frame:#1C1C1C;--cb-ink:#0E0C08;--cb-muted:#3F3628;--cb-rule:#CDB993;--cb-chip:#1F5E33;--cb-green:#1A5530;--cb-field:#FFFDF7;--cb-fieldline:#B9A57F;--cb-shadow:0 14px 30px rgba(20,60,30,.28);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--cb-board:#4E9462;--cb-edge:#3D7A4F;--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:#1F5E33;--cb-green:#1A5530;--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--cb-board:#4E9462;--cb-edge:#3D7A4F;--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:#1F5E33;--cb-green:#1A5530;--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--display);font-weight:800;text-wrap:balance;margin:0;line-height:1.15}
+button,input,select{font:inherit;color:inherit}
+/* 16px or more, or iPhone Safari zooms in when a field is tapped and the page then slides sideways. */
+input,select,textarea{font-size:16px}
+/* iPhone Safari counts a dropdown's longest option towards the page width (the page slid sideways); keep it in the box. */
+select{contain:paint}
+:focus-visible{outline:3px solid var(--club);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px}
+
+/* App header */
+.appbar{background:var(--bar);color:#fff;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.appbar .wrap{display:flex;align-items:center;gap:16px;padding-block:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;cursor:pointer;background:none;border:0;color:#fff;padding:0}
+.brand b{font-family:var(--display);font-size:19px;font-weight:800;display:block;line-height:1.1}
+.appnav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;align-items:center}
+
+main{padding-block:24px 64px}
+.view{display:grid;gap:22px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--surface);text-decoration:none}
+.btn.primary{background:var(--club);border-color:var(--club);color:#fff}
+.btn.primary:hover{background:var(--club-ink);border-color:var(--club-ink)}
+.btn.quiet{border-color:transparent;background:transparent;color:var(--muted);padding-inline:0;font-weight:500;text-decoration:underline}
+.btn.big{padding:14px 20px;font-size:17px;justify-content:center}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.note{border-left:3px solid var(--club);background:var(--club-soft);padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px}
+.note.warn{border-color:var(--warn-ink);background:var(--warn-soft)}
+.pagehead h1{font-size:34px;font-weight:800;letter-spacing:-.01em}
+
+label{font-weight:600;font-size:14px;display:grid;gap:6px}
+input[type=email],input[type=text],input[type=url],input[type=date],input[type=number],select{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 12px;width:100%}
+.small{font-size:13px;color:var(--muted)}
+
+/* Library */
+.libhead{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between}
+.libhead h1{font-size:34px;font-weight:800;letter-spacing:-.01em}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.games{display:grid;gap:10px}
+.game{display:grid;grid-template-columns:150px 1fr auto;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;text-align:left;width:100%}
+.game:hover{border-color:var(--club)}
+.thumb{aspect-ratio:16/9;border-radius:8px;position:relative;overflow:hidden;background:#1d4a2c;max-width:100%}
+.thumb::before{content:"";position:absolute;inset:18% 30%;border:2px solid rgba(255,255,255,.35);border-radius:50%}
+.thumb::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px solid rgba(255,255,255,.35)}
+.thumb .dur{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.75);color:#fff;font-family:var(--mono);font-size:11px;padding:1px 5px;border-radius:3px;z-index:1}
+.gmeta{min-width:0;display:grid;gap:4px}
+.gmeta h3{font-size:21px}
+.gmeta .sub{color:var(--muted);font-size:13px}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.t{font-size:11.5px;padding:1px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-weight:500}
+.t.src{background:var(--club-soft);border-color:transparent;color:var(--club-ink)}
+.t.new{background:var(--club);border-color:transparent;color:#fff;font-weight:700;letter-spacing:normal;text-transform:none;font-family:var(--body)}
+/* The final score: plain words, Won, Lost or Drew first, so it reads the same in either theme. */
+.t.score{color:var(--fg);font-weight:700;white-space:nowrap}
+.newcount{margin-left:10px;font-size:13px;font-weight:700;background:var(--club);color:#fff;padding:2px 9px;border-radius:999px}
+.when{font-family:var(--display);font-weight:800;font-size:16px;text-align:right;line-height:1.2;white-space:nowrap}
+.when .clock{display:block;font-weight:600;font-size:14px;color:var(--muted)}
+
+/* Watch */
+.watch{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}
+.player{aspect-ratio:16/9;max-width:100%;background:#123a22;border-radius:12px;position:relative;overflow:hidden;display:grid;place-items:center}
+.player .courtimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.side{display:grid;gap:14px}
+.side .panel{display:grid;gap:12px}
+/* The game's line under its title. */
+.blurb{margin:0;color:var(--muted);font-size:16px;max-width:65ch}
+.scoreform{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.scoreform label{min-width:0;overflow-wrap:anywhere}
+.scoreform .btn{grid-column:1/-1}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:500}
+.dl .btn{justify-content:space-between;width:100%}
+.dl .btn span{font-family:var(--mono);font-size:12px;opacity:.85}
+.titleline{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.titleline h1{font-size:30px;font-weight:800;letter-spacing:-.01em}
+.row-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+/* Modal */
+.scrim{position:fixed;inset:0;background:rgba(5,8,6,.6);display:grid;place-items:center;padding:16px;z-index:20}
+.modal{background:var(--surface);border-radius:14px;max-width:460px;width:100%;padding:22px;display:grid;gap:14px;border-top:5px solid var(--club)}
+.modal h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:500}
+.check input{margin-top:4px;width:18px;height:18px;accent-color:var(--club);flex:none}
+
+/* Forms */
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.prog{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--club);transition:width .3s}
+.file{display:grid;gap:8px}
+.file .row{display:flex;justify-content:space-between;gap:10px;font-size:14px;flex-wrap:wrap}
+ol.steps{margin:0;padding-left:20px;display:grid;gap:8px;font-size:14.5px}
+
+/* Manage team */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+.role{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--line)}
+.role.f{background:var(--warn-soft);color:var(--warn-ink);border-color:transparent}
+.role.c{background:var(--club-soft);color:var(--club-ink);border-color:transparent}
+/* Manage team: who's using the site, four counts from Last seen. */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.stat{display:grid;gap:2px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:0}
+.stat b{font-family:var(--display);font-size:28px;font-weight:800;line-height:1.1}
+.stat span{font-size:13px;color:var(--muted)}
+/* A link to a spot on a page (a Help question, a Roster week, Manage team's people, coaches' notes, a confirm) stops below the
+   sticky top bar, not under it: up to 195px tall on a phone or tablet (a team manager's, its buttons wrapped), 147px on
+   a computer. Only these targets, so nothing else scrolls differently (Go live's buttons, the player). */
+.faq,.duty-week,#families,#people,#notes,#confirm,#removals,.photogrid a{scroll-margin-top:205px}
+@media (min-width:1024px){.faq,.duty-week,#families,#people,#notes,#confirm,#removals,.photogrid a{scroll-margin-top:157px}}
+/* Manage team: Sort by Name, Role or Last seen, with Watch games' chips. */
+.sortby{align-items:center}
+.sortby span{font-size:13px;color:var(--muted)}
+
+@media (max-width:760px){
+  .watch{grid-template-columns:1fr}
+  .game{grid-template-columns:110px 1fr}
+  .game .when{grid-column:2;text-align:left}
+  .libhead h1,.pagehead h1{font-size:32px}
+  .appnav{margin-left:0;width:100%}
+}
+
+/* App additions (not in the mockup) */
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+.brand{text-decoration:none}
+.brand img{width:38px;height:38px;border-radius:50%;background:#fff}
+/* Someone in two or more teams: Switch team under the team's name, so it's plain that the name switches. */
+.switchteam{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 10px 2px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.6);background:rgba(255,255,255,.14);color:#fff;font-size:12.5px;font-weight:700;line-height:1.35;white-space:nowrap}
+.switchteam .ico{width:14px;height:14px;flex:none}
+.brand:hover .switchteam,.brand:focus-visible .switchteam{background:rgba(255,255,255,.26)}
+/* A small phone: no wider than the team's name, so Help, light or dark and sign out stay on its line. */
+@media (max-width:389px){.switchteam{font-size:11.5px;padding:1px 7px 1px 5px;gap:3px}.switchteam .ico{width:12px;height:12px}}
+.appnav a{color:#eaf5ed;padding:6px 10px;border-radius:6px;font-weight:600;font-size:14px;text-decoration:none}
+.appnav a[aria-current="page"]{color:#fff;background:rgba(255,255,255,.16)}
+.appnav a.big{flex:0 0 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--display);font-size:17px;font-weight:800;padding:10px 20px;border-radius:10px;border:2px solid rgba(255,255,255,.4);color:#fff;min-height:48px}
+.appnav a.big .ico{width:22px;height:22px;flex:none}
+.appnav a.big.up{background:var(--club);border-color:rgba(255,255,255,.55)}
+.appnav a.big[aria-current="page"]{background:#fff;color:var(--black);border-color:#fff}
+/* The "you are here" ring sits inside the button so every big button stays the same size. */
+.appnav a.big.up[aria-current="page"]{background:var(--club);color:#fff;box-shadow:inset 0 0 0 3px #fff}
+.appnav a.big.live{background:var(--live);border-color:var(--live)}
+.appnav a.big.live[aria-current="page"]{background:var(--live);color:#fff;box-shadow:inset 0 0 0 3px #fff}
+/* Phones: the big buttons share one row at equal width; the small links go on the next. */
+@media (max-width:760px){.appnav a.big{flex:1 1 30%;min-width:0;min-height:64px;font-size:17px;line-height:1.15;padding:8px 6px;gap:6px}.appnav a.big .ico{width:18px;height:18px}}
+a.game{color:inherit;text-decoration:none}
+form.inline{display:inline}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.chip{text-decoration:none;color:inherit}
+
+/* Upload home */
+.uphero{display:grid;gap:18px;max-width:640px;margin-inline:auto;width:100%}
+.uphero h1{font-size:36px;font-weight:800;letter-spacing:-.01em}
+.step{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:start}
+.step .n{width:34px;height:34px;border-radius:50%;background:var(--club);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:20px}
+.step.done .n{background:var(--club-soft);color:var(--club-ink)}
+.stack{display:grid;gap:10px}
+.bigpick{font-size:18px;font-weight:800;padding:16px 20px;width:100%;font-family:var(--display);justify-content:center}
+details.tips summary{cursor:pointer;font-weight:600}
+details.tips[open] summary{margin-bottom:10px}
+label .small{font-weight:400}
+.uphero form.panel{display:grid;gap:22px}
+a.btn{color:var(--fg)}
+a.btn.primary{color:#fff}
+.watch-main{min-width:0}
+.panel-warn{border-color:var(--warn-ink)}
+.request-row{align-items:center}
+details.panel:not([open]){padding-block:10px}
+textarea{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 12px;width:100%;font:inherit;font-size:16px;color:inherit}
+fieldset.clock{border:0;padding:0;margin:0;display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0}
+fieldset.clock legend{font-weight:600;font-size:14px;padding:0;margin-bottom:6px}
+fieldset.clock select{width:auto}
+/* The real file input covers the button, so the tap lands on it directly (iOS needs a native tap on a visible input). */
+.filepick{position:relative;overflow:hidden}
+.filepick input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:100px}
+.filepick:focus-within{outline:3px solid var(--club);outline-offset:2px}
+/* Drag and drop: the hint only shows on devices with a mouse; the box lights up while a file is dragged over it. */
+.drop-hint{display:none}
+@media (hover:hover) and (pointer:fine){.drop-hint{display:inline}}
+#upload.dragover,#addphotos.dragover{outline:3px dashed var(--club);outline-offset:4px;background:var(--club-soft)}
+/* Processing-time messages on the upload page */
+.after-note{margin:0;font-size:18px;font-weight:500;line-height:1.4;padding:12px 14px 12px 34px;display:grid;gap:6px;border-radius:10px;background:var(--club-soft);color:var(--fg)}
+.done-note{margin:0;font-family:var(--display);font-size:24px;font-weight:700;line-height:1.2;padding:16px;border-radius:10px;background:var(--club);color:#fff}
+.done-note:not([hidden]) ~ .after-note{display:none}
+/* Thumbnails: a real frame when Stream has one, otherwise the club's logo on white. */
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.thumb.has-img::before,.thumb.has-img::after,.thumb.fallback::before,.thumb.fallback::after{display:none}
+.thumb.fallback{background:#fff}
+.thumb.fallback img{object-fit:contain;padding:6%}
+/* Competition filter */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.libtools{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+/* Favourites: a star on a game or clip; Your favourites at the top of Watch games. */
+.btn.star{padding:6px 12px;font-size:14px}
+.btn.star[aria-pressed="true"]{background:var(--club-soft);color:var(--club-ink);border-color:transparent}
+.favs{display:grid;gap:10px}
+.favs h2,.allhead{font-size:20px}
+.favclips{display:grid;gap:8px}
+.favclip{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;text-decoration:none;color:inherit}
+.favclip:hover{border-color:var(--club)}
+.chip[aria-current="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.dl-notes{margin:0;padding-left:18px;display:grid;gap:6px}
+/* Highlight clips */
+.cliplist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.clip{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:start;padding:6px;border-radius:10px}
+.clip[aria-current="true"]{background:var(--club-soft)}
+.clipmeta{display:grid;gap:4px;min-width:0}
+.askremove[open]{flex-basis:100%}
+.askremove form{margin-top:8px}
+.askremove summary{list-style:none}
+.clipmeta b{overflow-wrap:anywhere}
+.clipmeta .btn{padding:4px 10px;font-size:13px}
+.clipmaker{display:grid;gap:12px}
+.clipgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.markrow{display:flex;gap:6px;align-items:center}
+.markrow input{min-width:0;flex:1}
+details.panel>summary.eyebrow{cursor:pointer}
+details.panel[open]>summary.eyebrow{margin-bottom:10px}
+.btn.danger{background:var(--live);border-color:var(--live);color:#fff}
+/* Coaches' private notes: the coach's clipboard (notes-panel.ts), a green board and its clip holding a maple court
+   sheet. The sheet stays light in dark mode, as a real one does, so its fields are light too. */
+.clipboard{position:relative;margin-top:16px;padding:34px 12px 10px;border-radius:22px;background:var(--cb-board);box-shadow:var(--cb-shadow),inset 0 0 0 1.5px var(--cb-edge);color:var(--cb-ink);color-scheme:light}
+.clipboard::before{content:"";position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:136px;height:42px;border-radius:12px 12px 18px 18px;background:linear-gradient(180deg,#F1F3F2,#959C98);box-shadow:0 4px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.6)}
+.clipboard::after{content:"";position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:46px;height:11px;border-radius:6px;background:var(--cb-board);box-shadow:inset 0 2px 3px rgba(0,0,0,.45)}
+.cbsheet{position:relative;overflow:hidden;display:grid;gap:18px;padding:104px 16px 18px;border:5px solid var(--cb-frame);border-radius:4px;background-color:var(--cb-sheet);background-image:repeating-linear-gradient(90deg,transparent 0 44px,var(--cb-plank) 44px 46px)}
+.cbcourt{position:absolute;top:0;left:50%;transform:translateX(-50%);width:300px;height:96px;fill:none}
+.cbcourt .ln{stroke:#fff;stroke-width:2.5}
+.cbcourt .dash{stroke-dasharray:6 5}
+.cbcourt .key{fill:var(--cb-board);stroke:var(--cb-frame);stroke-width:5}
+.cbcourt .rim{stroke:var(--cb-frame);stroke-width:2.5}
+.cbhead{display:grid;gap:4px}
+.cbtitle{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 10px}
+.cbtitle h2{font-size:24px;letter-spacing:-.01em}
+.cbonly{display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 9px;border-radius:999px;border:1.5px solid var(--cb-green);color:var(--cb-green);font-size:13px;font-weight:700}
+.cbonly .ico{width:14px;height:14px}
+.clipboard .small{color:var(--cb-muted)}
+.clipboard .btn.quiet{color:var(--cb-muted)}
+.clipboard .btn:not(.primary):not(.danger):not(.quiet){background:var(--cb-field);border-color:var(--cb-fieldline);color:var(--cb-ink)}
+.clipboard .confirmpanel{background:var(--cb-field)}
+.noteform{display:grid;gap:12px;padding-top:16px;border-top:1.5px dashed var(--cb-rule)}
+.noteform h3{font-size:16px}
+.cbhint{font-weight:500;line-height:1.4}
+.noteform label{display:grid;gap:6px;font-size:13px;font-weight:700;color:var(--cb-muted)}
+.clipboard input,.clipboard textarea{background-color:var(--cb-field);border:1.5px solid var(--cb-fieldline);border-radius:10px;color:var(--cb-ink)}
+.clipboard input{font-family:var(--mono)}
+.clipboard textarea{line-height:28px;padding:4px 12px;background-image:repeating-linear-gradient(to bottom,transparent 0 27px,var(--cb-rule) 27px 28px);background-position:0 4px;resize:vertical}
+.clipboard .btn.mark{border:1.5px solid var(--cb-green);background:transparent;color:var(--cb-green);font-weight:700}
+.cbnoteshead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding-top:16px;border-top:1.5px dashed var(--cb-rule)}
+.cbnoteshead h3{font-size:16px}
+.notelist{list-style:none;margin:-12px 0 0;padding:0;display:grid}
+.notelist li:first-child{border-top:0}
+.notelist li{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"time del" "body body";gap:6px 10px;align-items:center;padding:12px 0;border-top:1.5px dashed var(--cb-rule)}
+.notelist .notetime{grid-area:time;justify-self:start}
+.notelist .confirm{grid-area:del;justify-self:end}
+.notelist .confirm[open]{grid-area:auto;grid-column:1/-1;justify-self:stretch}
+.notelist .notebody{grid-area:body;min-width:0}
+.notetime{display:inline-flex;align-items:center;gap:5px;min-height:34px;padding:0 10px;border-radius:9px;background:var(--cb-chip);color:#fff;font-family:var(--mono);font-size:13.5px;text-decoration:none}
+.notetime.whole{background:none;border:1.5px solid var(--cb-rule);color:var(--cb-muted);font-family:var(--body);font-size:12px;font-weight:700}
+.notebody p{margin:0 0 2px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
+.cbempty{margin:0;padding-top:12px;border-top:1.5px dashed var(--cb-rule)}
+.cbmark{padding-top:10px;text-align:center;font-family:"Saira Semi Condensed",var(--display);font-weight:800;font-size:26px;line-height:1.1;letter-spacing:.08em;color:#fff;-webkit-text-stroke:1.5px #111;paint-order:stroke fill}
+/* On a wide computer the side column, where the clipboard sits beside the video, is wider for a coach. */
+@media (min-width:1280px){.watch.coaching{grid-template-columns:minmax(0,1fr) 400px}}
+/* Notifications */
+.feedlist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.feed{display:grid;grid-template-columns:minmax(150px,auto) minmax(0,1fr);gap:4px 14px;padding:8px 0;border-bottom:1px solid var(--line)}
+.feed.warn{border-left:3px solid var(--warn-ink);padding-left:10px}
+.mono{font-family:var(--mono)}
+@media (max-width:600px){.feed{grid-template-columns:1fr}}
+
+/* Home (landing page) */
+.home{display:grid;gap:18px;max-width:760px;margin-inline:auto;width:100%}
+/* The groups the computer's layout uses (desktop.css) are no boxes here, and the latest game comes after the links,
+   so the pieces sit as they always have. */
+.homehero,.homeside,.homemain{display:contents}
+.home .latest{order:1}.home .squad{order:2}
+.deskonly{display:none}
+.homecourt{width:100%;height:auto;aspect-ratio:16/9;max-width:100%;border-radius:14px;display:block;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.homehead{display:grid;gap:6px}
+.homeactions{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+/* Home: the squad, each home singlet on the left and "Steph #30" on the right, in the club's colours. */
+.squad{display:flex;flex-direction:column;gap:14px}.squad h2{margin:0}
+.squadlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.squadlist li{display:flex;align-items:center;gap:20px;padding:10px 0;border-top:1px solid var(--line)}
+.squadlist li:last-child{border-bottom:1px solid var(--line)}
+.squadlist .pname{font-family:var(--display);font-size:26px;font-weight:800;min-width:0}
+.jersey{display:block;width:120px;height:auto;flex:none;filter:drop-shadow(0 2px 3px rgb(0 0 0 / .18))}
+.jersey .kit{fill:var(--club)}.jersey .kit-shard{fill:var(--bar)}.jersey .kit-shard-light{fill:#fff}.jersey .kit-badge{fill:var(--bar);stroke:#fff;stroke-width:1}
+.jersey .kit-edge{fill:none;stroke:#0E110F;stroke-width:7}.jersey .kit-trim{fill:none;stroke:#fff;stroke-width:3}
+.jersey text{text-anchor:middle;fill:#fff;stroke:var(--bar);paint-order:stroke;stroke-linejoin:round}
+.jersey .kit-name{font-family:"Saira Semi Condensed","Arial Narrow",sans-serif;font-weight:800;font-size:21px;stroke-width:1.6}
+.jersey .kit-num{font-family:"Teko","Arial Narrow",sans-serif;font-weight:700;font-size:44px;stroke-width:1.6}
+.homemore{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.homemore .btn{justify-content:center;font-size:16px;padding:12px}
+.latest{display:grid;gap:2px;text-decoration:none;color:inherit;position:relative;padding-right:90px}
+.latest b{font-size:18px}
+.latest .go{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-weight:700;color:var(--club-ink)}
+
+/* Live streaming: red is used only for live things */
+.btn.livebtn{background:var(--live);border-color:var(--live);color:#fff;gap:10px}
+.btn.livebtn:hover{filter:brightness(.92)}
+.ondot{width:12px;height:12px;flex:none;display:inline-block}
+.livebtn .ondot{width:14px;height:14px;color:#fff}
+.step .n.live{background:var(--live);color:#fff}
+.golive form.step{margin:0}
+.golive label .btn{justify-self:start;margin-top:4px}
+.golive label{display:grid;gap:6px}
+.live-status{margin:0;display:flex;align-items:center;gap:8px}
+.live-status.on{color:var(--live)}
+.live-status.on .ondot{animation:livepulse 1.4s ease-in-out infinite}
+@keyframes livepulse{50%{opacity:.35}}
+.useapp{margin:0;display:grid;gap:6px;justify-items:start}
+.useapp .btn{font-size:14px;padding:8px 14px}
+.useapp p{margin:0}
+.golive:has(.webcam:not([hidden])) .useapp{display:none}
+.appacts{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.appacts form{margin:0}
+.appsays{display:block}
+.appsays .ondot{vertical-align:-1px}
+.copyrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:center;margin-top:8px}
+.copyrow label{grid-column:1/-1;font-weight:700;font-size:13px}
+.copyrow input{min-width:0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px}
+@media (prefers-reduced-motion:reduce){.live-status.on .ondot{animation:none}}
+.livebar{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-bottom:18px;padding:10px 14px;border-radius:12px;background:var(--live-deep);color:#fff;text-decoration:none;font-weight:700}
+.livebar + .livebar{margin-top:-10px}
+.livebar:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.livebar-on{display:inline-flex;align-items:center;gap:6px;font-size:12px;letter-spacing:.08em;white-space:nowrap}
+.livebar-on .ondot{width:10px;height:10px;color:#fff;animation:livepulse 1.4s ease-in-out infinite}
+.livebar-game{flex:1 1 12em;min-width:0}
+.livebar-go{background:#fff;color:var(--live-deep);border-radius:9px;padding:6px 12px;font-family:var(--display);font-weight:800;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.livebar-on .ondot{animation:none}}
+.livecard{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px;border-radius:14px;border:2px solid var(--live);background:var(--surface);text-decoration:none;color:inherit;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.livethumb{position:relative;display:block;aspect-ratio:16/9;border-radius:8px;overflow:hidden}
+.livethumb img{width:100%;height:100%;object-fit:cover;display:block}
+.livebadge{position:absolute;left:6px;top:6px;display:flex;align-items:center;gap:5px;background:var(--live);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;padding:2px 7px;border-radius:5px}
+.livebadge .ondot{width:8px;height:8px;color:#fff}
+.livebadge{white-space:nowrap}
+.livemeta{display:grid;gap:2px;min-width:0}
+.livego{background:var(--live);color:#fff;border-radius:10px;padding:10px 14px;font-family:var(--display);font-weight:800;font-size:16px;white-space:nowrap}
+@media (max-width:480px){.livecard{grid-template-columns:96px minmax(0,1fr)}.livego{grid-column:1/-1;text-align:center}}
+.appcard{display:grid;gap:10px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.appcard h3{margin:0;font-size:20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.appcard .steps{margin:0}
+.storebtn{justify-self:start;justify-content:center;gap:10px;font-weight:700}
+
+/* Club-site card headers: a bottle-green band with faint diagonal stripes on the right. */
+.panel > .eyebrow:first-child,.panel > summary.eyebrow{display:block;margin:-20px -20px 16px;padding:14px 20px;border-radius:11px 11px 0 0;
+  background:linear-gradient(110deg,transparent 72%,rgba(255,255,255,.07) 72% 76%,transparent 76% 80%,rgba(255,255,255,.07) 80% 84%,transparent 84%),var(--bar);
+  color:#fff;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:0;text-transform:none}
+.panel.latest > .eyebrow:first-child{margin:0;padding:0;background:none;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;border-radius:0}
+/* Watch games: a game with no footage yet shows the court and what it's waiting for. */
+.thumb.court::before,.thumb.court::after{display:none}
+/* Each card shows where the game is at: ready (green), processing (amber, stands out), upcoming (faded, dashed),
+   waiting for video (plain), no video (greyed). */
+.gstate{display:inline-flex;align-items:center;gap:7px;justify-self:start;font-size:13px;font-weight:800;padding:3px 10px 3px 8px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.gstate i{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+.s-ready .gstate{background:var(--club-soft);color:var(--club-ink);border-color:transparent}
+.s-ready .gstate i{width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent currentColor}
+.s-live .gstate{background:var(--live);color:#fff;border-color:transparent}
+.game.s-processing{background:var(--warn-soft);border-color:var(--warn-ink);border-width:2px 2px 2px 8px}
+.s-processing .gstate{font-size:17px;padding:5px 14px 5px 11px;background:var(--warn-ink);color:var(--warn-soft);border-color:transparent}
+.s-processing .gstate i{width:11px;height:11px;animation:gpulse 1.2s ease-in-out infinite}
+.s-processing .soon{font-size:13px;font-weight:600;color:var(--warn-ink)}
+@keyframes gpulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.s-processing .gstate i,.pendcard .pstate i{animation:none}}
+/* Game page while the video is uploading or processing: an amber card over the court, with a pulsing light. */
+.pendcard{position:relative;display:grid;justify-items:center;gap:8px;max-width:min(88%,30em);margin:0;padding:14px 18px;text-align:center;background:var(--warn-soft);color:var(--warn-ink);border:2px solid var(--warn-ink);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.pendcard p{margin:0;font-size:15px;font-weight:600}
+.pendcard .pstate{display:inline-flex;align-items:center;gap:9px;padding:5px 14px 5px 11px;border-radius:999px;background:var(--warn-ink);color:var(--warn-soft);font-size:17px;font-weight:800}
+.pendcard .pstate i{width:11px;height:11px;border-radius:50%;background:currentColor;animation:gpulse 1.2s ease-in-out infinite}
+/* Couldn't be processed: the same card, its light steady (nothing's on its way). */
+.pendcard.failed .pstate i{animation:none}
+.game.s-upcoming{background:transparent;border-style:dashed}
+.s-upcoming .thumb img,.s-novideo .thumb img{filter:grayscale(.85);opacity:.6}
+.s-upcoming .gstate{background:transparent;border-style:dashed}
+.s-playing .gstate{background:var(--club-soft);color:var(--club-ink);border-color:transparent}
+.game.s-novideo{background:transparent;opacity:.65}
+/* Home: Watch games stands out against the page: near-black on the light theme, near-white on the dark one. */
+a.btn.watchbtn{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+a.btn.watchbtn:hover{opacity:.88}
+.homeactions .ico{width:24px;height:24px;flex:none}
+.homemore .ico{width:19px;height:19px;flex:none}
+.homeactions .btn,.homemore .btn{gap:10px}
+@media (max-width:480px){.homemore .btn{flex-direction:column;font-size:15px;padding:10px 4px;gap:4px}.homemore .ico{width:20px;height:20px}}
+/* Wider than a phone: each button at least as wide as its words (six equal columns left Notifications spilling out on a
+   computer), sharing the row equally where they can, and onto a second row when they don't fit. */
+@media (min-width:481px){.homemore{display:flex;flex-wrap:wrap}.homemore .btn{flex:1 1 0;min-width:max-content}}
+/* Phones: Fixture and Manage team rows become cards instead of a table that scrolls sideways. */
+@media (max-width:640px){
+  .tablewrap.cards{border:0;background:none;overflow:visible;border-radius:0}
+  .cards table{display:block;min-width:0}
+  .cards thead{display:none}
+  .cards tbody{display:grid;gap:10px}
+  .cards tr{display:grid;gap:8px 10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;align-items:center}
+  .cards td{display:block;padding:0;border:0;min-width:0}
+  .cards td:empty{display:none}
+  .cards td[colspan]{grid-column:1/-1}
+  .fixture tr{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"date date status" "game game game" "type venue venue" "acts acts acts"}
+  .f-date{grid-area:date;font-size:13px;font-weight:600;color:var(--muted)}
+  .f-status{grid-area:status;justify-self:end}
+  .f-game{grid-area:game;font-family:var(--display);font-weight:800;font-size:18px;line-height:1.25}
+  .cards .f-game a{color:inherit;text-decoration:none}
+  .f-type{grid-area:type}
+  .f-venue{grid-area:venue;font-size:13.5px;color:var(--muted)}
+  .cards td.row-actions{display:flex}
+  .f-acts{grid-area:acts;border-top:1px solid var(--line);padding-top:4px;gap:18px}
+  .people tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"email email" "name name" "role role" "seen acts"}
+  .m-email{grid-area:email;font-weight:700;overflow-wrap:anywhere}
+  .m-name{grid-area:name}
+  .m-role{grid-area:role}
+  .m-role select{width:100%}
+  .m-seen{grid-area:seen;font-size:13px;color:var(--muted)}
+  .m-seen::before{content:"Last seen "}
+  .m-acts{grid-area:acts}
+}
+.stack > .row-actions,.addgame{margin-top:6px}
+/* Manage team's People: Save (once something's changed: save-changed.js) and Remove, side by side at the row's end. */
+.m-acts > div{display:flex;align-items:center;justify-content:flex-end;gap:8px 14px}
+.m-acts > div:has(details[open]){flex-wrap:wrap}
+.m-acts .btn{white-space:nowrap}
+@media (min-width:641px){.people .m-role select{width:auto}}
+.m-acts .btn.primary{padding-block:6px}
+.m-acts [data-save][data-same]{visibility:hidden}
+.cards .t,.cards .role{white-space:nowrap}
+.f-game a{color:var(--club-ink);font-weight:600}
+/* Help: one folding card per question. */
+.helppage{display:grid;gap:14px;max-width:760px;margin-inline:auto;width:100%}
+.faq summary{cursor:pointer;font-family:var(--display);font-weight:800;font-size:18px;line-height:1.3}
+.faqbody{display:grid;gap:12px;margin-top:14px}
+.faqbody p{margin:0;max-width:65ch}
+.faqbody h3{font-size:15px;margin-top:4px}
+.faqbody ul.steps{margin:0;padding-left:20px;display:grid;gap:8px;font-size:14.5px}
+.faqgroup{font-size:20px;margin-top:10px}
+/* A team manager's Help is in two parts: each part's name, above its sections. */
+.helppart{display:grid;gap:14px}
+.partname{font-size:26px;margin:18px 0 0;padding-top:14px;border-top:2px solid var(--club)}
+.helppart:first-child .partname{margin-top:0}
+.faqbody ol.steps ul.steps{margin-top:6px}
+/* Roster, Fixture and Photos are grey big buttons with short labels, so each takes only the room it needs. */
+.appnav a.big.grey{flex:0 0 auto;padding-inline:18px}
+@media (max-width:760px){.appnav a.big{flex:1 1 24%;align-self:stretch;flex-direction:column;gap:4px;padding:8px 4px;font-size:15.5px;text-align:center}.appnav a.big.grey{flex:0 0 auto;padding-inline:14px}}
+/* Top-bar buttons, one colour each: Upload green, Watch white, Go live red, Roster, Fixture and Photos grey. The page you're on gets an
+   inner ring (white on the coloured ones, green on the white one) so every button stays the same size. */
+.appnav a.big.up,.appnav a.big.up[aria-current="page"]{background:var(--club);border-color:rgba(255,255,255,.55);color:#fff}
+.appnav a.big.watch,.appnav a.big.watch[aria-current="page"]{background:#fff;border-color:#fff;color:#0E110F}
+.appnav a.big.live,.appnav a.big.live[aria-current="page"]{background:var(--live);border-color:var(--live);color:#fff}
+.appnav a.big.grey,.appnav a.big.grey[aria-current="page"]{background:#5E6A63;border-color:#5E6A63;color:#fff}
+.appnav a.big[aria-current="page"]{box-shadow:inset 0 0 0 3px #fff}
+.appnav a.big.watch[aria-current="page"]{box-shadow:inset 0 0 0 3px var(--club)}
+/* Go live from this page: camera preview, and the same in full screen (landscape) with the controls along the bottom. */
+.player video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.live-wait{position:absolute;inset:0;display:grid;place-content:center;gap:6px;text-align:center;padding:16px;background:#0A4A23;color:#fff}
+.live-wait b{font-size:20px}
+.live-wait span{font-size:14px;opacity:.85}
+/* Full time, once End game is tapped: the Game break card's look (golive-slate.js) as a page, sized by the player's
+   width so it reads the same on a phone and a TV. */
+.player:has(.live-over){container-type:inline-size}
+.live-over{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;color:#fff;padding:3cqw;background:radial-gradient(ellipse at center,#0D5A2B 0,#062E16 100%)}
+.live-over .court{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:#3DAA4A;stroke-width:9;stroke-linecap:round}
+.live-over .dash{stroke-dasharray:24 20}
+.live-over>*{position:relative}
+.live-over .over-title{font-family:"Saira Semi Condensed",var(--display);font-weight:800;font-size:9cqw;line-height:1;letter-spacing:.02em;text-transform:uppercase}
+.live-over img{width:26cqw;height:auto;margin:3cqw 0}
+.live-over b{font-size:max(14px,3.6cqw);font-weight:700;line-height:1.2}
+.live-over .over-note{font-size:max(12px,2.2cqw);font-weight:500;opacity:.85;margin-top:.5em;max-width:60ch}
+.webcam{position:relative;aspect-ratio:16/9;max-width:100%;background:#000;border-radius:12px;overflow:hidden}
+.webcam video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.camctl{position:absolute;left:0;right:0;bottom:0;padding:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:linear-gradient(transparent,rgba(0,0,0,.75))}
+.camstatus{margin:0;flex:1 1 12em;min-width:0;color:#fff;font-weight:700;font-size:15px}
+.webcam.full{position:fixed;inset:0;z-index:1000;border-radius:0;aspect-ratio:auto;width:100vw;height:100vh;height:100dvh;max-width:none}
+.webcam.full .camctl{padding:16px max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+/* Camera filling the screen: the page keeps a little scroll, because iPhone Safari only hides its bars again on a swipe. */
+html.camfull,html.camfull body{overflow-x:hidden}
+html.camfull body{min-height:calc(100lvh + 80px)}
+.btn.stopbtn{font-size:18px;font-weight:800;padding:14px 22px;min-height:52px;gap:10px;justify-content:center}
+.stopicon{width:14px;height:14px}
+.stopask{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:rgba(0,0,0,.85);color:#fff;border-radius:10px;padding:12px}
+.stopask p{margin:0;flex:1 1 100%;font-size:17px}
+.btn.pausebtn,.btn.resumebtn{font-size:18px;font-weight:800;padding:14px 22px;min-height:52px;gap:10px;justify-content:center}
+.btn.pausebtn{background:#F2B705;border-color:#F2B705;color:#111}
+.btn.resumebtn{background:var(--club);border-color:var(--club);color:#fff;font-size:20px;padding:16px 28px}
+/* Paused: a thick amber frame and a dimmed camera, so it can't be missed (and Resume isn't forgotten). */
+.webcam.paused::after{content:"";position:absolute;inset:0;border:8px solid #F2B705;pointer-events:none}
+.webcam.paused video{opacity:.45}
+.webcam.paused .camstatus{color:#F2B705;font-size:18px}
+.btn.keepbtn{font-size:18px;font-weight:700;padding:14px 22px;min-height:52px;background:#fff;color:#111;border-color:#fff}
+.weblive .recover,.weblive .saving{display:grid;gap:10px}
+.weblive .saving p{margin:0}
+.weblive progress{width:100%;height:12px;accent-color:var(--club)}
+.browsercheck{display:grid;gap:10px}
+.browsercheck p{margin:0}
+.browsercheck .row-actions{display:flex;gap:10px;flex-wrap:wrap}
+.addbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.addbar>details[open]{flex-basis:100%}
+fieldset.choice{border:0;padding:0;margin:0;display:flex;gap:10px;flex-wrap:wrap;min-width:0}
+fieldset.choice legend{font-weight:600;font-size:14px;padding:0;margin-bottom:6px}
+fieldset.choice label{display:flex;gap:8px;align-items:center;font-weight:500;border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer}
+ul.playhq{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+ul.playhq>li{border-top:1px solid var(--line);padding-top:12px;gap:6px}
+ul.playhq a{overflow-wrap:anywhere;color:inherit}
+.gone{display:block;color:var(--warn-ink);font-size:13px}
+.who-in{display:flex;flex-wrap:wrap;gap:4px}
+fieldset.players label{padding:6px 10px;font-size:14px}
+/* Help: Ask Virtual Team Manager. */
+.ask{display:grid;gap:10px;border-top:4px solid var(--club)}.ask h2{font-size:20px}.ask p{margin:0;max-width:65ch}
+.askform{display:flex;gap:8px}.askform input{min-width:0;flex:1;font-size:16px}.askform .btn{flex:none}
+.askanswer{white-space:pre-line;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+/* Top bar: Help (with Ask Virtual Team Manager first on it), an oval that says Help at the top right, then light or dark and
+   sign out (easier to spot than the round ? it was for a day, after Photos took its grey button).
+   A little brighter than the round buttons beside it. The nav wraps onto the rows below. */
+.helpbtn{order:1;margin-left:auto;flex:none;height:40px;padding:0 14px 0 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;color:#fff;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.14);font-weight:700;font-size:15px;line-height:1;text-decoration:none}
+.helpbtn:hover{background:rgba(255,255,255,.24)}.helpbtn .ico{width:20px;height:20px;flex:none}
+.helpbtn[aria-current="page"]{background:#fff;color:var(--bar);border-color:#fff}
+.appbar .appnav{order:2}
+/* Roster: each week's games and duties (Scoring, Lollies, Video), your family highlighted, and the fairness table.
+   Compact: a season runs to 40 or more weeks, so a week is a few short lines. */
+.duty-weeks{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.duty-week{display:grid;gap:8px;padding:12px 14px}
+.duty-games{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.duty-games li{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px}.duty-games b{font-family:var(--display);font-size:16px;font-weight:800}
+.duty-games .small{color:var(--muted)}
+.duties{display:flex;flex-wrap:wrap;gap:4px 18px}
+.duty{display:flex;align-items:baseline;gap:8px;min-width:0}
+.duty-name{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.duty-fams{font-weight:700;font-size:15px;overflow-wrap:anywhere}.duty-fam.empty{font-weight:500;color:var(--muted);font-size:14px}
+.duty-fam.mine{background:var(--club-soft);border-radius:4px;padding:0 4px}
+.duty-hand{margin:0}
+/* WhatsApp message and Change share a row, tucked into the card's padding but still easy to tap (44px). */
+.duty-admin{display:flex;flex-wrap:wrap;gap:0 18px;align-items:center;margin:-6px 0 -10px}
+.duty-edit[open]{flex-basis:100%;display:grid;gap:8px;margin-bottom:10px}
+.duty-picks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.duty-picks select{width:100%}
+.duty-families{list-style:none;margin:0;padding:0;display:grid;gap:4px}.duty-families li{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.msgbox{font-size:15px;line-height:1.45;field-sizing:content;min-height:14em}
+/* Roster fairness: a plain verdict, how duties are shared, a table of each family's duties with totals, and a week
+   grid. Light and dark like the rest of the site. Duty colours: scoring amber, lollies pink, video blue. */
+.fm{--fm-bg:#f3f5f8;--fm-panel:#fff;--fm-line:#e1e5eb;--fm-text:#1c2230;--fm-dim:#5d6676;--fm-track:#e6e9ef;
+  --fm-good:#1f9d55;--fm-warn:#c27c0e;--fm-scoring:#d99a00;--fm-lollies:#d9477e;--fm-video:#2f7fe0;
+  background:var(--fm-bg);color:var(--fm-text);border:1px solid var(--fm-line);border-radius:14px;padding:14px;display:grid;gap:10px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .fm{--fm-bg:#0f1116;--fm-panel:#171a21;--fm-line:#2a2f3a;--fm-text:#e7e9ee;
+  --fm-dim:#8b93a3;--fm-track:#2c323d;--fm-good:#3fd47f;--fm-warn:#f5b13d;--fm-scoring:#f5c542;--fm-lollies:#ff7eb0;--fm-video:#4aa3ff}}
+:root[data-theme="dark"] .fm{--fm-bg:#0f1116;--fm-panel:#171a21;--fm-line:#2a2f3a;--fm-text:#e7e9ee;
+  --fm-dim:#8b93a3;--fm-track:#2c323d;--fm-good:#3fd47f;--fm-warn:#f5b13d;--fm-scoring:#f5c542;--fm-lollies:#ff7eb0;--fm-video:#4aa3ff}
+.fm-head h2{font-size:20px;font-weight:600;color:var(--fm-text)}.fm-head p{margin:2px 0 0;font-size:13px;color:var(--fm-dim)}
+.fm-panel{background:var(--fm-panel);border:1px solid var(--fm-line);border-radius:10px;padding:14px 16px;display:grid;gap:8px;min-width:0}
+.fm-label{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fm-dim)}
+.fm-good{color:var(--fm-good)}.fm-warn{color:var(--fm-warn)}
+.fm-scoring{color:var(--fm-scoring);fill:var(--fm-scoring)}.fm-lollies{color:var(--fm-lollies);fill:var(--fm-lollies)}.fm-video{color:var(--fm-video);fill:var(--fm-video)}
+.fm-track{color:var(--fm-track);fill:var(--fm-track)}
+.fm-panel-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;border-bottom:1px solid var(--fm-line);margin:-2px -16px 4px;padding:0 16px 10px}
+.fm-hint{font-size:12px;color:var(--fm-dim)}
+.fm-verdict{margin:0;font-size:15px}.fm-verdict b{font-weight:600}
+.fm-how{margin:0;font-size:13.5px;color:var(--fm-dim);max-width:70ch}.fm-how b{color:var(--fm-text);font-weight:600}
+.fm-scroll{overflow-x:auto}.fm-table{width:100%;min-width:0;border-collapse:collapse;font-size:14px}
+.fm-table th,.fm-table td{padding:6px 8px;border-bottom:1px solid var(--fm-line);text-align:center;white-space:nowrap}
+.fm-table th{font-family:inherit;letter-spacing:normal;text-transform:none}
+.fm-table thead th{font-size:12.5px;font-weight:500;color:var(--fm-dim)}
+.fm-table tbody th,.fm-table tfoot th{font-size:14px;font-weight:500;color:var(--fm-text)}
+.fm-table th:first-child{text-align:left}
+.fm-table tbody tr:last-child th,.fm-table tbody tr:last-child td{border-bottom:0}
+.fm-total{font-weight:700}
+.fm-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--fm-dim);margin-top:4px}
+.fm-dot{display:inline-block;width:9px;height:9px;border-radius:2px;background:currentColor;margin-right:6px;vertical-align:-1px}
+/* Week by week: one square per week with a game, the same size all season; it slides sideways on a narrow screen
+   while the names stay put (rows are 20px, under a 16px row of month names). */
+.fm-gridwrap{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px;align-items:start}
+.fm-names{display:grid;grid-auto-rows:20px;padding-top:16px;font-size:13.5px}
+.fm-names span{line-height:20px;max-width:8.5em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-scroller{overflow-x:auto;padding-bottom:4px}
+.fm-weeks{display:block}.fm-weeks text{font-size:10.5px;fill:var(--fm-dim)}
+.fm-now{fill:none;stroke:var(--fm-text);stroke-width:1.5}
+@media (max-width:600px){.fm-panel-head{flex-direction:column;gap:2px}.fm-table th,.fm-table td{padding:6px 3px}.fm-table .fm-dot{display:none}}
+/* Top bar: the strip along the bottom for the small links (Manage team and Notifications, team manager only) and Dark
+   mode. */
+.appnav .navsub{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;border-top:1px solid rgba(255,255,255,.14);padding-top:6px;margin-top:4px}
+.appnav .navsub a{font-size:13.5px;padding:4px 10px}
+/* The big buttons in two groups: one row on a computer; on a phone, the coloured ones (Upload, Watch, Go live) share
+   the first row and the grey ones (Roster, Fixture, Photos) the second. */
+.appnav .navmain,.appnav .navgrey{display:contents}
+@media (max-width:760px){.appnav .navmain,.appnav .navgrey{display:flex;flex-basis:100%;gap:8px}
+  .appnav .navmain a.big,.appnav .navgrey a.big.grey{flex:1 1 0;min-width:0}.appnav .navgrey a.big.grey{min-height:56px;padding-inline:6px}}
+/* Top bar, balanced: shorter but still easy to read. Labels stay 14 to 15px; on a phone each
+   icon sits beside its label instead of above it (that's where the height went), buttons stay at least 44px tall to
+   tap, and the logo row is a little tighter. */
+.appbar .wrap{padding-block:8px;gap:10px}.brand img{width:32px;height:32px}.brand b{font-size:17px}
+.helpbtn{height:36px}.helpbtn .ico{width:19px;height:19px}
+.appnav a.big{flex-basis:180px;min-height:44px;padding:8px 16px;font-size:15px;border-radius:9px}.appnav a.big .ico{width:20px;height:20px}
+.appnav a.big.grey{padding-inline:16px}.appnav .navsub a{font-size:12.5px}
+@media (max-width:760px){.appnav a.big,.appnav .navmain a.big,.appnav .navgrey a.big.grey{flex-direction:row;min-height:44px;padding:6px 6px;gap:6px;font-size:14px;line-height:1.15}
+  .appnav a.big .ico{width:17px;height:17px}.appnav .navmain,.appnav .navgrey{gap:6px}.appnav .navsub{padding-top:4px;margin-top:2px}}
+/* Light/dark switch: a round button just right of Help (theme.js fills in the sun or moon). The bottom strip is only
+   there when it has links (team manager). */
+.themebtn{order:1;margin-left:8px;flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;border:2px solid rgba(255,255,255,.45);background:rgba(255,255,255,.08);cursor:pointer;padding:0}
+.themebtn:hover{background:rgba(255,255,255,.18)}.themebtn svg{width:19px;height:19px}
+.appnav .navsub:empty{display:none}
+/* The strip's links carry icons for the desktop view's sidebar (desktop.css); here they're words alone. The view switch
+   (Switch to mobile view, Switch to desktop view) is for a computer's screen alone: desktop.css shows it there, and a
+   strip with no links (a family's, holding only the switch) shows only there too. */
+.appnav .navsub .ico{display:none}
+.appnav .navsub:not(:has(a)){display:none}
+.viewswitch{display:none;background:none;border:0;cursor:pointer;color:#eaf5ed;padding:4px 10px;border-radius:6px;font-weight:600;font-size:12.5px;line-height:1.5}
+.viewswitch:hover{background:rgba(255,255,255,.16)}
+.appnav{margin-left:0;flex-basis:100%}
+/* Pull down to refresh, in the Home Screen app (pull-refresh.js): a pill below the top of the screen. */
+.pullhint{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:30;padding:8px 16px;border-radius:999px;background:#fff;color:var(--club-ink);font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}
+.pullhint.ready{background:var(--club);color:#fff}
+/* Help's mock screenshots (faq-mock.ts): small phone screens drawn in HTML, light or dark with the page. What to tap is
+   ringed in green; iPhone buttons are iOS blue. */
+.mock{--m-blue:#007AFF;margin:10px 0 2px;width:100%;max-width:272px;display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:18px;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;line-height:1.3;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mock{--m-blue:#0A84FF}}
+:root[data-theme="dark"] .mock{--m-blue:#0A84FF}
+.mock.wide{max-width:340px}
+.mocks{display:flex;flex-wrap:wrap;gap:0 12px;align-items:flex-start}
+/* Real screenshots of the site on Help (faq-mock.ts shot): a phone's width, framed, light as taken. */
+.shot{margin:10px 0 2px;width:100%;max-width:240px}
+.shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.shots{display:flex;flex-wrap:wrap;gap:0 12px;align-items:flex-start}
+.mock b{font-weight:600}
+.m-ico{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.m-inl{width:1.15em;height:1.15em;vertical-align:-.2em;margin-left:4px}
+.m-tap{box-shadow:inset 0 0 0 2.5px var(--club);background:var(--club-soft);color:var(--club-ink)}
+.m-list,.m-menu{display:grid;background:var(--surface);border-radius:12px;overflow:hidden}
+.m-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-top:1px solid var(--line)}
+.m-row:first-child{border-top:0}
+.m-row.m-tap{border-radius:12px;border-top-color:transparent;font-weight:600}
+.m-head{display:flex;align-items:center;gap:10px;padding:2px}
+.m-head.m-center{justify-content:center}
+.m-app{display:grid}.m-app small{color:var(--muted);font-size:12px}
+.m-logo{width:34px;height:34px;border-radius:8px;background:#fff;border:1px solid var(--line);flex:none}
+/* Safari's bar (iPhone) */
+.m-safari{display:grid;gap:8px;background:var(--surface);border-radius:14px;padding:8px 10px}
+.m-url{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:6px 10px;min-width:0}
+.m-url b{flex:1;text-align:center;font-weight:500}
+.m-tools{display:flex;justify-content:space-between;align-items:center;color:var(--m-blue);font-size:22px;line-height:1}
+.m-tools > *{width:34px;height:34px;display:grid;place-items:center;border-radius:50%}
+.m-tools .m-ico{width:20px;height:20px}
+/* Add to Home Screen, Save to Files, and Chrome's menu and box (Android) */
+.m-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;text-align:center}
+.m-link{color:var(--m-blue);padding:3px 9px;border-radius:999px;font-weight:500}
+.m-card{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:12px;padding:10px 12px}
+.m-between{justify-content:space-between}
+.m-switch{width:40px;height:24px;border-radius:999px;background:#34C759;position:relative;flex:none}
+.m-switch::after{content:"";position:absolute;right:2px;top:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.m-chrome{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:12px;padding:6px 8px}
+.m-chrome .m-url{flex:1}.m-chrome .m-url b{text-align:left}
+.m-count{width:20px;height:20px;border:2px solid currentColor;border-radius:5px;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.m-kebab{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:20px;font-weight:700;flex:none}
+.m-menu{justify-self:end;width:82%;padding:4px 0;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.m-menu .m-row{justify-content:flex-start;border-top:0;padding:8px 14px}
+.m-menu .m-row.m-tap{border-radius:0}
+.m-dialog{display:grid;gap:12px;background:var(--surface);border-radius:16px;padding:14px}
+.m-actions{display:flex;justify-content:flex-end;gap:4px}
+/* Go live's camera screen */
+.m-cam{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:10px;overflow:hidden;background:#123a22;color:#fff;display:grid;align-content:end}
+.m-cam::before{content:"";position:absolute;inset:22% 34%;border:2px solid rgba(255,255,255,.3);border-radius:50%}
+.m-cam::after{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px solid rgba(255,255,255,.3)}
+.m-ctl{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:11.5px}
+.m-ctl > b{flex:1 1 100%;font-weight:700}
+.m-ask{background:rgba(0,0,0,.85);border-radius:8px;margin:6px}
+.m-b{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;font-weight:800;font-size:12px}
+.m-b .stopicon{width:9px;height:9px}
+.m-b.pause{background:#F2B705;color:#111}.m-b.resume{background:var(--club);color:#fff}.m-b.stop{background:var(--live);color:#fff}.m-b.keep{background:#fff;color:#111}
+.m-cam .m-tap{box-shadow:0 0 0 2px #fff,0 0 0 5px var(--club)}
+/* Game labels in Help: Watch games' own, at the size of the words around them. */
+.faqbody .gstate,.faqbody .s-processing .gstate{font-size:12.5px;padding:1px 9px 1px 7px;vertical-align:1px}
+.faqbody .s-processing .gstate i{width:9px;height:9px}
+.faqbody .s-novideo .gstate{opacity:.65}
+/* Help: the Install button (webapp.js shows it when the browser offers one) */
+.installbox{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}.installbox p{margin:0}
+/* Sign out (signout.js): an exit door, furthest right of the top bar. It asks first, in the
+   site's own box (.scrim, .modal). */
+.signoutbtn{order:1;margin-left:8px;flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;border:2px solid rgba(255,255,255,.45);background:rgba(255,255,255,.08)}
+.signoutbtn:hover{background:rgba(255,255,255,.18)}.signoutbtn .ico{width:19px;height:19px}
+.modal p{margin:0}.modal .btn:disabled{opacity:.6;cursor:default}
+/* Phones narrower than an iPhone 13 (390px): a touch smaller, so the logo, Help and the two round buttons share one
+   row. (The reload button went on 26 Oct 2026: pull down to reload.) */
+@media (max-width:389px){.brand b{font-size:15.5px}.themebtn,.signoutbtn{width:34px;height:34px}.helpbtn{height:34px;padding:0 11px 0 8px;gap:5px}
+  .helpbtn + .themebtn,.themebtn + .signoutbtn{margin-left:2px}}
+/* Photos: squares under the day they were taken, newest first, three across on a phone; one
+   photo on its own page, as big as fits, with its download beside it (under it on a phone). */
+.photoday{display:grid;gap:8px}.photoday h2{font-size:20px}
+.photogrid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:4px}
+@media (min-width:761px){.photogrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}}
+.photogrid a{display:block;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--line)}
+.photogrid img{display:block;width:100%;height:100%;object-fit:cover}
+/* Choosing several (public/photos-pick.js): a tick box on each photo, the chosen ones ringed, and a bar of what to do. */
+.photogrid li{position:relative}
+.photogrid input[type=checkbox]{display:none}
+#photopick.picking .photogrid input[type=checkbox]{display:block;position:absolute;top:6px;left:6px;width:24px;height:24px;margin:0;accent-color:var(--club);pointer-events:none}
+#photopick.picking .photogrid li:has(:checked) a{outline:4px solid var(--club);outline-offset:-4px}
+#photopick.picking .photogrid li:has(:checked) img{opacity:.8}
+.pickbar{position:sticky;bottom:0;z-index:4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 -4px 16px rgb(0 0 0 / .12)}
+.pickbar .confirm[open]{flex-basis:100%}
+.photoview{margin:0;display:grid;place-items:center;background:var(--black);border-radius:12px;overflow:hidden}
+.photoview img{display:block;width:auto;height:auto;max-width:100%;max-height:78vh}
+.photoview{touch-action:pan-y}
+/* The grid would centre the three-wide track over the figure (the middle slide one width to the left): it starts at the figure's left edge. */
+.photoview .track{display:flex;width:300%;will-change:transform;justify-self:start}
+.photoview .track.snap{transition:transform .22s ease-out}
+.photoview .slide{flex:0 0 33.3333%;display:grid;place-items:center;min-height:40vh;position:relative;overflow:hidden}
+.photoview .slide img{max-width:100%;max-height:78vh;width:auto;height:auto}
+.photoview .slide .blur{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:cover;filter:blur(14px);transform:scale(1.1);opacity:.7}
+.photoview .slide .big{position:relative;opacity:0;transition:opacity .25s ease-out}
+.photoview .slide .big.in{opacity:1}
+.photoview .slide:has(.big.in) .blur{opacity:0;transition:opacity .3s ease-out}
+.photoview .slide .loading{position:absolute;color:#fff;opacity:.7;font-size:14px}
+@media (prefers-reduced-motion:reduce){.photoview .track.snap{transition:none}}
+.swipe-hint{display:none;text-align:center}
+@media (hover:none){.swipe-hint{display:block}}
+.pager,.photonav{align-items:center;justify-content:space-between}
+/* Manage team: a photo's removal request shows the photo. */
+.photoreq{display:flex;gap:10px;align-items:center;min-width:0}.photoreq img{display:block;width:64px;height:64px;object-fit:cover;border-radius:6px;flex:none}
+/* Which team? One button a team, the one you're on marked. */
+.teambtn{display:grid;justify-items:start;gap:2px;width:100%;text-align:left}
+.teambtn.here{border-color:var(--club);background:var(--club-soft)}
+/* Players on Manage team: number and first name, saved a row at a time. */
+.players{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+/* Manage team's People: Add a person, a row under the list as Add a player is under the squad (email, name, role, button). */
+.personadd{margin-top:10px}
+.personadd .pemail{flex:2 1 14em}
+.personadd .prole select{width:auto}
+/* Manage team's Waiting to sign in: each person, then Let them sign in (wrapping under on a phone). */
+.heldlist{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.heldlist li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
+.heldlist li>span{min-width:0;overflow-wrap:anywhere}
+.playerrow{display:flex;align-items:center;gap:10px}
+.playerform{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.playerform .pnum input{width:4.4em}
+.playerform .pname{flex:1;min-width:0}
+.playerform .pname input{width:100%}
+.playerrow .btn.quiet{padding-block:4px}
+.playerform.add{align-items:end;flex-wrap:wrap}
+.playerform.add label{display:grid;gap:4px}
+.playerform.add .pname{flex:1 1 9em}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* "Are you sure" before a delete (every delete and remove): Delete opens the question in place. */
+details.confirm{display:inline-block}
+details.confirm>summary{list-style:none;cursor:pointer}
+details.confirm>summary::-webkit-details-marker{display:none}
+details.confirm[open]{display:block;flex-basis:100%}
+.confirmpanel{margin-top:8px;padding:12px 14px;border-radius:10px;border:1px solid var(--live);background:var(--surface);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.confirmpanel p{flex-basis:100%;margin:0;font-size:15px}
+/* A closed season's banner: the way to the person's current team on its own line. */
+.closedbanner form{display:block;margin-top:10px}
+/* The roster's Duties panel: each duty's switch, its name and who does it, wrapping on a phone. */
+.duty-setting{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:end}
+.duty-setting>label{display:grid;gap:4px}
+.duty-setting>label.check{display:flex;align-items:center;gap:8px;flex-basis:100%}
+/* An admin in a team's pages: in it through their admin's way in, or viewing it as another role. */
+.adminstrip{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;border:2px solid var(--warn-ink);background:var(--warn-soft);color:var(--fg);border-radius:10px;padding:8px 14px;font-weight:600;font-size:14px}
+.adminstrip a{color:var(--club-ink);font-weight:700}
+.adminstrip .btn.quiet{padding-block:2px;color:var(--fg);font-weight:700}
+
+/* Staging (docs/runbooks/staging.md): never to be taken for the live site. */
+.stagingstrip { background: #b45309; color: #fff; text-align: center; font-size: .85rem; padding: .35rem max(16px, env(safe-area-inset-left, 0px)); }
+/* Support tickets (a proper service desk, answered on the site): the admins' queue, a team manager's
+   own requests, and a ticket's conversation, on the site's tokens so light and dark follow. */
+.chip .n{display:inline-block;min-width:1.5em;margin-left:4px;padding:0 5px;border-radius:999px;background:var(--bg);color:var(--fg);font-size:12px;text-align:center}
+.tickets{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.trow{display:grid;grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"num stat main" "meta meta meta";gap:6px 12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:inherit;text-decoration:none}
+.trow:hover{border-color:var(--club)}
+.tnum{grid-area:num;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.tstat{grid-area:stat;justify-self:start;font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--line);white-space:nowrap}
+.tstat.s-new{background:var(--warn-soft);color:var(--warn-ink);border-color:transparent}
+.tstat.s-open{background:var(--club-soft);color:var(--club-ink);border-color:transparent}
+.tstat.s-resolved{color:var(--muted)}
+/* A feature request, as its team manager sees it: by its stage. */
+.tstat.s-planned{background:var(--club-soft);color:var(--club-ink);border-color:transparent}
+.tstat.s-shipped{background:var(--club);color:#fff;border-color:transparent}
+.tstat.s-declined{color:var(--muted)}
+.tmain{grid-area:main;display:grid;min-width:0}
+.tline{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tmeta{grid-area:meta;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted)}
+.tickets.mine .trow{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"stat main when"}
+@media (max-width:560px){.trow{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"num stat" "main main" "meta meta"}
+  .tickets.mine .trow{grid-template-columns:minmax(0,1fr);grid-template-areas:"stat" "main" "when"}}
+.thread{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.msg{display:grid;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.msg.admin{border-left:4px solid var(--club)}
+.msg.mine{background:var(--bg)}
+.msg.note{background:var(--warn-soft);border-color:var(--warn-ink)}
+.msg.event{background:none;border:0;padding:0 14px}
+.msg p,.ticketwhere{margin:0}
+.msgwho{font-size:14px}
+.msgtext{white-space:pre-wrap;overflow-wrap:anywhere}
+.ticketwhere{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tickets.mine .trow>.small{grid-area:when}
+/* Help for each person (as easy to use as possible): a search box that narrows the questions
+   (help-search.js shows it), a chip for each of the person's sections, and the sections. */
+.helptools{display:grid;gap:10px}
+/* Help on a computer (desktop.css): its contents, On this page and neighbouring sections never show on a phone, and its
+   middle column's box isn't there, so a phone's Help is laid out as it always was. */
+.helpmain{display:contents}
+.helptoc,.helpoutline,.help-pn{display:none}
+#help-search{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:11px 16px}
+.helpgroup{display:grid;gap:14px;scroll-margin-top:205px}
+@media (min-width:1024px){.helpgroup{scroll-margin-top:157px}}
+.faqsub{font-size:16px;margin-top:6px}
+
+
+/* The entry pages (body.entry: sign in, sign out, errors, Which team?), in the look of the Access page the sign-in
+   replaced: the card alone on a page in the club's deep colour, with a grey footer band when there's one. */
+body.entry{background:var(--bar)}
+body.entry main{padding-block:12px 48px}
+.signin{display:grid;place-items:start center}
+.signin .card{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.signin .pad{padding:24px;display:grid;gap:18px}
+.signin .pad p{margin:0}
+.signin .brandrow{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:17px}
+.signin .brandrow img{width:40px;height:40px;border-radius:8px}
+.signin h1{font-size:28px;font-weight:700;line-height:1.2;letter-spacing:-.01em}
+.signin .pad form{margin:0;display:grid;gap:14px}
+.signin .pad h2.eyebrow{margin:6px 0 -4px}
+.signin label{font-size:17px;font-weight:600;gap:8px}
+.signin input[type=email],.signin input[type=text]{padding:14px;font-size:17px;background:var(--surface)}
+.signin .btn.big{width:100%;padding:14px 20px}
+.signin .foot{background:var(--bg);border-top:1px solid var(--line);padding:18px 24px;color:var(--muted);font-size:15px;line-height:1.5}
+/* Add families' rows (the Roster, rows.js): a surname and its × (none on a lone row: [hidden] is display:none). */
+.addrows{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.frow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 8px;align-items:center}
+.frow input{min-width:0}
+.frow .rowx{padding:4px 10px;font-size:18px;line-height:1}
+.frow:has(.rowx[hidden]){grid-template-columns:minmax(0,1fr)}
+@media (min-width:700px){.frow{grid-template-columns:minmax(0,22em) auto}.frow:has(.rowx[hidden]){grid-template-columns:minmax(0,22em)}}
+
+/* Manage team: the setup checklist at the top (until it's all done), and the end-of-season pack at the bottom. */
+.setuplist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.setuplist li{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.setuplist li.done{color:var(--muted)}
+.setuplist li.done .ico{width:20px;height:20px;flex:none;color:var(--club)}
+.setuplist .todo{width:16px;height:16px;margin:2px;flex:none;border:2px solid var(--line);border-radius:50%}
+.setuplist a,.seasonpack a{font-weight:700;color:var(--club-ink)}
+.seasonpack>summary{cursor:pointer;display:grid;gap:2px;list-style:none}
+.seasonpack>summary::-webkit-details-marker{display:none}
+.seasonpack>summary h2{display:flex;align-items:center;gap:8px}
+.seasonpack>summary h2::before{content:"";width:0;height:0;border-left:7px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.seasonpack[open]>summary h2::before{transform:rotate(90deg)}
+.seasonpack[open]>summary{margin-bottom:12px}
+.seasonpack h3{margin:6px 0 0;font-size:16px}
+.packgroup summary{cursor:pointer;font-weight:700;padding:4px 0}
+.packlist{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px}
+.packlist li{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}
+.packlist a{font-weight:700}

@@ -1,0 +1,19 @@
+{
+  "description": "<worker> rate limiting",
+  "rules": [
+    {
+      "description": "<worker>: limit API and form posts per IP",
+      "expression": "(starts_with(http.request.uri.path, \"/api/\") or http.request.method eq \"POST\")",
+      "action": "block",
+      "ratelimit": {
+        "characteristics": [
+          "cf.colo.id",
+          "ip.src"
+        ],
+        "period": 10,
+        "requests_per_period": 60,
+        "mitigation_timeout": 10
+      }
+    }
+  ]
+}

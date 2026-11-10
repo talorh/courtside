@@ -1,0 +1,139 @@
+/* The admin area's Documentation page (views/docs-page.ts): readable sections, a contents list, and diagrams drawn as
+   SVG and coloured here, on the site's colour tokens, so they follow light and dark mode. Loaded on that page only. */
+
+/* Laid out as documentation sites are: the contents and a search box down the left (folded behind a button on a phone),
+   the section as a reading column with a breadcrumb, headings that divide it, and cards to the sections either side; on a
+   wide screen "On this page" down the right. docs.js shows one section at a time and fills the search and the outline. */
+.docs{display:grid;gap:20px;min-width:0;align-items:start}
+.docs-body{display:grid;gap:20px;min-width:0}
+.docs.one .docsec:not(.current){display:none}
+.docs-outline{display:none}
+
+/* The section: no card, a reading column. */
+.docs .docsec{background:none;border:0;padding:0;box-shadow:none;display:grid;gap:14px;min-width:0}
+.docs-crumb{margin:0 0 -8px;font-size:13px;color:var(--muted);font-weight:600}
+.docs-num{color:var(--muted);font-weight:700}
+.toc-group .num{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.docsec h2{font-size:30px;letter-spacing:-.02em;line-height:1.15}
+.docsec h3{font-size:19px;letter-spacing:-.01em;margin-top:18px;padding-top:20px;border-top:1px solid var(--line)}
+.docsec > p,.docs-points{max-width:76ch;line-height:1.65;font-size:15.5px}
+.docs-points{margin:0;padding-left:20px;display:grid;gap:8px}
+.docs code{font-family:var(--mono);font-size:.86em;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:1px 6px;overflow-wrap:anywhere}
+.hit{outline:2px solid var(--club);outline-offset:6px;border-radius:6px}
+
+/* Before and after: two cards. */
+.docs-pn{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;padding-top:18px;border-top:1px solid var(--line)}
+.docs-pn a{display:grid;gap:3px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-decoration:none;color:var(--fg);min-width:0}
+.docs-pn a:hover{border-color:var(--club)}
+.docs-pn a small{font-size:12px;color:var(--muted)}
+.docs-pn a b{color:var(--club-ink);font-size:14.5px;overflow-wrap:anywhere}
+.docs-pn .next{text-align:right}
+@media (max-width:640px){.docs-pn{grid-template-columns:1fr}.docs-pn .next{text-align:left}}
+
+/* The contents and the search. */
+.docs-toc{display:grid;gap:12px;min-width:0}
+.docs-toc h2{font-size:12px;letter-spacing:.02em;color:var(--muted);margin:0 0 4px;padding-left:10px}
+.toc-group h3{font-size:12px;letter-spacing:.02em;color:var(--muted);margin:12px 0 3px;padding-left:10px}
+.toc-group:first-of-type h3{margin-top:0}
+.toc-group ol,.docs-results{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+.toc-group a{display:block;padding:5px 10px;border-radius:8px;color:var(--fg);font-size:13.5px;font-weight:500;text-decoration:none;line-height:1.3}
+.toc-group a:hover{background:var(--club-soft);color:var(--club-ink)}
+.toc-group a[aria-current="true"]{background:var(--club-soft);color:var(--club-ink);font-weight:700;box-shadow:inset 3px 0 0 var(--club)}
+.docs-search{position:relative;color:var(--muted)}
+.docs-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none}
+.docs-search input{width:100%;box-sizing:border-box;padding:9px 12px 9px 36px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);font:inherit;font-size:14px}
+.docs-search input:focus-visible{outline:2px solid var(--club);outline-offset:1px;border-color:var(--club)}
+.docs-results li.none{padding:8px 10px;font-size:13.5px;color:var(--muted)}
+.docs-results button{all:unset;box-sizing:border-box;display:grid;gap:2px;width:100%;padding:8px 10px;border-radius:8px;cursor:pointer;line-height:1.35}
+.docs-results button:hover,.docs-results button:focus-visible{background:var(--club-soft)}
+.docs-results button:focus-visible{outline:2px solid var(--club)}
+.docs-results b{font-size:13px;color:var(--club-ink)}
+.docs-results span{font-size:13px;color:var(--muted)}
+.docs-results mark{background:var(--warn-soft);color:inherit;border-radius:3px;padding:0 1px}
+
+/* On a phone: the contents fold behind a button showing the current section; the search stays in view. */
+.docs .toc-toggle.btn{display:none;align-items:center;gap:8px;width:100%;justify-content:space-between;text-decoration:none;color:var(--fg);font-weight:700;padding-inline:0}
+.toc-toggle .toc-now{color:var(--club-ink)}
+.docs.js .toc-toggle{display:flex}
+.docs.js .docs-toc{padding:12px 14px 14px;border:1px solid var(--line);border-radius:var(--a-radius);background:var(--surface)}
+.docs.js .docs-toc h2{display:none}
+.docs.js .docs-toc:not(.open) #toc-list{display:none}
+/* A section linked from the contents lands below the admin area's sticky bar on a phone. */
+.docs,.docsec{scroll-margin-top:120px}
+.docsec h3{scroll-margin-top:120px}
+
+/* A computer: the page uses the screen (the rest of the admin area keeps its narrower measure), the contents stay put
+   down the left with their own quiet scrollbar only if they need one. */
+@media (min-width:1024px){
+  html:not([data-view="mobile"]) .docs{grid-template-columns:264px minmax(0,1fr);gap:32px}
+  html:not([data-view="mobile"]) .docs-toc{position:sticky;top:24px;max-height:calc(100dvh - 48px);overflow-y:auto;scrollbar-width:thin;scrollbar-gutter:stable;padding-right:8px}
+  html:not([data-view="mobile"]) .docs.js .docs-toc{padding:0 8px 0 0;border:0;background:none;border-radius:0}
+  html:not([data-view="mobile"]) .docs.js .toc-toggle{display:none}
+  html:not([data-view="mobile"]) .docs.js .docs-toc:not(.open) #toc-list{display:block}
+  html:not([data-view="mobile"]) .docs,html:not([data-view="mobile"]) .docsec,html:not([data-view="mobile"]) .docsec h3{scroll-margin-top:24px}
+  html:not([data-view="mobile"]) .docsec > p,html:not([data-view="mobile"]) .docs-points{max-width:80ch}
+}
+/* Wide enough for On this page down the right, with the diagrams still fitting the middle. */
+@media (min-width:1600px){
+  html:not([data-view="mobile"]) .docs{grid-template-columns:264px minmax(0,1fr) 220px;gap:44px}
+  html:not([data-view="mobile"]) .docs-outline{display:block;position:sticky;top:30px}
+  html:not([data-view="mobile"]) .docs-outline[hidden]{display:none}
+  .docs-outline h2{font-size:12px;letter-spacing:.02em;color:var(--muted);margin:0 0 8px}
+  .docs-outline ol{list-style:none;margin:0;padding:0;display:grid}
+  .docs-outline a{display:block;padding:5px 0 5px 12px;border-left:2px solid var(--line);color:var(--muted);font-size:13px;text-decoration:none;line-height:1.35}
+  .docs-outline a:hover{color:var(--fg)}
+  .docs-outline a.on{border-color:var(--club);color:var(--fg);font-weight:600}
+}
+
+.docs-table{min-width:0}.docs-table.wide{min-width:520px}
+.docs-table th,.docs-table td{vertical-align:top;text-align:left}
+.docs-table thead th{background:var(--bg);font-size:12.5px;color:var(--muted);font-weight:700}
+body.admin .docs-table th[scope="row"]{white-space:normal;color:var(--fg);font-size:14px}
+.docs-table td{line-height:1.55;font-size:14.5px}
+.docs .tablewrap{border:1px solid var(--line);border-radius:12px;overflow:auto}
+
+/* The diagrams. Each scrolls sideways inside its own box on a narrow phone rather than shrinking past reading. */
+.dg{margin:4px 0;padding:12px;border:1px solid var(--line);border-radius:var(--a-radius);background:var(--surface);display:grid;gap:10px;min-width:0}
+.dgscroll{overflow-x:auto}
+.dg svg{display:block;width:100%;height:auto}
+.dg-w560{min-width:560px}.dg-w600{min-width:600px}.dg-w640{min-width:640px}.dg-w680{min-width:680px}
+.dg figcaption{font-size:13.5px;color:var(--muted);max-width:80ch;line-height:1.5}
+.dg text{font-family:var(--body)}
+
+.dg-box rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.dg-t{fill:var(--fg);font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:var(--muted);font-size:11.5px;text-anchor:middle}
+.dg-m{fill:var(--fg);font-size:11.5px}
+.k-person rect{stroke:var(--fg)}
+.k-edge rect{fill:var(--warn-soft);stroke:var(--warn-ink)}
+.k-worker rect{fill:var(--bar);stroke:var(--club)}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:var(--club-soft);stroke:var(--club)}
+.k-service rect{stroke:var(--club)}
+.k-job rect{fill:var(--bg);stroke:var(--muted);stroke-dasharray:6 4}
+.k-stop rect{stroke:var(--live)}.k-stop .dg-t{fill:var(--live)}
+.k-done rect{fill:var(--club);stroke:var(--club)}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+
+.dg-arrow{fill:none;stroke:var(--muted);stroke-width:1.6}
+.dg-arrow.dash{stroke:var(--club);stroke-dasharray:6 4}
+.dg-head{fill:var(--muted)}
+.dg-life{stroke:var(--line);stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:var(--muted);font-size:11.5px;paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:var(--muted);font-size:12px;font-weight:700}
+
+@media (forced-colors:active){.dg-box rect,.dg-zone rect,.dg-arrow,.dg-life{stroke:CanvasText}.dg text,.dg-head{fill:CanvasText}}
+/* The Documentation AI assistant, above whichever section is showing: its answer in the site's note style, with links
+   to the sections it was answered from. */
+.docs-ai{display:grid;gap:10px}
+.docs-ai h2{font-size:20px}
+.docs-ai-a{display:grid;gap:8px;border-left:3px solid var(--club);background:var(--club-soft);padding:12px 14px;border-radius:0 8px 8px 0}
+.docs-ai-text{white-space:pre-line;margin:0}
+.docs-ai-from{margin:0}
+/* Commands to type, and the agent's instructions: a block that scrolls sideways rather than wrapping. */
+.docs-cmd{margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow-x:auto;max-width:100%}
+.docs-cmd code{font-family:var(--mono);font-size:13px;line-height:1.55;white-space:pre;background:none;border:0;padding:0}
+.docs-agent{max-height:520px;overflow:auto}
+.docs-copy{display:flex;gap:10px;align-items:center;flex-wrap:wrap}

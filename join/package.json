@@ -1,0 +1,14 @@
+{
+	"name": "courtside-join",
+	"private": true,
+	"type": "module",
+	"description": "The video joiner Worker and its ffmpeg container. Its node_modules is a link to the repo's (npm run join makes it); deploy only with npm run join, or Workers Builds.",
+	"devDependencies": {
+		"@cloudflare/vite-plugin": "2.0.0-beta.sha-67fa336fd",
+		"cf": "^1.0.0-beta.5",
+		"vite": "^8.3.0"
+	},
+	"dependencies": {
+		"@cloudflare/containers": "^0.3.7"
+	}
+}

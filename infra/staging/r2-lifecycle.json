@@ -1,0 +1,21 @@
+[
+  {
+    "id": "expire-staging-7d",
+    "enabled": true,
+    "conditions": {
+      "prefix": ""
+    },
+    "deleteObjectsTransition": {
+      "condition": {
+        "type": "Age",
+        "maxAge": 604800
+      }
+    },
+    "abortMultipartUploadsTransition": {
+      "condition": {
+        "type": "Age",
+        "maxAge": 604800
+      }
+    }
+  }
+]

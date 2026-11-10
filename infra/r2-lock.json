@@ -1,0 +1,10 @@
+{
+	"rules": [
+		{
+			"id": "lock-db-backups-14d",
+			"enabled": true,
+			"prefix": "backups/d1/",
+			"condition": { "type": "Age", "maxAgeSeconds": 1209600 }
+		}
+	]
+}

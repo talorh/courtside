@@ -1,0 +1,7 @@
+{
+  "type": "TXT",
+  "name": "_dmarc.<domain>",
+  "content": "\"v=DMARC1; p=reject; sp=reject; rua=mailto:<your DMARC Management address>@dmarc-reports.cloudflare.net;\"",
+  "ttl": 1,
+  "comment": "Reject forged <domain> mail; reports to DMARC Management. The only DMARC record"
+}

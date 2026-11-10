@@ -1,0 +1,60 @@
+import { registerNotificationRoutes } from "../features/activity/notifications-routes.ts";
+import { registerClipRoutes } from "../features/clips/clips-routes.ts";
+import { registerFavouriteRoutes } from "../features/favourites/favourites-routes.ts";
+import { registerNoteRoutes } from "../features/notes/notes-routes.ts";
+import { registerRosterRoutes } from "../features/roster/roster-routes.ts";
+import { registerHelpRoutes } from "../features/help/help-routes.ts";
+import { registerSupportRoutes } from "../features/support/support-routes.ts";
+import { registerHomeRoutes } from "../features/home/home-routes.ts";
+import { registerLiveRoutes } from "../features/live/live-routes.ts";
+import { registerAppLiveRoutes } from "../features/live/app-live-routes.ts";
+import { registerFixtureRoutes } from "../features/games/fixture-routes.ts";
+import { registerImportRoutes } from "../features/games/import-routes.ts";
+import { registerPlayhqRoutes } from "../features/games/playhq-routes.ts";
+import { registerLibraryRoutes } from "../features/games/library-routes.ts";
+import { registerMembersRoutes } from "../features/members/members-routes.ts";
+import { registerGameLinesRoutes } from "../features/games/game-lines-routes.ts";
+import { registerSeasonPackRoutes } from "../features/season/season-pack-routes.ts";
+import { registerPhotoPickRoutes } from "../features/photos/photos-pick-routes.ts";
+import { registerPhotoRoutes } from "../features/photos/photos-routes.ts";
+import { registerPlayerRoutes } from "../features/players/players-routes.ts";
+import { registerRemovalRoutes } from "../features/removals/removals-routes.ts";
+import { registerScoreRoutes } from "../features/scores/scores-routes.ts";
+import { registerDownloadRoutes } from "../features/videos/download-routes.ts";
+import { registerUploadRoutes } from "../features/videos/upload-routes.ts";
+import { registerProblemRoutes } from "../features/admin/problem-routes.ts";
+import { registerWatchRoutes } from "../features/videos/watch-routes.ts";
+import { Router } from "./router.ts";
+
+export function buildRouter(): Router {
+	const router = new Router();
+	// Landing page after sign-in (court image, Upload and Watch buttons).
+	registerHomeRoutes(router);
+	registerUploadRoutes(router);
+	registerLiveRoutes(router);
+	registerAppLiveRoutes(router);
+	registerLibraryRoutes(router);
+	registerWatchRoutes(router);
+	registerDownloadRoutes(router);
+	registerClipRoutes(router);
+	registerNoteRoutes(router);
+	registerScoreRoutes(router);
+	registerFavouriteRoutes(router);
+	registerPhotoPickRoutes(router);
+	registerPhotoRoutes(router);
+	// Before the fixture routes: /fixture/playhq, /fixture/link and so on would otherwise be taken for a game id.
+	registerPlayhqRoutes(router);
+	registerImportRoutes(router);
+	registerFixtureRoutes(router);
+	registerMembersRoutes(router);
+	registerGameLinesRoutes(router);
+	registerSeasonPackRoutes(router);
+	registerPlayerRoutes(router);
+	registerRemovalRoutes(router);
+	registerNotificationRoutes(router);
+	registerHelpRoutes(router);
+	registerSupportRoutes(router);
+	registerRosterRoutes(router);
+	registerProblemRoutes(router);
+	return router;
+}

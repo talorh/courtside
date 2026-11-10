@@ -1,0 +1,11 @@
+{
+	"name": "courtside-maintenance",
+	"private": true,
+	"type": "module",
+	"description": "The maintenance page Worker. Its node_modules is a link to the repo's (npm run maintenance makes it); deploy only with npm run maintenance.",
+	"devDependencies": {
+		"@cloudflare/vite-plugin": "2.0.0-beta.sha-67fa336fd",
+		"cf": "^1.0.0-beta.5",
+		"vite": "^8.3.0"
+	}
+}

@@ -1,0 +1,15 @@
+{
+  "description": "<worker> custom WAF rules",
+  "rules": [
+    {
+      "description": "<worker>: only GET, HEAD and POST",
+      "expression": "(not http.request.method in {\"GET\" \"HEAD\" \"POST\"})",
+      "action": "block"
+    },
+    {
+      "description": "<worker>: human check (Turnstile managed challenge) on page loads before sign-in; signed-in visitors (the site's session cookie), upload API, static files and WhatsApp's link previews (the sign-in page's card) excluded",
+      "expression": "(http.request.method eq \"GET\" and not starts_with(http.request.uri.path, \"/api/\") and not http.request.uri.path.extension in {\"js\" \"css\" \"png\" \"ico\" \"txt\" \"svg\" \"jpg\" \"jpeg\" \"webp\" \"woff2\" \"webmanifest\"} and not http.cookie contains \"<worker>_session=\" and not http.user_agent contains \"WhatsApp/\")",
+      "action": "managed_challenge"
+    }
+  ]
+}

@@ -1,0 +1,562 @@
+/* The admin area (docs/plans/v2/2026-10-28-v2-09-admin-help-overhaul.md): the club's
+   back office. A bottle-green sidebar on a computer, one row of sections that scrolls sideways on a phone, flat white
+   panels, and one bold thing: Insights' scoreboard, in Teko (the jersey numbers' face). Loaded on admin pages only, after
+   app.css, on its colour tokens, so light and dark come with them. No inline styles anywhere (the CSP). */
+
+:root{--a-amber:#F2B705;--a-spark:#7FD394;--a-radius:14px}
+
+/* The frame: a sidebar on a computer, the page to its right; on a phone or tablet, a bar at the top. */
+body.admin{min-height:100vh;min-height:100dvh}
+body.admin main.wrap{max-width:1800px;width:100%;padding-block:20px 64px;gap:20px}
+.adminside{background:linear-gradient(110deg,transparent 72%,rgba(255,255,255,.05) 72% 76%,transparent 76% 80%,rgba(255,255,255,.05) 80% 84%,transparent 84%),var(--bar);color:#fff;
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.adminrow{display:flex;align-items:center;gap:8px;padding:8px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px))}
+.adminside .brand span{display:grid;line-height:1.1}
+.adminside .brand small{font-size:12px;font-weight:700;color:#cfe5d6}
+.admintools{display:flex;align-items:center;gap:6px;margin-left:auto}
+.admintools .themebtn,.admintools .signoutbtn{margin-left:0}
+.adminnav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:2px max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px))}
+.adminnav::-webkit-scrollbar{display:none}
+.adminnav a{flex:none;display:flex;align-items:center;gap:8px;color:#E6F2EA;text-decoration:none;padding:7px 12px;border-radius:10px;font-weight:700;font-size:14.5px}
+.adminnav a:hover{background:rgba(255,255,255,.1)}
+.adminnav a[aria-current="page"]{background:#fff;color:var(--bar)}
+/* Keyboard focus shows on the green: white, not the site's green ring. */
+.adminside :focus-visible{outline-color:#fff}
+.adminnav .ico{width:18px;height:18px;flex:none}
+.count{min-width:21px;height:21px;padding:0 6px;border-radius:999px;background:var(--a-amber);color:#1a1400;font-size:12px;font-weight:800;display:inline-grid;place-items:center;line-height:1}
+.count.urgent{background:var(--live);color:#fff}
+@media (max-width:480px){.adminside .brand b{display:none}.adminside .brand small{font-size:15.5px;font-weight:800;color:#fff}}
+@media (min-width:1024px){
+  html:not([data-view="mobile"]) body.admin{display:grid;grid-template-columns:252px minmax(0,1fr);align-items:start;background:linear-gradient(90deg,var(--bar) 252px,var(--bg) 252px)}
+  html:not([data-view="mobile"]) body.admin .stagingstrip{grid-column:1/-1}
+  /* Staging's strip sits above the sidebar, so the sidebar is that much shorter, or its foot would be off the screen. */
+  html:not([data-view="mobile"]) body.admin:has(.stagingstrip) .adminside{height:calc(100vh - 32px);height:calc(100dvh - 32px)}
+  html:not([data-view="mobile"]) .adminside{top:0;height:100vh;height:100dvh;overflow-y:auto;display:flex;flex-direction:column;padding:18px 14px}
+  html:not([data-view="mobile"]) .adminrow{display:contents}
+  html:not([data-view="mobile"]) .adminside .brand{order:1;padding:2px 8px 18px}
+  html:not([data-view="mobile"]) .adminside .brand b{font-size:18px}
+  html:not([data-view="mobile"]) .adminnav{order:2;flex-direction:column;overflow:visible;padding:0;gap:2px}
+  html:not([data-view="mobile"]) .adminnav a{padding:9px 12px;font-size:15px}
+  html:not([data-view="mobile"]) .adminnav .count{margin-left:auto}
+  html:not([data-view="mobile"]) .admintools{order:4;margin:16px 0 0;padding:0 0 4px;justify-content:flex-end}
+  /* A big monitor is used: the page grows to 1800px, its side padding with it, and the grids inside fill the width. */
+  html:not([data-view="mobile"]) body.admin main.wrap{margin:0;padding-inline:clamp(36px,3vw,72px);padding-block:30px 72px}
+
+  /* At the sidebar's foot, as on the team pages: the switch to the phone's view, then light or dark and sign out. In the
+     phone's view on a computer, back to the desktop view beside them (public/view.js keeps the choice per device). */
+  html:not([data-view="mobile"]) .adminside > .viewswitch{order:3;display:flex;align-items:center;width:100%;margin-top:auto;padding:9px 12px;border-radius:10px;color:#E6F2EA;font-weight:700;font-size:15px;line-height:1.3;text-align:left}
+  html:not([data-view="mobile"]) .adminside > .viewswitch:hover{background:rgba(255,255,255,.1)}
+  html[data-view="mobile"] .admintools .viewswitch{display:inline-block}
+}
+
+/* A page's head: where it belongs (‹ Teams), its title, a line under it, and its own actions. */
+.ahead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px}
+.aheadtext{min-width:0}
+.ahead h1{font-size:30px;letter-spacing:-.015em}
+.backlink{display:inline-block;margin-bottom:6px;color:var(--muted);font-weight:700;font-size:14px;text-decoration:none}
+.backlink:hover{color:var(--fg)}
+.lede{margin:6px 0 0;color:var(--muted);max-width:64ch}
+.aheadacts{display:flex;flex-wrap:wrap;gap:8px}
+.aheadacts .btn .ico{width:19px;height:19px;flex:none}
+@media (max-width:640px){.ahead h1{font-size:26px}.aheadacts{flex:1 1 100%}.aheadacts .btn{flex:1 1 auto;justify-content:center}}
+
+/* What's inside: flat panels with a little more room, sentence-case table heads, figures that line up. */
+.adminview{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;min-width:0}
+.adminview p{margin:0}
+body.admin .panel{border-radius:var(--a-radius);padding:18px 20px}
+body.admin .panel>h2,.panelhead h2{font-size:18px}
+.panelhead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 12px}
+.panelhead .small a{color:var(--club-ink);font-weight:700}
+body.admin th{font-family:var(--body);font-size:12.5px;letter-spacing:0;text-transform:none;font-weight:700;color:var(--muted);white-space:nowrap}
+body.admin td{font-variant-numeric:tabular-nums}
+body.admin .t{border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
+.t.warn{background:var(--warn-soft);color:var(--warn-ink);border-color:transparent}
+.t.urgent{background:var(--live);color:#fff;border-color:transparent}
+.sub{display:block;font-size:12.5px;color:var(--muted)}
+tr.past td{color:var(--muted)}
+.sectionrow td{background:var(--bg);font-size:12.5px;font-weight:700;color:var(--muted);padding-block:8px}
+.empty{display:grid;gap:6px;justify-items:start;padding:6px 0;color:var(--muted)}
+.empty b{color:var(--fg);font-size:16px}
+
+/* Insights' boards: the site's numbers as arena boards, one a side of the site, Teko numerals on bottle green, each number
+   with its 12 weeks. */
+.boards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.scoreboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px 18px;align-content:start;padding:18px 22px 20px;border-radius:18px;color:#fff;
+  background:radial-gradient(circle at 104% 50%,transparent 74px,rgba(255,255,255,.07) 75px 77px,transparent 78px),var(--bar)}
+.scoreboard .sbhead{grid-column:1/-1;margin:0 0 -4px;font-size:13px;font-weight:700;letter-spacing:.01em;color:#cfe5d6}
+/* On a wide screen each board's numbers sit in one row: three across, or four for a board with four. */
+@media (min-width:1400px){
+  html:not([data-view="mobile"]) .boards .scoreboard{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 12px}
+  html:not([data-view="mobile"]) .boards .scoreboard:has(.sb:nth-of-type(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+/* Insights' Alerts section: the banner, then the checks; the page's own heading for the section. */
+.alerts .panelhead h2{font-size:20px}
+.insightpair{display:grid;gap:16px;align-items:start}
+.sb{display:grid;gap:4px;min-width:0;align-content:start}
+.sb b{font-family:"Teko","Arial Narrow",sans-serif;font-weight:700;font-size:54px;line-height:.86;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.sb b small{font-size:26px;color:#cfe5d6;margin-left:3px}
+.sb>span{font-size:13.5px;font-weight:700;color:#E6F2EA}
+.sb .spark{display:block;width:100%;max-width:150px;height:22px;margin-top:4px}
+.sb .spark rect{fill:var(--a-spark)}
+.sb .spark rect.now{fill:#fff}
+.sb .delta{font-size:12.5px;color:#cfe5d6}
+@media (max-width:480px){.scoreboard{grid-template-columns:1fr 1fr;padding:14px 16px 16px;gap:14px 14px}.sb b{font-size:46px}}
+
+/* Needs attention: what's waiting for an admin, worst first, each with where it's dealt with. */
+.attention{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.att{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--warn-ink)}
+.att.urgent{border-left-color:var(--live)}
+.att.info{border-left-color:var(--club)}
+.att p{margin:0;flex:1 1 16em;min-width:0}
+.att .btn{padding:7px 14px;font-size:14px}
+.allclear{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:var(--club-soft);color:var(--club-ink);font-weight:700}
+.allclear .ico{width:22px;height:22px;flex:none}
+
+/* Charts (dataviz skill): one series a chart, thin bars in the club's green with rounded tops, the peak labelled, every
+   week hoverable, the numbers in a table too. SVG attributes and these classes only (the CSP). */
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
+.chart{margin:0;padding:14px;border:1px solid var(--line);border-radius:var(--a-radius);background:var(--surface);display:grid;gap:6px;min-width:0}
+.chart.main{padding:18px}
+.chart figcaption{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.chart svg{width:100%;height:auto;display:block}
+.chart .bar{fill:var(--club)}
+.chart g:hover .bar{fill:var(--club-ink)}
+/* Mobile and desktop: the mobile view in the club's green, the desktop view in blue, named in the legend. */
+.chart .bar.desktop{fill:var(--k-viewing)}
+.chart g:hover .bar.desktop{fill:#1B5FAE}
+.chart .legend{display:inline-flex;gap:14px;font-size:12px;color:var(--muted)}
+.chart .legend .key{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--club);margin-right:5px;vertical-align:-1px}
+.chart .legend .key.desktop{background:var(--k-viewing)}
+.chart .hit{fill:transparent}
+.chart .base{stroke:var(--line);stroke-width:1}
+.chart text{fill:var(--muted);font-size:10px;font-family:var(--body)}
+.chart text.peak{fill:var(--fg);font-weight:700}
+.chart text.empty{font-size:12px}
+.chart.main text{font-size:18px}.chart.main text.empty{font-size:20px}
+.chart .axis{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.datatable td,.datatable th{white-space:nowrap}
+
+/* When families watch: a week of hours, one green from light to dark (validated light and dark: dataviz skill). */
+.heat{margin:0;padding:16px;border:1px solid var(--line);border-radius:var(--a-radius);background:var(--surface);display:grid;gap:8px;min-width:0}
+.heat svg{width:100%;height:auto;display:block}
+.heat text{fill:var(--muted);font-size:9px;font-family:var(--body)}
+.heat .h0{fill:var(--bg)}.heat .h1{fill:#D3EDDA}.heat .h2{fill:#9ED4AC}.heat .h3{fill:#5DB373}.heat .h4{fill:#2A8F3D}.heat .h5{fill:#145C27}
+.heat g:hover rect{stroke:var(--fg);stroke-width:1}
+.heatkey{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.heatkey i{display:inline-block;width:14px;height:10px;border-radius:2px}
+.heatkey .h0{background:var(--bg);border:1px solid var(--line)}.heatkey .h1{background:#D3EDDA}.heatkey .h2{background:#9ED4AC}.heatkey .h3{background:#5DB373}.heatkey .h4{background:#2A8F3D}.heatkey .h5{background:#145C27}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .heat .h1,:root:not([data-theme="light"]) .heatkey .h1{fill:#173D24;background:#173D24}
+  :root:not([data-theme="light"]) .heat .h2,:root:not([data-theme="light"]) .heatkey .h2{fill:#1F6334;background:#1F6334}
+  :root:not([data-theme="light"]) .heat .h3,:root:not([data-theme="light"]) .heatkey .h3{fill:#2E8C49;background:#2E8C49}
+  :root:not([data-theme="light"]) .heat .h4,:root:not([data-theme="light"]) .heatkey .h4{fill:#4DB668;background:#4DB668}
+  :root:not([data-theme="light"]) .heat .h5,:root:not([data-theme="light"]) .heatkey .h5{fill:#8FDCA2;background:#8FDCA2}}
+:root[data-theme="dark"] .heat .h1,:root[data-theme="dark"] .heatkey .h1{fill:#173D24;background:#173D24}
+:root[data-theme="dark"] .heat .h2,:root[data-theme="dark"] .heatkey .h2{fill:#1F6334;background:#1F6334}
+:root[data-theme="dark"] .heat .h3,:root[data-theme="dark"] .heatkey .h3{fill:#2E8C49;background:#2E8C49}
+:root[data-theme="dark"] .heat .h4,:root[data-theme="dark"] .heatkey .h4{fill:#4DB668;background:#4DB668}
+:root[data-theme="dark"] .heat .h5,:root[data-theme="dark"] .heatkey .h5{fill:#8FDCA2;background:#8FDCA2}
+
+/* A thin bar against a limit (a team's people, the site's), and a figure's bar in a row (Teams compared). */
+.meter{width:100%;height:6px;display:block}
+.meter .track{fill:var(--line)}
+.meter .fill{fill:var(--club)}
+.meter .fill.high{fill:var(--live)}
+.inbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;min-width:7em}
+.inbar .meter{height:8px}
+
+/* Platform: one row a thing watched, its figure, its meter and how its alert stands. */
+.watchlist{list-style:none;margin:0;padding:0;display:grid}
+.watch1{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;padding:14px 0;border-top:1px solid var(--line)}
+.watch1:first-child{border-top:0;padding-top:4px}
+.watch1 h3{font-size:15.5px}
+.watch1 .fig{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.watch1 .meter,.watch1 .note,.watch1 .small{grid-column:1/-1}
+.watch1 .state{justify-self:end;align-self:start}
+.limitrow{display:grid;gap:4px;padding:10px 0;border-top:1px solid var(--line)}
+.limitrow:first-of-type{border-top:0}
+.limithead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.limithead span{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+
+/* Teams: Open on each row, and a More menu (no script needed; admin.js closes one when another opens). */
+.teams th{white-space:nowrap}
+.teams .t-team b{white-space:nowrap}
+.t-support a{color:var(--club-ink);font-weight:700}
+.t-acts{white-space:nowrap}
+.t-acts .row-actions{flex-wrap:nowrap;align-items:center;justify-content:flex-end}
+.rowmenu{position:relative;display:inline-block}
+.rowmenu>summary{list-style:none;cursor:pointer}
+.rowmenu>summary::-webkit-details-marker{display:none}
+.rowmenu .menu{position:absolute;right:0;top:calc(100% + 6px);z-index:10;min-width:312px;max-width:calc(100vw - 32px);display:grid;gap:2px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18)}
+.menu a,.menu button{display:block;width:100%;text-align:left;padding:9px 12px;border:0;border-radius:8px;background:none;color:var(--fg);font-weight:600;font-size:14.5px;text-decoration:none;cursor:pointer}
+.menu a:hover,.menu button:hover{background:var(--bg)}
+.menu .danger{color:var(--live)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 6px}
+.menu form{display:block;margin:0}
+.menu .viewas{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 8px 8px 12px}
+.menu .viewas label{flex:1 1 auto;min-width:0;font-size:13px}
+/* Wide enough for the longest role, Watch and film, with its arrow. */
+.menu .viewas select{flex:none;min-width:9.5em;width:auto}
+.menu .viewas button{width:auto;padding:8px 14px;border:1px solid var(--line);background:var(--surface);text-align:center}
+/* A table whose rows have a More menu: the menu shows in full, over the rows below (on a phone it's cards anyway). */
+.tablewrap.menus{overflow:visible}
+form.viewas{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.viewas label{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap}
+.viewas select{width:auto;padding:6px 8px;font-size:14px}
+@media (max-width:640px){
+  .teams tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"team status" "season members" "managers managers" "setup setup" "seen support" "acts acts"}
+  .t-setup{grid-area:setup;font-size:13px}
+  .t-setup::before{content:"Setup: ";color:var(--muted)}
+  .t-setup .sub{display:inline;margin-left:6px}
+  .t-team{grid-area:team}
+  .t-status{grid-area:status;justify-self:end}
+  .t-season{grid-area:season;font-size:13px;color:var(--muted)}
+  .t-members{grid-area:members;justify-self:end;font-size:13px}
+  .t-managers{grid-area:managers;font-size:14px}
+  .t-managers::before{content:"Team managers: ";color:var(--muted)}
+  .t-seen{grid-area:seen;font-size:13px;color:var(--muted)}
+  .t-seen::before{content:"Last used "}
+  .t-support{grid-area:support;justify-self:end;font-size:13px}
+  .t-support::before{content:"Support: ";color:var(--muted)}
+  .t-acts{grid-area:acts;border-top:1px solid var(--line);padding-top:10px}
+  .t-acts .row-actions{justify-content:flex-start}
+  /* The More menu spans the card under its buttons, so it's centred on the phone and nothing runs off the screen. */
+  .t-acts .row-actions{position:relative}
+  .t-acts .rowmenu{position:static}
+  .t-acts .rowmenu .menu{left:0;right:0;min-width:0;max-width:none}
+  .cards tr.sectionrow{display:block;background:none;border:0;padding:8px 2px 0}
+  .cards .sectionrow td{background:none;padding:0}
+}
+/* A choice with a line of explanation under it (ending a season: when its footage goes). */
+fieldset.deletewhen{border:0;padding:0;margin:0;min-width:0}
+fieldset.deletewhen legend{font-weight:700;font-size:14px;padding:0}
+label.option{display:flex;gap:10px;align-items:flex-start;margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
+label.option input{width:auto;margin:3px 0 0;flex:none}
+label.option>span{display:block;flex:1;min-width:0}
+label.option .small{display:block;margin-top:2px}
+textarea.msg{font-size:14px;line-height:1.5;border-style:dashed;resize:vertical}
+
+/* The Log's Right now: what's happening in the teams, each line with its team and an Open button. */
+.teamtag{display:inline-block;font-size:12px;font-weight:800;padding:1px 8px;border-radius:999px;background:var(--club-soft);color:var(--club-ink);margin-right:6px;white-space:nowrap}
+.nowlist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.nowlist li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}
+.nowlist .what{flex:1 1 14em;min-width:0}
+.nowlist li.warn{border-left:3px solid var(--warn-ink)}
+.rightnow-none{margin:0}
+
+/* The Log and Admins. */
+/* The Log's filter bar: the days (chips, then two dates), then who, team, event, device and search in a row that wraps,
+   then only warnings, device views and the buttons. */
+.logfilters{display:grid;gap:12px}
+.lf-days,.lf-row,.lf-foot{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px}
+.lf-days .chips{margin-right:auto;align-self:center}
+.logfilters label:not(.lf-tick){display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted);min-width:0}
+.logfilters input[type="date"]{width:auto;min-width:0}
+.lf-row>label{flex:1 1 12em}
+.lf-row>.lf-q{flex:2 1 16em}
+.lf-foot{align-items:center;justify-content:space-between}
+.logfilters input[type="search"],.queuefilters input[type="search"]{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 12px;width:100%}
+.lf-ticks{display:flex;flex-wrap:wrap;gap:8px 20px}
+.lf-tick{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.lf-tick input{width:auto;margin:0}
+.lf-acts{display:flex;gap:8px;margin-left:auto}
+/* A few figures for the lines shown. */
+.statrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9.5em),1fr));gap:10px}
+.lstat{display:grid;align-content:start;gap:2px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.lstat b{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.lstat span{font-size:13px;color:var(--muted)}
+.lstat.warn b{color:var(--warn-ink)}
+.loghead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
+/* The table: a day's heading row, then its lines; a person, event, team, device or address filters to its own lines. */
+.logtable{min-width:760px}
+.logtable td{vertical-align:top}
+.logtable .lday td{background:var(--bg);font-weight:800;font-size:13px;padding:6px 14px}
+.l-when{white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums}
+.l-who a,.l-ip a{color:inherit;text-decoration:none;overflow-wrap:anywhere}
+.l-who a{font-weight:700;white-space:nowrap}
+.l-ip{font-size:13px;color:var(--muted);white-space:nowrap}
+.l-ip a{display:block}
+.l-who a:hover,.l-ip a:hover{text-decoration:underline}
+.l-team .teamtag{text-decoration:none;margin:0}
+.ev{display:inline-block;white-space:nowrap;font-size:12px;font-weight:700;padding:1px 8px;border-radius:6px;text-decoration:none;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.ev.good{background:var(--club-soft);border-color:transparent;color:var(--club-ink)}
+.ev.warn{background:var(--warn-soft);border-color:transparent;color:var(--warn-ink)}
+.ev:hover{text-decoration:underline}
+.pager{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+@media (max-width:640px){
+  .logtable tr.lr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"who when" "event event" "what what" "team ip"}
+  .l-who{grid-area:who;min-width:0}.l-who a{display:block;overflow:hidden;text-overflow:ellipsis}.l-when{grid-area:when;justify-self:end}.l-event{grid-area:event}.l-what{grid-area:what}.l-team{grid-area:team}.l-ip{grid-area:ip;justify-self:end}
+  .logtable tr.lday{display:block;padding:8px 2px 0;background:none;border:0}
+  .logtable .lday td{background:none;padding:0;font-size:14px}
+  .lf-acts{margin-left:0}
+}
+.adminlist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.adminlist li{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.adminlist .pname{flex:1;min-width:0;display:grid;gap:2px}
+.adminlist .pname b{overflow-wrap:anywhere}
+/* Support: its two queues as tabs, the queue's figures, a filter bar, then the tickets as a table (cards on a phone).
+   A row opens its ticket (admin.js); one waiting over a day for an answer has an amber edge. */
+.tabs{display:flex;gap:4px;box-shadow:inset 0 -1px 0 var(--line);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.tab{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;font-weight:700;font-size:15px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;white-space:nowrap}
+.tab[aria-current="page"]{color:var(--fg);border-bottom-color:var(--club)}
+.tab .n{display:inline-block;min-width:1.5em;padding:0 6px;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-size:12px;text-align:center;color:var(--fg)}
+.lstat .lnote{font-size:12px;color:var(--muted)}
+.queuefilters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px}
+.queuefilters label{display:grid;gap:4px;font-size:13px;font-weight:700;color:var(--muted);flex:1 1 12em;min-width:0}
+.queuefilters .qf-q{flex:2 1 16em}
+.qf-acts{display:flex;gap:8px}
+.queue{min-width:820px}
+.queue td{vertical-align:top}
+.queue tr.tk{cursor:pointer}
+.queue tr.tk:hover td{background:var(--bg)}
+.queue tr.late td:first-child{box-shadow:inset 3px 0 0 var(--warn-ink)}
+.k-num{font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.k-main{min-width:16em}
+.k-main a{color:inherit;text-decoration:none;display:block}
+.k-main a:hover b{text-decoration:underline}
+.k-main .tline{display:block;max-width:44em}
+.k-stat .sub,.k-when .t{display:block;margin-top:4px;width:max-content}
+.k-stat .sub{font-size:12px;color:var(--warn-ink);font-weight:700}
+.k-when{white-space:nowrap;color:var(--muted);font-size:13px}
+.k-owner .muted{color:var(--muted)}
+.stage{display:inline-block;white-space:nowrap;font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;border:1px solid var(--line);background:var(--bg)}
+.stage.s-new{background:var(--warn-soft);color:var(--warn-ink);border-color:transparent}
+.stage.s-considering{background:var(--surface);color:var(--fg)}
+.stage.s-planned{background:var(--club-soft);color:var(--club-ink);border-color:transparent}
+.stage.s-shipped{background:var(--club);color:#fff;border-color:transparent}
+.stage.s-declined{color:var(--muted)}
+@media (max-width:640px){
+  .queue tr.tk{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"num stat when" "main main main" "team who who" "owner owner owner";align-items:start}
+  .k-num{grid-area:num}.k-main{grid-area:main;min-width:0}.k-stat{grid-area:stat;justify-self:start;text-align:left}.k-when{grid-area:when;justify-self:end;text-align:right}
+  .k-team{grid-area:team}.k-who{grid-area:who;font-size:13px;align-self:center}.k-owner{grid-area:owner;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+  .k-owner::before{content:"Owner: "}
+  .k-stat .sub,.k-when .t{display:inline-block;margin:0 0 0 6px}
+  .queue tr.late{border-left:3px solid var(--warn-ink)}
+  .queue tr.late td:first-child{box-shadow:none}
+}
+/* A support ticket's page: the conversation, and beside it (under it on a phone) its status, owner and who asked. */
+.ticketgrid{display:grid;gap:16px;align-items:start}
+@media (min-width:1100px){.ticketgrid{grid-template-columns:minmax(0,1fr) 320px}}
+.sideform{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
+.sideform label{flex:1 1 10em;min-width:0}
+.tside .kv dd{overflow-wrap:anywhere}
+
+/* Insights: the main chart beside when families watch on a wide screen; the teams side by side. */
+.insightgrid{display:grid;gap:16px;align-items:start}
+@media (min-width:1100px){.insightgrid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+.compare th[scope="row"]{font-family:var(--body);font-size:14px;font-weight:800;color:var(--fg);letter-spacing:0;text-transform:none;white-space:nowrap}
+.compare td{white-space:nowrap}
+.compare .inbar{min-width:7.5em}
+/* Phones: each team a card, each figure with its name. */
+@media (max-width:640px){
+  .compare tr{grid-template-columns:1fr 1fr}
+  .compare th[scope="row"]{grid-column:1/-1;display:block;padding:0;border:0;font-size:16px}
+  .compare td::before{content:attr(data-label);display:block;font-size:12px;font-weight:700;color:var(--muted);white-space:normal}
+  .compare .inbar{min-width:0}
+}
+
+/* Costs, as cloud cost tools lay it out (dataviz skill): the kinds of cost in four hues validated together, light and
+   dark (adjacent stacks: CVD and normal-vision separation pass; amber's relief is the legend and the months table). */
+:root{--k-shared:#6250D6;--k-storage:#2A8F3D;--k-viewing:#2A78D6;--k-uploads:#EDA100}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--k-shared:#9085E9;--k-storage:#3BA552;--k-viewing:#3987E5;--k-uploads:#C98500}}
+:root[data-theme="dark"]{--k-shared:#9085E9;--k-storage:#3BA552;--k-viewing:#3987E5;--k-uploads:#C98500}
+.k-shared{fill:var(--k-shared);background:var(--k-shared)}.k-storage{fill:var(--k-storage);background:var(--k-storage)}
+.k-viewing{fill:var(--k-viewing);background:var(--k-viewing)}.k-uploads{fill:var(--k-uploads);background:var(--k-uploads)}
+/* Costs' tiles: smaller than Insights' board (dollars and cents are wider than counts), a tile each in one green
+   board, some with a small picture under the words: the months as a sparkline, or a meter. */
+.costtiles .sb b{font-size:clamp(28px,7vw,38px);line-height:.9}
+.costtiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,168px),1fr));gap:16px 24px;padding:16px 20px 18px}
+.costtiles .sb>span:not(.delta){font-size:13px}
+.costtiles .mspark{width:100%;max-width:140px;height:20px;margin-top:4px}
+.costtiles .mspark rect{fill:var(--a-spark)}.costtiles .mspark rect.now{fill:#fff}.costtiles .mspark rect.est{fill:#fff;fill-opacity:.28}
+.tmeter{display:block;width:100%;max-width:140px;height:6px;margin-top:8px}
+.tmeter .track{fill:rgba(255,255,255,.18)}.tmeter .fill.ok{fill:var(--a-spark)}.tmeter .fill.warn{fill:var(--a-amber)}.tmeter .fill.over{fill:#FF8A8E}
+@media (max-width:480px){.costtiles{grid-template-columns:1fr 1fr}}
+/* The widgets: one under another on a phone; on a middling screen the same, with where it goes beside what was used;
+   on a wide one the months chart takes two thirds beside those two, then the running total beside each team. A chart is
+   never drawn much bigger than it's made (no taller than 330px), so its words stay their size. */
+.costdash{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+.costdash>div{display:grid;gap:18px;min-width:0;align-content:start}
+.costdash>.cd-main,.costdash>.cd-half{align-content:stretch}
+.costdash .costchart>svg{max-height:330px}
+.cd-main>.costchart{grid-template-rows:auto auto 1fr}
+.cd-main>.costchart>svg{align-self:center}
+.cd-side{grid-template-rows:auto 1fr}
+.costdash .units{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.costdash .unit{padding:9px 12px;border-radius:10px}
+.costdash .unit b{font-size:19px}
+.costdash .unit>span:not(.sub){font-size:13px}
+@media (min-width:900px) and (max-width:1279.98px){.costdash>.cd-side{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto}}
+@media (min-width:1280px){.costdash{grid-template-columns:repeat(12,minmax(0,1fr))}.cd-main{grid-column:span 8}.cd-side{grid-column:span 4}.cd-half{grid-column:span 6}}
+.costdash>.cd-full{grid-column:1/-1}
+/* Team by team: a cell a team's month, shaded by how dear it is (the club green, four steps), the months to come lighter,
+   this month's column marked; every team's total under a line. */
+.tmgrid{width:100%;border-collapse:separate;border-spacing:3px;font-size:13px;font-variant-numeric:tabular-nums}
+.tmgrid th,.tmgrid td{padding:7px 8px;border:0;border-radius:6px;text-align:right;white-space:nowrap}
+.tmgrid thead th{font-size:12px;font-weight:700;color:var(--muted);padding-block:4px}
+.tmgrid thead th.now{color:var(--fg)}
+.tmgrid th[scope="row"]{text-align:left;font-weight:700;padding-left:0}
+.tmgrid th[scope="row"] a{color:inherit}
+/* The team's name stays put while a narrow screen scrolls the months. */
+.tmgrid th[scope="row"],.tmgrid thead th:first-child{position:sticky;left:0;z-index:1;background:var(--surface);padding-right:10px}
+.tmgrid thead th:first-child{text-align:left;padding-left:0}
+.tmgrid td.hm0{color:var(--muted)}
+.tmgrid td.hm1{background:color-mix(in srgb,var(--club) 12%,transparent)}
+.tmgrid td.hm2{background:color-mix(in srgb,var(--club) 26%,transparent)}
+.tmgrid td.hm3{background:color-mix(in srgb,var(--club) 42%,transparent)}
+.tmgrid td.hm4{background:color-mix(in srgb,var(--club) 60%,transparent);font-weight:700}
+.tmgrid td.est{color:var(--muted)}
+.tmgrid td.est.hm1{background:color-mix(in srgb,var(--club) 6%,transparent)}.tmgrid td.est.hm2{background:color-mix(in srgb,var(--club) 12%,transparent)}
+.tmgrid td.est.hm3{background:color-mix(in srgb,var(--club) 19%,transparent)}.tmgrid td.est.hm4{background:color-mix(in srgb,var(--club) 27%,transparent);font-weight:400}
+.tmgrid td.now{outline:2px solid var(--club);outline-offset:-2px}
+.tmgrid td.season{background:var(--bg);color:var(--fg)}
+.tmgrid tr.total th,.tmgrid tr.total td{border-top:2px solid var(--line);border-radius:0;font-weight:700;color:var(--fg)}
+.tmgrid tr.total td.est{color:var(--muted)}
+/* Actual (Cloudflare's own bill) or estimated, said on every figure: a filled pill for actual, an outlined one for
+   estimated, so the two never look alike. On the green board they're in white; on a card in the page's own colours. */
+.pill{display:inline-block;justify-self:start;width:max-content;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:800;line-height:1.5;letter-spacing:.02em}
+.costtiles .pill.actual{background:#fff;color:var(--bar)}
+.costtiles .pill.est{border:1.5px dashed rgba(255,255,255,.75);color:#fff;padding:0 7px}
+.chart .pill.actual{background:var(--club);color:#fff}
+.chart .pill.est{border:1.5px dashed var(--muted);color:var(--muted);padding:0 7px}
+.sw.solid{background:var(--fg)}
+.sw.light{background:transparent;border:1.5px dashed var(--muted);width:10px;height:10px}
+/* Cloudflare's bill: what it charged and the plan's fees, then each product against its free allowance. */
+.billhead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.billw .units{grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
+.billw .unit b{font-size:20px}
+.billsub{margin:10px 0 0;font-size:14px}
+.freelist{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));column-gap:28px}
+.kindlist.freelist li{grid-template-columns:minmax(0,1fr) auto;align-content:start;gap:4px 10px}
+.kindlist.freelist li:has(.billed){grid-template-columns:minmax(0,1fr) auto auto}
+.freelist .kname b{font-weight:700}
+.freelist .kval.billed{color:var(--fg);font-weight:700;min-width:4.5em}
+.chart svg.fmeter{grid-column:1/-1;width:100%;height:6px;display:block}
+.fmeter .track{fill:var(--line)}.fmeter .fill.ok{fill:var(--club)}.fmeter .fill.warn{fill:var(--warn-ink)}.fmeter .fill.over{fill:var(--live)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.costchart{align-content:start}
+.costchart .seg{stroke:var(--surface);stroke-width:1.5}
+.costchart g.est .seg{fill-opacity:.42}
+.costchart g:hover .seg{fill-opacity:1;stroke:var(--fg);stroke-width:1}
+.costchart .grid{stroke:var(--line);stroke-width:1}
+.costchart text{font-size:13px}
+.costchart text.tick,.costchart text.mon{fill:var(--muted)}
+.costchart g.now text.mon{fill:var(--fg);font-weight:700}
+.costchart text.val{fill:var(--fg);font-weight:700}
+.costchart .future{fill:var(--bg)}
+.costchart text.futurelabel{fill:var(--muted);font-size:12px;font-weight:700}
+.costchart .budgetline{stroke:var(--fg);stroke-width:1.5;stroke-dasharray:6 5;fill:none}
+.costchart text.budgetlabel{fill:var(--fg);font-size:12.5px;font-weight:700}
+.burn .spent{stroke:var(--club);stroke-width:2.5;fill:none;stroke-linejoin:round}
+.burn .ahead{stroke:var(--club);stroke-width:2.5;fill:none;stroke-dasharray:3 5;stroke-linecap:round}
+.burn .pt{fill:var(--club);stroke:var(--surface);stroke-width:2}
+.burn .pt.est{fill:var(--surface);stroke:var(--club);stroke-width:2}
+.burn g:hover .pt{r:6}
+.legend{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;color:var(--muted)}
+.legend li{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;flex:none}
+.sw.budget{height:0;width:16px;border-top:2px dashed var(--fg);border-radius:0}
+.sw.spent{height:3px;width:16px;background:var(--club);border-radius:2px}
+.sw.ahead{height:0;width:16px;border-top:3px dotted var(--club);border-radius:0}
+.kinds{align-content:start}
+.kindlist{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:12px}
+.kindlist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 14px;align-items:center;font-size:14px}
+.kindlist.withnow li{grid-template-columns:minmax(0,1fr) auto minmax(7.5em,auto)}
+.kindlist .khead{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:-6px}
+.kindlist .khead span{text-align:right}
+.kval.now{color:var(--fg)}
+.teamlist li{grid-template-columns:minmax(0,1fr) auto}
+.teamlist a{font-weight:700;color:inherit}
+.teamlist .sub{grid-column:1/-1;margin-top:-2px}
+.chart svg.tbar{grid-column:1/-1;width:100%;height:12px;display:block}
+.tbar .track{fill:var(--line)}.tbar .est{fill:var(--club);fill-opacity:.3}.tbar .budgetmark{fill:var(--fg)}
+.tbar .spent.ok{fill:var(--club)}.tbar .spent.warn{fill:var(--warn-ink)}.tbar .spent.over{fill:var(--live)}
+.kname{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.kval{font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
+.kval b{color:var(--fg)}
+.chart svg.kbar{grid-column:1/-1;width:100%;height:10px;display:block}
+.kbar .track,.buse .track{fill:var(--line)}
+.mspark{width:120px;height:24px;display:block}
+.mspark rect{fill:var(--club)}.mspark rect.now{fill:var(--club-ink)}.mspark rect.est{fill:var(--club);fill-opacity:.35}
+.buse{width:100%;max-width:220px;height:12px;display:block}
+.buse .used.ok{fill:var(--club)}.buse .used.warn{fill:var(--warn-ink)}.buse .used.over{fill:var(--live)}
+.buse .budgetmark{fill:var(--fg)}.buse .estmark{fill:var(--muted)}
+.budgetuse .buse{max-width:none;height:14px;margin-bottom:8px}
+.costs td.c-team a{color:inherit}
+/* The currency switch in the page's head, the rate it's at under it. */
+.cursw{display:grid;gap:4px;justify-items:end;text-align:right}
+/* The seasons, with the season's report for Excel at the end of their row (under them on a phone). */
+.costbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.costbar .chips{margin:0}
+@media (max-width:640px){.cursw{justify-items:start;text-align:left}}
+.costs .c-use .sub{margin-top:4px}
+.units{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.unit{display:grid;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:12px}
+.unit b{font-size:22px;font-variant-numeric:tabular-nums}
+.unit>span:not(.sub){font-weight:700;font-size:14px}
+.costmonths tr.est td{color:var(--muted)}
+.costmonths tr.est td b{color:var(--fg);font-weight:600}
+.costmonths .sub.over{color:var(--live);font-weight:700}
+.workings>summary,.costtable>summary{cursor:pointer;font-weight:700}
+.costnotes{margin:12px 0 0;padding-left:18px;display:grid;gap:8px;font-size:14px;line-height:1.5}
+.budgetform{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
+.budgetform label{display:grid;gap:6px;font-size:13px;font-weight:700;flex:1 1 220px;max-width:340px}
+@media (max-width:640px){
+  .costs tr{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"team state" "month est" "spark game" "use use"}
+  .c-team{grid-area:team}.c-state{grid-area:state;justify-self:end}
+  .c-month{grid-area:month}.c-est{grid-area:est}.c-spark{grid-area:spark}.c-game{grid-area:game}.c-use{grid-area:use}
+  .c-month::before,.c-est::before,.c-game::before,.c-use::before{display:block;font-size:12px;color:var(--muted);font-weight:600}
+  .c-month::before{content:"This month"}.c-est::before{content:"Season, estimated"}.c-game::before{content:"A player"}.c-use::before{content:"Budget used"}
+  /* Drawn smaller on a phone, so its words are drawn bigger: the wide months chart most. */
+  .costchart text{font-size:19px}.costchart text.futurelabel,.costchart text.budgetlabel{font-size:17px}.costchart text.val{font-size:20px}
+  .costchart:not(.burn) text{font-size:25px}.costchart:not(.burn) text.futurelabel,.costchart:not(.burn) text.budgetlabel{font-size:22px}.costchart:not(.burn) text.val{font-size:26px}
+}
+
+/* Support's Alerts: one answer at the top, then every check as a light: green, amber, red, or grey before its first check. */
+.healthbanner{display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:18px;border:1px solid var(--line);background:var(--surface);border-left:8px solid var(--warn-ink)}
+.healthbanner h2{margin:0 0 2px;font-size:24px}
+.healthbanner p{color:var(--muted)}
+.healthbanner.ok{background:var(--club-soft);border-color:transparent;border-left-color:var(--club);color:var(--club-ink)}
+.healthbanner.ok p{color:var(--club-ink)}
+.healthbanner.ok .ico{width:44px;height:44px;flex:none}
+.healthbanner.urgent{border-left-color:var(--live)}
+.healthbanner .dot{width:22px;height:22px}
+.checks{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.check{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.check h3{margin:0;font-size:15px}
+.check h3 a{color:inherit;text-decoration:none}
+.check h3 a:hover{text-decoration:underline}
+.check p{font-size:13.5px;color:var(--muted);overflow-wrap:anywhere}
+.check .sub a{color:var(--club-ink);font-weight:700}
+.check .lvl{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-top:4px;background:var(--line);flex:none}
+.ok>.dot,.check.ok .dot{background:var(--club)}
+.warn>.dot{background:var(--warn-ink)}
+.urgent>.dot{background:var(--live)}
+.check.warn{border-color:var(--warn-ink)}.check.warn .lvl{color:var(--warn-ink)}
+.check.urgent{border-color:var(--live)}.check.urgent .lvl{color:var(--live)}
+.check.idle .lvl{font-weight:600}
+.nowstrip{display:flex;flex-wrap:wrap;gap:8px 28px}
+.nowstrip b{font-size:20px;font-variant-numeric:tabular-nums}
+
+/* A big monitor: the pages that are tables of figures fill it; the ones that are lines of text keep a reading width;
+   Platform's and Activity's lists go two abreast; the charts get more room each. */
+@media (min-width:1400px){
+  html:not([data-view="mobile"]) .charts{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+  html:not([data-view="mobile"]) .watchlist{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:48px}
+  html:not([data-view="mobile"]) .watch1:nth-child(2){border-top:0;padding-top:4px}
+  html:not([data-view="mobile"]) .adminlist{max-width:1100px}
+  html:not([data-view="mobile"]) .ticketgrid{grid-template-columns:minmax(0,1fr) 380px;gap:24px}
+  html:not([data-view="mobile"]) .checks{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+}
+
+/* The Changelog as release notes: a panel a day, its changes under Features, Enhancements and Fixes. */
+.release{display:grid;gap:8px}
+.release h2{margin:0}
+.rkind{margin:10px 0 0;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.rkind::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--line)}
+.rkind.k-feature::before{background:var(--club)}
+.rkind.k-enhancement::before{background:var(--club-soft);box-shadow:inset 0 0 0 1px var(--club)}
+.rkind.k-fix::before{background:var(--warn-ink)}
+.rkind .n{font-size:12px;font-weight:700;color:var(--muted)}
+.rnotes{margin:0;padding-left:20px;display:grid;gap:6px;max-width:80ch;line-height:1.5}
+.rnotes b{font-weight:800}
