@@ -46,7 +46,7 @@ describe("npm run staging (docs/runbooks/staging.md)", () => {
 
 	it("the config: a preview build runs on staging's database and bucket, with no domain or cron triggers", () => {
 		const text = readFileSync("cloudflare.config.ts", "utf8");
-		expect(text).toContain("domains: isPreview ? [] : [CLUB.domain]");
+		expect(text).toContain("domains: isPreview ? [] : [club.domain]");
 		expect(text).toContain("triggers: isPreview ? [] : [");
 		expect(text).toContain("DB: isPreview ? bindings.d1({ id: DEPLOY.staging.d1Id, name: DEPLOY.staging.d1Name })");
 		expect(text).not.toMatch(/ACCESS_AUD|accessAud|cloudflareaccess/); // the site's own sign-in

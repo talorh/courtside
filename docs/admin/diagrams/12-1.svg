@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" width="760" height="320" role="img" aria-labelledby="dg-clip-t dg-clip-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="320" fill="#FFFFFF"/>
+<title id="dg-clip-t">A highlight clip&#39;s path</title><desc id="dg-clip-d">A member marks a start and an end on the game&#39;s video with a label; the Worker asks Stream to cut that part as a clip of its own; the 5-minute job asks Stream how it&#39;s going, and once it&#39;s ready starts its MP4; the clip shows beside the player with the players in it.</desc>
+<defs><marker id="ah-clip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<line class="dg-life" x1="90" y1="60" x2="90" y2="300"/>
+<g class="dg-box k-person"><rect x="20" y="14" width="140" height="44" rx="10"/><text class="dg-t" x="90" y="41">Member</text></g><line class="dg-life" x1="290" y1="60" x2="290" y2="300"/>
+<g class="dg-box k-worker"><rect x="220" y="14" width="140" height="44" rx="10"/><text class="dg-t" x="290" y="41">Worker</text></g><line class="dg-life" x1="490" y1="60" x2="490" y2="300"/>
+<g class="dg-box k-service"><rect x="420" y="14" width="140" height="44" rx="10"/><text class="dg-t" x="490" y="41">Stream</text></g><line class="dg-life" x1="670" y1="60" x2="670" y2="300"/>
+<g class="dg-box k-job"><rect x="600" y="14" width="140" height="44" rx="10"/><text class="dg-t" x="670" y="41">5-minute job</text></g>
+<path class="dg-arrow" d="M94 100 L286 100" marker-end="url(#ah-clip)"/>
+<text class="dg-label mid" x="190" y="92">a start, an end and a label</text>
+<path class="dg-arrow" d="M294 146 L486 146" marker-end="url(#ah-clip)"/>
+<text class="dg-label mid" x="390" y="138">cut it from the game&#39;s video</text>
+<path class="dg-arrow" d="M666 192 L494 192" marker-end="url(#ah-clip)"/>
+<text class="dg-label mid" x="580" y="184">ready yet?</text>
+<path class="dg-arrow" d="M494 238 L666 238" marker-end="url(#ah-clip)"/>
+<text class="dg-label mid" x="580" y="230">ready: its MP4 started</text>
+<path class="dg-arrow" d="M286 284 L94 284" marker-end="url(#ah-clip)"/>
+<text class="dg-label mid" x="190" y="276">beside the player, with who&#39;s in it</text></svg>

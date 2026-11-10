@@ -6,6 +6,7 @@ import { admin } from "./docs-text-admin.ts";
 import { agent } from "./docs-text-agent.ts";
 import { artifacts } from "./docs-text-artifacts.ts";
 import { costs } from "./docs-text-costs.ts";
+import { decisions } from "./docs-text-decisions.ts";
 import { fairUse } from "./docs-text-fair-use.ts";
 import { fixture } from "./docs-text-fixture.ts";
 import { glossary } from "./docs-text-glossary.ts";
@@ -29,5 +30,5 @@ export const GROUPS: Array<{ label: string; sections: Array<() => DocSection> }>
 	{ label: "How it works", sections: [requests, signIn, teams, people, fixture, roster, video, watching, photos, home, help, privacy, fairUse] },
 	{ label: "Running it", sections: [admin, tasks, jobs, data, monitoring, costs] },
 	{ label: "Changing it", sections: [setup, agent, releases, recovery, codeLayout] },
-	{ label: "Reference", sections: [glossary] },
+	{ label: "Reference", sections: [glossary, decisions] },
 ];

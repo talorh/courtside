@@ -1,8 +1,17 @@
+/// <reference types="node" />
 import { bindings, defineConfig, triggers } from "cf/config";
 // Namespace import is required by the cf config API (cf-worker import attribute).
 import * as entrypoint from "./src/index.ts" with { type: "cf-worker" };
-import { CLUB } from "./src/club.ts";
+import { readFileSync } from "node:fs";
 import { DEPLOY } from "./deploy.config.ts";
+
+// The two things the deploy needs from src/club.ts, read as text: the Worker imports that file too, and a module in
+// both the config and the Worker confuses the dev server.
+const clubText = readFileSync("src/club.ts", "utf8"); // read from the project root, where cf runs
+const club = {
+	domain: /\bdomain:\s*"([^"]+)"/.exec(clubText)?.[1] ?? "",
+	dailyJobUtcHours: (/\bdailyJobUtcHours:\s*\[([^\]]*)\]/.exec(clubText)?.[1] ?? "").split(",").map((h) => Number(h.trim())).filter((h) => !Number.isNaN(h)),
+};
 
 // The site's Worker. Who it's for is src/club.ts; where it runs is deploy.config.ts (the account, zone, databases and
 // buckets the install made, INSTALL.md). `cf dev` evaluates this with mode "development"; `cf deploy` builds with mode
@@ -18,7 +27,7 @@ export default defineConfig(({ mode, isPreview }) => {
 			compatibilityDate: "2026-09-25",
 			entrypoint,
 			// The club's domain, behind the site's own sign-in (auth/session.ts).
-			domains: isPreview ? [] : [CLUB.domain],
+			domains: isPreview ? [] : [club.domain],
 			// workers.dev stays off; its Preview URLs (staging) are on, behind the same sign-in.
 			workersDev: false,
 			previewUrls: true,
@@ -31,7 +40,7 @@ export default defineConfig(({ mode, isPreview }) => {
 			// Every 5 minutes: video sync. Daily at 3am in the club's time zone: backup and orphan sweep. Cron is UTC only, so
 			// one trigger fires for each UTC hour that is 3am there across the year (club.ts dailyJobUtcHours) and the job runs
 			// on the one that's 3am (jobs/daily.ts).
-			triggers: isPreview ? [] : [triggers.scheduled({ schedule: "*/5 * * * *" }), ...CLUB.dailyJobUtcHours.map((h) => triggers.scheduled({ schedule: `0 ${h} * * *` }))],
+			triggers: isPreview ? [] : [triggers.scheduled({ schedule: "*/5 * * * *" }), ...club.dailyJobUtcHours.map((h) => triggers.scheduled({ schedule: `0 ${h} * * *` }))],
 			// Issues: Cloudflare groups the Worker's failures and emails the account when a new one starts, the
 			// one alert that still works when the Worker itself is failing. Every deploy must keep it on, or it goes off.
 			observability: { enabled: true, redactQueryString: true, issues: { enabled: true } },
@@ -50,7 +59,7 @@ export default defineConfig(({ mode, isPreview }) => {
 				// ticket's replies), from this one sender only: alerts@ the club's domain (src/club.ts). Who it writes to comes
 				// from the admins table or the team's list (src/features/admin/admin-mail.ts), never from here. Local in
 				// development, so cf dev only logs what it would send.
-				ADMIN_MAIL: bindings.sendEmail({ allowedSenderAddresses: [`alerts@${CLUB.domain}`] }),
+				ADMIN_MAIL: bindings.sendEmail({ allowedSenderAddresses: [`alerts@${club.domain}`] }),
 				ACCOUNT_ID: bindings.text(DEPLOY.accountId),
 				STREAM_CUSTOMER_CODE: bindings.text(isDev ? "dev" : DEPLOY.streamCustomerCode),
 				R2_BUCKET: bindings.text(bucket),

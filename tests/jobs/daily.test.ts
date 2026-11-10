@@ -45,7 +45,7 @@ describe("the daily job's time: 3am local, all year", () => {
 	it("has one trigger for each UTC hour the club config names, and the deploy config makes its triggers from the same hours", () => {
 		expect(DAILY_CRONS).toEqual(new Set(CLUB.dailyJobUtcHours.map((h) => `0 ${h} * * *`)));
 		const config = readFileSync("cloudflare.config.ts", "utf8");
-		expect(config).toContain("CLUB.dailyJobUtcHours.map((h) => triggers.scheduled({ schedule: `0 ${h} * * *` }))");
+		expect(config).toContain("club.dailyJobUtcHours.map((h) => triggers.scheduled({ schedule: `0 ${h} * * *` }))");
 	});
 });
 

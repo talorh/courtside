@@ -6,7 +6,9 @@ Two scheduled jobs keep things moving: one every five minutes, and one at 3am lo
 
 ### The 5-minute job
 
-> **The 5-minute job.** Every five minutes the job chooses this run's teams, then for each team handles live streams, video copies (a carried-on stream's parts joined into one first), HD downloads, clips, retention and PlayHQ, and then once a run deletes a slice of any closed team due to go, sends emails that didn't go and runs the health checks. Busy teams (a game today, something streaming or processing) get a turn every run; quiet teams take turns, 12 a run, so every team is reached within the hour. One team's or one step's failure never stops the rest.
+![The 5-minute job](diagrams/20-1.svg)
+
+*Busy teams (a game today, something streaming or processing) get a turn every run; quiet teams take turns, 12 a run, so every team is reached within the hour. One team's or one step's failure never stops the rest.*
 
 **Whose turn it is.** One query reads which teams are busy (a game today, a live stream open, a video or clip being processed, an HD copy awaited). Every busy team runs every run; the quiet teams take turns, 12 a run, so each is reached within the hour. A different team goes first each run, so one busy team can't use up the run's outside calls. With 12 teams or fewer, every team runs every five minutes. A deleted team's leftover work takes one turn a run, after everyone else's.
 
@@ -40,7 +42,9 @@ Two scheduled jobs keep things moving: one every five minutes, and one at 3am lo
 
 ### The 3am job
 
-> **The 3am job.** Every night at 3am local time: a checked backup of the database to R2, a sweep of leftover media in Stream and Images, a clean-up of finished sign-in sessions and codes, and the nightly checks, a test of the video joiner among them. Each step stands on its own: a failure is reported on Platform and raises a ticket, and the next night runs again.
+![The 3am job](diagrams/20-2.svg)
+
+*Each step stands on its own: a failure is reported on Platform and raises a ticket, and the next night runs again.*
 
 Cron triggers are UTC only, so two fire, 16:00 and 17:00 UTC, and the job runs on whichever is 3am in the club's time zone that day. The backup goes first, so a run cut short still has it; every later step runs even if an earlier one failed, and any failure fails the night.
 

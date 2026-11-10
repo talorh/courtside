@@ -66,7 +66,7 @@ In each folder, `npm install`. In `courtside-staging`, `.dev.vars` from its exam
 cd ~/git/courtside-staging
 npm install
 cp .dev.vars.example .dev.vars
-npx cf d1 migrations apply courtside --local --dir migrations
+npm run dev:db && npm run dev:seed
 npm run dev
 ```
 

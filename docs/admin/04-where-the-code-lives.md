@@ -4,7 +4,9 @@
 
 The code the site deploys from is a git repository hosted by Cloudflare itself, on **Cloudflare Artifacts**, inside the club's own account, guarded by the same login that runs the site. The project itself is published on GitHub, and the club keeps its own copy wherever it likes; what reaches Artifacts is only ever `main`, pushed by the release. **Workers Builds** watches that repository and turns a push to its main branch into a deploy.
 
-> **The code's path to the live site.** The production folder pushes main to the Artifacts repository with a ten-minute token; Workers Builds sees the push, runs the checks and deploys the Worker; a new computer clones the repository with a read token. Only the release pushes, only to main, and only Workers Builds deploys. A read token is all a new computer needs to get the code.
+![The code's path to the live site](diagrams/04-1.svg)
+
+*Only the release pushes, only to main, and only Workers Builds deploys. A read token is all a new computer needs to get the code.*
 
 | What | Where |
 | --- | --- |
@@ -15,7 +17,9 @@ The code the site deploys from is a git repository hosted by Cloudflare itself, 
 
 ### On a computer: one repository, two folders
 
-> **One repository, two folders.** The repository's git folder lives in courtside-prod, which stays on main, what's live; courtside-staging is a worktree of the same repository, where the staging branch and every feature and fix branch are worked on. npm run staging deploys staging's commit to the staging preview; npm run release pushes main from courtside-prod to Cloudflare Artifacts, which Workers Builds deploys; a new computer clones from Artifacts with a read token. Both folders share one set of commits, branches and the staging record, so a branch made in one is there in the other. Only main ever leaves the computer.
+![One repository, two folders](diagrams/04-2.svg)
+
+*Both folders share one set of commits, branches and the staging record, so a branch made in one is there in the other. Only main ever leaves the computer.*
 
 A computer that works on the site has one clone of the repository and two folders. `courtside-prod` is the clone itself (it holds the `.git` folder) and stays on `main`, what's live, so it's always clear what the release will push. `courtside-staging` is a git worktree of the same repository, where `staging` and every `feature/` and `fix/` branch are worked on. Both share one set of commits and branches, so nothing moves between them by push or pull: `main` in `courtside-prod` is simply fast-forwarded to `staging` for a release. Setting up a computer shows how to make them; Environments and releases how a change moves through them.
 

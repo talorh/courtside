@@ -4,7 +4,9 @@
 
 Manage team is where a team manager runs the team's people. Who's on its list decides who can sign in and what they see, so the list is the site's whole idea of who's allowed in: there's nothing else to set up for a new parent.
 
-> **People and players.** A team manager adds a person with their email, name and role; they're on the team's list, so they can ask for a sign-in code, and every request checks the list for what their role allows. Players, a name and number each, appear in Home's squad, tag highlight clips and gather each player's clips at the season's end. Taking someone off the list works straight away: their next page checks it. Players are the squad only, never people who sign in.
+![People and players](diagrams/08-1.svg)
+
+*Taking someone off the list works straight away: their next page checks it. Players are the squad only, never people who sign in.*
 
 ### People
 

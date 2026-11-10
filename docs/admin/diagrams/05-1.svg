@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 518" width="660" height="518" role="img" aria-labelledby="dg-request-t dg-request-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="660" height="518" fill="#FFFFFF"/>
+<title id="dg-request-t">What happens to a request</title><desc id="dg-request-d">A request passes the edge, then the Worker checks the sign-in, works out who is asking and their team, checks a write names its team, and finally the route checks the role.</desc>
+<defs><marker id="ah-request" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-box k-person"><rect x="30" y="16" width="330" height="58" rx="10"/>
+<text class="dg-t" x="195" y="42">A request arrives</text><text class="dg-s" x="195" y="59">a page, a form or a page script</text></g>
+<path class="dg-arrow" d="M195 74 L195 100" marker-end="url(#ah-request)"/>
+<g class="dg-box k-edge"><rect x="30" y="102" width="330" height="58" rx="10"/>
+<text class="dg-t" x="195" y="128">Edge protection</text><text class="dg-s" x="195" y="145">DDoS, WAF, allowed methods, rate limits</text></g>
+<path class="dg-arrow" d="M195 160 L195 186" marker-end="url(#ah-request)"/>
+<g class="dg-box k-stop"><rect x="420" y="102" width="220" height="58" rx="10"/>
+<text class="dg-t" x="530" y="128">Blocked</text><text class="dg-s" x="530" y="145">at Cloudflare&#39;s edge</text></g><path class="dg-arrow" d="M360 131 L418 131" marker-end="url(#ah-request)"/><g class="dg-box k-worker"><rect x="30" y="188" width="330" height="58" rx="10"/>
+<text class="dg-t" x="195" y="214">Signed in?</text><text class="dg-s" x="195" y="231">the session cookie, looked up in D1</text></g>
+<path class="dg-arrow" d="M195 246 L195 272" marker-end="url(#ah-request)"/>
+<g class="dg-box k-stop"><rect x="420" y="188" width="220" height="58" rx="10"/>
+<text class="dg-t" x="530" y="214">To the sign-in page</text><text class="dg-s" x="530" y="231">and back after the code</text></g><path class="dg-arrow" d="M360 217 L418 217" marker-end="url(#ah-request)"/><g class="dg-box k-step"><rect x="30" y="274" width="330" height="58" rx="10"/>
+<text class="dg-t" x="195" y="300">Who, and which team</text><text class="dg-s" x="195" y="317">the teams&#39; lists and the team cookie</text></g>
+<path class="dg-arrow" d="M195 332 L195 358" marker-end="url(#ah-request)"/>
+<g class="dg-box k-step"><rect x="420" y="274" width="220" height="58" rx="10"/>
+<text class="dg-t" x="530" y="300">Admin pages</text><text class="dg-s" x="530" y="317">site admins only</text></g><path class="dg-arrow" d="M360 303 L418 303" marker-end="url(#ah-request)"/><g class="dg-box k-step"><rect x="30" y="360" width="330" height="58" rx="10"/>
+<text class="dg-t" x="195" y="386">Team guard</text><text class="dg-s" x="195" y="403">a write names its team; closed is read-only</text></g>
+<path class="dg-arrow" d="M195 418 L195 444" marker-end="url(#ah-request)"/>
+<g class="dg-box k-stop"><rect x="420" y="360" width="220" height="58" rx="10"/>
+<text class="dg-t" x="530" y="386">Refused</text><text class="dg-s" x="530" y="403">reload, or read only</text></g><path class="dg-arrow" d="M360 389 L418 389" marker-end="url(#ah-request)"/><g class="dg-box k-done"><rect x="30" y="446" width="330" height="58" rx="10"/>
+<text class="dg-t" x="195" y="472">The route</text><text class="dg-s" x="195" y="489">role check, then the page or API</text></g>
+
+</svg>

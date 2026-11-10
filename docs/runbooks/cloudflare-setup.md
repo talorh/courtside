@@ -165,7 +165,7 @@ For a fix that will take a while, switch the maintenance page on first (`docs/ru
 
 ```bash
 cp .dev.vars.example .dev.vars                           # secrets only; put a generated JWK in STREAM_KEY_JWK
-npx cf d1 migrations apply courtside --local --dir migrations
+npm run dev:db && npm run dev:seed
 npm run dev                                              # http://localhost:5173, signed in as DEV_AUTH_EMAIL
 rm -rf .cloudflare/state                                 # reset local data (then re-run the migrations)
 # Run the 5-minute job locally:

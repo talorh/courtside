@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 230" width="760" height="230" role="img" aria-labelledby="dg-alerts-t dg-alerts-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="230" fill="#FFFFFF"/>
+<title id="dg-alerts-t">An alert&#39;s path</title><desc id="dg-alerts-d">A check runs in a job, its level is saved each time and shown on Platform, a change for the worse raises a ticket on Support and emails the admins once, and when the check clears the ticket resolves itself.</desc>
+<defs><marker id="ah-alerts" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-box k-job"><rect x="10" y="30" width="230" height="56" rx="10"/>
+<text class="dg-t" x="125" y="55">A check runs</text><text class="dg-s" x="125" y="72">every 5 minutes, or at 3am</text></g>
+<g class="dg-box k-step"><rect x="265" y="30" width="230" height="56" rx="10"/>
+<text class="dg-t" x="380" y="55">Its level is saved</text><text class="dg-s" x="380" y="72">ok, warning or urgent: Insights, Platform</text></g>
+<g class="dg-box k-service"><rect x="520" y="30" width="230" height="56" rx="10"/>
+<text class="dg-t" x="635" y="55">Worse than before?</text><text class="dg-s" x="635" y="72">a ticket on Support</text></g>
+<g class="dg-box k-edge"><rect x="520" y="140" width="230" height="56" rx="10"/>
+<text class="dg-t" x="635" y="165">The admins emailed, once</text><text class="dg-s" x="635" y="182">again only if it gets worse</text></g>
+<g class="dg-box k-done"><rect x="265" y="140" width="230" height="56" rx="10"/>
+<text class="dg-t" x="380" y="165">It clears</text><text class="dg-s" x="380" y="182">the ticket resolves itself</text></g>
+<path class="dg-arrow" d="M240 58 L263 58" marker-end="url(#ah-alerts)"/><path class="dg-arrow" d="M495 58 L518 58" marker-end="url(#ah-alerts)"/><path class="dg-arrow" d="M635 86 L635 138" marker-end="url(#ah-alerts)"/><path class="dg-arrow" d="M520 168 L497 168" marker-end="url(#ah-alerts)"/>
+<path class="dg-arrow" d="M380 196 L380 212 L120 212 L120 88" marker-end="url(#ah-alerts)"/><text class="dg-label" x="130" y="208">the next run checks again</text></svg>

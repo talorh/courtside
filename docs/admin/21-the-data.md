@@ -4,7 +4,9 @@
 
 D1 holds everything but the media itself. Times are kept in UTC, apart from a game's start and a photo's date, which are local time as people see them. Changes to the database are numbered migrations, applied to the live database before the release that needs them, and never edited afterwards. Each adds beside what's there rather than changing it in place: the live site keeps running on the database between the migration and the release, so a new value or column goes in next to the old, the release reads either, and a later migration drops the old once the release is known good.
 
-> **The database's tables.** One teams table, with every team's own tables grouped as people, games, video, photos and roster, and requests, each row carrying its team. Below them the site-wide tables: admins, the sign-in's sessions, codes, events and holds, the devices a week by view, support tickets and messages, platform alerts, server errors, problems (anything that failed, for the admin Log), the month's emails, the admin log, the Documentation assistant's questions, and Costs' minutes watched, exchange rate and Cloudflare's bill. Every team table carries a team_id, and every query names it, so one team can never read another's rows. The site-wide tables belong to no team.
+![The database's tables](diagrams/21-1.svg)
+
+*Every team table carries a team_id, and every query names it, so one team can never read another's rows. The site-wide tables belong to no team.*
 
 | What | How long it's kept |
 | --- | --- |

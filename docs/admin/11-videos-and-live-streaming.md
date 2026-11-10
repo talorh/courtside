@@ -6,13 +6,17 @@ Each game has one video. It either comes from a phone's camera, uploaded after t
 
 ### Uploading
 
-> **Uploading a game's video.** The phone asks the Worker to start, the Worker opens a multipart upload in R2, the phone sends the parts straight to R2, the Worker completes it and asks Stream to copy it, and Stream pulls the original from R2. The video never passes through the Worker: the phone sends 16 MB parts straight to R2, and a dropped connection carries on where it stopped.
+![Uploading a game's video](diagrams/11-1.svg)
+
+*The video never passes through the Worker: the phone sends 16 MB parts straight to R2, and a dropped connection carries on where it stopped.*
 
 Stream makes the playback copy, and the 5-minute job asks it how it's going: about 20 to 25 minutes later the game is ready to watch, and its HD MP4 download about 10 to 15 minutes after that. The original in R2 is deleted after 30 days, as Stream has its own copy by then.
 
 ### Live streaming
 
-> **Live streaming a game.** The filming phone asks the Worker to go live, the Worker opens a Stream live input, the phone sends the live picture to Stream, which families watch about a second behind, while the phone also records the game and uploads it to R2. Stopping switches the input off, and the recording becomes the game's video. Stream can't record a stream sent from a browser, so the phone records the game itself and uploads it as it goes. That recording becomes the game's video, at full quality whatever the signal was like.
+![Live streaming a game](diagrams/11-2.svg)
+
+*Stream can't record a stream sent from a browser, so the phone records the game itself and uploads it as it goes. That recording becomes the game's video, at full quality whatever the signal was like.*
 
 - **Go live** runs in Safari or Chrome, never the Home Screen app, where a locked phone can lose its microphone.
 - **Which game:** the one being filmed, else today's next game still to finish (one starting within half an hour before one under way that nobody is streaming), else the next one coming up.
@@ -36,7 +40,9 @@ A closed tab, a phone that restarts or a flat battery doesn't lose the game. The
 
 ### How the parts become one video
 
-> **Joining a carried-on stream's parts.** The phone uploads each part of a stopped-and-restarted stream to R2. After End game the Worker completes every part, and the 5-minute job asks the joiner to join them. The joiner reads the parts from R2 and writes one file back. A later run finds that file and asks Stream to copy it. No run waits for a join. One run asks for it and a later run finds the joined file in R2; the parts are deleted only then.
+![Joining a carried-on stream's parts](diagrams/11-3.svg)
+
+*No run waits for a join. One run asks for it and a later run finds the joined file in R2; the parts are deleted only then.*
 
 The parts are joined by the **video joiner**: a second small Worker, `courtside-join`, that runs ffmpeg in a container on **Cloudflare Containers**. It's the one piece of the site that isn't the main Worker, as a Worker can't run ffmpeg. The site hands it short-lived signed links to the parts in R2 and one to write the joined file to, and nothing else: no team, no names, no database.
 

@@ -10,7 +10,7 @@ const ask = (question: string) => jsonBody({ question });
 describe("what the Documentation AI assistant knows", () => {
 	it("is every section of the Documentation, numbered as the page numbers them, as plain text", () => {
 		const all = docSections();
-		expect(all).toHaveLength(29);
+		expect(all).toHaveLength(30);
 		expect(all.map((s) => s.n)).toEqual(all.map((_, i) => i + 1));
 		const fixture = all.find((s) => s.id === "fixture")!;
 		expect(fixture).toMatchObject({ n: 9, title: "The fixture and PlayHQ" });

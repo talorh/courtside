@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 130" width="760" height="130" role="img" aria-labelledby="dg-nightly-t dg-nightly-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="130" fill="#FFFFFF"/>
+<title id="dg-nightly-t">The 3am job</title><desc id="dg-nightly-d">Every night at 3am local time: a checked backup of the database to R2, a sweep of leftover media in Stream and Images, a clean-up of finished sign-in sessions and codes, and the nightly checks, a test of the video joiner among them.</desc>
+<defs><marker id="ah-nightly" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<text class="dg-label" x="10" y="22">Every night at 3am, local time</text>
+<g class="dg-box k-store"><rect x="10" y="44" width="168" height="64" rx="10"/>
+<text class="dg-t" x="94" y="73">Backup</text><text class="dg-s" x="94" y="90">the database, to R2</text></g><path class="dg-arrow" d="M178 76 L200 76" marker-end="url(#ah-nightly)"/><g class="dg-box k-job"><rect x="202" y="44" width="168" height="64" rx="10"/>
+<text class="dg-t" x="286" y="73">Sweep</text><text class="dg-s" x="286" y="90">leftover media</text></g><path class="dg-arrow" d="M370 76 L392 76" marker-end="url(#ah-nightly)"/><g class="dg-box k-step"><rect x="394" y="44" width="168" height="64" rx="10"/>
+<text class="dg-t" x="478" y="73">Sign-in clean-up</text><text class="dg-s" x="478" y="90">old sessions, codes</text></g><path class="dg-arrow" d="M562 76 L584 76" marker-end="url(#ah-nightly)"/><g class="dg-box k-step"><rect x="586" y="44" width="168" height="64" rx="10"/>
+<text class="dg-t" x="670" y="73">Nightly checks</text><text class="dg-s" x="670" y="90">sizes, costs, the joiner</text></g></svg>

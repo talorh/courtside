@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="760" height="330" role="img" aria-labelledby="dg-release-t dg-release-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="330" fill="#FFFFFF"/>
+<title id="dg-release-t">How a change goes live</title><desc id="dg-release-d">A change is built on its own branch, merged into staging and tried on the staging site, then npm run release checks everything and pushes main to the site&#39;s Artifacts repository, where Workers Builds checks it again and deploys it to saints.example.</desc>
+<defs><marker id="ah-release" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-box k-step"><rect x="30" y="20" width="220" height="58" rx="10"/>
+<text class="dg-t" x="140" y="46">A branch</text><text class="dg-s" x="140" y="63">feature/ or fix/, tests first</text></g><g class="dg-box k-step"><rect x="270" y="20" width="220" height="58" rx="10"/>
+<text class="dg-t" x="380" y="46">Merged into staging</text><text class="dg-s" x="380" y="63">npm run check passes</text></g><g class="dg-box k-service"><rect x="510" y="20" width="220" height="58" rx="10"/>
+<text class="dg-t" x="620" y="46">The staging site</text><text class="dg-s" x="620" y="63">tried on a phone, signed in</text></g><g class="dg-box k-job"><rect x="510" y="130" width="220" height="58" rx="10"/>
+<text class="dg-t" x="620" y="156">npm run release</text><text class="dg-s" x="620" y="173">every check, browser tests</text></g><g class="dg-box k-store"><rect x="270" y="130" width="220" height="58" rx="10"/>
+<text class="dg-t" x="380" y="156">Artifacts: main</text><text class="dg-s" x="380" y="173">the site&#39;s own git repo</text></g><g class="dg-box k-worker"><rect x="30" y="130" width="220" height="58" rx="10"/>
+<text class="dg-t" x="140" y="156">Workers Builds</text><text class="dg-s" x="140" y="173">checks again, then deploys</text></g>
+<path class="dg-arrow" d="M250 49 L268 49" marker-end="url(#ah-release)"/><path class="dg-arrow" d="M490 49 L508 49" marker-end="url(#ah-release)"/><path class="dg-arrow" d="M620 78 L620 128" marker-end="url(#ah-release)"/>
+<path class="dg-arrow" d="M510 159 L492 159" marker-end="url(#ah-release)"/><path class="dg-arrow" d="M270 159 L252 159" marker-end="url(#ah-release)"/><path class="dg-arrow" d="M140 188 L140 238" marker-end="url(#ah-release)"/>
+<g class="dg-box k-done"><rect x="30" y="240" width="220" height="58" rx="10"/>
+<text class="dg-t" x="140" y="266">saints.example</text><text class="dg-s" x="140" y="283">live for every team</text></g>
+<text class="dg-label" x="290" y="274">Nothing is deployed any other way: a push to main is a deploy.</text></svg>

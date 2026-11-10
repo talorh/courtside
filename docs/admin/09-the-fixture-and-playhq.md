@@ -4,7 +4,9 @@
 
 The Fixture is every game the team plays. Everyone sees it; only team managers add, change and delete games. Much of the site follows it: Upload and Go live offer its games, Watch games lists them, the roster gives each week with a game its duties, and PlayHQ's games get their final scores by themselves.
 
-> **How games come into the fixture.** A PlayHQ team link is read from PlayHQ's feed and its games saved straight away, then checked again by themselves; any other public fixture page is read by Workers AI, and a spreadsheet is read in the Worker; those two are shown to check first, and only the ticked games are added. A game can always be added, changed or deleted by hand too. PlayHQ's games need no check page: they're PlayHQ's own, and later checks keep them in step.
+![How games come into the fixture](diagrams/09-1.svg)
+
+*A game can always be added, changed or deleted by hand too. PlayHQ's games need no check page: they're PlayHQ's own, and later checks keep them in step.*
 
 ### A game by hand
 
@@ -29,7 +31,9 @@ The usual tip-off comes from the team's code, boys and girls the same; an age be
 
 ### How PlayHQ is kept in step
 
-> **Keeping a PlayHQ fixture in step.** The 5-minute job finds each PlayHQ fixture due a check, reads the team's fixture from PlayHQ's feed and matches each game to one already here; new games are added, changed ones updated, and ones PlayHQ dropped are marked, never deleted. Checks stop by themselves, and a failed read changes nothing. A game deleted here stays deleted on later checks. A failed read is saved on the fixture, and team managers see it on every page until a check works.
+![Keeping a PlayHQ fixture in step](diagrams/09-2.svg)
+
+*A game deleted here stays deleted on later checks. A failed read is saved on the fixture, and team managers see it on every page until a check works.*
 
 | Fixture | Checked | Stops |
 | --- | --- | --- |
@@ -43,7 +47,9 @@ The usual tip-off comes from the team's code, boys and girls the same; an age be
 
 ### From any fixture page, read by AI
 
-> **Reading a fixture page with AI.** The team manager pastes a fixture page's link; the Worker fetches the page securely, cuts it down to its text, and sends that with the team's names to Workers AI, which answers with the team's games as JSON; the Worker checks every game and shows them to check. Nothing is added until the team manager ticks the games. A page that draws its fixture with JavaScript after it loads has no games in its text, and the site says so.
+![Reading a fixture page with AI](diagrams/09-3.svg)
+
+*Nothing is added until the team manager ticks the games. A page that draws its fixture with JavaScript after it loads has no games in its text, and the site says so.*
 
 - **Fetching:** the link is asked for over https (an http:// link is asked for securely), following up to five redirects, each one https too, for 15 seconds, and only the first 2 MB is read. The page must be public: if it doesn't open in a private window, the site can't read it either. A link to a file rather than a web page is pointed to the spreadsheet instead.
 - **Cutting it down:** scripts, styles and the page's head are dropped, table cells are kept apart with a "|" so a row stays a row, and the first 30,000 characters (about 8,000 tokens) go on. A page with almost no text draws its fixture with JavaScript after it loads, and the site says so rather than asking the model.
@@ -60,7 +66,9 @@ Games from a page or a spreadsheet are shown first, sorted by date, with every p
 
 ### Final scores
 
-> **A PlayHQ game's final score.** During the game's hour it says In progress; once it's over the 5-minute job asks PlayHQ every run for two hours, then about hourly until three days after tip-off, then stops; a FINAL result with both scores is entered, never over a score a team manager typed. Results usually go into PlayHQ at the final buzzer, so most scores arrive within minutes. A team manager can enter or fix any score once the game has started.
+![A PlayHQ game's final score](diagrams/09-4.svg)
+
+*Results usually go into PlayHQ at the final buzzer, so most scores arrive within minutes. A team manager can enter or fix any score once the game has started.*
 
 During a game's hour it says In progress. For a game from a PlayHQ fixture, the 5-minute job then asks PlayHQ for its result (`discoverGame`), and enters the score only when PlayHQ's status is FINAL with both scores in, and never over one a team manager typed. It stops 3 days after tip-off. A failed ask is logged and tried again later, on the same back-off; it never fails the run. A team manager can enter or fix any game's score once it has started, and any member can hide scores everywhere for themselves.
 

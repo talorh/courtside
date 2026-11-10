@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" width="760" height="250" role="img" aria-labelledby="dg-placement-t dg-placement-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="250" fill="#FFFFFF"/>
+<title id="dg-placement-t">Where the Worker runs</title><desc id="dg-placement-d">A phone reaches the Cloudflare data centre nearest it, which runs the zone&#39;s protections, then the request goes to the Worker in its region, placed beside the database, so each of a page&#39;s queries takes a millisecond or two.</desc>
+<defs><marker id="ah-placement" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-zone"><rect x="500" y="14" width="254" height="222" rx="14"/><text x="514" y="34">The region</text></g>
+<g class="dg-box k-person"><rect x="20" y="40" width="200" height="56" rx="10"/>
+<text class="dg-t" x="120" y="65">A phone in the club&#39;s time zone</text><text class="dg-s" x="120" y="82">a family on the site</text></g>
+<g class="dg-box k-edge"><rect x="260" y="40" width="200" height="56" rx="10"/>
+<text class="dg-t" x="360" y="65">Nearest data centre</text><text class="dg-s" x="360" y="82">DDoS, WAF, human check</text></g>
+<g class="dg-box k-worker"><rect x="520" y="40" width="214" height="56" rx="10"/>
+<text class="dg-t" x="627" y="65">Worker: courtside</text><text class="dg-s" x="627" y="82">placement aws:ap-southeast-2</text></g>
+<g class="dg-box k-store"><rect x="520" y="160" width="214" height="56" rx="10"/>
+<text class="dg-t" x="627" y="185">D1: courtside</text><text class="dg-s" x="627" y="202">primary, the region</text></g>
+<path class="dg-arrow" d="M220 68 L258 68" marker-end="url(#ah-placement)"/><path class="dg-arrow" d="M460 68 L518 68" marker-end="url(#ah-placement)"/><text class="dg-label" x="466" y="58">one hop</text>
+<path class="dg-arrow" d="M627 96 L627 158" marker-end="url(#ah-placement)" marker-start="url(#ah-placement)"/><text class="dg-label" x="640" y="132">each query, 1 to 2 ms</text></svg>

@@ -4,7 +4,9 @@
 
 The admin area is for site admins only; anyone else gets "Page not found" there. Its pages read every team at once, so each of their queries is a listed exception to the rule that every query names its team (`CROSS_TEAM` in `scripts/rules.mjs`), and they show counts and figures, never a family's email. Each page works its figures out as it opens, from five sources.
 
-> **Where the admin area's figures come from.** Five sources feed the admin pages, each read as a page opens: the site's database for every count, the jobs' saved alert levels, Cloudflare's analytics through a read-only token, Stream's API for minutes left, and Frankfurter for the exchange rate. Insights, Teams, the Log, Platform, Costs and Insights' Alerts each draw on them. Besides the teams' own rows, the admin area keeps a few figures of its own: minutes watched by month, the day's exchange rate, each alert's level, the month's emails and each hour's server errors. Everything else is worked out each time a page opens.
+![Where the admin area's figures come from](diagrams/18-1.svg)
+
+*Besides the teams' own rows, the admin area keeps a few figures of its own: minutes watched by month, the day's exchange rate, each alert's level, the month's emails and each hour's server errors. Everything else is worked out each time a page opens.*
 
 | Page | What it shows | Where its figures come from |
 | --- | --- | --- |
@@ -25,7 +27,9 @@ Platform's last 30 days, the Worker's errors on Insights' Alerts and the minutes
 
 ### How Costs gets its figures
 
-> **A team's month of costs.** A team's month adds up its own video storage past the bundle, its minutes watched, its originals in R2 past the free 10 GB, and a share of the site's fixed costs by the days it ran; that is turned from US dollars into Australian at the day's rate and set against the team's season budget, which raises the Team budgets alert if it's over or heading over. Cloudflare's list prices are in the code (costs-prices.ts). The estimate for the rest of a season uses the team's own figures once it has three games with a video. Cloudflare's bill is the true figure.
+![A team's month of costs](diagrams/18-2.svg)
+
+*Cloudflare's list prices are in the code (costs-prices.ts). The estimate for the rest of a season uses the team's own figures once it has three games with a video. Cloudflare's bill is the true figure.*
 
 - **Storage** is worked out from the database: each team's videos' and clips' minutes, against the 1,000 the bundle includes, priced at the further 1,000-minute blocks the account buys, and shared by the minutes each team stores. A clip counts until it or its video goes.
 - **Uploads** are each team's originals in R2 (kept 30 days each), from their sizes on the database's rows, past the free 10 GB, by each team's share.

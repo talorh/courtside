@@ -29,15 +29,21 @@ Staging is the same Worker deployed as a Worker Preview of `courtside`, told it'
 | When | Any time, as often as needed | Not on a day a team plays, unless it fixes something broken; never while anyone is uploading or streaming |
 | Who sees it | Admins and the test accounts, signed in | Every team |
 
-> **The two environments and how each is deployed.** From the staging folder, npm run staging deploys the staging branch as a preview of the Worker with its own database and bucket. From the main folder, npm run release pushes main to Cloudflare, where Workers Builds deploys the live Worker. Stream, Images, Workers AI and Email Sending are shared, with staging's things labelled. Staging is deployed from the computer in about a minute, as often as needed. Production is deployed only by Workers Builds, from a push the release makes once every check has passed.
+![The two environments and how each is deployed](diagrams/26-1.svg)
 
-> **How a change goes live.** A change is built on its own branch, merged into staging and tried on the staging site, then npm run release checks everything and pushes main to the site's Artifacts repository, where Workers Builds checks it again and deploys it to saints.example. Staging and production run the same commit. Anything changed after it's been tried on staging goes back to staging first.
+*Staging is deployed from the computer in about a minute, as often as needed. Production is deployed only by Workers Builds, from a push the release makes once every check has passed.*
+
+![How a change goes live](diagrams/26-2.svg)
+
+*Staging and production run the same commit. Anything changed after it's been tried on staging goes back to staging first.*
 
 ### Branches
 
 One repository, two working folders: one for `staging` and the branches, one for `main`. A change is built on its own branch, `feature/` or `fix/`, off `staging`, its tests written first. When it's ready it's merged into `staging`, the staging environment's branch, and `npm run staging` puts that branch on the staging site: it checks the code, applies staging's migrations, deploys the preview and records the commit it deployed as `refs/courtside/staging`. `main` is production. Nothing is committed on it directly: it's only ever fast-forwarded to `staging` for a release, so what goes live is exactly what was tried. A merged branch is deleted.
 
-> **The branches.** Feature and fix branches come off staging and are merged back into it; main is only ever fast-forwarded to staging for a release. Every branch comes off staging and is merged back once its tests pass, then deleted. Nothing is committed on main directly.
+![The branches](diagrams/26-3.svg)
+
+*Every branch comes off staging and is merged back once its tests pass, then deleted. Nothing is committed on main directly.*
 
 ### A change, start to finish
 

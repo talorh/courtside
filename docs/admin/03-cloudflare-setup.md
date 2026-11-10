@@ -25,7 +25,9 @@ Everything runs in the club's own Cloudflare account (its id in `deploy.config.t
 
 The Worker's placement is set to a region in `deploy.config.ts` (`aws:ap-southeast-2`, Sydney, for a club in Melbourne). That's Cloudflare's way of naming a place: it runs the Worker in its own data centre nearest that cloud region. Nothing runs on AWS and nothing is billed there, and placement costs nothing extra: a Worker is charged by requests and CPU time wherever it runs.
 
-> **Where the Worker runs.** A phone reaches the Cloudflare data centre nearest it, which runs the zone's protections, then the request goes to the Worker in its region, placed beside the database, so each of a page's queries takes a millisecond or two. Without placement the Worker runs wherever the request lands, so a phone sent through Singapore or the US by its network would send every query across the ocean.
+![Where the Worker runs](diagrams/03-1.svg)
+
+*Without placement the Worker runs wherever the request lands, so a phone sent through Singapore or the US by its network would send every query across the ocean.*
 
 Beside the database, because a page runs several queries one after another. Left to the default, the Worker runs wherever the request arrives, and when a phone network sends a local phone through another continent, every query crosses an ocean and a page takes seconds. Pinned beside the database, each query takes a millisecond or two and the person pays one hop to the region. The zone's protections still run at the data centre nearest the person, and every answer carries a `cf-placement` header (`remote-SYD`) that shows the placement working. Smart Placement would most likely settle on the same place, but only after watching traffic, and with a sample of requests left unplaced; naming the region is Cloudflare's advice for one database in one known place. Read replicas add nothing when everyone who uses the site is in one region.
 

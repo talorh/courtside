@@ -2,7 +2,7 @@
 
 *Courtside Documentation › Getting started. [Contents](README.md).*
 
-Courtside is a private website where each Saints team keeps its game videos and photos for its families. It runs entirely on Cloudflare, in one account called **Courtside**, as one program (a Worker) with one database, plus a small helper that joins a live stream's parts into one video. Team managers run their own teams; a site admin looks after the whole site from this admin area, and can open any team to help. This page explains how it all works. If Cloudflare's words are new to you, the Glossary at the end puts each one in plain English.
+Courtside is a private website where each Saints team keeps its game videos and photos for its families. It runs entirely on Cloudflare, in the club's own account, as one program (a Worker) with one database, plus a small helper that joins a live stream's parts into one video. Team managers run their own teams; a site admin looks after the whole site from this admin area, and can open any team to help. This page explains how it all works. If Cloudflare's words are new to you, the Glossary at the end puts each one in plain English.
 
 ### What you need
 

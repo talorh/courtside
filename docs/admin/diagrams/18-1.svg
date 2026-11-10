@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 410" width="760" height="410" role="img" aria-labelledby="dg-admindata-t dg-admindata-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="410" fill="#FFFFFF"/>
+<title id="dg-admindata-t">Where the admin area&#39;s figures come from</title><desc id="dg-admindata-d">Five sources feed the admin pages, each read as a page opens: the site&#39;s database for every count, the jobs&#39; saved alert levels, Cloudflare&#39;s analytics through a read-only token, Stream&#39;s API for minutes left, and Frankfurter for the exchange rate. Insights, Teams, the Log, Platform, Costs and Insights&#39; Alerts each draw on them.</desc>
+<defs><marker id="ah-admindata" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-box k-store"><rect x="10" y="20" width="240" height="56" rx="10"/>
+<text class="dg-t" x="130" y="45">The site&#39;s database</text><text class="dg-s" x="130" y="62">every team&#39;s rows, counted</text></g><g class="dg-box k-job"><rect x="10" y="100" width="240" height="56" rx="10"/>
+<text class="dg-t" x="130" y="125">The jobs&#39; checks</text><text class="dg-s" x="130" y="142">each alert&#39;s level, saved</text></g><g class="dg-box k-service"><rect x="10" y="180" width="240" height="56" rx="10"/>
+<text class="dg-t" x="130" y="205">Cloudflare&#39;s analytics</text><text class="dg-s" x="130" y="222">a read-only token, GraphQL</text></g><g class="dg-box k-service"><rect x="10" y="260" width="240" height="56" rx="10"/>
+<text class="dg-t" x="130" y="285">Stream&#39;s API</text><text class="dg-s" x="130" y="302">minutes of storage left</text></g><g class="dg-box k-edge"><rect x="10" y="340" width="240" height="56" rx="10"/>
+<text class="dg-t" x="130" y="365">Frankfurter</text><text class="dg-s" x="130" y="382">the day&#39;s US$ rate for the club&#39;s currency</text></g><g class="dg-box k-worker"><rect x="510" y="20" width="240" height="56" rx="10"/>
+<text class="dg-t" x="630" y="45">Insights</text><text class="dg-s" x="630" y="62">counts, weeks, mobile and desktop</text></g><g class="dg-box k-worker"><rect x="510" y="100" width="240" height="56" rx="10"/>
+<text class="dg-t" x="630" y="125">Teams, Log</text><text class="dg-s" x="630" y="142">lists, right now, what happened</text></g><g class="dg-box k-worker"><rect x="510" y="180" width="240" height="56" rx="10"/>
+<text class="dg-t" x="630" y="205">Platform</text><text class="dg-s" x="630" y="222">each limit, Cloudflare&#39;s 30 days</text></g><g class="dg-box k-worker"><rect x="510" y="260" width="240" height="56" rx="10"/>
+<text class="dg-t" x="630" y="285">Costs</text><text class="dg-s" x="630" y="302">each team&#39;s months and budget</text></g><g class="dg-box k-worker"><rect x="510" y="340" width="240" height="56" rx="10"/>
+<text class="dg-t" x="630" y="365">Insights&#39; Alerts</text><text class="dg-s" x="630" y="382">every check as a light</text></g>
+<g class="dg-box k-step"><rect x="295" y="180" width="170" height="56" rx="10"/>
+<text class="dg-t" x="380" y="205">Read as it opens</text><text class="dg-s" x="380" y="222">Cloudflare: a few seconds</text></g>
+<path class="dg-arrow" d="M250 48 L275 48 L275 208 L293 208" marker-end="url(#ah-admindata)"/><path class="dg-arrow" d="M250 128 L275 128 L275 208 L293 208" marker-end="url(#ah-admindata)"/><path class="dg-arrow" d="M250 208 L275 208 L275 208 L293 208" marker-end="url(#ah-admindata)"/><path class="dg-arrow" d="M250 288 L275 288 L275 208 L293 208" marker-end="url(#ah-admindata)"/><path class="dg-arrow" d="M250 368 L275 368 L275 208 L293 208" marker-end="url(#ah-admindata)"/>
+<path class="dg-arrow" d="M465 208 L485 208 L485 48 L508 48" marker-end="url(#ah-admindata)"/><path class="dg-arrow" d="M465 208 L485 208 L485 128 L508 128" marker-end="url(#ah-admindata)"/><path class="dg-arrow" d="M465 208 L485 208 L485 208 L508 208" marker-end="url(#ah-admindata)"/><path class="dg-arrow" d="M465 208 L485 208 L485 288 L508 288" marker-end="url(#ah-admindata)"/><path class="dg-arrow" d="M465 208 L485 208 L485 368 L508 368" marker-end="url(#ah-admindata)"/></svg>

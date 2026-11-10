@@ -1,7 +1,7 @@
 # Courtside: the admin area's Documentation
 
-The same text the site's admins read at `/admin/docs`, exported by `npm run docs` so it can be read here. Diagrams are
-described in words; the site draws them. A change to the Documentation regenerates these files in the same commit.
+The same text the site's admins read at `/admin/docs`, exported by `npm run docs` so it can be read here, its
+diagrams beside it. A change to the Documentation regenerates these files in the same commit.
 
 ## Getting started
 
@@ -49,3 +49,4 @@ described in words; the site draws them. A change to the Documentation regenerat
 ## Reference
 
 29. [Glossary](29-glossary.md)
+30. [Technology decisions](30-technology-decisions.md)

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 460" width="780" height="460" role="img" aria-labelledby="dg-live-t dg-live-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="780" height="460" fill="#FFFFFF"/>
+<title id="dg-live-t">Live streaming a game</title><desc id="dg-live-d">The filming phone asks the Worker to go live, the Worker opens a Stream live input, the phone sends the live picture to Stream, which families watch about a second behind, while the phone also records the game and uploads it to R2. Stopping switches the input off, and the recording becomes the game&#39;s video.</desc>
+<defs><marker id="ah-live" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<line class="dg-life" x1="80" y1="60" x2="80" y2="440"/>
+<g class="dg-box k-person"><rect x="15" y="14" width="130" height="44" rx="10"/><text class="dg-t" x="80" y="41">Filming phone</text></g><line class="dg-life" x1="235" y1="60" x2="235" y2="440"/>
+<g class="dg-box k-worker"><rect x="170" y="14" width="130" height="44" rx="10"/><text class="dg-t" x="235" y="41">Worker</text></g><line class="dg-life" x1="390" y1="60" x2="390" y2="440"/>
+<g class="dg-box k-service"><rect x="325" y="14" width="130" height="44" rx="10"/><text class="dg-t" x="390" y="41">Stream</text></g>
+<line class="dg-life" x1="545" y1="60" x2="545" y2="440"/>
+<g class="dg-box k-store"><rect x="480" y="14" width="130" height="44" rx="10"/><text class="dg-t" x="545" y="41">R2</text></g><line class="dg-life" x1="700" y1="60" x2="700" y2="440"/>
+<g class="dg-box k-person"><rect x="635" y="14" width="130" height="44" rx="10"/><text class="dg-t" x="700" y="41">Families</text></g>
+<path class="dg-arrow" d="M84 100 L231 100" marker-end="url(#ah-live)"/>
+<text class="dg-label mid" x="157.5" y="92">Go live</text>
+<path class="dg-arrow" d="M239 146 L386 146" marker-end="url(#ah-live)"/>
+<text class="dg-label mid" x="312.5" y="138">open a live input</text>
+<path class="dg-arrow dash" d="M84 192 L386 192" marker-end="url(#ah-live)"/>
+<text class="dg-label mid" x="235" y="184">the live picture (WHIP)</text>
+<path class="dg-arrow dash" d="M394 238 L696 238" marker-end="url(#ah-live)"/>
+<text class="dg-label mid" x="545" y="230">about a second behind (WHEP)</text>
+<path class="dg-arrow dash" d="M84 284 L541 284" marker-end="url(#ah-live)"/>
+<text class="dg-label mid" x="312.5" y="276">its own recording, 8 MB parts</text>
+<path class="dg-arrow" d="M84 330 L231 330" marker-end="url(#ah-live)"/>
+<text class="dg-label mid" x="157.5" y="322">End game</text>
+<path class="dg-arrow" d="M239 376 L386 376" marker-end="url(#ah-live)"/>
+<text class="dg-label mid" x="312.5" y="368">switch the input off</text>
+<path class="dg-arrow" d="M239 422 L386 422" marker-end="url(#ah-live)"/>
+<text class="dg-label mid" x="312.5" y="414">copy the recording</text></svg>

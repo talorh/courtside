@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 440" width="760" height="440" role="img" aria-labelledby="dg-data-t dg-data-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="440" fill="#FFFFFF"/>
+<title id="dg-data-t">The database&#39;s tables</title><desc id="dg-data-d">One teams table, with every team&#39;s own tables grouped as people, games, video, photos and roster, and requests, each row carrying its team. Below them the site-wide tables: admins, the sign-in&#39;s sessions, codes, events and holds, the devices a week by view, support tickets and messages, platform alerts, server errors, problems (anything that failed, for the admin Log), the month&#39;s emails, the admin log, the Documentation assistant&#39;s questions, and Costs&#39; minutes watched, exchange rate and Cloudflare&#39;s bill.</desc>
+<defs><marker id="ah-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-box k-store"><rect x="290" y="16" width="180" height="52" rx="10"/>
+<text class="dg-t" x="380" y="39">teams</text><text class="dg-s" x="380" y="56">one row a team</text></g>
+<g class="dg-box k-step"><rect x="8" y="110" width="148" height="102" rx="10"/>
+<text class="dg-t" x="82" y="132">People</text><text class="dg-m" x="17" y="156">members</text><text class="dg-m" x="17" y="173">players</text><text class="dg-m" x="17" y="190">favourites</text><text class="dg-m" x="17" y="207">ask_counts</text></g><path class="dg-arrow" d="M380 68 L82 108" marker-end="url(#ah-data)"/><g class="dg-box k-step"><rect x="158" y="110" width="148" height="119" rx="10"/>
+<text class="dg-t" x="232" y="132">Games</text><text class="dg-m" x="167" y="156">games</text><text class="dg-m" x="167" y="173">game_scores</text><text class="dg-m" x="167" y="190">game_lines</text><text class="dg-m" x="167" y="207">playhq_fixtures</text><text class="dg-m" x="167" y="224">coach_notes</text></g><path class="dg-arrow" d="M380 68 L232 108" marker-end="url(#ah-data)"/><g class="dg-box k-step"><rect x="308" y="110" width="148" height="170" rx="10"/>
+<text class="dg-t" x="382" y="132">Video</text><text class="dg-m" x="317" y="156">videos</text><text class="dg-m" x="317" y="173">recording_segments</text><text class="dg-m" x="317" y="190">clips</text><text class="dg-m" x="317" y="207">clip_players</text><text class="dg-m" x="317" y="224">live_streams</text><text class="dg-m" x="317" y="241">downloads</text><text class="dg-m" x="317" y="258">media_downloads</text><text class="dg-m" x="317" y="275">video_views</text></g><path class="dg-arrow" d="M380 68 L382 108" marker-end="url(#ah-data)"/><g class="dg-box k-step"><rect x="458" y="110" width="148" height="119" rx="10"/>
+<text class="dg-t" x="532" y="132">Photos and roster</text><text class="dg-m" x="467" y="156">photos</text><text class="dg-m" x="467" y="173">roster_families</text><text class="dg-m" x="467" y="190">roster_slots</text><text class="dg-m" x="467" y="207">roster_duties</text><text class="dg-m" x="467" y="224">roster_weeks</text></g><path class="dg-arrow" d="M380 68 L532 108" marker-end="url(#ah-data)"/><g class="dg-box k-step"><rect x="608" y="110" width="148" height="102" rx="10"/>
+<text class="dg-t" x="682" y="132">Requests</text><text class="dg-m" x="617" y="156">removal_requests</text><text class="dg-m" x="617" y="173">clip_removal_requests</text><text class="dg-m" x="617" y="190">photo_removal_requests</text><text class="dg-m" x="617" y="207">activity</text></g><path class="dg-arrow" d="M380 68 L682 108" marker-end="url(#ah-data)"/>
+<g class="dg-box k-service"><rect x="8" y="276" width="744" height="150" rx="10"/><text class="dg-t" x="380" y="298">Site-wide, belonging to no team</text>
+<text class="dg-m" x="40" y="324">admins</text><text class="dg-m" x="40" y="344">sessions</text><text class="dg-m" x="40" y="364">sign_in_codes</text><text class="dg-m" x="40" y="384">sign_in_events</text><text class="dg-m" x="40" y="404">sign_in_holds</text><text class="dg-m" x="225" y="324">view_weeks</text><text class="dg-m" x="225" y="344">support_requests</text><text class="dg-m" x="225" y="364">support_messages</text><text class="dg-m" x="225" y="384">platform_alerts</text><text class="dg-m" x="225" y="404">server_errors</text><text class="dg-m" x="410" y="324">problems</text><text class="dg-m" x="410" y="344">email_months</text><text class="dg-m" x="410" y="364">admin_log</text><text class="dg-m" x="410" y="384">docs_ask_counts</text><text class="dg-m" x="410" y="404">cost_views</text><text class="dg-m" x="595" y="324">exchange_rates</text><text class="dg-m" x="595" y="344">billed_usage</text></g></svg>

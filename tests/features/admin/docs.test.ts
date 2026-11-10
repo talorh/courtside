@@ -15,7 +15,7 @@ describe("the admin area's Documentation", () => {
 		const contents = items.map((m) => m[1]);
 		expect(contents).toEqual(["start", "overview", "cloudflare", "artifacts", "requests", "signin", "teams", "people", "fixture", "roster", "video",
 			"watching", "photos", "home", "help", "privacy", "fairuse", "admin", "tasks", "jobs", "data", "monitoring", "costs", "setup", "agent", "releases", "recovery",
-			"code", "glossary"]);
+			"code", "glossary", "decisions"]);
 		// Numbered 1 to 29 through the groups, the number on each heading too.
 		expect(items.map((m) => Number(m[2]))).toEqual(contents.map((_, i) => i + 1));
 		for (const [i, id] of contents.entries()) {
@@ -33,7 +33,7 @@ describe("the admin area's Documentation", () => {
 		expect(html).toContain('<p class="docs-crumb">Documentation › Running it</p><h2 id="jobs-h"><span class="docs-num">20.</span> Background jobs</h2>');
 		expect(html).toContain('<nav class="docs-pn" aria-label="Neighbouring sections"><span></span><a class="next" href="#overview"><small>Next</small><b>2. The site at a glance</b></a></nav>');
 		expect(html).toContain('<a class="prev" href="#artifacts"><small>Previous</small><b>4. Where the code lives</b></a><a class="next" href="#signin"><small>Next</small><b>6. Signing in</b></a>');
-		expect(html).toContain('<a class="prev" href="#code"><small>Previous</small><b>28. Where things are in the code</b></a></nav>');
+		expect(html).toContain('<a class="prev" href="#glossary"><small>Previous</small><b>29. Glossary</b></a></nav>');
 	});
 
 	it("covers the Cloudflare setup as it stands: the account, its resources, the edge and the secrets by name only", async () => {

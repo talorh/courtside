@@ -11,7 +11,9 @@
 
 ### Highlight clips
 
-> **A highlight clip's path.** A member marks a start and an end on the game's video with a label; the Worker asks Stream to cut that part as a clip of its own; the 5-minute job asks Stream how it's going, and once it's ready starts its MP4; the clip shows beside the player with the players in it. A clip is its own video in Stream, deleted with the game's video or by a team manager. Its maker or a team manager can change who's in it.
+![A highlight clip's path](diagrams/12-1.svg)
+
+*A clip is its own video in Stream, deleted with the game's video or by a team manager. Its maker or a team manager can change who's in it.*
 
 - **Making one:** any member marks a start and an end while watching, 3 seconds to 5 minutes apart, and gives it a label; a game has 50 clips at most. Stream's clip API isn't on the Worker's binding, so the Worker asks Stream's REST API, with a token that can only use Stream (`STREAM_API_TOKEN`).
 - **Ready:** each 5-minute run asks Stream how processing clips are going; a ready one has its MP4 started, so it can be downloaded, and a failed one is marked failed.

@@ -4,7 +4,9 @@
 
 There are no passwords. Someone types their email, gets a six-digit code by email, types it, and stays signed in for 30 days on that device. A code is only ever sent to an address on a team's list, or a site admin's, and only once Cloudflare Turnstile says a person, not a script, asked: the check is invisible unless Cloudflare wants a tap, and if Cloudflare can't be reached the code still goes, with the limits below holding.
 
-> **Signing in.** Someone types their email. Turnstile checks a person is asking. A code is only sent to an address on a team's list or an admin's, within the limits. The code lasts 10 minutes, and a right code gives a 30-day session on that device. Nobody gets a code unless their email is on a team's list (or they're a site admin). Sessions are per device, so a phone and a computer each sign in once.
+![Signing in](diagrams/06-1.svg)
+
+*Nobody gets a code unless their email is on a team's list (or they're a site admin). Sessions are per device, so a phone and a computer each sign in once.*
 
 | Limit | Why |
 | --- | --- |

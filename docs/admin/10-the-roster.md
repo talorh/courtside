@@ -18,7 +18,9 @@ The Roster says which family does which game-day duty. Every member sees it; the
 
 ### How a week is filled
 
-> **How a roster week is filled.** The roster takes the fixture's weeks, gives each game its slots, gives a duty one family does every week to that family, then shares the rest among the families free that week with the fewest duties, in the cheapest way for evenness, and afterwards swaps duties between families wherever that evens them out. Weeks are filled in date order, a game at a time. Families on the roster now share the duties; duties set by hand are kept and counted.
+![How a roster week is filled](diagrams/10-1.svg)
+
+*Weeks are filled in date order, a game at a time. Families on the roster now share the duties; duties set by hand are kept and counted.*
 
 - **Slots:** each game in the week, in playing order, wants video first (it takes the most organising), then two scorers, then the extra duty. A slot is a week, a duty, a position and a game, so a tournament weekend's games each get their own scorers.
 - **Who's free:** the families with no duty yet that week, apart from every-week families, sorted by fewest duties so far, then the longest since their last duty, then the order they were added.
@@ -29,7 +31,9 @@ The Roster says which family does which game-day duty. Every member sees it; the
 
 ### What changes it
 
-> **What changes the roster.** Six things change the roster: opening it fills new games' weeks and clears ones with no games, Generate roster shares out next week on again, Change on a week fills that week around the families picked, saving the duties shares out next week on again, a family's time off counts as done, and Scorers only this week leaves a week with two scorers a game. Past weeks keep what was done, and it still counts. A closed season's roster stays exactly as it was.
+![What changes the roster](diagrams/10-2.svg)
+
+*Past weeks keep what was done, and it still counts. A closed season's roster stays exactly as it was.*
 
 - **Opening the Roster** brings it up to date once Generate roster has been tapped, while the season's on: new games' weeks are filled, a week or a game that's gone loses its slots, and from this week on so does a slot the week no longer wants (a duty switched off, video in a No video week).
 - **Generate roster** needs families and an upcoming game. It clears next week on, keeping duties set by hand, and shares the rest out around them. A duty left with a family that's since been taken off goes to one on the roster.

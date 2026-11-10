@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" width="760" height="250" role="img" aria-labelledby="dg-scores-t dg-scores-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="250" fill="#FFFFFF"/>
+<title id="dg-scores-t">A PlayHQ game&#39;s final score</title><desc id="dg-scores-d">During the game&#39;s hour it says In progress; once it&#39;s over the 5-minute job asks PlayHQ every run for two hours, then about hourly until three days after tip-off, then stops; a FINAL result with both scores is entered, never over a score a team manager typed.</desc>
+<defs><marker id="ah-scores" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-box k-step"><rect x="10" y="40" width="140" height="56" rx="10"/>
+<text class="dg-t" x="80" y="65">Tip-off</text><text class="dg-s" x="80" y="82">In progress</text></g><g class="dg-box k-step"><rect x="160" y="40" width="140" height="56" rx="10"/>
+<text class="dg-t" x="230" y="65">An hour on</text><text class="dg-s" x="230" y="82">the game&#39;s over</text></g><g class="dg-box k-job"><rect x="310" y="40" width="140" height="56" rx="10"/>
+<text class="dg-t" x="380" y="65">Every run</text><text class="dg-s" x="380" y="82">for the next 2 hours</text></g><g class="dg-box k-job"><rect x="460" y="40" width="140" height="56" rx="10"/>
+<text class="dg-t" x="530" y="65">About hourly</text><text class="dg-s" x="530" y="82">until 3 days after</text></g><g class="dg-box k-stop"><rect x="610" y="40" width="140" height="56" rx="10"/>
+<text class="dg-t" x="680" y="65">Stops</text><text class="dg-s" x="680" y="82">never asked again</text></g>
+<path class="dg-arrow" d="M150 68 L158 68" marker-end="url(#ah-scores)"/><path class="dg-arrow" d="M300 68 L308 68" marker-end="url(#ah-scores)"/><path class="dg-arrow" d="M450 68 L458 68" marker-end="url(#ah-scores)"/><path class="dg-arrow" d="M600 68 L608 68" marker-end="url(#ah-scores)"/>
+<g class="dg-box k-done"><rect x="160" y="140" width="440" height="56" rx="10"/>
+<text class="dg-t" x="380" y="165">FINAL with both scores: entered</text><text class="dg-s" x="380" y="182">never over a score a team manager typed</text></g>
+<path class="dg-arrow" d="M380 96 L380 138" marker-end="url(#ah-scores)"/><path class="dg-arrow" d="M530 96 L530 138" marker-end="url(#ah-scores)"/>
+<text class="dg-label" x="10" y="230">Only games from a PlayHQ fixture are asked about, at most four a run.</text></svg>

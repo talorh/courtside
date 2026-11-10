@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" width="760" height="260" role="img" aria-labelledby="dg-worktrees-t dg-worktrees-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="260" fill="#FFFFFF"/>
+<title id="dg-worktrees-t">One repository, two folders</title><desc id="dg-worktrees-d">The repository&#39;s git folder lives in courtside-prod, which stays on main, what&#39;s live; courtside-staging is a worktree of the same repository, where the staging branch and every feature and fix branch are worked on. npm run staging deploys staging&#39;s commit to the staging preview; npm run release pushes main from courtside-prod to Cloudflare Artifacts, which Workers Builds deploys; a new computer clones from Artifacts with a read token.</desc>
+<defs><marker id="ah-worktrees" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-box k-step"><rect x="20" y="30" width="220" height="56" rx="10"/>
+<text class="dg-t" x="130" y="55">courtside-staging</text><text class="dg-s" x="130" y="72">a worktree: staging, feature/, fix/</text></g>
+<g class="dg-box k-store"><rect x="270" y="30" width="220" height="56" rx="10"/>
+<text class="dg-t" x="380" y="55">The one .git</text><text class="dg-s" x="380" y="72">commits, branches, the staging record</text></g>
+<g class="dg-box k-done"><rect x="520" y="30" width="220" height="56" rx="10"/>
+<text class="dg-t" x="630" y="55">courtside-prod</text><text class="dg-s" x="630" y="72">main only: what&#39;s live</text></g>
+<g class="dg-box k-service"><rect x="20" y="170" width="220" height="56" rx="10"/>
+<text class="dg-t" x="130" y="195">The staging preview</text><text class="dg-s" x="130" y="212">staging&#39;s commit, test data</text></g>
+<g class="dg-box k-store"><rect x="520" y="170" width="220" height="56" rx="10"/>
+<text class="dg-t" x="630" y="195">Artifacts: courtside/courtside</text><text class="dg-s" x="630" y="212">main, pushed by the release</text></g>
+<path class="dg-arrow" d="M240 58 L268 58" marker-end="url(#ah-worktrees)" marker-start="url(#ah-worktrees)"/><path class="dg-arrow" d="M520 58 L492 58" marker-end="url(#ah-worktrees)" marker-start="url(#ah-worktrees)"/>
+<path class="dg-arrow" d="M130 86 L130 168" marker-end="url(#ah-worktrees)"/><text class="dg-label" x="140" y="132">npm run staging</text>
+<path class="dg-arrow" d="M630 86 L630 168" marker-end="url(#ah-worktrees)"/><text class="dg-label" x="640" y="132">npm run release</text>
+<path class="dg-arrow dash" d="M520 212 L380 212 L380 88" marker-end="url(#ah-worktrees)"/><text class="dg-label" x="390" y="236">clone and fetch, a read token</text></svg>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" width="760" height="320" role="img" aria-labelledby="dg-environments-t dg-environments-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="320" fill="#FFFFFF"/>
+<title id="dg-environments-t">The two environments and how each is deployed</title><desc id="dg-environments-d">From the staging folder, npm run staging deploys the staging branch as a preview of the Worker with its own database and bucket. From the main folder, npm run release pushes main to Cloudflare, where Workers Builds deploys the live Worker. Stream, Images, Workers AI and Email Sending are shared, with staging&#39;s things labelled.</desc>
+<defs><marker id="ah-environments" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-zone"><rect x="4" y="14" width="196" height="230" rx="14"/><text x="18" y="34">This computer</text></g>
+<g class="dg-box k-step"><rect x="16" y="48" width="172" height="56" rx="10"/>
+<text class="dg-t" x="102" y="73">courtside-staging</text><text class="dg-s" x="102" y="90">staging and the branches</text></g>
+<g class="dg-box k-step"><rect x="16" y="170" width="172" height="56" rx="10"/>
+<text class="dg-t" x="102" y="195">courtside-prod</text><text class="dg-s" x="102" y="212">main</text></g>
+<g class="dg-box k-job"><rect x="230" y="48" width="170" height="56" rx="10"/>
+<text class="dg-t" x="315" y="73">npm run staging</text><text class="dg-s" x="315" y="90">check, migrations, deploy</text></g>
+<g class="dg-box k-worker"><rect x="430" y="48" width="320" height="56" rx="10"/>
+<text class="dg-t" x="590" y="73">Staging: a preview of courtside</text><text class="dg-s" x="590" y="90">D1 and R2 courtside-staging, test data only</text></g>
+<g class="dg-box k-job"><rect x="230" y="170" width="170" height="56" rx="10"/>
+<text class="dg-t" x="315" y="195">npm run release</text><text class="dg-s" x="315" y="212">every check, then push</text></g>
+<g class="dg-box k-job"><rect x="430" y="170" width="150" height="56" rx="10"/>
+<text class="dg-t" x="505" y="195">Workers Builds</text><text class="dg-s" x="505" y="212">checks, deploys</text></g>
+<g class="dg-box k-done"><rect x="600" y="170" width="150" height="56" rx="10"/>
+<text class="dg-t" x="675" y="195">saints.example</text><text class="dg-s" x="675" y="212">D1 courtside, R2 originals</text></g>
+<path class="dg-arrow" d="M188 76 L228 76" marker-end="url(#ah-environments)"/><path class="dg-arrow" d="M400 76 L428 76" marker-end="url(#ah-environments)"/>
+<path class="dg-arrow" d="M188 198 L228 198" marker-end="url(#ah-environments)"/><path class="dg-arrow" d="M400 198 L428 198" marker-end="url(#ah-environments)"/><path class="dg-arrow" d="M580 198 L598 198" marker-end="url(#ah-environments)"/>
+<g class="dg-box k-service"><rect x="230" y="266" width="520" height="44" rx="10"/>
+<text class="dg-t" x="490" y="285">Stream, Images, Workers AI, Email Sending: shared</text><text class="dg-s" x="490" y="302">staging&#39;s things labelled and swept within a week</text></g>
+<path class="dg-arrow dash" d="M590 104 L590 264" marker-end="url(#ah-environments)"/><path class="dg-arrow dash" d="M675 226 L675 264" marker-end="url(#ah-environments)"/></svg>

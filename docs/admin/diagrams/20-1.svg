@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" width="760" height="400" role="img" aria-labelledby="dg-five-t dg-five-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="760" height="400" fill="#FFFFFF"/>
+<title id="dg-five-t">The 5-minute job</title><desc id="dg-five-d">Every five minutes the job chooses this run&#39;s teams, then for each team handles live streams, video copies (a carried-on stream&#39;s parts joined into one first), HD downloads, clips, retention and PlayHQ, and then once a run deletes a slice of any closed team due to go, sends emails that didn&#39;t go and runs the health checks.</desc>
+<defs><marker id="ah-five" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<g class="dg-box k-job"><rect x="200" y="16" width="360" height="56" rx="10"/>
+<text class="dg-t" x="380" y="41">Choose this run&#39;s teams</text><text class="dg-s" x="380" y="58">busy teams every run, quiet ones 12 at a time</text></g>
+<g class="dg-zone"><rect x="10" y="100" width="740" height="170" rx="14"/><text x="24" y="120">Each team</text></g><g class="dg-zone"><rect x="10" y="292" width="740" height="98" rx="14"/><text x="24" y="312">Once a run</text></g>
+<g class="dg-box k-service"><rect x="30" y="130" width="220" height="52" rx="10"/>
+<text class="dg-t" x="140" y="153">Live streams</text><text class="dg-s" x="140" y="170">save, close, mark live</text></g><g class="dg-box k-service"><rect x="270" y="130" width="220" height="52" rx="10"/>
+<text class="dg-t" x="380" y="153">Video copies</text><text class="dg-s" x="380" y="170">joins, copies, processing</text></g><g class="dg-box k-service"><rect x="510" y="130" width="220" height="52" rx="10"/>
+<text class="dg-t" x="620" y="153">HD downloads</text><text class="dg-s" x="620" y="170">the MP4 for each video</text></g><g class="dg-box k-service"><rect x="510" y="200" width="220" height="52" rx="10"/>
+<text class="dg-t" x="620" y="223">Clips</text><text class="dg-s" x="620" y="240">processing to ready</text></g><g class="dg-box k-step"><rect x="270" y="200" width="220" height="52" rx="10"/>
+<text class="dg-t" x="380" y="223">Retention</text><text class="dg-s" x="380" y="240">whatever&#39;s past its date</text></g><g class="dg-box k-step"><rect x="30" y="200" width="220" height="52" rx="10"/>
+<text class="dg-t" x="140" y="223">PlayHQ</text><text class="dg-s" x="140" y="240">fixtures and final scores</text></g>
+<path class="dg-arrow" d="M380 72 L380 90 L140 90 L140 128" marker-end="url(#ah-five)"/><path class="dg-arrow" d="M250 156 L268 156" marker-end="url(#ah-five)"/><path class="dg-arrow" d="M490 156 L508 156" marker-end="url(#ah-five)"/>
+<path class="dg-arrow" d="M620 182 L620 198" marker-end="url(#ah-five)"/><path class="dg-arrow" d="M510 226 L492 226" marker-end="url(#ah-five)"/><path class="dg-arrow" d="M270 226 L252 226" marker-end="url(#ah-five)"/><path class="dg-arrow" d="M140 252 L140 322" marker-end="url(#ah-five)"/>
+<g class="dg-box k-step"><rect x="30" y="324" width="220" height="52" rx="10"/>
+<text class="dg-t" x="140" y="347">Closed teams</text><text class="dg-s" x="140" y="364">a slice deleted, when due</text></g><g class="dg-box k-service"><rect x="270" y="324" width="220" height="52" rx="10"/>
+<text class="dg-t" x="380" y="347">Emails</text><text class="dg-s" x="380" y="364">any that didn&#39;t go</text></g><g class="dg-box k-step"><rect x="510" y="324" width="220" height="52" rx="10"/>
+<text class="dg-t" x="620" y="347">Health checks</text><text class="dg-s" x="620" y="364">Stream minutes, errors, email</text></g><path class="dg-arrow" d="M250 350 L268 350" marker-end="url(#ah-five)"/><path class="dg-arrow" d="M490 350 L508 350" marker-end="url(#ah-five)"/></svg>

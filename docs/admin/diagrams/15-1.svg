@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 270" width="700" height="270" role="img" aria-labelledby="dg-ask-t dg-ask-d" class="dg">
+<style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
+.dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
+.dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
+.dg-s{fill:#5D6862;font-size:11.5px;text-anchor:middle}
+.dg-m{fill:#121513;font-size:11.5px}
+.k-person rect{stroke:#121513}
+.k-edge rect{fill:#FFF4D6;stroke:#7A5800}
+.k-worker rect{fill:#14274E;stroke:#2F6FDB}
+.k-worker .dg-t{fill:#fff}.k-worker .dg-s{fill:#CFE5D6}
+.k-store rect{fill:#E4ECFB;stroke:#2F6FDB}
+.k-service rect{stroke:#2F6FDB}
+.k-job rect{fill:#F6F7F6;stroke:#5D6862;stroke-dasharray:6 4}
+.k-stop rect{stroke:#D9262C}.k-stop .dg-t{fill:#D9262C}
+.k-done rect{fill:#2F6FDB;stroke:#2F6FDB}
+.k-done .dg-t{fill:#fff}.k-done .dg-s{fill:#E3F3E8}
+.dg-arrow{fill:none;stroke:#5D6862;stroke-width:1.6}
+.dg-arrow.dash{stroke:#2F6FDB;stroke-dasharray:6 4}
+.dg-head{fill:#5D6862}
+.dg-life{stroke:#E1E5E2;stroke-width:1.2;stroke-dasharray:3 4}
+.dg-label{fill:#5D6862;font-size:11.5px;paint-order:stroke;stroke:#FFFFFF;stroke-width:4px;stroke-linejoin:round}
+.dg-label.mid{text-anchor:middle}
+.dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
+.dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
+<rect width="700" height="270" fill="#FFFFFF"/>
+<title id="dg-ask-t">A question to Ask Virtual Team Manager</title><desc id="dg-ask-d">A member asks a question on Help; the Worker counts it against their 20 a day and sends Workers AI their own Help page as text with whether they&#39;re on an iPhone, Android or a computer; the model answers from that alone, and the answer is shown; nothing is kept.</desc>
+<defs><marker id="ah-ask" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<line class="dg-life" x1="100" y1="60" x2="100" y2="250"/>
+<g class="dg-box k-person"><rect x="30" y="14" width="140" height="44" rx="10"/><text class="dg-t" x="100" y="41">Member</text></g><line class="dg-life" x1="350" y1="60" x2="350" y2="250"/>
+<g class="dg-box k-worker"><rect x="280" y="14" width="140" height="44" rx="10"/><text class="dg-t" x="350" y="41">Worker</text></g><line class="dg-life" x1="600" y1="60" x2="600" y2="250"/>
+<g class="dg-box k-service"><rect x="530" y="14" width="140" height="44" rx="10"/><text class="dg-t" x="600" y="41">Workers AI</text></g>
+<path class="dg-arrow" d="M104 100 L346 100" marker-end="url(#ah-ask)"/>
+<text class="dg-label mid" x="225" y="92">a question, of 20 a day</text>
+<path class="dg-arrow" d="M354 146 L596 146" marker-end="url(#ah-ask)"/>
+<text class="dg-label mid" x="475" y="138">their Help page&#39;s text, and their phone</text>
+<path class="dg-arrow" d="M596 192 L354 192" marker-end="url(#ah-ask)"/>
+<text class="dg-label mid" x="475" y="184">a short, plain answer</text>
+<path class="dg-arrow" d="M346 238 L104 238" marker-end="url(#ah-ask)"/>
+<text class="dg-label mid" x="225" y="230">the answer; nothing kept</text></svg>

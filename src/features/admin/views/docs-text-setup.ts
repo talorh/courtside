@@ -51,7 +51,7 @@ real Stream and R2 don't work locally; staging is where those are tried.</p>
 ${cmd(`cd ~/git/courtside-staging
 npm install
 cp .dev.vars.example .dev.vars
-npx cf d1 migrations apply courtside --local --dir migrations
+npm run dev:db && npm run dev:seed
 npm run dev`)}
 <p>Then ${code("npm run check")} in that folder: types, every unit test, the line limits and the rules. It passes on a
 fresh checkout, and it's the first thing an agent runs.</p>`});

@@ -5,6 +5,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "cf dev",
+		"dev:db": "node scripts/dev-db.mjs",
+		"dev:seed": "node scripts/dev-seed.mjs",
 		"build": "cf build",
 		"deploy": "echo \"Deploy with: npm run release (it runs every check first)\" && exit 1",
 		"typecheck": "cf workers types && tsc && tsc -p tests",

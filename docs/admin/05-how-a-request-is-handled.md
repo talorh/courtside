@@ -4,7 +4,9 @@
 
 Every page, form and page script call goes through the same checks, in the same order, before the page itself runs. The pages are plain HTML drawn on the server, with small scripts for the pages that need them (uploading, Go live, Photos, Ask) and no framework.
 
-> **What happens to a request.** A request passes the edge, then the Worker checks the sign-in, works out who is asking and their team, checks a write names its team, and finally the route checks the role. Each check happens in order; the first one that says no answers the request. A page's own route then checks the person's role.
+![What happens to a request](diagrams/05-1.svg)
+
+*Each check happens in order; the first one that says no answers the request. A page's own route then checks the person's role.*
 
 - **Before the sign-in:** a write from another website is refused, and only the sign-in pages, their few files, the opening spinner and security.txt answer without a session. Even the site's static files need one.
 - **The current team** comes from a cookie, so every team shares the same addresses. Someone in one team just has it; someone in several picks with Switch team.

@@ -4,7 +4,9 @@
 
 First, the top of Insights says what's wrong. Then one of these, each spelt out step by step in the Cloudflare runbook. Anything that deletes or restores data needs the owner's go-ahead first.
 
-> **What to do when something goes wrong.** Five problems and their answers: the maintenance page for a long fix, rolling the Worker back for a bad deploy, D1 Time Travel for a bad change to the data, restoring last night's backup when the database itself is gone, and clearing a video's deleted fields within a day of a mistaken delete. Each answer is in the Cloudflare runbook step by step. Anything that deletes or restores data needs the owner's go-ahead first.
+![What to do when something goes wrong](diagrams/27-1.svg)
+
+*Each answer is in the Cloudflare runbook step by step. Anything that deletes or restores data needs the owner's go-ahead first.*
 
 | Problem | What to do |
 | --- | --- |

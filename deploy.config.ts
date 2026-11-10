@@ -10,9 +10,10 @@ export const DEPLOY = {
 	worker: "courtside",
 	/** Where the Worker runs, nearest the club and its database: an AWS-style region name Cloudflare placement accepts. */
 	region: "aws:ap-southeast-2",
-	/** The live site's D1 database and R2 bucket. */
+	/** The live site's D1 database and R2 bucket. The id below is a stand-in that local development (cf dev) also uses as
+	 * its database's id; the install replaces it with the real one. */
 	d1Name: "courtside",
-	d1Id: "REPLACE_WITH_D1_ID",
+	d1Id: "00000000-0000-4000-8000-000000000001",
 	bucket: "courtside-originals",
 	/** Stream's customer code for the account (the subdomain of its playback addresses). */
 	streamCustomerCode: "REPLACE_WITH_STREAM_CUSTOMER_CODE",
