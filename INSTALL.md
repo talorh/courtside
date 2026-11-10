@@ -50,7 +50,7 @@ scripts expect, a git worktree called `courtside-staging` for the work:
 
 ```bash
 mkdir -p ~/git && cd ~/git
-git clone https://github.com/talorh/courtside.git courtside-prod
+git clone <this repository's address, from the Code button on GitHub> courtside-prod
 cd courtside-prod && npm install
 git branch staging main && git worktree add ../courtside-staging staging
 cd ../courtside-staging && npm install && npm run check      # types, every test, the line limits and the rules: all green
