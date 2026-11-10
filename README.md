@@ -85,8 +85,8 @@ that answers from it.
 Everything is private. Every page and file sits behind the sign-in; nothing about a child or a family is ever public,
 and the site holds no names but the ones a team manager types. Footage goes straight from the filming phone to the
 club's own Cloudflare account on short-lived signed links, is stored and played from there behind the same sign-in,
-and reaches only the people on the team's list, so children's game video has a private home instead of a group
-chat or a social media feed. The made-up Saints club and players named after NBA
+and reaches only the people on the team's list, so children's game video has a private home instead of reliance on
+social media. The made-up Saints club and players named after NBA
 stars stand in for real people throughout the code, the tests and these docs.
 
 ## What it looks like
