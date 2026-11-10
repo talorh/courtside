@@ -122,21 +122,7 @@ for the code and the deploys. There are no servers, no third-party services and 
 phone and the platform. The reasoning behind each choice, and what was turned down, is in
 [Technology decisions](docs/admin/30-technology-decisions.md).
 
-```mermaid
-flowchart LR
-  P([Phones and computers]) --> E[Edge protection<br>DDoS, WAF, Turnstile, rate limits]
-  E --> W[Worker<br>pages, API, sign-in, jobs]
-  W --> D1[(D1<br>every team's data)]
-  W --> AI[Workers AI]
-  W --> M[Email Sending]
-  W -. a game's parts to join .-> J[Containers<br>ffmpeg joiner]
-  P -. direct, on signed links .-> R2[(R2<br>originals, backups)]
-  P -. direct, on signed links .-> S[Stream<br>live, playback, clips]
-  P -. direct, on signed links .-> I[Images<br>photos]
-  W --> R2
-  W --> S
-  W --> I
-```
+![How the site fits together: phones and computers reach one Worker through Cloudflare's edge protection, and the Worker uses D1, Workers AI, Email Sending, R2, Stream, Images and the container joiner](docs/admin/diagrams/02-1.svg)
 
 ## Getting started
 
