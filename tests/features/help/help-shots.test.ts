@@ -13,7 +13,7 @@ describe("Help's screenshots", () => {
 		const shots = [...html.matchAll(/<figure class="shot"><img src="\/help\/([a-z-]+)\.webp" alt="([^"]+)"/g)];
 		expect(shots.map((m) => m[1])).toEqual([
 			"manage-add-people", "manage-waiting", "manage-players", "fixture-add-game", "fixture", "roster-families", "roster-duties", "roster-change",
-			"whatsapp-message", "signin-email", "signin-code", "signout", "teams", "upload", "upload", "golive", "golive-safari-bars", "watch-games", "clip-make", "clip-make-done",
+			"whatsapp-message", "signin-email", "signin-code", "signout", "teams", "upload", "upload", "golive", "watch-games", "clip-make", "clip-make-done",
 			"photos", "roster",
 		]);
 		for (const m of shots) {

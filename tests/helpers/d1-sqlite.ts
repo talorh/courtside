@@ -44,13 +44,12 @@ class SqliteD1 {
 }
 
 /** The example club's first team as the tests find it: Saints B12.1, Sam its team manager and the site's first admin,
- * and a squad of ten named after NBA players (never real children). */
+ * and a squad of ten named after the 1992 Dream Team (never real children). */
 export const SEED = `
 INSERT INTO teams (id, name, code, season_start, ask_name, created_at) VALUES ('b12.1-2026', 'Saints U12 Boys 12.1', 'b12.1', 2026, 'Sam', '2026-11-10T00:00:00.000Z');
 INSERT INTO members (id, team_id, email, name, role, created_at) VALUES (1, 'b12.1-2026', 'sam@saints.example', 'Sam Rivers', 'manager', '2026-10-01T00:00:00.000Z');
 INSERT INTO admins (email, added_by, added_at) VALUES ('sam@saints.example', 'seed', '2026-10-01T00:00:00.000Z');
-INSERT INTO players (team_id, number, name) VALUES ('b12.1-2026', 3, 'Chris'), ('b12.1-2026', 6, 'LeBron'), ('b12.1-2026', 11, 'Kyrie'), ('b12.1-2026', 13, 'Paolo'), ('b12.1-2026', 23, 'Jordan'),
-	('b12.1-2026', 30, 'Steph'), ('b12.1-2026', 34, 'Giannis'), ('b12.1-2026', 35, 'Kevin'), ('b12.1-2026', 41, 'Dirk'), ('b12.1-2026', 99, 'Jae');
+INSERT INTO players (team_id, number, name) VALUES ('b12.1-2026', 5, 'Robinson'), ('b12.1-2026', 6, 'Ewing'), ('b12.1-2026', 7, 'Bird'), ('b12.1-2026', 8, 'Pippen'), ('b12.1-2026', 9, 'Jordan'), ('b12.1-2026', 10, 'Drexler'), ('b12.1-2026', 11, 'Malone'), ('b12.1-2026', 12, 'Stockton'), ('b12.1-2026', 14, 'Barkley'), ('b12.1-2026', 15, 'Magic');
 `;
 
 /** Fresh in-memory database with every migration applied, then the example team seeded (SEED). */

@@ -19,7 +19,7 @@ describe("choosing an external app for a game", () => {
 		expect(before).toContain('class="appcard weblive"');
 		expect(before).toContain('<button class="btn livebtn bigpick" type="button" data-act="camera" hidden>Start camera</button>');
 		expect(before).toMatch(new RegExp(`</section><form method="post" action="/live/${gameId}/app" class="useapp">(<input type="hidden" name="_team"[^>]*>)?<button class="btn primary">Use an external app instead</button>`));
-		expect(before).toContain('Only for an AI tracking camera whose own app does the filming, like XbotGo\'s. <a href="/help#ai-cameras">Which cameras work</a>');
+		expect(before).toContain('Only for an AI tracking camera whose own app does the filming, like XbotGo\'s at the time of writing. <a href="/help#ai-cameras">Which cameras work</a>');
 		expect(before).not.toContain("key-live");
 		expect(before).not.toContain("golive-app.js");
 		expect(await row()).toMatchObject({ source: "camera" });

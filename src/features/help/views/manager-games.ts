@@ -10,7 +10,7 @@ ${faqItem("g-game", "Adding a game", html`<ol class="steps">
 <li>Fill in the date, tip-off, competition, round, opponent and venue.</li>
 <li>Pick its <b>Video</b>: <b>Live stream</b>, <b>Record and upload after</b> or <b>No video</b>.</li>
 <li>Tap <b>Save game</b>.</li></ol>
-${shot("fixture-add-game", "The Add game form on the Fixture: date, tip-off, competition, round, opponent, venue and the Video choice, then Save game", 301, 658)}`)}
+${shot("fixture-add-game", "The Add game form on the Fixture: date, tip-off, competition, round, opponent, venue and the Video choice, then Save game", 358, 751)}`)}
 ${faqItem("g-playhq", "Linking PlayHQ, so games fill in by themselves", html`<ol class="steps">
 <li>On PlayHQ, open your team's <b>public</b> page and copy its link: find the team on playhq.com without signing in. Its address has <b>/org/</b> and <b>/teams/</b> in it.</li>
 <li>On <b>Fixture</b>, tap <b>Add fixture</b>, paste the link, pick VJBL or Tournament, and tap <b>Read fixture</b>. Its games come straight in.</li></ol>
@@ -43,18 +43,18 @@ game's details go.</li>
 <h2 class="faqgroup">Video duty and the roster</h2>
 ${faqItem("g-families", "Families and duties", html`<ol class="steps">
 <li>On <b>Roster</b>, under <b>Families on the roster</b>, type a family's surname, one family a row. <b>+ Add another</b>
-adds a row, then tap <b>Add families</b>.${shot("roster-families", "Add families on the Roster: one surname a row, with + Add another and Add families", 333, 301)}</li>
+adds a row, then tap <b>Add families</b>.${shot("roster-families", "Add families on the Roster: one surname a row, with + Add another and Add families", 358, 801)}</li>
 <li>Under <b>Duties</b>, choose your team's game day duties, then tap <b>Save duties</b>.</li>
 <li>Tap <b>Generate roster</b>: every game gets its families, shared out fairly.</li></ol>
 <p class="small">Picking a family for video under <b>Duties</b> gives them every game's video and no other duty.</p>
 ${h.duties.video ? html`<p>Each family on video duty needs someone set to <b>Watch and film</b> on <b>Manage team</b>, or they can't film their
 turn.</p>` : ""}
-${shot("roster-duties", "The Roster's Duties panel: An extra duty ticked with its name Lollies and Who, Video ticked with Who, and Save duties", 343, 642)}`)}
+${shot("roster-duties", "The Roster's Duties panel: An extra duty ticked with its name Lollies and Who, Video ticked with Who, and Save duties", 358, 626)}`)}
 ${faqItem("g-swap", "Swapping a week by hand", html`<p>Tap <b>Change</b> on the week, pick the families and tap <b>Save week</b>. A change
 made by hand stays put when the roster is generated again. A family can only do one duty a game.</p>
 ${h.duties.lollies ? html`<p class="small">A tournament weekend starts with fewer duties. For all of them, tap <b>Change</b> on it, then
 <b>All duties this week</b>.</p>` : ""}
-${shot("roster-change", "A week on the Roster with Change open: a family picker for Video, Scoring 1, Scoring 2 and Lollies, each showing Roster's pick, then Save week", 343, 948)}`)}
+${shot("roster-change", "A week on the Roster with Change open: a family picker for Video, Scoring 1, Scoring 2 and Lollies, each showing Roster's pick, then Save week", 343, 952)}`)}
 ${faqItem("g-away", "A family away for a while", html`<p>A child away or injured for a few weeks? Under <b>Families on the roster</b>, tap
 <b>Take off</b> next to the family, then <b>Yes, take them off</b>: their upcoming duties go to other families. When they're back,
 add the same surname again under <b>Add families</b>.</p>
@@ -64,4 +64,4 @@ ${faqItem("g-message", "The message for the team chat", html`<p>Tap <b>WhatsApp 
 the team chat. It has the game, tip-off, venue and who's on duty.</p>
 <p class="small">Something to add or change (a swap, a note about parking)? Tap into the message and change it first:
 <b>Copy message</b> and <b>Open WhatsApp</b> send it as you've left it. <b>Update message</b> starts it again from the roster.</p>
-${shot("whatsapp-message", "The Match day message page: a Uniform choice (Green or White), Update message, and the message ready to copy")}`)}`;
+${shot("whatsapp-message", "The Match day message page: a Uniform choice when the club has more than one, Update message, and the message ready to copy")}`)}`;

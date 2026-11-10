@@ -58,8 +58,8 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
 - **Absolutely private.** Every page and file stays behind the sign-in, with no bypass. The only open paths are the
   sign-in page and its own few files, and `/.well-known/security.txt`. Pages send `noindex`, and AI bots are blocked at
   the zone (`infra/zone/bot-management.json`).
-- **No real people named.** Help, docs, tests and the example data use made-up names after NBA players (Steph #30,
-  Jordan #23) and the fictional Saints club. Never a real child, family, email address or phone number.
+- **No real people named.** Help, docs, tests and the example data use made-up names after the 1992 Dream Team (Jordan #9,
+  Magic #15) and the fictional Saints club. Never a real child, family, email address or phone number.
 - **Nothing about a club or an account outside its two files.** The club's name, colours and words are in
   `src/club.ts`; the account, zone, database, bucket and Worker names in `deploy.config.ts`; keys in Worker secrets and
   the git-ignored `.secrets.*.json`. No id, address, token or key anywhere else, in code, docs or tests.

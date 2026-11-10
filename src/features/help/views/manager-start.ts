@@ -24,7 +24,7 @@ ${faqItem("g-add", "Adding people", html`<ol class="steps">
 <li>On <b>Manage team</b>, under <b>People</b>, go to the row at the bottom of the list.</li>
 <li>Type their <b>email</b>, <b>name</b> and <b>role</b>. Anyone who'll film games needs <b>Watch and film</b>, the role it starts on.</li>
 <li>Tap <b>Add a person</b>. They can sign in straight away at ${CLUB.domain}, with a code sent to that email.</li></ol>
-${shot("manage-add-people", "Manage team's People list with the Add a person row at the bottom: Email, Name and a Role picker, and the green Add a person button", 359, 396)}
+${shot("manage-add-people", "Manage team's Add a person row, under the People list: Email, Name and a Role picker, and the Add a person button", 358, 151)}
 <p class="small">Someone already on the list is left as they are.</p>
 <p><b>Lots of people at once?</b> Under the list, tap <b>Add from a spreadsheet</b> and download the <b>template</b>. Fill in a row
 for each person (Name, Email and Role; a blank role is Watch only), save it as <b>CSV</b> (Excel: File → Save As; Google
@@ -54,12 +54,12 @@ contacts.</li>
 has to wait, and the sign-in page tells them so. While they're waiting, they're listed under <b>Waiting to sign in</b> at the top of <b>Manage team</b>.
 Checked it's really them? Tap <b>Let them sign in</b> and they can ask for a new code straight away.</li>
 <li>Still asking? Tap the door at the top right to sign out, then sign in again.</li></ul>
-${shot("manage-waiting", "Manage team's Waiting to sign in: a parent's name and email, when they can ask for a code again, and a green Let them sign in button", 343, 271)}`)}
+${shot("manage-waiting", "Manage team's Waiting to sign in: a parent's name and email, when they can ask for a code again, and a Let them sign in button", 358, 271)}`)}
 <h2 class="faqgroup">Players</h2>
 ${faqItem("g-players", "Adding the squad", html`<ol class="steps">
 <li>On <b>Manage team</b>, under <b>Players</b>, type a number and a name.</li>
 <li>Tap <b>Add a player</b>. Up to 10.</li></ol>
-${shot("manage-players", "Manage team's Players panel: each player's number and name with Save and Remove, and Add a player below", 343, 836)}
+${shot("manage-players", "Manage team's Players panel: each player's number and name with Save and Remove, and Add a player below", 358, 835)}
 <p class="small">A first name or a full name, as you like: only the team sees them.</p>`)}
 ${faqItem("g-player-edit", "Changing or removing a player", html`<ul class="steps">
 <li><b>New number or name:</b> change it in the list and tap <b>Save</b>.</li>

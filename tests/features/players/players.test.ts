@@ -100,7 +100,7 @@ describe("the Players section on Members", () => {
 		const page = await (await makeClient(deps)("/manage")).text();
 		expect(page).toContain('<section class="panel stack" id="players"');
 		expect(page).toContain("The squad on Home and the players you can tag in highlight clips come from this list. A first name or a full name: only the team can see them.");
-		expect(page).toContain('value="Chris"');
+		expect(page).toContain('value="Robinson"');
 		await deps.db.prepare("INSERT INTO members (team_id, email, role) VALUES (?, 'coach@x.com', 'coach')").bind(B12).run();
 		expect((await makeClient(deps, "coach@x.com")("/players", form({ number: "7", name: "Sam" }))).status).toBe(403);
 	});

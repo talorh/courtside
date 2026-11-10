@@ -1,5 +1,5 @@
 // npm run dev:seed   Example data for the local dev server: the Saints' first team, the development address
-// (deploy.config.ts devEmail) as its team manager and a site admin, a squad named after NBA players, a season of games
+// (deploy.config.ts devEmail) as its team manager and a site admin, a squad named after the 1992 Dream Team, a season of games
 // with a few scores, and roster families. Nothing here is a real person. cf has no local query command, so this writes
 // straight into the local database file cf dev keeps (.cloudflare/state, after npm run dev:db). Run again to start over.
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -26,8 +26,7 @@ const sql = [
 	 (2, '${team}', 'coach@saints.example', 'Alex Coach', 'coach', '${now}'), (3, '${team}', 'parent@saints.example', 'Jordan Appleby', 'filmer', '${now}'),
 	 (4, '${team}', 'grandma@saints.example', 'Nan Birchwood', 'watcher', '${now}');`,
 	`INSERT INTO admins (email, added_by, added_at) VALUES ('${email}', 'npm run dev:seed', '${now}');`,
-	`INSERT INTO players (team_id, number, name) VALUES ('${team}', 3, 'Chris'), ('${team}', 6, 'LeBron'), ('${team}', 11, 'Kyrie'), ('${team}', 13, 'Paolo'), ('${team}', 23, 'Jordan'),
-	 ('${team}', 30, 'Steph'), ('${team}', 34, 'Giannis'), ('${team}', 35, 'Kevin'), ('${team}', 41, 'Dirk'), ('${team}', 99, 'Jae');`,
+	`INSERT INTO players (team_id, number, name) VALUES ('${team}', 5, 'Robinson'), ('${team}', 6, 'Ewing'), ('${team}', 7, 'Bird'), ('${team}', 8, 'Pippen'), ('${team}', 9, 'Jordan'), ('${team}', 10, 'Drexler'), ('${team}', 11, 'Malone'), ('${team}', 12, 'Stockton'), ('${team}', 14, 'Barkley'), ('${team}', 15, 'Magic');`,
 	...games.map(([at, comp, round, opp, venue], i) => `INSERT INTO games (id, team_id, starts_at, competition, round_label, opponent, venue, created_by, live_stream) VALUES (${i + 1}, '${team}', '${at}', '${comp}', '${round}', '${opp}', '${venue}', 1, ${i % 2});`),
 	...games.flatMap(([, , , , , ours, theirs], i) => (ours === null ? [] : [`INSERT INTO game_scores (team_id, game_id, ours, opponent, source, entered_by, entered_at) VALUES ('${team}', ${i + 1}, ${ours}, ${theirs}, 'manual', 1, '${now}');`])),
 	`INSERT INTO roster_families (team_id, surname) VALUES ('${team}', 'Appleby'), ('${team}', 'Birchwood'), ('${team}', 'Cresswell'), ('${team}', 'Rivers'), ('${team}', 'Okafor'), ('${team}', 'Lindqvist');`,

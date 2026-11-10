@@ -15,7 +15,7 @@ export interface ClipCard {
 	players: Player[];
 }
 
-/** Tick who's in the clip: "#23 Jordan", in number order. */
+/** Tick who's in the clip: "#9 Jordan", in number order. */
 function playerPicker(players: Player[], ticked: Player[] = []): SafeHtml | "" {
 	if (!players.length) return "";
 	const on = new Set(ticked.map((p) => p.id));

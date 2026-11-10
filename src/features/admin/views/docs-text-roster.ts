@@ -68,7 +68,7 @@ fold the rest, as a season runs to 40 weeks or more.</li>
 tells the team manager to Generate roster), each family's count of each duty with its total and its time off, and a
 week-by-week chart of who was on.</li>
 <li><b>The WhatsApp message</b> (team managers, one a game): the opponent, the venue and when, arrive 30 minutes early,
-the uniform (Green or White, always packing the other) and who's on each duty, with Copy and Open WhatsApp. The team manager can change it in the box first; both send it as it stands (public/match-message.js), and it isn't saved: Update message makes it again from the roster.</li>
+the uniform (one of the club's, from src/club.ts, packing the other as the clash uniform when the club has more than one; a club with a reversible singlet has no choice to make) and who's on each duty, with Copy and Open WhatsApp. The team manager can change it in the box first; both send it as it stands (public/match-message.js), and it isn't saved: Update message makes it again from the roster.</li>
 <li><b>Export to Excel</b> (everyone but Watch only): the season as an .xlsx, a row a week and a line a game.</li></ul>
 ${table(["Table", "Holds"], [
 		[code("roster_families"), "Each family by surname: when it was added and removed, and its periods away"],

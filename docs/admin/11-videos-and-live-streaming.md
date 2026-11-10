@@ -54,7 +54,7 @@ The parts are joined by the **video joiner**: a second small Worker, `courtside-
 
 ### From an external app (RTMPS)
 
-An AI tracking camera films through its own app, so the page can't have the phone's camera. On the Go live page, below the red Start camera button (don't tap it), is a smaller green **Use an external app instead**. It only helps if the camera's app can stream to a custom RTMPS server with a stream key: XbotGo's can; Trackd's is locked down, so a Trackd game is recorded in its app and uploaded afterwards.
+An AI tracking camera films through its own app, so the page can't have the phone's camera. On the Go live page, below the red Start camera button (don't tap it), is a smaller green **Use an external app instead**. It only helps if the camera's app can stream to a custom RTMPS server with a stream key. XbotGo and Trackd are two examples of many, as they stood at the time of writing: XbotGo's app can, Trackd's can't yet, so a Trackd game is recorded in its app and uploaded afterwards. Makers change their apps, so Help says to check.
 
 - **Choosing it** sets the game to the app and shows its RTMPS server and stream key to copy. The key is that game's password: it's shown only there, to people who film, and never logged. Going back to the phone's camera works until the app has streamed. Who chose it, went back or stopped it is in the Log.
 - **Stream records it**, so there's no recording on a phone and no original in R2: Stream's copy is the only one, and it's only as good as the signal was.

@@ -104,7 +104,7 @@ choice is kept on that device (`public/view.js`), and the two buttons show on a 
 **Home** is the landing page after sign-in: the court picture, big Upload and Go live (for those who film) and Watch
 games buttons, smaller Roster, Fixture, Photos, Manage team and Notifications (team managers) and Help buttons, a link to
 the latest game (with its score), and the squad. **The squad** lists the players in number order: a drawing of the
-green home singlet (the club's name across the chest, their number) on the left and "Jordan #23" on the right (made-up names after
+green home singlet (the club's name across the chest, their number) on the left and "Jordan #9" on the right (made-up names after
 NBA players in every example: no current player is named outside the team's own pages).
 
 ### Upload
@@ -170,7 +170,8 @@ page open until Saved.
  game's RTMPS details in the camera card's place: the Server and the Stream key (each with Copy), a line on what RTMPS
  is, whether the site is receiving the stream, **End game**, and **Use this phone's camera instead** (until the
  app has streamed). It's for an AI tracking camera whose app can stream to a custom RTMPS server with a stream key
- (XbotGo's can; Trackd's is locked down, so its games are recorded and uploaded). Stream records the stream, so there's
+ (XbotGo and Trackd are two examples of many, as they stood at the time of writing: XbotGo's app can, Trackd's can't
+ yet, so its games are recorded and uploaded). Stream records the stream, so there's
  no phone recording and no original in R2; families watch in the usual video player about half a minute behind; the
  game's video is Stream's recording, saved after End game or by itself 20 minutes after the app stops. A gap
  under 10 minutes stays one recording; after a longer one the longest part is the game video and the others are clips.
@@ -232,7 +233,7 @@ Any member marks a start and an end while watching (3 seconds to 5 minutes) and 
 its own video. Every member sees every clip beside the game's player, can watch it in the main player and download it
 as an MP4.
 
-- **Who's in it:** ticking players while making a clip ("#23 Jordan", in number order; optional, any number), shown on
+- **Who's in it:** ticking players while making a clip ("#9 Jordan", in number order; optional, any number), shown on
  the clip. The clip's maker or a team manager can change them later. The players are the team manager's, on Manage team,
  so each player's clips can be gathered into a reel at the season's end.
 - **Removing:** only a team manager deletes a clip; anyone
@@ -328,8 +329,9 @@ families scoring, one on lollies and one on video. There's no video duty when ev
  names, slides sideways on a narrow screen and opens at this week (`public/roster.js`). Percentage rings and duty-mix
  bars were tried and dropped.
 - **The WhatsApp message**:
- the match day message for the team chat in the site owner's layout ("Opponent: …", the venue and time, arrive 30 minutes early, and the uniform: Green or White, chosen each
- time, always packing the other, "Green uniform, pack white just in case."), then 💻 Scorers, 🍬 Lollies and 🎥 Video
+ the match day message for the team chat in the site owner's layout ("Opponent: …", the venue and time, arrive 30 minutes early, and the uniform, from the club's list in
+ `src/club.ts`: chosen each time when there's more than one, packing the other, the clash uniform, "Navy uniform, pack
+ White just in case."; a club with one kit or a reversible singlet gets "Uniform: Reversible singlet." and no choice), then 💻 Scorers, 🍬 Lollies and 🎥 Video
  from the roster, with **Copy** and **Open WhatsApp**.
 - **Compact**: each week is
  its games (a weekend's shared venue once), then Scoring, Lollies and Video each beside its families on a line or two,
@@ -678,7 +680,7 @@ resolves itself when it clears. There are no reminders.
 | Sign-in | The site's own: a six-digit code by email, only for an address on a team's list or an admin's (anyone else is told to ask their team manager, and gets no code), then a fixed 30-day session per device, several devices at once. Limits per address, per IP address and site-wide. The sign-in page has the club's logo and colours. Cloudflare Access did this from 15 to 31 Oct 2026 (the team `courtside` from 28 Oct). |
 | Who gets in | The sign-in checks the teams' lists and the admins table before sending a code, and the site checks them again on every request, so removal is instant. A person sees their current team (remembered for a year on each phone or computer); someone in several teams picks on Which team?; anyone on no list sees "Ask your team manager to sub you in". |
 | Filming | The phone's camera app, 1080p at 30 frames a second (High Efficiency on an iPhone: about 4 GB a game, a third of 4K), landscape on a tripod. Help and the Upload page say so. Stadiums have no Wi-Fi, so upload at home. |
-| Live streaming | From the Go live page's camera, the same on every phone. Phone apps as the usual way were dropped: Moblin on iPhone, and no Android app was good enough (Larix, IRL Pro, PRISM, LifeStreamer, Streamlabs). An external app over RTMPS came back as the quiet second way, for AI tracking cameras only (XbotGo): Stream's recording, a 10-minute reconnect window and a 20-minute wait, as before. A page closed mid-game carries on from the same phone, the segments joined into one video by a Cloudflare container (the joiner). |
+| Live streaming | From the Go live page's camera, the same on every phone. Phone apps as the usual way were dropped: Moblin on iPhone, and no Android app was good enough (Larix, IRL Pro, PRISM, LifeStreamer, Streamlabs). An external app over RTMPS came back as the quiet second way, for AI tracking cameras only (XbotGo's app could, at the time of writing): Stream's recording, a 10-minute reconnect window and a 20-minute wait, as before. A page closed mid-game carries on from the same phone, the segments joined into one video by a Cloudflare container (the joiner). |
 | Downloads | Stream's HD MP4 only. No agreement to click. |
 | Photos | Kept in Cloudflare Images, and not linked to games. |
 | Teams | Every table has `team_id`. Other Saints teams asked to join, and multi-team went live. The same addresses for every team (`saints.example/games/12`), the site remembering each person's team. Codes like `b12.1` (boys U12 1s) and `g14.5`. Team managers run their own team; site admins onboard and close teams. |

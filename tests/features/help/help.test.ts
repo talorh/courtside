@@ -79,7 +79,7 @@ describe("Help", () => {
 		// Safari's bars back over the camera (the phone turned or locked): how to hide them, with the picture.
 		expect(page).toContain("<li><b>Safari's bars back over the picture?</b>");
 		expect(page).toContain("choose <b>Hide Toolbar</b>");
-		expect(page).toMatch(/<img src="\/help\/golive-safari-bars\.webp" alt="[^"]*Hide Toolbar[^"]*" width="600" height="277"/);
+		expect(page).toMatch(/<figure class="mock wide" role="img" aria-label="[^"]*Hide Toolbar[^"]*">\s*<span class="m-cam m-bars"><span class="m-sbar"><span class="m-url"><span class="m-aa m-tap">aA<\/span><b>saints\.example<\/b>/);
 		// Not "download": a search for downloading photos finds only the sections about that.
 		expect(page.match(/HD download about/g)).toBeNull();
 		// iPhone uploads: save to Files first, because the iPhone converts a video picked from Photos before handing it over.

@@ -12,4 +12,4 @@ whole game.</li>
 <li>Write the note and tap <b>Save note</b>.</li></ol>
 <p class="small">Tap a note's time to jump the video there. <b>Delete</b> takes one off, after asking. <b>Download for
 Excel</b> saves the game's notes as a spreadsheet.</p>
-${shot("coach-notes", "Coaches' notes on its clipboard: Coaches only, Add a note with the time, Mark time, the note and Save note, then This game's notes with Download for Excel, and a note at 3:42 with Delete", 351, 947)}`);
+${shot("coach-notes", "Coaches' notes on its clipboard: Coaches only, Add a note with the time, Mark time, the note and Save note, then This game's notes with Download for Excel, and a note at 3:42 with Delete", 358, 1013)}`);

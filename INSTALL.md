@@ -93,6 +93,7 @@ The agent fills both from your answers:
 | Your home stadium | `homeVenue` | Saints Stadium |
 | Local rival clubs, as fixtures name them | `rivals` | Westside, Bayside |
 | The league your teams play in | `league` | VJBL |
+| Your uniforms, home first: two or more, or one for a reversible singlet (the match day message says which to wear and which to pack) | `uniforms` | Navy, White |
 | A cheer to sign off the welcome email | `cheer` | Go Saints! |
 | Your time zone, and the two UTC hours that are 3am there across the year | `timeZone`, `dailyJobUtcHours` | Australia/Melbourne; 16 and 17 |
 | The month your season starts | `seasonStartMonth` | 10 |

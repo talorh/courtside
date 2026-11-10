@@ -86,8 +86,8 @@ Everything is private. Every page and file sits behind the sign-in; nothing abou
 and the site holds no names but the ones a team manager types. Footage goes straight from the filming phone to the
 club's own Cloudflare account on short-lived signed links, is stored and played from there behind the same sign-in,
 and reaches only the people on the team's list, so children's game video has a private home instead of reliance on
-social media. The made-up Saints club and players named after NBA
-stars stand in for real people throughout the code, the tests and these docs.
+social media. The made-up Saints club and a squad named after the 1992
+Dream Team stand in for real people throughout the code, the tests and these docs.
 
 ## What it looks like
 
@@ -114,7 +114,7 @@ stars stand in for real people throughout the code, the tests and these docs.
 </tr>
 </table>
 
-<sub>The example Saints club, with players named after NBA stars and made-up opponents, from the local dev server's seed (<code>npm run dev:seed</code>).</sub>
+<sub>The example Saints club, with a squad named after the 1992 Dream Team and made-up opponents, from the local dev server's seed (<code>npm run dev:seed</code>).</sub>
 
 ## How it's built
 
@@ -184,6 +184,14 @@ unless it fixes something broken.
 | `tests/` | Vitest on Node with a `node:sqlite` stand-in for D1; `tests/e2e/` the browser suite; `tests/isolation/` two teams through every route |
 | `scripts/` | The release, staging, maintenance, joiner, docs and club commands |
 | `docs/` | Everything above |
+
+## Contributing
+
+Courtside is open source under Apache 2.0, and it's in use: the author's son's team plays on Friday nights, and
+every one of those games goes through the site before a change lands here. Contributions are welcome: a bug, a page
+that could say it better, something your club needs that the site doesn't do yet, or a pull request. For anything
+bigger than a fix, open an issue first so the approach is agreed before the work. [AGENTS.md](AGENTS.md) has the rules
+every change follows, with or without an AI coding agent, and `npm run check` has to pass.
 
 ## Licence
 

@@ -3,20 +3,21 @@ import { faqItem, type HelpFor } from "./faq-item.ts";
 
 /**
  * AI tracking cameras, for whoever films: one films through its own app, so it can live stream to the site only if
- * that app streams to a custom RTMPS server (Go live's Use an external app instead). XbotGo's does; Trackd's is locked
- * down, so its games are recorded and uploaded.
+ * that app streams to a custom RTMPS server (Go live's Use an external app instead). XbotGo and Trackd are two examples
+ * of many, as they stood at the time of writing: XbotGo's app does, Trackd's doesn't yet, and makers change their apps.
  */
-export const faqAiCameras = (h: HelpFor) => faqItem("ai-cameras", "Filming with an AI tracking camera (XbotGo, Trackd)", html`
+export const faqAiCameras = (h: HelpFor) => faqItem("ai-cameras", "Filming with an AI tracking camera (XbotGo, Trackd and others)", html`
 <p>An AI tracking camera follows the play by itself, but it films through <b>its own app</b>, so Go live can't use the
-phone's camera at the same time. What it can do here depends on that app.</p>
+phone's camera at the same time. What it can do here depends on that app. XbotGo and Trackd below are two examples of
+many, as they stood at the time of writing: makers change their apps, so check yours.</p>
 <ul class="steps">
 <li><b>To live stream, the camera's app must support RTMPS</b>: in its live streaming settings, it has to let you type in
 a <b>custom RTMPS server</b> with a <b>stream key</b> (some call it Custom RTMP). Streaming only to YouTube, Facebook or
 the maker's own service isn't enough.</li>
-<li><b>XbotGo: yes.</b> Its app streams to a custom address, so it can live stream to this site.</li>
-<li><b>Trackd: no.</b> Its app is locked down: it streams only to Trackd's own service. Record the game in the Trackd app,
+<li><b>XbotGo: yes, at the time of writing.</b> Its app streams to a custom address, so it can live stream to this site.</li>
+<li><b>Trackd: not yet, at the time of writing.</b> Its app streams only to Trackd's own service; that may change. Until it does, record the game in the Trackd app,
 export it to Photos or Files, then use <b>Upload video</b> after the game. Families still get the tracked video, just not live.</li>
-<li><b>Any camera:</b> a game it has recorded can always be uploaded afterwards.</li></ul>
+<li><b>Any other camera:</b> look in its app's live streaming settings for a custom RTMPS server. Whatever the app can do, a game it has recorded can always be uploaded afterwards.</li></ul>
 <h3>Live streaming from the camera's app</h3>
 <ol class="steps">
 <li>Open <b>Go live</b> and check it shows the right game. Under the red Start camera button, tap the green <b>Use an external app instead</b>.</li>

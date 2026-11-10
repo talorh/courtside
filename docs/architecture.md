@@ -404,8 +404,9 @@ sequenceDiagram
 ### From an external app (RTMPS)
 
 `app-live-service.ts`, `app-live-sync.ts`, `app-live-routes.ts`, `views/app-live-card.ts`, `public/golive-app.js`,
-`platform/stream-live-app.ts`. For an AI tracking camera, whose own app has to hold the camera (XbotGo's can stream to a
-custom RTMPS server; Trackd's is locked down). Design and plan: the design notes.
+`platform/stream-live-app.ts`. For an AI tracking camera, whose own app has to hold the camera (XbotGo and Trackd are two examples
+of many, as they stood at the time of writing: XbotGo's app can stream to a custom RTMPS server, Trackd's can't yet).
+Design and plan: the design notes.
 
 - **Choosing it:** Go live's green Use an external app instead (`POST /live/:gameId/app`, the same checks as Go
  live's start) sets `live_streams.source` to `app` and the input's `recording.timeoutSeconds` to 600, so a drop or a

@@ -18,23 +18,23 @@ async function setup() {
 }
 
 describe("who's in a highlight clip", () => {
-	it("the team's players, in number order, as #3 Chris", async () => {
+	it("the team's players, in number order, as #5 Robinson", async () => {
 		const deps = createTestDeps();
 		expect((await listPlayers(deps.db, deps.team.id)).map((p) => `#${p.number} ${p.name}`)).toEqual([
-			"#3 Chris", "#6 LeBron", "#11 Kyrie", "#13 Paolo", "#23 Jordan", "#30 Steph", "#34 Giannis", "#35 Kevin", "#41 Dirk", "#99 Jae",
+			"#5 Robinson", "#6 Ewing", "#7 Bird", "#8 Pippen", "#9 Jordan", "#10 Drexler", "#11 Malone", "#12 Stockton", "#14 Barkley", "#15 Magic",
 		]);
 	});
 	it("ticked when making the clip, and shown on it in number order", async () => {
 		const { deps, gameId, videoId, id, watcher } = await setup();
 		const page = await (await watcher(`/games/${gameId}`)).text();
 		expect(page).toContain("Who's in it?");
-		expect(page.indexOf("#3 Chris")).toBeLessThan(page.indexOf("#99 Jae"));
-		const res = await watcher(`/videos/${videoId}/clips`, formOf([["start", "0:10"], ["end", "0:20"], ["label", "Steal and score"], ["players", id("Steph")], ["players", id("Chris")]]));
+		expect(page.indexOf("#5 Robinson")).toBeLessThan(page.indexOf("#15 Magic"));
+		const res = await watcher(`/videos/${videoId}/clips`, formOf([["start", "0:10"], ["end", "0:20"], ["label", "Steal and score"], ["players", id("Jordan")], ["players", id("Robinson")]]));
 		expect(res.status).toBe(303);
-		expect([...(await playersByClip(deps.db, deps.team.id, [1])).get(1)!].map((p) => p.name)).toEqual(["Chris", "Steph"]);
-		expect(await (await watcher(`/games/${gameId}`)).text()).toContain('<span class="who-in"><span class="t src">#3 Chris</span><span class="t src">#30 Steph</span></span>');
+		expect([...(await playersByClip(deps.db, deps.team.id, [1])).get(1)!].map((p) => p.name)).toEqual(["Robinson", "Jordan"]);
+		expect(await (await watcher(`/games/${gameId}`)).text()).toContain('<span class="who-in"><span class="t src">#5 Robinson</span><span class="t src">#9 Jordan</span></span>');
 		await deps.db.prepare("UPDATE clips SET status = 'ready'").run();
-		expect(await (await watcher(`/games/${gameId}?clip=1`)).text()).toContain('<h1>Steal and score</h1><span class="who-in"><span class="t src">#3 Chris</span>');
+		expect(await (await watcher(`/games/${gameId}?clip=1`)).text()).toContain('<h1>Steal and score</h1><span class="who-in"><span class="t src">#5 Robinson</span>');
 	});
 	it("no players ticked is fine", async () => {
 		const { deps, videoId, watcher } = await setup();
@@ -43,8 +43,8 @@ describe("who's in a highlight clip", () => {
 	});
 	it("the same player sent twice (a crafted post) counts once, never an error", async () => {
 		const { deps, videoId, id, watcher } = await setup();
-		expect((await watcher(`/videos/${videoId}/clips`, formOf([["start", "0:10"], ["end", "0:20"], ["players", id("Steph")], ["players", id("Steph")]]))).status).toBe(303);
-		expect([...(await playersByClip(deps.db, deps.team.id, [1])).get(1)!].map((p) => p.name)).toEqual(["Steph"]);
+		expect((await watcher(`/videos/${videoId}/clips`, formOf([["start", "0:10"], ["end", "0:20"], ["players", id("Jordan")], ["players", id("Jordan")]]))).status).toBe(303);
+		expect([...(await playersByClip(deps.db, deps.team.id, [1])).get(1)!].map((p) => p.name)).toEqual(["Jordan"]);
 	});
 	it("a player who isn't on the list is refused before Stream cuts anything", async () => {
 		const { deps, videoId, watcher } = await setup();
@@ -53,10 +53,10 @@ describe("who's in a highlight clip", () => {
 	});
 	it("the maker or a team manager can change who's in it; others can't", async () => {
 		const { deps, gameId, videoId, id, admin, watcher } = await setup();
-		await admin(`/videos/${videoId}/clips`, formOf([["start", "0:10"], ["end", "0:20"], ["players", id("Giannis")]]));
-		expect((await watcher("/clips/1/players", formOf([["players", id("Kevin")]]))).status).toBe(403);
-		expect((await admin("/clips/1/players", formOf([["players", id("Kevin")], ["players", id("Paolo")]]))).headers.get("Location")).toBe(`/games/${gameId}?done=clipplayers`);
-		expect((await playersByClip(deps.db, deps.team.id, [1])).get(1)!.map((p) => p.name)).toEqual(["Paolo", "Kevin"]);
+		await admin(`/videos/${videoId}/clips`, formOf([["start", "0:10"], ["end", "0:20"], ["players", id("Barkley")]]));
+		expect((await watcher("/clips/1/players", formOf([["players", id("Malone")]]))).status).toBe(403);
+		expect((await admin("/clips/1/players", formOf([["players", id("Malone")], ["players", id("Ewing")]]))).headers.get("Location")).toBe(`/games/${gameId}?done=clipplayers`);
+		expect((await playersByClip(deps.db, deps.team.id, [1])).get(1)!.map((p) => p.name)).toEqual(["Ewing", "Malone"]);
 		await admin("/clips/1/players", formOf([]));
 		expect((await playersByClip(deps.db, deps.team.id, [1])).size).toBe(0);
 	});

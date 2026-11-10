@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { badRequest, notFound } from "../../app/errors.ts";
+import { CLUB } from "../../club.ts";
 import { fileResponse, htmlResponse, redirect } from "../../app/respond.ts";
 import type { Router } from "../../app/router.ts";
 import { isRealDate, localDate } from "../../shared/time.ts";
@@ -59,7 +60,7 @@ export function registerRosterRoutes(router: Router): void {
 	});
 
 	// The match day message for the team chat, one a game (a weekend with several has one for each: `?game=`, the first
-	// game's without it), with the uniform chosen each time (the team has green and white, and always packs the other).
+	// game's without it), with the uniform chosen each time from the club's (packing the other, when there is one).
 	router.get("/roster/week/:week/message", "manager", async ({ url, params, frame, deps }) => {
 		const week = weekParam(params.week);
 		const { weeks, slots, duties } = await syncRoster(deps);
@@ -68,7 +69,7 @@ export function registerRosterRoutes(router: Router): void {
 		const asked = url.searchParams.get("game");
 		const game = asked === null ? w.games[0]!.game : w.games.find((g) => String(g.game.id) === asked)?.game;
 		if (!game) throw notFound("Game");
-		const uniform = url.searchParams.get("uniform") === "white" ? "white" : "green";
+		const uniform = CLUB.uniforms.find((u) => u === url.searchParams.get("uniform")) ?? CLUB.uniforms[0]!;
 		const text = matchMessage({
 			game, slots: slots.filter((s) => s.week === week && s.gameId === game.id), names: await familyNames(deps.db, deps.team.id),
 			video: !game.noVideo && w.video, extra: w.extra, uniform, duties: dutiesFor(week, weekOf(localDate(deps.now())), duties),

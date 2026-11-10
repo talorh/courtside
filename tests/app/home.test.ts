@@ -33,11 +33,11 @@ describe("home", () => {
 		expect(page).toContain("Saints U12 Boys 12.1");
 		expect(page).toContain('<section class="squad"><h2>The squad</h2>');
 		// The club singlet with their number on the left, then "Chris #3".
-		expect(page).toMatch(/<li><svg class="jersey"[^>]*aria-label="Saints singlet, number 3">[\s\S]*?<\/svg><span class="pname">Chris #3<\/span><\/li>/);
+		expect(page).toMatch(/<li><svg class="jersey"[^>]*aria-label="Saints singlet, number 5">[\s\S]*?<\/svg><span class="pname">Robinson #5<\/span><\/li>/);
 		expect(page).not.toContain("EASTLAND");
 		expect(page).toMatch(/<text class="kit-name"[^>]*>SAINTS<\/text>/);
-		expect(page.indexOf(">Chris #3<")).toBeLessThan(page.indexOf(">LeBron #6<"));
-		expect(page.indexOf(">LeBron #6<")).toBeLessThan(page.indexOf(">Jae #99<"));
+		expect(page.indexOf(">Robinson #5<")).toBeLessThan(page.indexOf(">Ewing #6<"));
+		expect(page.indexOf(">Ewing #6<")).toBeLessThan(page.indexOf(">Magic #15<"));
 		expect(page.indexOf("homemore")).toBeLessThan(page.indexOf("The squad"));
 		expect(page).not.toContain(">Kevin #35<");
 		expect(page).not.toContain("players, in number order");

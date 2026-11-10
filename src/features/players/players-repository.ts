@@ -8,7 +8,7 @@ export interface Player {
 	name: string;
 }
 
-/** "#23 Jordan" */
+/** "#9 Jordan" */
 export const playerLabel = (p: Player) => `#${p.number} ${p.name}`;
 
 /** Current players in number order. */

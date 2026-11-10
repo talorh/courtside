@@ -15,6 +15,10 @@ const STOP_ASK = mock("After tapping End game, the question: End the game? Only 
 const CAMERA_GONE = mock("Go live's camera screen after the phone locked: CAMERA STOPPED, families see Game break, tap Resume camera to carry on, with the Resume camera button ringed beside End game", html`
 <span class="m-cam"><span class="m-ctl"><b>⏸ CAMERA STOPPED · Families see "Game break". Tap Resume camera to carry on.</b><span class="m-b resume m-tap">${PLAY_ICON}Resume camera</span><span class="m-b stop">${STOP_ICON}End game</span></span></span>`, "wide");
 
+// Safari's bars back over the picture on an iPhone held sideways: the button at the left of the address, ringed.
+const SAFARI_BARS = mock("Go live streaming in Safari on an iPhone held sideways, with Safari's address bar back over the top of the camera picture, and the button at the left of the address ringed: tap it, then Hide Toolbar", html`
+<span class="m-cam m-bars"><span class="m-sbar"><span class="m-url"><span class="m-aa m-tap">aA</span><b>${CLUB.domain}</b><span>↻</span></span></span><span class="m-ctl"><b>● LIVE 12 min · Families can watch</b></span></span>`, "wide");
+
 export const faqLiveGame = (h: HelpFor) => faqItem("live-game", "Live streaming a game", html`
 <p><b>You need:</b> to be set to <b>Watch and film</b> (ask ${h.c.ask}), the game in the <b>Fixture</b>, your phone's web browser
 (<b>Chrome</b> on Android, <b>Safari</b> on iPhone), a tripod, a power bank, and 2 to 3 GB of mobile data.</p>
@@ -40,7 +44,7 @@ buzzer until it says <b>Saved</b> (on Wi-Fi if you can). Closed it before then? 
 open <b>Go live</b> again on that phone and tap <b>Save what was recorded</b>, and they're sent first.</li>
 <li><b>Safari's bars back over the picture?</b> They can come back if the phone turns or locks. On an iPhone, tap the
 button at the left of the address and choose <b>Hide Toolbar</b> (on older iPhones it's under <b>aA</b>). The stream and
-the recording carry on either way.${shot("golive-safari-bars", "Go live streaming in Safari on an iPhone held sideways, with Safari's address bar and tabs back over the top of the camera picture, and the button at the left of the address ringed: tap it, then Hide Toolbar", 600, 277)}</li>
+the recording carry on either way.${SAFARI_BARS}</li>
 <li><b>Says to turn the phone sideways when it already is?</b> Portrait Orientation Lock is on (Auto-rotate is off on
 Android), which keeps the picture upright. Turn it off as in step 2; the page says how too.</li>
 <li><b>Camera stopped</b> (the phone locked, a call came, or another app took the camera)? Nothing ends. While you're

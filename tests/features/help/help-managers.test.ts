@@ -142,7 +142,7 @@ describe("Help for team managers (no separate guide, one Help page with each rol
 		const { deps, s, today } = await b12();
 		await deps.db.prepare("INSERT INTO roster_families (team_id, surname) VALUES (?, 'Bruce')").bind(B12_1.id).run();
 		// B12.1 has its 10 players: one leaves, so Add a player shows.
-		await deps.db.prepare("UPDATE players SET removed_at = '2026-10-14T00:00:00.000Z' WHERE team_id = ? AND name IN ('Playerb', 'Jae')").bind(B12_1.id).run();
+		await deps.db.prepare("UPDATE players SET removed_at = '2026-10-14T00:00:00.000Z' WHERE team_id = ? AND name IN ('Playerb', 'Magic')").bind(B12_1.id).run();
 		// Someone asked for too many codes, so Waiting to sign in shows.
 		await holdEmail(deps.db, MANAGER, "2026-10-15T00:10:00.000Z");
 		// The game's video is a carried-on stream whose join gave up, so Keep the first part shows.

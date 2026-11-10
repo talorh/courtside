@@ -50,7 +50,7 @@ function gamePicker(p: LivePageProps): SafeHtml {
 function useAppButton(p: LivePageProps): SafeHtml | "" {
 	if (p.input === null || p.recordingVideoId !== null) return "";
 	return html`<form method="post" action="/live/${p.selected!.id}/app" class="useapp"><button class="btn primary">Use an external app instead</button>
-<p class="small">Only for an AI tracking camera whose own app does the filming, like XbotGo's. <a href="/help#ai-cameras">Which cameras work</a></p></form>`;
+<p class="small">Only for an AI tracking camera whose own app does the filming, like XbotGo's at the time of writing. <a href="/help#ai-cameras">Which cameras work</a></p></form>`;
 }
 
 function streamStep(p: LivePageProps): SafeHtml {

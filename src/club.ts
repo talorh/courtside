@@ -33,6 +33,10 @@ export const CLUB = {
 	/** The league the club plays in, the first choice when a game is added; a game's round number is shown as "Round 5"
 	 * only in the league. */
 	league: "VJBL",
+	/** The uniforms a game can be played in, home first. Two or more ("Navy", "White"): the match day message lets the
+	 * team manager pick one and says to pack the other, the clash uniform. One, for a club with a single kit or a
+	 * reversible singlet ("Reversible singlet"): no choice, and the message just names it. */
+	uniforms: ["Navy", "White"] as string[],
 	/** Signs off the welcome message a new team manager gets. */
 	cheer: "Go Saints!",
 	/** IANA time zone the club plays in: fixtures, the Log and the daily job's 3am. */

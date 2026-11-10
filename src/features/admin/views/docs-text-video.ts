@@ -83,8 +83,9 @@ joiner is known before a game needs it (Background jobs).</li></ul>
 <h3>From an external app (RTMPS)</h3>
 <p>An AI tracking camera films through its own app, so the page can't have the phone's camera. On the Go live
 page, below the red Start camera button (don't tap it), is a smaller green <b>Use an external app instead</b>. It
-only helps if the camera's app can stream to a custom RTMPS server with a stream key: XbotGo's can; Trackd's is
-locked down, so a Trackd game is recorded in its app and uploaded afterwards.</p>
+only helps if the camera's app can stream to a custom RTMPS server with a stream key. XbotGo and Trackd are two
+examples of many, as they stood at the time of writing: XbotGo's app can, Trackd's can't yet, so a Trackd game is
+recorded in its app and uploaded afterwards. Makers change their apps, so Help says to check.</p>
 <ul class="docs-points">
 <li><b>Choosing it</b> sets the game to the app and shows its RTMPS server and stream key to copy. The key
 is that game's password: it's shown only there, to people who film, and never logged. Going back to the phone's

@@ -697,6 +697,11 @@ fieldset.players label{padding:6px 10px;font-size:14px}
 .m-b .stopicon{width:9px;height:9px}
 .m-b.pause{background:#F2B705;color:#111}.m-b.resume{background:var(--club);color:#fff}.m-b.stop{background:var(--live);color:#fff}.m-b.keep{background:#fff;color:#111}
 .m-cam .m-tap{box-shadow:0 0 0 2px #fff,0 0 0 5px var(--club)}
+/* Safari's address bar back over the live picture (an iPhone held sideways) */
+.m-bars{align-content:space-between}
+.m-sbar{position:relative;z-index:1;padding:6px 8px;background:rgba(242,242,247,.96);color:#111;font-size:12px}
+.m-sbar .m-url{background:#fff;border-radius:9px;padding:4px 8px}
+.m-aa{font-weight:700;padding:1px 5px;border-radius:6px;background:#fff;color:#111}
 /* Game labels in Help: Watch games' own, at the size of the words around them. */
 .faqbody .gstate,.faqbody .s-processing .gstate{font-size:12.5px;padding:1px 9px 1px 7px;vertical-align:1px}
 .faqbody .s-processing .gstate i{width:9px;height:9px}

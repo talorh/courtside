@@ -17,7 +17,7 @@ ${shots(shot("signin-email", "The sign-in page: Log in to Courtside, an Email bo
 ask ${h.c.ask} to add you.</p>
 <p class="small">To sign out, tap the door at the top right, then <b>Sign out</b>.</p>
 <p class="small">On more than one team? Tap <b>Switch team</b>, under the team's name at the top left.</p>
-${shots(shot("signout", "The door at the top right tapped: a Sign out? box with Sign out and Cancel buttons"), shot("teams", "The Which team? page: each of your teams as a button, the one you're on marked"))}`);
+${shots(shot("signout", "The door at the top right tapped: a Sign out? box with Sign out and Cancel buttons"), shot("teams", "The Which team? page: each of your teams as a button to tap"))}`);
 
 /** Who has access (the site's admins too, for support). */
 export const faqWho = (h: HelpFor) => faqItem("who", "Who can see the videos and photos?", html`<p>Only the team's <b>families</b> and <b>coaches</b> who've been given access, each signing in
@@ -77,10 +77,10 @@ ${faqItem("clips", "How do I make a highlight clip?", html`<ol class="steps">
 play on and tap <b>Mark end</b>.</li>
 <li>Give it a name, tick who's in it under <b>Who's in it?</b>, and tap <b>Save clip</b>. Ticking players gives each
 player their own highlights at the end of the season.
-${shot("clip-make", "Make a highlight clip, filled in: Start 1:42 and End 1:52 with Mark start and Mark end, the label Q3 Jordan's steal and layup, #23 Jordan ticked under Who's in it, and Save clip", 343, 797)}</li>
+${shot("clip-make", "Make a highlight clip, filled in: Start 1:42 and End 1:52 with Mark start and Mark end, the label Q3 Jordan's steal and layup, #9 Jordan ticked under Who's in it, and Save clip", 358, 797)}</li>
 <li>It shows next to the game a minute or two later. To keep it on an iPhone, tap <b>Save</b> on it, then <b>Save
 Video</b>.
-${shot("clip-make-done", "The game's Highlight clips: Q3 Jordan's steal and layup, 10 seconds long, tagged #23 Jordan, with Watch, Download and Favourite", 343, 403)}</li></ol>
+${shot("clip-make-done", "The game's Highlight clips: Q3 Jordan's steal and layup, 10 seconds long, tagged #9 Jordan, with Watch, Download and Favourite", 358, 302)}</li></ol>
 <p class="small">Forgot to tick someone? Whoever made the clip (or ${h.c.ask}) can tap <b>Add players</b> or <b>Change
 players</b> on it.</p>`)}
 ${faqItem("labels", "What do Ready to watch, Processing and the other labels mean?", html`<ul class="steps">
