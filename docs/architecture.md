@@ -620,6 +620,18 @@ empty database with `npm run restore-d1 -- courtside-YYYY-MM-DD.sql <NEW_DB_ID>`
 runbook). `cf` has no import, so it goes in through `cf d1 query`, a request at a time, each its own transaction on D1,
 which is why rows go in parents first. `--sqlite <file>` runs the same restore into a local SQLite file, to drill it.
 
+## The Friday check: are the weekend's games good to go
+
+At 6am in the club's time zone every Friday (`src/jobs/game-day.ts`: `GAME_DAY_CRONS` is every UTC weekday and time
+that is 6am Friday there across a year, and `gameDayDue` picks the trigger that lands on it; `cloudflare.config.ts`
+makes the same triggers from the club's time zone) and from Platform's **Run the Friday check now**, `checkGameDay`
+(`src/features/admin/game-day-checks.ts`) reads every running team's live games up to Sunday in one trip
+(`game-day-repository.ts`, a `CROSS_TEAM` read) and asks: does Stream answer, with `MINUTES_A_GAME` (150) free for each
+game; is each game's open Go live input still in Stream (gone is a warning: `openLive` sets up a new one); does the
+joiner's self-test join; did the 5-minute job run in the last 15 minutes (not asked on staging); is any other alert up.
+`gameDayReadiness` turns that into the `game_day` alert's level and words, and `setAlert` raises or resolves its ticket
+as for every alert. It never throws: a failure is a problem in the Log (`alertFailed`).
+
 ## Manage team: the setup checklist and the end-of-season pack
 
 **The setup checklist** (`teams/team-setup.ts`, `team-setup-repository.ts`, `views/setup-card.ts`) is at the top of
@@ -846,7 +858,7 @@ section and keeps one More menu open at a time.
  and by the 3am job). Cloudflare's bill is the true figure.
 - **Admins**: add (the email typed twice) and remove (it asks first; never yourself, never the last admin, checked in
  the same statement; a removed admin's hidden memberships go in the same batch).
-- **Changelog** (from `CHANGELOG.md`) and **Log** (`log-routes.ts`). First its **Right now** (`views/log-now.ts`, from
+- **Changelog** (from `CHANGELOG.md`; `changelog-weeks.ts` counts each day's changes into the 53 weeks ending this week, and `views/changelog-heatmap.ts` draws them as Insights' heatmap does) and **Log** (`log-routes.ts`). First its **Right now** (`views/log-now.ts`, from
  `listSiteInProgress` and `listSiteWaiting` in `activity-admin-repository.ts`): every team's live streams, uploads,
  processing and HD downloads, and removal requests waiting, each with Open through the team switch; it follows the
  Team filter alone. Then every line of the local days asked for (the last 7 days unless today, yesterday, the last

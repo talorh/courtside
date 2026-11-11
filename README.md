@@ -75,8 +75,9 @@ that answers questions for their team.
 **Site admins**
 
 Insights, Teams, Support tickets with alerts that raise only when something needs doing, Platform limits, Costs with
-Cloudflare's own bill reconciled, one Log of everything, the Changelog, and the Documentation, with an AI assistant
-that answers from it.
+Cloudflare's own bill reconciled, one Log of everything, the Changelog with a heatmap of the last twelve months'
+activity, and the Documentation, with an AI assistant that answers from it. A Friday check at 6am looks ahead to the
+weekend's games (Stream, each game's Go live input, the video joiner, the jobs) and raises a ticket if anything's wrong.
 
 </td>
 </tr>

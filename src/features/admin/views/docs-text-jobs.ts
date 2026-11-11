@@ -1,11 +1,13 @@
-// The Documentation page's Background jobs section: the 5-minute job and the 3am job, step by step, with each step's
-// limits and what it records, as the code in src/jobs/ does it.
+// The Documentation page's Background jobs section: the 5-minute job, the 3am job and the Friday check, step by step,
+// with each step's limits and what it records, as the code in src/jobs/ does it.
 import { html } from "../../../shared/html.ts";
 import { code, type DocSection, table } from "./docs-blocks.ts";
 import { fiveMinuteDiagram, nightlyDiagram } from "./docs-diagrams-ops.ts";
+import { MINUTES_A_GAME } from "../game-day-checks.ts";
 
 export const jobs = (): DocSection => ({ id: "jobs", title: "Background jobs", body: html`
-<p>Two scheduled jobs keep things moving: one every five minutes, and one at 3am local time. Every step reads the
+<p>Two scheduled jobs keep things moving, one every five minutes and one at 3am local time, and a third, the Friday
+check, looks ahead to the weekend's games at 6am every Friday. Every step reads the
 current state, so running one twice does no harm; every record is processed even if one fails; and one team's or one
 step's failure never stops the rest. A run's failures are thrown together at its end, so the run shows as failed in
 Workers Observability; each one is also a problem in the admin Log, under the team whose step it was (the same one every
@@ -65,4 +67,18 @@ ${table(["Step", "What it does"], [
 		["The video joiner", "The joiner is asked to join two small test files that ship in its image, which wakes its container and runs ffmpeg end to end. Joined: the alert says how many seconds it took. Not answering, or the join failed: a warning, so it's known before a game needs it. An urgent alert from a game's join is left as it is."],
 		["AI models", "The site's one model (Ask Virtual Team Manager, the Documentation assistant, reading fixture pages) against Cloudflare's catalog: a planned retirement warns, two weeks before it (or a model gone from the catalog) is urgent, a current model clears."],
 		["How the night went", "The 3am job's own alert: urgent the night its backup, sweep or deletions fail; a good night clears it. Then the 5-minute job's heartbeat is checked."],
+	])}
+<h3>The Friday check</h3>
+<p>At 6am local time every Friday (a trigger for each UTC time that is 6am Friday in the club's time zone across the
+year, and only the one landing on 6am runs it), ahead of the weekend's games, the site asks itself whether they're good
+to go, and Platform's <b>Run the Friday check now</b> asks the same any day. It reads every running team's live games
+up to Sunday (not No video, not recorded and uploaded), then checks what they'll need. The answer is the Friday check
+alert: ok says what was found; a problem raises a ticket for the admins saying what to do, and the next fine check
+resolves it.</p>
+${table(["Checked", "Warns", "Urgent"], [
+		["Stream", "", `Not answering, or fewer than ${MINUTES_A_GAME} minutes free for each game up to Sunday`],
+		["Each game's Go live input", "Set up but gone from Stream (Go live sets up a new one)", ""],
+		["The video joiner", "Not answering, or its test join failed", ""],
+		["The 5-minute job", "", "No run for 15 minutes (staging has none, and isn't asked)"],
+		["The other alerts", "Any up at a warning", "Any up at urgent"],
 	])}`});

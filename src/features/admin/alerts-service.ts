@@ -32,6 +32,8 @@ const WORDS: Record<AlertKind, { thing: string; is: Record<"warn" | "urgent", st
 		todo: "pick a current model in Cloudflare's Workers AI catalog (the dashboard: AI, Workers AI, Models), change MODEL in src/platform/workers-ai.ts (the one model, for staging and the live site alike), and try Ask Virtual Team Manager, the Documentation assistant and a fixture import on staging before the day. Past it, they stop answering." },
 	joiner: { thing: "the video joiner", is: { warn: "isn't answering", urgent: "couldn't join a game's video" },
 		todo: "look at the courtside-join Worker's logs (Observability) and its container. A game's join is tried again every ten minutes, six times; after that its team manager is offered Keep the first part on the game's page." },
+	game_day: { thing: "the weekend's games", is: { warn: "may have a problem", urgent: "aren't ready" },
+		todo: "read what the check found (Platform, The Friday check) and put it right before tip-off: Stream's minutes are bought in the Cloudflare dashboard, the jobs' Cron Triggers are under the Worker's Settings, and the joiner has its own Worker and container. Platform's Run the Friday check now says when it's fixed." },
 	budget: { thing: "a team's costs", is: { warn: "are on track to go over budget", urgent: "are over budget" },
 		todo: "open the team on Costs (in the admin area): its months show where the money goes. Raise its season's budget there if it's right, or ask the team manager about how much is filmed and watched." },
 };

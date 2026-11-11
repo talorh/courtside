@@ -5,6 +5,7 @@ import { buildRouter } from "./app/routes.ts";
 import { sessionAuthenticator } from "./auth/session.ts";
 import { buildAdminRouter } from "./features/admin/admin-routes.ts";
 import { DAILY_CRONS, dailyDue, runDaily } from "./jobs/daily.ts";
+import { GAME_DAY_CRONS, gameDayDue, runGameDay } from "./jobs/game-day.ts";
 import { runSync } from "./jobs/sync-videos.ts";
 import { createFetchBudget } from "./platform/fetch-budget.ts";
 import { newImageUrlCache } from "./platform/hosted-images.ts";
@@ -34,8 +35,11 @@ export default {
 		// Of the daily job's two triggers, the one that isn't 3am in the club's time zone today does nothing (jobs/daily.ts).
 		const daily = DAILY_CRONS.has(controller.cron);
 		if (daily && !dailyDue(controller.scheduledTime)) return;
+		// And of the Friday check's, the one that isn't 6am Friday (jobs/game-day.ts).
+		const gameDay = GAME_DAY_CRONS.has(controller.cron);
+		if (gameDay && !gameDayDue(controller.scheduledTime)) return;
 		// Every team's work, each with its own deps (src/jobs/teams.ts).
 		const deps = buildDeps(env, loadConfig(env), { fetch: createFetchBudget(CRON_FETCH_BUDGET).fetch });
-		await (daily ? runDaily(deps) : runSync(deps));
+		await (daily ? runDaily(deps) : gameDay ? runGameDay(deps) : runSync(deps));
 	},
 } satisfies ExportedHandler<Env>;

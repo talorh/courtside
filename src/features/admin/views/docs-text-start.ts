@@ -23,7 +23,7 @@ ${table(["Page", "What it's for", "When you look"], [
 		["Platform", "The site's health, each thing once: every figure watched with its limit and alert, last night's backup and clean-up, Cloudflare's last 30 days.", "Weekly, and when an alert is raised"],
 		["Costs", "What each team costs on Cloudflare, this month and this season, against its budget, in Australian or US dollars.", "Monthly, and when the Team budgets alert is raised"],
 		["Admins", "Who the site's admins are.", "Adding or removing an admin"],
-		["Changelog", "One line for every deploy, newest first: what changed on the site and when.", "After a release, or when someone asks what changed"],
+		["Changelog", "Release notes, newest first: what changed on the site and when, under a heatmap of the last twelve months' activity, a square a day.", "After a release, or when someone asks what changed"],
 		["Log", "What's happening right now in every team (live streams, uploads, processing, removal requests waiting), then everything that happened: who changed what, videos and photos, every sign-in attempt from the last month, and anything that didn't work (Problems), each with the device it came from.", "Game nights and the morning after; something odd about a sign-in, or a problem; who changed what"],
 		["Documentation", "This page.", "Now"],
 	])}

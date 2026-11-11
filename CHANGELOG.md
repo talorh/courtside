@@ -10,6 +10,8 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 11 Nov 2026
 
+- [Feature] **Platform:** The Friday check runs at 6am every Friday and looks ahead to the weekend's live games: Stream answering with minutes to spare, each game's Go live input, the video joiner, the 5-minute job and the other alerts. Anything wrong raises a ticket for the admins; Run the Friday check now on Platform asks the same any day.
+- [Feature] **Changelog:** A heatmap at the top of the Changelog shows how much went out each day over the last twelve months, a square a day like a contribution graph, with the busiest day in words; the Features, Enhancements and Fixes chips narrow it to one kind.
 - [Fix] **Look:** Fixed an issue where the coaches' clipboard, the Game Break card, video backgrounds, the admin charts and the Excel exports kept fixed greens: they now take the club's colours from src/club.ts.
 - [Enhancement] **Roster:** The match day message names the club's own uniforms: team managers pick one and the message says to pack the other, or a club with a reversible singlet gets just the one and no choice.
 - [Enhancement] **Help:** Every screenshot now shows the example club's pages, the squad is named after the 1992 Dream Team, Safari's bars are drawn rather than photographed, and the AI camera page says XbotGo and Trackd are two examples of many as they stood at the time of writing.

@@ -139,12 +139,13 @@ tr.past td{color:var(--muted)}
 /* When families watch: a week of hours, one green from light to dark (validated light and dark: dataviz skill). */
 .heat{margin:0;padding:16px;border:1px solid var(--line);border-radius:var(--a-radius);background:var(--surface);display:grid;gap:8px;min-width:0}
 .heat svg{width:100%;height:auto;display:block}
+.heat.weeks{overflow-x:auto}.heat.weeks svg{min-width:720px}
 .heat text{fill:var(--muted);font-size:9px;font-family:var(--body)}
-.heat .h0{fill:var(--bg)}.heat .h1{fill:color-mix(in srgb,var(--club) 18%,var(--bg))}.heat .h2{fill:color-mix(in srgb,var(--club) 40%,var(--bg))}.heat .h3{fill:color-mix(in srgb,var(--club) 62%,var(--bg))}.heat .h4{fill:color-mix(in srgb,var(--club) 85%,var(--bg))}.heat .h5{fill:#145C27}
+.heat .h0{fill:var(--bg)}.heat .h1{fill:color-mix(in srgb,var(--club) 18%,var(--bg))}.heat .h2{fill:color-mix(in srgb,var(--club) 40%,var(--bg))}.heat .h3{fill:color-mix(in srgb,var(--club) 62%,var(--bg))}.heat .h4{fill:color-mix(in srgb,var(--club) 85%,var(--bg))}.heat .h5{fill:var(--club-ink)}
 .heat g:hover rect{stroke:var(--fg);stroke-width:1}
 .heatkey{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
 .heatkey i{display:inline-block;width:14px;height:10px;border-radius:2px}
-.heatkey .h0{background:var(--bg);border:1px solid var(--line)}.heatkey .h1{background:color-mix(in srgb,var(--club) 18%,var(--bg))}.heatkey .h2{background:color-mix(in srgb,var(--club) 40%,var(--bg))}.heatkey .h3{background:color-mix(in srgb,var(--club) 62%,var(--bg))}.heatkey .h4{background:color-mix(in srgb,var(--club) 85%,var(--bg))}.heatkey .h5{background:#145C27}
+.heatkey .h0{background:var(--bg);border:1px solid var(--line)}.heatkey .h1{background:color-mix(in srgb,var(--club) 18%,var(--bg))}.heatkey .h2{background:color-mix(in srgb,var(--club) 40%,var(--bg))}.heatkey .h3{background:color-mix(in srgb,var(--club) 62%,var(--bg))}.heatkey .h4{background:color-mix(in srgb,var(--club) 85%,var(--bg))}.heatkey .h5{background:var(--club-ink)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .heat .h1,:root:not([data-theme="light"]) .heatkey .h1{fill:color-mix(in srgb,var(--club) 22%,var(--bg));background:color-mix(in srgb,var(--club) 22%,var(--bg))}
   :root:not([data-theme="light"]) .heat .h2,:root:not([data-theme="light"]) .heatkey .h2{fill:color-mix(in srgb,var(--club) 40%,var(--bg));background:color-mix(in srgb,var(--club) 40%,var(--bg))}
   :root:not([data-theme="light"]) .heat .h3,:root:not([data-theme="light"]) .heatkey .h3{fill:color-mix(in srgb,var(--club) 60%,var(--bg));background:color-mix(in srgb,var(--club) 60%,var(--bg))}

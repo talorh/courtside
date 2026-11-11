@@ -15,6 +15,9 @@ describe("the sign-in code email", () => {
 		expect(page).toContain("It works for 10 minutes, on the phone or computer that asked for it.");
 		expect(page).toContain("If you didn&#39;t ask for a code, you can ignore this email: nobody can sign in without it.");
 		expect(page).not.toContain("Staging");
+		// The code's box is in the club's colours (a plain string once left the placeholder in, and a fixed green).
+		expect(page).toContain("background:#E4ECFB;border-radius:8px;text-align:center;font-size:36px;font-weight:800;letter-spacing:4px;line-height:1.2;color:#14274E");
+		expect(page).not.toContain("${");
 	});
 	it("tells Hotmail and Outlook users how to get the next code in their inbox, in both its HTML and plain text", () => {
 		expect(codeEmailHtml("482913", false)).toContain("Using Hotmail or Outlook? If this email was in Junk, mark it <b>Not junk</b> and add alerts@saints.example to your contacts");

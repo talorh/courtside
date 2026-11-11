@@ -2,7 +2,7 @@
 // (alerts raise tickets, not emails of their own). Site-wide by nature (platform_alerts has no team), so a
 // CROSS_TEAM exception in scripts/rules.mjs.
 
-export type AlertKind = "stream_storage" | "images" | "daily_job" | "sync_job" | "database" | "site_errors" | "email" | "email_allowance" | "budget" | "ai_models" | "joiner";
+export type AlertKind = "stream_storage" | "images" | "daily_job" | "sync_job" | "database" | "site_errors" | "email" | "email_allowance" | "budget" | "ai_models" | "joiner" | "game_day";
 export type AlertLevel = "ok" | "warn" | "urgent";
 
 /** `since`: when this spell began (null while ok). `failures`: a job's failed runs in a row. `ticketId`: its latest

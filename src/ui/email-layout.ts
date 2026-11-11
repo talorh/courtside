@@ -14,7 +14,7 @@ export const EMAIL = {
 	body: raw("padding:16px 18px 6px"),
 	p: raw("margin:0 0 14px"),
 	/** The sign-in code: large, spaced out, the one thing to read off the email. */
-	code: raw("margin:0 0 14px;padding:18px 14px;background:${CLUB.colors.light.soft};border-radius:8px;text-align:center;font-size:36px;font-weight:800;letter-spacing:4px;line-height:1.2;color:#0A4A23"),
+	code: raw(`margin:0 0 14px;padding:18px 14px;background:${CLUB.colors.light.soft};border-radius:8px;text-align:center;font-size:36px;font-weight:800;letter-spacing:4px;line-height:1.2;color:${CLUB.colors.light.bar}`),
 	list: raw("margin:0 0 10px;padding-left:22px"),
 	item: raw("margin:0 0 10px"),
 	button: raw(`display:inline-block;padding:13px 22px;background:${CLUB.colors.light.button};border-radius:8px;color:#FFFFFF;${FONT};font-size:17px;font-weight:800;text-decoration:none`),

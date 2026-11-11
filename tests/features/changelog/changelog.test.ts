@@ -71,3 +71,16 @@ describe("the admin Changelog page", () => {
 		expect(page).toContain('class="rkind k-feature"');
 	});
 });
+
+describe("the admin Changelog page's heatmap", () => {
+	it("sits above the release notes, for the kind of change chosen", async () => {
+		const page = await (await makeClient(createTestDeps(new Date("2026-11-11T00:00:00Z")))("/admin/changelog")).text();
+		expect(page.indexOf('<figure class="heat weeks">')).toBeGreaterThan(page.indexOf('<nav class="chips"'));
+		expect(page.indexOf('<figure class="heat weeks">')).toBeLessThan(page.indexOf('<section class="panel release">'));
+		expect(page).toContain("Changes a day, the last 12 months");
+		// The clock is 11 Nov 2026, a day with changes: they're on the grid.
+		expect(page).toMatch(/<title>Wed 11 Nov 2026: [^<]*(feature|enhancement|fix)/);
+		const fixes = await (await makeClient(createTestDeps())("/admin/changelog?type=fix")).text();
+		expect(fixes).toContain("Fixes a day, the last 12 months");
+	});
+});

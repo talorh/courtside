@@ -15,4 +15,5 @@ export const KINDS: Array<{ kind: AlertKind; label: string; heading: string; war
 	{ kind: "daily_job", label: "3am job", heading: "The 3am job", warn: "Failing", first: "Not run yet: it runs at 3am." },
 	{ kind: "sync_job", label: "5-minute job", heading: "The 5-minute job", warn: "Failing", first: "Not run yet: it runs every 5 minutes." },
 	{ kind: "joiner", label: "Video joiner", heading: "The video joiner", warn: "Not answering", first: "Not checked yet: the 3am job tries it every night." },
+	{ kind: "game_day", label: "Friday check", heading: "The Friday check", warn: "Not ready", first: "Not checked yet: it runs at 6am every Friday, and Platform's button runs it now." },
 ];

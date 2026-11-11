@@ -2,18 +2,20 @@ import { CLUB, siteOrigin } from "../../club.ts";
 // The admin area's Platform and Changelog pages.
 import { logProblem } from "./problem-log.ts";
 import { checkAiModelsSoon } from "./ai-model-checks.ts";
+import { checkGameDay } from "./game-day-checks.ts";
 import changelog from "../../../CHANGELOG.md?raw";
 import type { AdminRouter } from "../../app/admin-router.ts";
 import { notFound } from "../../app/errors.ts";
 import type { AppDeps } from "../../app/deps.ts";
 import { htmlResponse, redirect } from "../../app/respond.ts";
 import type { CloudflareFigures } from "../../platform/cloudflare-insights.ts";
-import { addDays } from "../../shared/time.ts";
+import { addDays, localDate } from "../../shared/time.ts";
 import { runSync } from "../../jobs/sync-videos.ts";
 import { mailAdmins } from "./admin-mail.ts";
 import { BACKUP_PREFIX } from "../../jobs/backup-db.ts";
 import { SWEEP_RECORD } from "../../jobs/sweep-orphans.ts";
 import { CHANGE_KINDS, type ChangeKind, parseChangelog } from "../changelog/changelog.ts";
+import { weeksOfChanges } from "../changelog/changelog-weeks.ts";
 import { changelogPage } from "../changelog/views/changelog-page.ts";
 import { countPeopleOnTeams } from "../teams/teams-repository.ts";
 import { countLiveSessions } from "../../auth/session-repository.ts";
@@ -88,6 +90,11 @@ export function platformRoutes(router: AdminRouter): void {
 		});
 		return redirect(`/admin/platform?done=${done}`);
 	});
+	// The Friday check, now (game-day-checks.ts): its row on Platform says what it found.
+	router.post("/admin/run-game-day", async ({ deps }) => {
+		await checkGameDay(deps);
+		return redirect("/admin/platform?done=gameday");
+	});
 	// Whether emails reach the admins (alerts, support requests): logged, and Platform says how it went.
 	router.post("/admin/test-email", async ({ deps, viewer }) => {
 		let detail: string;
@@ -103,10 +110,11 @@ export function platformRoutes(router: AdminRouter): void {
 		await adminLogStatement(deps.db, { device: deps.device, adminEmail: viewer.email, teamId: null, action: "test_email", detail, at: deps.now().toISOString() }).run();
 		return redirect("/admin/platform");
 	});
-	router.get("/admin/changelog", async ({ frame, url }) => {
+	router.get("/admin/changelog", async ({ deps, frame, url }) => {
 		const asked = url.searchParams.get("type") ?? "";
 		const only = (CHANGE_KINDS as readonly string[]).includes(asked) ? asked as ChangeKind : null;
-		return htmlResponse(changelogPage({ frame, days: parseChangelog(changelog), only }));
+		const days = parseChangelog(changelog);
+		return htmlResponse(changelogPage({ frame, days, weeks: weeksOfChanges(days, localDate(deps.now())), only }));
 	});
 	// Its old address, from the team managers' links: an admin's bookmark still works.
 	router.get("/changelog", async () => redirect("/admin/changelog", 302));

@@ -552,7 +552,7 @@ Support's counts beside it (tickets waiting, and alerts that aren't ok). Anyone 
  from the sections it's about, names them with links, and takes 50 questions an admin a day; and carries the **fair use policy**: one video a game, a few clips, photos of the team's own games and events, downloads for the household only,
  the daily Ask and Support limits and the $200 season budget, each beside the limit the code enforces. Written for
  teams and to be shared with them later; admins only for now.
-- **Admins**, the **Changelog** (a line per deploy, newest first, from `CHANGELOG.md`) and the **Log**: one page, in
+- **Admins**, the **Changelog** (release notes, newest first, from `CHANGELOG.md`, under a heatmap of the last twelve months' features, enhancements and fixes, a square a day like a contribution graph, narrowed with the kind chips) and the **Log**: one page, in
  place of Activity and the Log as two. First its **Right now**: every team's live streams, uploads,
  processing and HD downloads, and removal requests waiting, each with Open; it follows the Team filter alone. Then
  everything that happened, in six groups: Admins (and the site); Teams (people, players, games, game lines); Videos
@@ -667,8 +667,10 @@ The site sends email from alerts@saints.example, and never to families:
 - to a **team manager about their own ticket**: the admin's replies and when it's resolved (Reply-To the admin).
 
 **Monitoring** watches video storage, photos against Images' 100,000, the sign-in (Platform's Sign-ins row, and a ticket when codes are paused), the
-database's size, server errors, emails not going, the month's emails, the 3am and 5-minute jobs, and each team against
-its season's budget (Costs). Insights' Alerts section shows them all in one place, with what it checks as it opens. When something needs doing, it raises
+database's size, server errors, emails not going, the month's emails, the 3am and 5-minute jobs, each team against
+its season's budget (Costs), and, at 6am every Friday (the **Friday check**, also run from Platform's button), whether the
+weekend's live games are good to go: Stream answering with 150 minutes free a game, each game's Go live input still
+there, the video joiner answering, the 5-minute job running and no other alert up. Insights' Alerts section shows them all in one place, with what it checks as it opens. When something needs doing, it raises
 a ticket from the site saying what to do, emailed to the admins once; it emails again only if it gets worse, and
 resolves itself when it clears. There are no reminders.
 

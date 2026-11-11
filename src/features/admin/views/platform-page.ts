@@ -41,6 +41,7 @@ export interface PlatformProps {
 /** What a change just did (`?done=`): fixed words only, never anything from the address itself. */
 export const PLATFORM_MESSAGES: Record<string, string> = {
 	ran: "The 5-minute job ran.", ranfailed: "The 5-minute job ran, but something in it failed: the Worker's logs say what.",
+	gameday: "The Friday check ran: its row says how the weekend's games stand.",
 };
 
 const when = (iso: string) => formatGameDate(localTime(new Date(iso)));
@@ -78,12 +79,13 @@ ${row("AI models (Workers AI)", html`The model behind Ask Virtual Team Manager, 
 ${row("The 3am job", html`The database backup, the clean-up of videos and photos nothing uses, and the sign-in's leftovers, every night.`, { kind: "daily_job", alerts: a, more: html`${backupLine(p.lastBackup, p.now)}${sweepLine(p.lastSweep, p.now)}` })}
 ${row("The 5-minute job", html`Uploads, live streams, processing, scores and emails, for every team.`, { kind: "sync_job", alerts: a })}
 ${row("The video joiner", html`Joins a live stream's parts into one video after its page closed mid-game: the courtside-join Worker and its container.`, { kind: "joiner", alerts: a })}
+${row("The Friday check", html`At 6am every Friday, the weekend's live games against what they'll need: Stream answering with minutes to spare, each game's Go live input, the video joiner and the 5-minute job, and no other alert up.`, { kind: "game_day", alerts: a })}
 </ul></section>`;
 }
 
 export function platformPage(p: PlatformProps): SafeHtml {
 	const runSync = p.staging ? html`<form method="post" action="/admin/run-sync" class="inline"><button class="btn">Run the 5-minute job now</button></form>` : "";
-	const head = html`${runSync}<form method="post" action="/admin/test-email" class="inline"><button class="btn">Send a test email</button></form>`;
+	const head = html`${runSync}<form method="post" action="/admin/run-game-day" class="inline"><button class="btn">Run the Friday check now</button></form><form method="post" action="/admin/test-email" class="inline"><button class="btn">Send a test email</button></form>`;
 	const tested = p.testEmail ? html`<p class="small">Last test email: ${when(p.testEmail.at)}, ${p.testEmail.detail}.</p>` : html`<p class="small">No test email sent yet.</p>`;
 	return adminLayout({ title: "Platform", current: "platform", frame: p.frame, head, lede: "How the site is doing: what it uses against what it has, its jobs, and Cloudflare's view." },
 		html`${notice(p.message)}${watched(p)}${cloudflareSection(p.cloudflare.figures, p.cloudflare.configured)}${tested}`);
