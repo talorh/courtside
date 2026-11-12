@@ -54,15 +54,14 @@ export interface UnfilmedGame { teamId: string; id: number; startsAt: string; co
 /**
  * Every active team's games that started before `before` (local, 'YYYY-MM-DDTHH:MM') with nothing filmed, in one
  * trip: not No video, not set back to Video by a team manager since `beforeIso`, no video of any kind (a failed one too:
- * someone's dealing with it), none a person deleted (a team manager replacing it, or a removal request: the game was
- * filmed), and no live stream that was used (only opened is fine).
+ * someone's dealing with it; one a person deleted doesn't count, so a lost recording doesn't keep the game waiting), and
+ * no live stream that was used (only opened is fine).
  */
 export async function unfilmedGames(db: D1Database, before: string, beforeIso: string): Promise<UnfilmedGame[]> {
 	const { results } = await db.prepare(`SELECT g.team_id AS teamId, g.id, g.starts_at AS startsAt, g.competition, g.round_label AS roundLabel, g.opponent
 		FROM games g JOIN teams t ON t.id = g.team_id AND t.status = 'active'
 		WHERE g.deleted_at IS NULL AND g.no_video_at IS NULL AND g.starts_at < ?1 AND (g.waiting_since IS NULL OR g.waiting_since < ?2)
-		AND NOT EXISTS (SELECT 1 FROM videos v WHERE v.team_id = g.team_id AND v.game_id = g.id
-			AND (v.deleted_at IS NULL OR v.deleted_reason IN ('admin', 'removal_request')))
+		AND NOT EXISTS (SELECT 1 FROM videos v WHERE v.team_id = g.team_id AND v.game_id = g.id AND v.deleted_at IS NULL)
 		AND NOT EXISTS (SELECT 1 FROM live_streams ls WHERE ls.team_id = g.team_id AND ls.game_id = g.id AND ls.status = 'open'
 			AND (ls.last_live_at IS NOT NULL OR ls.end_requested_at IS NOT NULL OR ls.recording_video_id IS NOT NULL))
 		ORDER BY g.starts_at`).bind(before, beforeIso).all<UnfilmedGame>();

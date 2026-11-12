@@ -259,9 +259,9 @@ game with no time yet, and a game a fixture page gives no time for, get it too.
  Record puts it back. It can't be chosen while the game has a video (a failed one doesn't count). A game is
  **Waiting for video** for a week after tip-off; with nothing uploaded or streamed by then, the 5-minute job sets it
  to No video, with a line in the Log by the site (a Go live that was only opened is closed). A team manager who sets
- the game back to Video, to upload it after all, gives it another week from then. A game whose video a
- person deleted is left alone, and a week's or a PlayHQ fixture's Video switch leaves the site's No video as it is
- (Edit undoes it, one game at a time).
+ the game back to Video, to upload it after all, gives it another week from then. A deleted video doesn't count (a
+ recording that was lost and deleted doesn't keep the game waiting), and a week's or a PlayHQ fixture's Video switch
+ leaves the site's No video as it is (Edit undoes it, one game at a time).
 - **Add game**, by hand (a practice match, say). A league game has a **Phase**: a VJBL season runs as three rounds of
   grading phase 1, a crossover game, three rounds of grading phase 2, then the championship season (rounds and finals),
   each phase's rounds starting from 1 again. It's kept on the game (`games.phase`), shows as a tag beside the league on

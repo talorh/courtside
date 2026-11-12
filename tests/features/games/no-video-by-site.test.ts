@@ -43,17 +43,18 @@ describe("the site's own No video", () => {
 		await manager("/roster/week/2026-11-09/video", form({}));
 		expect([await noVideo(deps, friday), await noVideo(deps, sunday)]).toEqual([true, false]);
 	});
-	it("a game whose video a team manager deleted (to replace it, say) is left alone; a stream thrown away as a test isn't a video", async () => {
+	it("a game whose only video was deleted (a lost recording, a removal request, a stream thrown away as a test) is No video like one never filmed", async () => {
 		const deps = createTestDeps(new Date("2026-11-13T00:00:00Z"));
-		const deleted = await seedGame(deps, { startsAt: "2026-11-13T19:35" });
-		const tested = await seedGame(deps, { startsAt: "2026-11-13T19:35" });
-		for (const [gameId, reason] of [[deleted, "admin"], [tested, "live_test"]] as const) {
+		const ids: number[] = [];
+		for (const reason of ["admin", "removal_request", "live_test"]) {
+			const gameId = await seedGame(deps, { startsAt: "2026-11-13T19:35" });
 			const videoId = await seedVideo(deps, { gameId, status: "ready", streamUid: `s${gameId}` });
-			await deps.db.prepare("UPDATE videos SET deleted_at = ?, deleted_reason = ? WHERE id = ?").bind("2026-11-13T10:00:00.000Z", reason, videoId).run();
+			await deps.db.prepare("UPDATE videos SET deleted_at = ?, deleted_reason = ? WHERE team_id = ? AND id = ?").bind("2026-11-13T10:00:00.000Z", reason, deps.team.id, videoId).run();
+			ids.push(gameId);
 		}
 		later(deps, "2026-11-21T00:00:00Z");
 		await runSync(deps);
-		expect([await noVideo(deps, deleted), await noVideo(deps, tested)]).toEqual([false, true]);
+		for (const id of ids) expect([id, await noVideo(deps, id)]).toEqual([id, true]);
 	});
 	it("the game's page stops waiting for a live stream once the game is over, when Go live was only opened", async () => {
 		const deps = createTestDeps(new Date("2026-11-08T05:00:00Z")); // 4pm Sunday

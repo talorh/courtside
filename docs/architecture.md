@@ -561,8 +561,8 @@ the videos, games and people only that log named.
  a typed score can be cleared (PlayHQ would put its own straight back); PlayHQ's is fixed by saving over it.
 
 After every team's steps, the run sets games nobody filmed to No video (`no-video-after.ts`): one read of every active
-team's games (`unfilmedGames`, all-teams-repository.ts) that started over a week ago, with no video row of any kind
-(failed included) and none a person deleted (`admin` or `removal_request`: the game was filmed), no open live stream
+team's games (`unfilmedGames`, all-teams-repository.ts) that started over a week ago, with no undeleted video row of any
+kind (failed included; a deleted one, a lost recording say, doesn't hold the game), no open live stream
 that was used (noted live, ended, or with a recording), and not set back to Video by a team manager in the last week
 (`games.waiting_since`, stamped by `BACK_TO_VIDEO` whenever a game goes from No video to Video, so footage that turned
 up late gets a week to be uploaded). `games.no_video_auto_at` marks a No video as the site's until the game is set back:

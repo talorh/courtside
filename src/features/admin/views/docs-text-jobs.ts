@@ -36,7 +36,7 @@ ${table(["Step", "What it does", "A run"], [
 		["Final scores", "PlayHQ games are asked for their score from half an hour after tip-off: every run until 3 hours after it, then hourly, until 3 days after tip-off (a fixture's Check now asks at once). A final score ends In progress straight away. Only a FINAL status with both scores is entered, and never over a score already there.", "4 games"],
 	])}
 <p><b>After every team's steps</b>, the run sets to No video every running team's games nobody uploaded or streamed in
-the week after tip-off (one read for every team: no video of any kind, none a person deleted, and no live stream
+the week after tip-off (one read for every team: no video of any kind, a deleted one not counting, and no live stream
 that was used; a Go live only opened is closed; one a team manager set back to Video waits a week from then, and a
 week's or a PlayHQ fixture's Video switch leaves the site's No video alone; a line in the Log by the site), deletes a slice of any closed team whose date has passed (media first, 20
 calls a run, then the rows), sends any ticket email that didn't go (one failing again is logged, never failing the
