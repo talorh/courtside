@@ -9,8 +9,8 @@ const base = { startsAt: "2026-10-18T09:00", competition: "VJBL" as const, round
 
 describe("games service", () => {
 	it("maps form fields (12-hour time), defaulting the opponent to TBC", () => {
-		const form = { date: "2026-10-25", hour: 10, minute: 20, period: "am" as const, competition: "VJBL" as const, roundLabel: "10", opponent: "", venue: "Saints", video: "live" as const };
-		expect(toGameInput(form)).toEqual({ startsAt: "2026-10-25T10:20", competition: "VJBL", roundLabel: "10", opponent: "TBC", venue: "Saints" });
+		const form = { date: "2026-10-25", hour: 10, minute: 20, period: "am" as const, competition: "VJBL" as const, roundLabel: "10", phase: "" as const, opponent: "", venue: "Saints", video: "live" as const };
+		expect(toGameInput(form)).toEqual({ startsAt: "2026-10-25T10:20", competition: "VJBL", roundLabel: "10", phase: null, opponent: "TBC", venue: "Saints" });
 		expect(toGameInput({ ...form, hour: 6, minute: 40, period: "pm" }).startsAt).toBe("2026-10-25T18:40");
 		expect(toGameInput({ ...form, hour: 12, minute: 5, period: "am" }).startsAt).toBe("2026-10-25T00:05");
 		expect(toGameInput({ ...form, hour: 12, minute: 0, period: "pm" }).startsAt).toBe("2026-10-25T12:00");

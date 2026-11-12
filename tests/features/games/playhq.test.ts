@@ -50,7 +50,7 @@ describe("PlayHQ links and games", () => {
 		const [first, second] = team().games;
 		expect(toPlayhqGameInput("VJBL", { ...second!, round: "Round 2" }, "19:40").startsAt).toBe("2026-11-06T19:40");
 		expect(toPlayhqGameInput("VJBL", first!, "19:40").startsAt).toBe("2026-10-30T18:40");
-		expect(toPlayhqGameInput("VJBL", first!, "18:40")).toEqual({ startsAt: "2026-10-30T18:40", competition: "VJBL", roundLabel: "1", opponent: "Hillcrest 3", venue: "Saints Stadium, Court 1" });
+		expect(toPlayhqGameInput("VJBL", first!, "18:40")).toEqual({ startsAt: "2026-10-30T18:40", competition: "VJBL", roundLabel: "1", opponent: "Hillcrest 3", venue: "Saints Stadium, Court 1", phase: "championship" });
 		expect(toPlayhqGameInput("Tournament", { ...second!, round: "Finals Round 1" }, "18:40")).toMatchObject({ startsAt: "2026-11-06T18:40", roundLabel: "Finals Round 1", opponent: "TBC" });
 		expect(toPlayhqGameInput("Tournament", first!, "18:40").roundLabel).toBe("Round 1");
 	});
@@ -97,6 +97,46 @@ describe("Add fixture", () => {
 	});
 });
 
+
+describe("The season's phases", () => {
+	it("reads each VJBL game's phase of the season from its PlayHQ grade, and the Fixture shows it", async () => {
+		const t = team();
+		t.games = [
+			{ id: "p1", round: "Round 2", date: "2026-11-27", time: "19:40", opponent: "Hillcrest U12 Boys 2", venue: "Saints Stadium", grade: "12 Boys Grading 1 - Pool 2D" },
+			{ id: "x1", round: "Round 1", date: "2026-12-11", time: "18:40", opponent: "Hillcrest U12 Boys 2", venue: "", grade: "12 Boys Grading 1 - Crossover" },
+			{ id: "p2", round: "Round 1", date: "2027-02-05", time: "18:40", opponent: "Westside U12 Boys 1", venue: "", grade: "U12 Boys Grading 2 - AA Pool B" },
+			{ id: "c14", round: "Round 14", date: "2027-06-04", time: "18:40", opponent: "Lakeside U12 Boys 2", venue: "", grade: "U12 Boys - VJL1 (P1)" },
+		];
+		const { deps, client } = await added(t);
+		expect((await games(deps)).map((g) => [g.roundLabel, g.phase])).toEqual([["2", "grading1"], ["1", "crossover"], ["1", "grading2"], ["14", "championship"]]);
+		const page = await (await client("/fixture")).text();
+		expect(page).toContain("Grading phase 1, Round 2 · vs Hillcrest 2");
+		expect(page).toContain("Crossover game · vs Hillcrest 2");
+		expect(page).toContain("Grading phase 2, Round 1 · vs Westside 1");
+		expect(page).toContain("Round 14 · vs Lakeside 2");
+		expect(page).toContain('<span class="t src">VJBL</span> <span class="t src">Grading phase 1</span>');
+		expect(page).toContain('<span class="t src">VJBL</span> <span class="t src">Championship season</span>');
+		// Everyone's view of the Fixture says it too.
+		await deps.db.prepare("INSERT INTO members (team_id, email, name, role) VALUES (?, 'w@x.com', 'Wil', 'watcher')").bind(deps.team.id).run();
+		expect(await (await makeClient(deps, "w@x.com")("/fixture")).text()).toContain('<span class="t src">VJBL</span> <span class="t src">Crossover game</span>');
+	});
+	it("a tournament's games have no phase, whatever PlayHQ calls the grade", async () => {
+		const t = team();
+		t.games = [{ ...t.games[0]!, grade: "U12 Boys Division 1" }];
+		const { deps, client } = await added(t, "Tournament");
+		expect((await games(deps)).map((g) => g.phase)).toEqual([null]);
+		expect(await (await client("/fixture")).text()).toContain('<span class="t src">Tournament</span></td>');
+	});
+	it("a played grading game PlayHQ drops keeps its phase, and a game PlayHQ moves to another grade changes its", async () => {
+		const t = team();
+		t.games = [{ ...t.games[0]!, grade: "12 Boys Grading 1 - Pool 2D" }, { ...t.games[1]!, grade: "12 Boys Grading 1 - Pool 2D" }];
+		const { deps, client } = await added(t);
+		const [fixture] = await listPlayhqFixtures(deps.db, deps.team.id);
+		deps.playhq.teams.set("8fab8b8c", { ...t, games: [{ ...t.games[1]!, grade: "12 Boys Grading 1 - Crossover" }] });
+		await client(`/fixture/playhq/${fixture!.id}/check`, { method: "POST" });
+		expect((await games(deps)).map((g) => [g.roundLabel, g.phase, g.playhqGone])).toEqual([["1", "grading1", true], ["2", "crossover", false]]);
+	});
+});
 
 describe("A whole season", () => {
 	it("comes in with a handful of database trips, well inside the free plan's 50 per request", async () => {

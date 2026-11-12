@@ -65,7 +65,7 @@ describe("live stream or not, per game", () => {
 	it("the match day message tells the family on video to live stream it, or to record and upload it", () => {
 		const game = (liveStream: boolean): Game => ({
 			id: 1, teamId: "t", startsAt: "2026-10-30T18:40", competition: "Practice match", roundLabel: "", opponent: "Lakeside", venue: "Saints Stadium Court 1",
-			noVideo: false, playhqGone: false, fromPlayhq: false, liveStream,
+			noVideo: false, playhqGone: false, fromPlayhq: false, phase: null, liveStream,
 		});
 		const message = (g: Game) => matchMessage({ game: g, slots: [{ week: "2026-10-26", duty: "video", position: 1, gameId: 1, familyId: 8 }], names: new Map([[8, "Rivers"]]), video: true, uniform: "Navy" });
 		expect(message(game(true))).toContain("🎥 Video: Rivers (live stream it from https://saints.example)");

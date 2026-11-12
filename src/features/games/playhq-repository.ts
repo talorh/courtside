@@ -1,5 +1,5 @@
 import { assertChanged } from "../../shared/d1.ts";
-import type { GameInput } from "./games-repository.ts";
+import { type GameInput, phaseFor } from "./games-repository.ts";
 
 /** The league (club.ts) or a tournament: the kinds of game PlayHQ carries. */
 export type PlayhqCompetition = string;
@@ -127,12 +127,12 @@ export async function unlinkedGamesOn(db: D1Database, teamId: string, competitio
 /** Adds the game, or (with `gameId`) brings it up to date with PlayHQ and links it. Already added: left alone.
  * `noVideoAt`: a new game from a No video fixture comes in marked No video. */
 export function playhqGameWrite(db: D1Database, teamId: string, fixtureId: number, playhqGameId: string, input: GameInput, gameId: number | null, noVideoAt: string | null = null) {
-	const values = [input.startsAt, input.competition, input.roundLabel, input.opponent, input.venue, playhqGameId, fixtureId];
+	const values = [input.startsAt, input.competition, input.roundLabel, input.opponent, input.venue, phaseFor(input), playhqGameId, fixtureId];
 	if (gameId === null) {
-		return db.prepare(`INSERT OR IGNORE INTO games (team_id, starts_at, competition, round_label, opponent, venue, playhq_game_id, playhq_fixture_id, no_video_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(teamId, ...values, noVideoAt);
+		return db.prepare(`INSERT OR IGNORE INTO games (team_id, starts_at, competition, round_label, opponent, venue, phase, playhq_game_id, playhq_fixture_id, no_video_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(teamId, ...values, noVideoAt);
 	}
-	return db.prepare(`UPDATE games SET starts_at = ?, competition = ?, round_label = ?, opponent = ?, venue = ?, playhq_game_id = ?,
+	return db.prepare(`UPDATE games SET starts_at = ?, competition = ?, round_label = ?, opponent = ?, venue = ?, phase = ?, playhq_game_id = ?,
 		playhq_fixture_id = ?, playhq_gone_at = NULL WHERE team_id = ? AND id = ? AND deleted_at IS NULL`).bind(...values, teamId, gameId);
 }
 

@@ -10,6 +10,7 @@ import { closeUnusedLive } from "../live/live-service.ts";
 import { footageDue } from "../teams/team-code.ts";
 import type { Team } from "../teams/team.ts";
 import { getActiveVideoForGame } from "../videos/videos-repository.ts";
+import { SEASON_PHASES } from "./season-phase.ts";
 
 export const gameFormSchema = z.object({
 	date: z.string().refine(isRealDate, "Choose a date"),
@@ -18,6 +19,8 @@ export const gameFormSchema = z.object({
 	period: z.enum(["am", "pm"]),
 	competition: z.enum(COMPETITIONS),
 	roundLabel: z.string().trim().max(40).default(""),
+	/** The league season's phase, or "" for none (kept only for a league game). */
+	phase: z.enum(["", ...SEASON_PHASES]).default(""),
 	opponent: z.string().trim().max(80).default(""),
 	venue: z.string().trim().max(120).default(""),
 	/** Live stream (the default on the form), Record and upload after, or No video. */
@@ -31,7 +34,7 @@ export function toGameInput(form: GameForm): GameInput {
 	const hour24 = (form.hour % 12) + (form.period === "pm" ? 12 : 0);
 	const startsAt = `${form.date}T${String(hour24).padStart(2, "0")}:${String(form.minute).padStart(2, "0")}`;
 	parseLocal(startsAt);
-	return { startsAt, competition: form.competition, roundLabel: form.roundLabel, opponent: form.opponent || "TBC", venue: form.venue };
+	return { startsAt, competition: form.competition, roundLabel: form.roundLabel, opponent: form.opponent || "TBC", venue: form.venue, phase: form.phase || null };
 }
 
 export async function requireGame(db: D1Database, teamId: string, id: number): Promise<Game> {

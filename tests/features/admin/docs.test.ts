@@ -83,7 +83,8 @@ describe("the admin area's Documentation", () => {
 		for (const words of ["api.playhq.com/graphql", "discoverTeamFixture", "Origin: https://www.playhq.com", "not PlayHQ's official API",
 			"@cf/google/gemma-4-26b-a4b-it", "JSON mode", "30,000 characters", "temperature 0", "Never make up a game",
 			"6:40pm", "Not on PlayHQ any more", "every 8 hours", "every hour", "six weeks after", "60 days", "FINAL", "3 days after tip-off",
-			"Check now", "No video for these games", "the same day and time, or the same day against the same opponent", "playhq_fixtures"]) {
+			"Check now", "No video for these games", "the same day and time, or the same day against the same opponent", "playhq_fixtures",
+			"12 Boys Grading 1 - Crossover", "Grading phase 1, Round 2 · vs Hillcrest 2"]) {
 			expect(html, words).toContain(words);
 		}
 	});

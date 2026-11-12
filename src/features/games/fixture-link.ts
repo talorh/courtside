@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { CLUB } from "../../club.ts";
 import type { AppDeps } from "../../app/deps.ts";
 import { badRequest } from "../../app/errors.ts";
 import { formatClock, isRealDate, localDate } from "../../shared/time.ts";
 import type { Competition } from "./games-repository.ts";
 import type { ImportedGame } from "./fixture-import.ts";
+import { phaseOfWords } from "./season-phase.ts";
 
 // Any public fixture page (a club site, a tournament page, a competition's draw), read by Workers AI. The page is
 // fetched by the Worker, cut down to its text, and the model lists the team's games; they're checked before adding.
@@ -19,15 +21,15 @@ const SCHEMA = {
 			type: "array",
 			items: {
 				type: "object",
-				properties: { date: { type: "string" }, time: { type: "string" }, round: { type: "string" }, opponent: { type: "string" }, venue: { type: "string" } },
-				required: ["date", "time", "round", "opponent", "venue"],
+				properties: { date: { type: "string" }, time: { type: "string" }, round: { type: "string" }, phase: { type: "string" }, opponent: { type: "string" }, venue: { type: "string" } },
+				required: ["date", "time", "round", "phase", "opponent", "venue"],
 			},
 		},
 	},
 	required: ["games"],
 };
 const readSchema = z.object({
-	games: z.array(z.object({ date: z.string(), time: z.string(), round: z.string(), opponent: z.string(), venue: z.string() }).partial()).max(200),
+	games: z.array(z.object({ date: z.string(), time: z.string(), round: z.string(), phase: z.string(), opponent: z.string(), venue: z.string() }).partial()).max(200),
 });
 
 const system = (today: string) => `You read sports fixture web pages and list the games one junior basketball team plays.
@@ -35,6 +37,7 @@ Today is ${today} (local, Australia). Reply with JSON only. For each game the te
 - date: YYYY-MM-DD. If the page leaves out the year, use the year that puts the game closest after today.
 - time: tip-off, 24-hour HH:MM local time, or "" if the page doesn't give one.
 - round: as the page names it ("Round 3", "Semi Final", "Pool A Game 2"), or "".
+- phase: for a ${CLUB.league} game, the part of the season the page puts it in: "Grading phase 1", "Crossover", "Grading phase 2" or "Championship season", or "" if the page doesn't say.
 - opponent: the other team's name, or "" if not decided yet.
 - venue: venue and court, or "".
 Only games for our team. Leave out byes, results, ladders and other teams' games. Never make up a game, date or time.
@@ -117,6 +120,7 @@ export async function readFixtureLink(deps: AppDeps, link: string, o: { team: st
 		games.push({
 			startsAt: `${date}T${okTime ? time : o.usualTime}`, competition: o.competition, roundLabel: (g.round ?? "").trim().slice(0, 40),
 			opponent: ((g.opponent ?? "").trim() || "TBC").slice(0, 80), venue: (g.venue ?? "").trim().slice(0, 120), noVideo: o.noVideo, liveStream: true,
+			phase: o.competition === CLUB.league ? phaseOfWords(g.phase ?? "") : null,
 		});
 	}
 	if (!games.length && !problems.length) problems.push(empty);

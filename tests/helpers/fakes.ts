@@ -213,6 +213,7 @@ export class FakeAi implements AiPort {
 	asked: Array<{ system: string; question: string }> = [];
 	explained: Array<{ system: string; question: string }> = [];
 	read: string[] = [];
+	readSystem: string[] = [];
 	reply = "Tap **Watch games** and choose a game.";
 	json: unknown = { games: [] };
 	down = false;
@@ -226,9 +227,10 @@ export class FakeAi implements AiPort {
 		this.explained.push({ system, question });
 		return this.reply;
 	}
-	async readJson(_system: string, text: string) {
+	async readJson(system: string, text: string) {
 		if (this.down) throw new Error("Workers AI: daily free allocation used up");
 		this.read.push(text);
+		this.readSystem.push(system);
 		return structuredClone(this.json);
 	}
 	/** The catalog's word on the site's model: current, unless a test says otherwise. */

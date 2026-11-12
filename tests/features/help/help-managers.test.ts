@@ -44,6 +44,7 @@ const EMPHASIS = new Set(["end-of-season pack", "Lots of people at once?", "temp
 	"Too many codes?", "email", "name", "role",
 	"{opponent}", "at {venue}", "{ours}", "{them}", // what a game line is written with, on Game lines
 	"Waiting for video", // a played game's status on the Fixture, not a button (fixture tests check it)
+	"Phase", "Grading phase 1", "Crossover game", "Grading phase 2", "Championship season", // the game form's Phase and the Fixture's phase tags (playhq.test.ts)
 	// On a tournament weekend's Change only (this team has none): roster-routes.test.ts checks they're there.
 	"All duties this week", "Scorers only this week",
 ]);

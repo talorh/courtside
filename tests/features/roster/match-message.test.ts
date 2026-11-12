@@ -11,7 +11,7 @@ import { seedGame } from "../../helpers/seed.ts";
 
 const game = (o: Partial<Game>): Game => ({
 	id: 1, teamId: "t", startsAt: "2026-10-23T18:30", competition: "Practice match", roundLabel: "", opponent: "Northside 2",
-	venue: "Saints Stadium Court 1", noVideo: false, playhqGone: false, fromPlayhq: false, liveStream: true, ...o,
+	venue: "Saints Stadium Court 1", noVideo: false, playhqGone: false, fromPlayhq: false, liveStream: true, ...o, phase: o.phase ?? null,
 });
 const week = "2026-10-19";
 const slots: Slot[] = [

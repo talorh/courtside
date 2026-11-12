@@ -4,9 +4,10 @@ import { pageHead } from "../../../ui/components.ts";
 import { layout, type PageFrame } from "../../../ui/layout.ts";
 import { gameTitle } from "../game-format.ts";
 import type { ImportedGame, ImportPreview } from "../fixture-import.ts";
+import { competitionTags } from "./phase-tag.ts";
 
 const row = (g: ImportedGame, i: number | null) => html`<tr>${i === null ? html`<td></td>` : html`<td><input type="checkbox" name="pick" value="${i}" checked aria-label="Add this game"></td>`}
-<td class="f-date">${formatGameDate(g.startsAt)}</td><td class="f-game">${gameTitle(g)}</td><td class="f-type"><span class="t src">${g.competition}</span></td>
+<td class="f-date">${formatGameDate(g.startsAt)}</td><td class="f-game">${gameTitle(g)}</td><td class="f-type">${competitionTags(g)}</td>
 <td class="f-venue">${g.venue}</td><td class="f-status"><span class="role">${g.noVideo ? "No video" : g.liveStream ? "Live stream" : "Recorded"}</span></td></tr>`;
 
 const table = (body: SafeHtml[]) => html`<div class="tablewrap cards"><table class="fixture"><thead><tr><th></th><th>Date</th><th>Game</th><th>Type</th><th>Venue</th><th>Video</th></tr></thead>

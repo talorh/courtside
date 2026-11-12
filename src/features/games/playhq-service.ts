@@ -14,6 +14,7 @@ import {
 } from "./playhq-repository.ts";
 import { CHECK_EVERY_HOURS, stillChecked, TOURNAMENT_EVERY_HOURS } from "./playhq-checks.ts";
 import { setPlayhqFixtureVideo } from "./playhq-video-repository.ts";
+import { phaseOfGrade } from "./season-phase.ts";
 
 export const playhqFormSchema = z.object({
 	url: z.string().trim().min(1, "Paste the team's PlayHQ link").max(400),
@@ -46,6 +47,8 @@ export function toPlayhqGameInput(competition: PlayhqCompetition, g: PlayhqGame,
 	return {
 		startsAt: `${g.date}T${g.time ?? usualTime}`, competition, roundLabel: round.slice(0, 40),
 		opponent: g.opponent ? shortTeamName(g.opponent).slice(0, 80) : "TBC", venue: g.venue.slice(0, 120),
+		// Which phase of the league season, from the game's grade; a tournament has none.
+		phase: competition === CLUB.league ? phaseOfGrade(g.grade ?? "") : null,
 	};
 }
 

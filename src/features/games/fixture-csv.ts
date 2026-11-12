@@ -3,23 +3,24 @@ import { csvRows } from "../../shared/csv.ts";
 import { isRealDate, MONTHS } from "../../shared/time.ts";
 import type { Competition } from "./games-repository.ts";
 import type { ImportedGame } from "./fixture-import.ts";
+import { phaseOfWords } from "./season-phase.ts";
 
 // A fixture spreadsheet, saved as CSV (Excel: File → Save As → CSV; Google Sheets: File → Download → CSV).
 // One game per row, with a header row naming the columns (any order, any case). Dates are Australian (31/10/2026).
 
-export const SAMPLE_CSV = `Date,Time,Competition,Round,Opponent,Venue,Video
-31/10/2026,6:40pm,VJBL,5,Lakeside Rockets,"Saints Stadium, Court 2",Live
-7/11/2026,9:00am,Tournament,Round 1,Pine Valley Eagles,"Hillcrest Stadium, Court 4",No
-7/11/2026,1:20pm,Tournament,Round 2,Westside Storm,"Hillcrest Stadium, Court 4",No
-14/11/2026,10:30am,Practice match,,Riverton Wolves,"Saints Stadium, Court 1",Record
+export const SAMPLE_CSV = `Date,Time,Competition,Phase,Round,Opponent,Venue,Video
+31/10/2026,6:40pm,${CLUB.league},Grading phase 1,2,Lakeside Rockets,"Saints Stadium, Court 2",Live
+7/11/2026,9:00am,Tournament,,Round 1,Pine Valley Eagles,"Hillcrest Stadium, Court 4",No
+7/11/2026,1:20pm,Tournament,,Round 2,Westside Storm,"Hillcrest Stadium, Court 4",No
+14/11/2026,10:30am,Practice match,,,Riverton Wolves,"Saints Stadium, Court 1",Record
 `;
 
 const COLUMNS: Record<string, keyof Row> = {
 	date: "date", day: "date", time: "time", "tip-off": "time", tipoff: "time", competition: "competition", type: "competition",
-	round: "round", opponent: "opponent", against: "opponent", vs: "opponent", versus: "opponent", venue: "venue",
+	round: "round", phase: "phase", stage: "phase", opponent: "opponent", against: "opponent", vs: "opponent", versus: "opponent", venue: "venue",
 	court: "venue", location: "venue", video: "video", filming: "video", filmed: "video",
 };
-interface Row { date: string; time: string; competition: string; round: string; opponent: string; venue: string; video: string }
+interface Row { date: string; time: string; competition: string; round: string; phase: string; opponent: string; venue: string; video: string }
 
 /** 31/10/2026, 31-10-26, 2026-10-31, Sat 31 Oct 2026, 31 October 2026 → '2026-10-31'. */
 export function parseDate(raw: string): string | null {
@@ -66,7 +67,7 @@ export function readFixtureCsv(text: string, fallback: Competition): { games: Im
 	}
 	const games: ImportedGame[] = [], problems: string[] = [];
 	rows.forEach((cells, i) => {
-		const r: Row = { date: "", time: "", competition: "", round: "", opponent: "", venue: "", video: "" };
+		const r: Row = { date: "", time: "", competition: "", round: "", phase: "", opponent: "", venue: "", video: "" };
 		keys.forEach((k, j) => { if (k) r[k] = (cells[j] ?? "").trim(); });
 		const date = parseDate(r.date), time = parseTime(r.time), competition = competitionOf(r.competition, fallback);
 		const why = !date ? `the date "${r.date}" isn't one we can read (use 31/10/2026)` : !time ? `the time "${r.time}" isn't one we can read (use 6:40pm)`
@@ -77,6 +78,8 @@ export function readFixtureCsv(text: string, fallback: Competition): { games: Im
 			venue: r.venue.slice(0, 120), noVideo: /^(no|n|false|0|no video|not filmed)$/i.test(r.video),
 			// Video: Live (or Yes, or blank), Record, or No.
 			liveStream: !/^(record|recorded|record and upload( after)?|upload|upload after)$/i.test(r.video),
+			// Phase: the league season's, in the person's own words ("Grading phase 1", "crossover"); a tournament has none.
+			phase: competition === CLUB.league ? phaseOfWords(r.phase) : null,
 		});
 	});
 	return { games, problems };

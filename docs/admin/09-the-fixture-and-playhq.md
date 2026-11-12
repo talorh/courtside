@@ -10,7 +10,7 @@ The Fixture is every game the team plays. Everyone sees it; only team managers a
 
 ### A game by hand
 
-**Add game** takes the date and tip-off (the coming Friday at the team's usual tip-off, below, to start with), the competition (VJBL, Tournament or Practice match), the round, the opponent and the venue, and the game's **Video**: Live stream (the default), Record and upload after, or No video. No video takes the game out of Upload and Go live and off the roster's video duty, and can't be chosen while the game has a video. Any game can be edited or deleted later.
+**Add game** takes the date and tip-off (the coming Friday at the team's usual tip-off, below, to start with), the competition (VJBL, Tournament or Practice match), in the league the phase of the season (below), the round, the opponent and the venue, and the game's **Video**: Live stream (the default), Record and upload after, or No video. No video takes the game out of Upload and Go live and off the roster's video duty, and can't be chosen while the game has a video. Any game can be edited or deleted later.
 
 | Age group | Usual tip-off |
 | --- | --- |
@@ -21,11 +21,15 @@ The Fixture is every game the team plays. Everyone sees it; only team managers a
 
 The usual tip-off comes from the team's code, boys and girls the same; an age between takes the younger group's (`usualTipOff` in `team-code.ts`). A new game starts there, and so does a game PlayHQ or a fixture page gives no time for.
 
+### The league season's phases
+
+A VJBL season (the example league; the labels are the club's, `seasonPhases` in `club.ts`) runs in phases, and each phase's rounds start again from 1: three rounds of **grading phase 1**, a **crossover game**, three rounds of **grading phase 2**, then the **championship season** in the division the grading settled, its rounds and finals. Every league game carries its phase (`games.phase`: grading1, crossover, grading2 or championship; `season-phase.ts`). PlayHQ gives it: each game's grade is named for its phase ("12 Boys Grading 1 - Pool 2D", "12 Boys Grading 1 - Crossover", "U12 Boys Grading 2 - AA Pool B", then the division, "U12 Boys - VJL1 (P1)"), and the phase is read from that name on every check, anything that isn't grading or the crossover being the championship season. A spreadsheet's Phase column and a page read by AI say it in words; the game form has a Phase choice. It shows as a tag beside the league on the Fixture and Watch games, and a grading or crossover game's title says it ("Grading phase 1, Round 2 · vs Hillcrest 2", "Crossover game · vs Hillcrest 2"); the championship season's games are titled by their round alone. The phase stays on a game once PlayHQ drops it: after each grading phase the played games leave PlayHQ, and here they're kept, marked "Not on PlayHQ any more". A tournament or practice match never has one.
+
 ### From PlayHQ
 
 - **The link** is a team's public page on playhq.com, with /org/ and /teams/ in it; its last part is PlayHQ's id for the team. A My teams link (from a parent signed in to PlayHQ, with their own id in it) is refused and never stored. A PlayHQ fixture is VJBL or a tournament, never a practice match.
 - **The feed** is not PlayHQ's official API, which needs a key PlayHQ issues to clubs. It's the same public feed playhq.com's own team pages use: `api.playhq.com/graphql`, asked for `discoverTeam` and `discoverTeamFixture`, sent with Origin: https://www.playhq.com and a `tenant` header naming the sport (example-association). If PlayHQ changes it, a check fails and says so, and nothing in the fixture changes.
-- **What comes in** for each game: its date, its tip-off (the team's usual one until PlayHQ sets one), its round (VJBL's "Round 4" shows as 4; a tournament keeps PlayHQ's name, such as "Semi Final"), the opponent shortened ("Hillcrest U12 Boys 3" becomes "Hillcrest 3"), and the venue with its court. A game PlayHQ lists twice comes in once.
+- **What comes in** for each game: its date, its tip-off (the team's usual one until PlayHQ sets one), its round (VJBL's "Round 4" shows as 4; a tournament keeps PlayHQ's name, such as "Semi Final"), in the league its phase of the season from its grade's name (the game's own grade, else its round's, else the team's), the opponent shortened ("Hillcrest U12 Boys 3" becomes "Hillcrest 3"), and the venue with its court. A game PlayHQ lists twice comes in once.
 - **Adding it** saves the fixture and all its games at once, with no check page: they're PlayHQ's own. A game added by hand on the same day in the same competition is taken over, not doubled, and games of this fixture deleted here earlier come back if they have no video. The team's name on PlayHQ is kept as the fixture's name.
 - **No video for these games**, ticked when adding (a tournament that doesn't allow filming), marks every game the fixture brings in, now or later, No video. Each fixture's No video and Allow video switch changes its games, and the ones it adds later, either way.
 
@@ -53,12 +57,12 @@ The usual tip-off comes from the team's code, boys and girls the same; an age be
 
 - **Fetching:** the link is asked for over https (an http:// link is asked for securely), following up to five redirects, each one https too, for 15 seconds, and only the first 2 MB is read. The page must be public: if it doesn't open in a private window, the site can't read it either. A link to a file rather than a web page is pointed to the spreadsheet instead.
 - **Cutting it down:** scripts, styles and the page's head are dropped, table cells are kept apart with a "|" so a row stays a row, and the first 30,000 characters (about 8,000 tokens) go on. A page with almost no text draws its fixture with JavaScript after it loads, and the site says so rather than asking the model.
-- **The model:** Workers AI's `@cf/google/gemma-4-26b-a4b-it`, the site's one model (the same as Ask's), with its thinking off, in JSON mode (a schema of date, time, round, opponent and venue for each game), at temperature 0, with up to 4,000 tokens to answer in: under a hundred of the account's free daily neurons a page. It's told today's date in local, so a page that leaves out the year gets the one that puts the game closest after today, and the names a draw may give the team: b12.1 is "Saints U12 Boys 1", which a page may write "Saints U12 Boys 1", "Saints U12B1", or just "Saints 1" on a page for U12 Boys alone. Its instructions say to list only that team's games, to leave out byes, results, ladders and other teams' games, and: Never make up a game, date or time.
+- **The model:** Workers AI's `@cf/google/gemma-4-26b-a4b-it`, the site's one model (the same as Ask's), with its thinking off, in JSON mode (a schema of date, time, round, phase, opponent and venue for each game), at temperature 0, with up to 4,000 tokens to answer in: under a hundred of the account's free daily neurons a page. It's told today's date in local, so a page that leaves out the year gets the one that puts the game closest after today, and the names a draw may give the team: b12.1 is "Saints U12 Boys 1", which a page may write "Saints U12 Boys 1", "Saints U12B1", or just "Saints 1" on a page for U12 Boys alone. Its instructions say to list only that team's games, to leave out byes, results, ladders and other teams' games, and: Never make up a game, date or time.
 - **Checking its answer:** an answer that isn't the JSON asked for is refused (try again, or use a spreadsheet), and at most 200 games are taken. A game without a real date is left out and listed; one without a clear tip-off gets the team's usual tip-off and is listed to fix; no opponent is "TBC"; the round, opponent and venue are cut to 40, 80 and 120 characters.
 
 ### From a spreadsheet
 
-A CSV, up to 300 KB, one game a row under a header row naming the columns in any order: Date, Time, Competition, Round, Opponent, Venue and Video (other names work too, such as Against or Court). Dates are Australian, day first (31/10 is 31 October), a semicolon works in place of a comma, and an Excel file is refused with how to save it as CSV. The Fixture has a sample to download.
+A CSV, up to 300 KB, one game a row under a header row naming the columns in any order: Date, Time, Competition, Phase (the league season's, in words), Round, Opponent, Venue and Video (other names work too, such as Against or Court). Dates are Australian, day first (31/10 is 31 October), a semicolon works in place of a comma, and an Excel file is refused with how to save it as CSV. The Fixture has a sample to download.
 
 ### Checking before adding
 
@@ -74,7 +78,7 @@ During a game's hour it says In progress. For a game from a PlayHQ fixture, the 
 
 | Table | Holds |
 | --- | --- |
-| `games` | Every game, with its PlayHQ game id and fixture when it came from one, when PlayHQ stopped listing it, when it was marked No video (and whether the site did, a week on with nothing filmed), when a team manager last set it back to Video (it waits a week from then), and when PlayHQ was last asked for its score |
+| `games` | Every game, with the league season's phase it's in, its PlayHQ game id and fixture when it came from one, when PlayHQ stopped listing it, when it was marked No video (and whether the site did, a week on with nothing filmed), when a team manager last set it back to Video (it waits a week from then), and when PlayHQ was last asked for its score |
 | `playhq_fixtures` | Each PlayHQ team added: its link and PlayHQ id, competition, name, No video, whether it's still checked, when it last was, how many games, and the last error |
 | `game_scores` | Each game's final score, whether a team manager or PlayHQ gave it, who entered it and when |
 | `game_lines` | A team's own game lines, a row for each group its team manager changed (one line a row); a group with no row uses the club's |

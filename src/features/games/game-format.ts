@@ -2,12 +2,19 @@ import { CLUB } from "../../club.ts";
 import type { Team } from "../teams/team.ts";
 import { parseTeamCode } from "../teams/team-code.ts";
 import type { Competition, Game } from "./games-repository.ts";
+import { PHASE_LABELS, type SeasonPhase } from "./season-phase.ts";
 
-type Titled = Pick<Game, "competition" | "roundLabel" | "opponent">;
+type Titled = Pick<Game, "competition" | "roundLabel" | "opponent"> & { phase?: SeasonPhase | null };
 
+/** "Round 8 · vs Storm"; a league grading or crossover game says its phase (each phase's rounds start again from 1):
+ * "Grading phase 1, Round 2 · vs Hillcrest 2", "Crossover game · vs Hillcrest 2". The season proper is the season itself. */
 export function gameTitle(game: Titled): string {
-	const isRoundNumber = game.competition === CLUB.league && /^\d+$/.test(game.roundLabel);
-	const label = isRoundNumber ? `Round ${game.roundLabel}` : game.roundLabel || game.competition;
+	const league = game.competition === CLUB.league;
+	const round = league && /^\d+$/.test(game.roundLabel) ? `Round ${game.roundLabel}` : game.roundLabel;
+	const phase = league ? game.phase ?? null : null;
+	const label = phase === "crossover" ? PHASE_LABELS.crossover
+		: phase && phase !== "championship" ? [PHASE_LABELS[phase], round].filter(Boolean).join(", ")
+		: round || game.competition;
 	return `${label} · vs ${game.opponent}`;
 }
 

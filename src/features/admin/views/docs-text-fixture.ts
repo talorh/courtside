@@ -13,13 +13,26 @@ game its duties, and PlayHQ's games get their final scores by themselves.</p>
 ${fixtureInDiagram()}
 <h3>A game by hand</h3>
 <p><b>Add game</b> takes the date and tip-off (the coming Friday at the team's usual tip-off, below, to start with), the competition (VJBL,
-Tournament or Practice match), the round, the opponent and the venue, and the game's <b>Video</b>: Live stream (the
+Tournament or Practice match), in the league the phase of the season (below), the round, the opponent and the venue, and the game's <b>Video</b>: Live stream (the
 default), Record and upload after, or No video. No video takes the game out of Upload and Go live and off the roster's
 video duty, and can't be chosen while the game has a video. Any game can be edited or deleted later.</p>
 ${table(["Age group", "Usual tip-off"], [["U12", "6:40pm"], ["U14", "7:40pm"], ["U16", "8:40pm"], ["U18", "9:40pm"]])}
 <p>The usual tip-off comes from the team's code, boys and girls the same; an age between takes the younger group's
 (${code("usualTipOff")} in ${code("team-code.ts")}). A new game starts there, and so does a game PlayHQ or a fixture page
 gives no time for.</p>
+<h3>The league season's phases</h3>
+<p>A VJBL season (the example league; the labels are the club's, ${code("seasonPhases")} in ${code("club.ts")}) runs in phases, and each phase's rounds start again from 1: three rounds of <b>grading phase 1</b>, a
+<b>crossover game</b>, three rounds of <b>grading phase 2</b>, then the <b>championship season</b> in the division the
+grading settled, its rounds and finals. Every league game carries its phase (${code("games.phase")}: grading1, crossover,
+grading2 or championship; ${code("season-phase.ts")}). PlayHQ gives it: each game's grade is named for its phase
+("12 Boys Grading 1 - Pool 2D", "12 Boys Grading 1 - Crossover", "U12 Boys Grading 2 - AA Pool B", then the division,
+"U12 Boys - VJL1 (P1)"), and the phase is read from that name on every check, anything that isn't grading or the
+crossover being the championship season. A spreadsheet's Phase column and a page read by AI say it in words; the
+game form has a Phase choice. It shows as a tag beside the league on the Fixture and Watch games, and a grading or
+crossover game's title says it ("Grading phase 1, Round 2 · vs Hillcrest 2", "Crossover game · vs Hillcrest 2"); the
+championship season's games are titled by their round alone. The phase stays on a game once PlayHQ drops it: after
+each grading phase the played games leave PlayHQ, and here they're kept, marked "Not on PlayHQ any more". A tournament
+or practice match never has one.</p>
 <h3>From PlayHQ</h3>
 <ul class="docs-points">
 <li><b>The link</b> is a team's public page on playhq.com, with /org/ and /teams/ in it; its last part is PlayHQ's
@@ -30,7 +43,8 @@ playhq.com's own team pages use: ${code("api.playhq.com/graphql")}, asked for ${
 ${code("discoverTeamFixture")}, sent with Origin: https://www.playhq.com and a ${code("tenant")} header naming the sport
 (example-association). If PlayHQ changes it, a check fails and says so, and nothing in the fixture changes.</li>
 <li><b>What comes in</b> for each game: its date, its tip-off (the team's usual one until PlayHQ sets one), its round (VJBL's
-"Round 4" shows as 4; a tournament keeps PlayHQ's name, such as "Semi Final"), the opponent shortened ("Hillcrest U12
+"Round 4" shows as 4; a tournament keeps PlayHQ's name, such as "Semi Final"), in the league its phase of the season from
+its grade's name (the game's own grade, else its round's, else the team's), the opponent shortened ("Hillcrest U12
 Boys 3" becomes "Hillcrest 3"), and the venue with its court. A game PlayHQ lists twice comes in once.</li>
 <li><b>Adding it</b> saves the fixture and all its games at once, with no check page: they're PlayHQ's own. A game
 added by hand on the same day in the same competition is taken over, not doubled, and games of this fixture deleted
@@ -66,7 +80,7 @@ the spreadsheet instead.</li>
 row stays a row, and the first 30,000 characters (about 8,000 tokens) go on. A page with almost no text draws its fixture
 with JavaScript after it loads, and the site says so rather than asking the model.</li>
 <li><b>The model:</b> Workers AI's ${code(MODEL)}, the site's one model (the same as Ask's), with its thinking
-off, in JSON mode (a schema of date, time, round, opponent and venue for each game), at temperature 0, with
+off, in JSON mode (a schema of date, time, round, phase, opponent and venue for each game), at temperature 0, with
 up to 4,000 tokens to answer in: under a hundred of the account's free daily neurons a page. It's told today's date in
 local, so a page that leaves out the year gets the one that puts the game closest after today, and the names a
 draw may give the team: b12.1 is "Saints U12 Boys 1", which a page may write "Saints U12 Boys 1",
@@ -78,7 +92,7 @@ the team's usual tip-off and is listed to fix; no opponent is "TBC"; the round, 
 characters.</li></ul>
 <h3>From a spreadsheet</h3>
 <p>A CSV, up to 300 KB, one game a row under a header row naming the columns in any order: Date, Time, Competition,
-Round, Opponent, Venue and Video (other names work too, such as Against or Court). Dates are Australian, day first (31/10 is 31 October), a
+Phase (the league season's, in words), Round, Opponent, Venue and Video (other names work too, such as Against or Court). Dates are Australian, day first (31/10 is 31 October), a
 semicolon works in place of a comma, and an Excel file is refused with how to save it as CSV. The Fixture has a
 sample to download.</p>
 <h3>Checking before adding</h3>
@@ -94,7 +108,7 @@ never over one a team manager typed. It stops 3 days after tip-off. A failed ask
 same back-off; it never fails the run. A team manager can enter or fix any game's score once it has started, and any member can
 hide scores everywhere for themselves.</p>
 ${table(["Table", "Holds"], [
-		[code("games"), "Every game, with its PlayHQ game id and fixture when it came from one, when PlayHQ stopped listing it, when it was marked No video (and whether the site did, a week on with nothing filmed), when a team manager last set it back to Video (it waits a week from then), and when PlayHQ was last asked for its score"],
+		[code("games"), "Every game, with the league season's phase it's in, its PlayHQ game id and fixture when it came from one, when PlayHQ stopped listing it, when it was marked No video (and whether the site did, a week on with nothing filmed), when a team manager last set it back to Video (it waits a week from then), and when PlayHQ was last asked for its score"],
 		[code("playhq_fixtures"), "Each PlayHQ team added: its link and PlayHQ id, competition, name, No video, whether it's still checked, when it last was, how many games, and the last error"],
 		[code("game_scores"), "Each game's final score, whether a team manager or PlayHQ gave it, who entered it and when"],
 		[code("game_lines"), "A team's own game lines, a row for each group its team manager changed (one line a row); a group with no row uses the club's"],

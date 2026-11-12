@@ -168,3 +168,23 @@ describe("fixture order", () => {
 		expect(page.indexOf(`href="/games/${sooner}"`)).toBeLessThan(page.indexOf(`href="/games/${later}"`));
 	});
 });
+
+describe("the season's phase on the game form", () => {
+	it("a VJBL game can be given its phase, shown on Edit; another competition's is never kept", async () => {
+		const deps = createTestDeps();
+		const client = makeClient(deps);
+		const game = { date: "2026-11-27", hour: "7", minute: "40", period: "pm", roundLabel: "2", opponent: "Hillcrest 2", venue: "", video: "live" };
+		await client("/fixture", form({ ...game, competition: "VJBL", phase: "grading1" }));
+		await client("/fixture", form({ ...game, date: "2026-11-28", competition: "Tournament", phase: "grading1" }));
+		const list = async () => (await listGamesWithVideoStatus(deps.db, deps.team.id)).map((r) => [r.game.competition, r.game.phase]).sort();
+		expect(await list()).toEqual([["Tournament", null], ["VJBL", "grading1"]]);
+		const [vjbl] = (await listGamesWithVideoStatus(deps.db, deps.team.id)).filter((r) => r.game.competition === "VJBL");
+		const edit = await (await client(`/fixture?edit=${vjbl!.game.id}`)).text();
+		expect(edit).toContain('<option value="grading1" selected>Grading phase 1</option>');
+		expect(edit).toContain('<option value="">Not set</option>');
+		// Saved without a phase, it has none; a phase the form doesn't know is refused.
+		expect((await client(`/fixture/${vjbl!.game.id}`, form({ ...game, competition: "VJBL", phase: "" }))).status).toBe(303);
+		expect(await list()).toEqual([["Tournament", null], ["VJBL", null]]);
+		expect((await client(`/fixture/${vjbl!.game.id}`, form({ ...game, competition: "VJBL", phase: "finals" }))).status).toBe(400);
+	});
+});

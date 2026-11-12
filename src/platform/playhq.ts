@@ -6,7 +6,7 @@ import { CLUB } from "../club.ts";
 const ENDPOINT = "https://api.playhq.com/graphql";
 const QUERY = `query teamFixture($teamID: ID!) {
   discoverTeam(teamID: $teamID) { id name season { name } grade { name } }
-  discoverTeamFixture(teamID: $teamID) { name fixture { games { id date
+  discoverTeamFixture(teamID: $teamID) { name grade { name } fixture { games { id date grade { name }
     allocation { time dateTimeList { date time } court { name venue { name } } }
     home { ... on ProvisionalTeam { name } ... on DiscoverTeam { id name } }
     away { ... on ProvisionalTeam { name } ... on DiscoverTeam { id name } } } } }
@@ -23,6 +23,9 @@ export interface PlayhqGame {
 	opponent: string | null;
 	/** "Saints Stadium, Court 1"; "" when not set yet. */
 	venue: string;
+	/** The grade PlayHQ plays the game in ("12 Boys Grading 1 - Pool 2D"): in the league, which phase of the season it's
+	 * in (features/games/season-phase.ts). The game's own, else its round's, else the team's; "" when PlayHQ gives none. */
+	grade?: string;
 }
 
 export interface PlayhqTeamFixture {
@@ -58,16 +61,17 @@ type Side = { id?: string; name?: string } | null;
 interface RawGame {
 	id: string;
 	date: string | null;
+	grade: { name?: string } | null;
 	allocation: { time: string | null; dateTimeList: Array<{ date: string; time: string }> | null; court: { name: string; venue: { name: string } | null } | null } | null;
 	home: Side;
 	away: Side;
 }
 interface RawFixture {
 	discoverTeam: { id: string; name: string; season: { name: string } | null; grade: { name: string } | null } | null;
-	discoverTeamFixture: Array<{ name: string; fixture: { games: RawGame[] } | null }> | null;
+	discoverTeamFixture: Array<{ name: string; grade: { name?: string } | null; fixture: { games: RawGame[] } | null }> | null;
 }
 
-function toGame(teamId: string, round: string, g: RawGame): PlayhqGame | null {
+function toGame(teamId: string, round: string, grade: string, g: RawGame): PlayhqGame | null {
 	const first = g.allocation?.dateTimeList?.[0];
 	const date = g.date ?? first?.date;
 	if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
@@ -75,7 +79,7 @@ function toGame(teamId: string, round: string, g: RawGame): PlayhqGame | null {
 	const other = [g.home, g.away].find((side) => side && side.id !== teamId && side.name);
 	const court = g.allocation?.court;
 	const venue = [court?.venue?.name, court?.name].filter(Boolean).join(", ");
-	return { id: g.id, round, date, time: time && /^\d{2}:\d{2}$/.test(time) ? time : null, opponent: other?.name ?? null, venue };
+	return { id: g.id, round, date, time: time && /^\d{2}:\d{2}$/.test(time) ? time : null, opponent: other?.name ?? null, venue, grade: g.grade?.name ?? grade };
 }
 
 export function createPlayhqClient(config: { fetch?: typeof fetch } = {}): PlayhqPort {
@@ -101,7 +105,7 @@ export function createPlayhqClient(config: { fetch?: typeof fetch } = {}): Playh
 			const games = new Map<string, PlayhqGame>(); // a game listed twice comes in once
 			for (const r of data.discoverTeamFixture ?? []) {
 				for (const g of r.fixture?.games ?? []) {
-					const game = toGame(teamId, r.name, g);
+					const game = toGame(teamId, r.name, r.grade?.name ?? team.grade?.name ?? "", g);
 					if (game && !games.has(game.id)) games.set(game.id, game);
 				}
 			}

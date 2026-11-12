@@ -3,6 +3,7 @@ import type { TeamDeps } from "../../app/deps.ts";
 import { badRequest } from "../../app/errors.ts";
 import { compareIso } from "../../shared/time.ts";
 import { COMPETITIONS, createGameWrite, type GameInput, listGamesWithVideoStatus } from "./games-repository.ts";
+import { SEASON_PHASES } from "./season-phase.ts";
 
 // Bringing in several games at once, from a spreadsheet or from any fixture page (read by AI). Either way the games
 // are shown to check first (import page), then added; the list travels in the form, so nothing is stored in between.
@@ -19,6 +20,7 @@ export const importedGameSchema = z.object({
 	startsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
 	competition: z.enum(COMPETITIONS),
 	roundLabel: z.string().max(40),
+	phase: z.enum(SEASON_PHASES).nullable().optional(),
 	opponent: z.string().min(1).max(80),
 	venue: z.string().max(120),
 	noVideo: z.boolean(),

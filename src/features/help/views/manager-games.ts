@@ -7,13 +7,17 @@ import { shot } from "./faq-mock.ts";
 export const managerGames = (h: HelpFor) => html`<h2 class="faqgroup">Fixture and games</h2>
 ${faqItem("g-game", "Adding a game", html`<ol class="steps">
 <li>On <b>Fixture</b>, tap <b>Add game</b>.</li>
-<li>Fill in the date, tip-off, competition, round, opponent and venue.</li>
+<li>Fill in the date, tip-off, competition, round, opponent and venue. For a league game, pick its <b>Phase</b>: grading phase 1, the crossover game, grading phase 2 or the championship season.</li>
 <li>Pick its <b>Video</b>: <b>Live stream</b>, <b>Record and upload after</b> or <b>No video</b>.</li>
 <li>Tap <b>Save game</b>.</li></ol>
 ${shot("fixture-add-game", "The Add game form on the Fixture: date, tip-off, competition, round, opponent, venue and the Video choice, then Save game", 358, 751)}`)}
 ${faqItem("g-playhq", "Linking PlayHQ, so games fill in by themselves", html`<ol class="steps">
 <li>On PlayHQ, open your team's <b>public</b> page and copy its link: find the team on playhq.com without signing in. Its address has <b>/org/</b> and <b>/teams/</b> in it.</li>
 <li>On <b>Fixture</b>, tap <b>Add fixture</b>, paste the link, pick VJBL or Tournament, and tap <b>Read fixture</b>. Its games come straight in.</li></ol>
+<p class="small">League games come in with their phase of the season, from how PlayHQ names the grade: <b>Grading phase 1</b>,
+the <b>Crossover game</b>, <b>Grading phase 2</b>, then the <b>Championship season</b>. A grading game stays here after
+PlayHQ drops it, marked "Not on PlayHQ any more". Gone up or down a grade? If PlayHQ gives the team a new page, add that
+link too.</p>
 <p class="small">The link from <b>My teams</b>, when you're signed in to PlayHQ, is private (it has <b>/account/my-teams/</b> in it), and the site can't read it. Paste one and the site says so.</p>
 <p class="small">It checks PlayHQ again every 8 hours for new or changed games, and every hour over a tournament's four
 days (Friday to Monday), as its finals appear. Fixture says the day each stops. A game's final score comes in by itself

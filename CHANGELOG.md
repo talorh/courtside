@@ -8,6 +8,10 @@ was wrong), the area in bold, then a plain sentence saying what changed for the 
 where ..."). Every deploy adds its lines at the top of today's date, and the deploy (`npm run release`, then Workers
 Builds) sends the top line, in plain words, as its message.
 
+## 12 Nov 2026
+
+- [Feature] **Fixture:** League games now carry their phase of the season: grading phase 1, the crossover game, grading phase 2 or the championship season (the labels are the club's). PlayHQ fixtures set it from each game's grade, a spreadsheet's Phase column and the AI reader take it in words, and the game form has a Phase choice. It shows as a tag beside the league on the Fixture and Watch games, and a grading or crossover game's title says it, since each phase's rounds start from 1 again. A grading game keeps its phase after PlayHQ drops it.
+
 ## 11 Nov 2026
 
 - [Feature] **Platform:** The Friday check runs at 6am every Friday and looks ahead to the weekend's live games: Stream answering with minutes to spare, each game's Go live input, the video joiner, the 5-minute job and the other alerts. Anything wrong raises a ticket for the admins; Run the Friday check now on Platform asks the same any day.

@@ -9,6 +9,7 @@ import type { PlayhqFixture } from "../playhq-repository.ts";
 import type { Score } from "../../scores/scores-repository.ts";
 import { scoreTag } from "../../scores/views/score-line.ts";
 import { gameFields } from "./game-fields.ts";
+import { competitionTags } from "./phase-tag.ts";
 import { addFixtureForm, addSheetForm, playhqPanel } from "./playhq-panel.ts";
 import { confirmButton } from "../../../ui/confirm.ts";
 import { fixtureTeamName } from "../../teams/team-code.ts";
@@ -80,7 +81,7 @@ function viewPage(p: FixturePageProps): SafeHtml {
 	const PHASE = { upcoming: html`<span class="role">Upcoming</span>`, in_progress: html`<span class="role">In progress</span>`, complete: html`<span class="role c">Complete</span>` };
 	const played = (g: Game) => PHASE[gamePhase(g.startsAt, p.nowLocal, p.scores.has(g.id))];
 	const rows = p.games.map(({ game }) => html`<tr><td class="f-date">${formatGameDate(game.startsAt)}</td><td class="f-game"><a href="/games/${game.id}">${gameTitle(game)}</a> ${scoreTag(p.scores.get(game.id), p.frame.member.hideScores)}</td>
-<td class="f-type"><span class="t src">${game.competition}</span></td><td class="f-venue">${game.venue}</td><td class="f-status">${played(game)}${planTag(game, p.nowLocal)}</td></tr>`);
+<td class="f-type">${competitionTags(game)}</td><td class="f-venue">${game.venue}</td><td class="f-status">${played(game)}${planTag(game, p.nowLocal)}</td></tr>`);
 	return layout({ title: "Fixture", frame: p.frame, current: "fixture" }, html`${pageHead("This season", "Fixture")}
 <p class="small">Every game, with tip-off times and venues. ${teamCopy(p.frame.team).Ask} keeps it up to date.</p>
 <div class="tablewrap cards"><table class="fixture"><thead><tr><th>Date</th><th>Game</th><th>Type</th><th>Venue</th><th>Status</th></tr></thead>
@@ -95,7 +96,7 @@ ${p.editing.fromPlayhq ? html`<p class="small">This game comes from PlayHQ, and 
 		: html`<div class="addbar"><details class="panel"><summary class="btn primary">Add game</summary><form method="post" action="/fixture" class="stack addgame">${gameFields({}, p.defaultStart)}
 <div class="row-actions"><button class="btn primary">Save game</button></div></form></details>${addFixtureForm(fixtureTeamName(p.frame.team.code))}${addSheetForm()}</div>`;
 	const rows = p.games.map((row) => html`<tr><td class="f-date">${formatGameDate(row.game.startsAt)}</td><td class="f-game"><a href="/games/${row.game.id}">${gameTitle(row.game)}</a> ${scoreTag(p.scores.get(row.game.id), p.frame.member.hideScores)}</td>
-<td class="f-type"><span class="t src">${row.game.competition}</span></td><td class="f-venue">${row.game.venue}${row.game.playhqGone ? html`<span class="gone">Not on PlayHQ any more</span>` : ""}</td><td class="f-status">${status(row, p.nowLocal, p.live.get(row.game.id), p.scores.has(row.game.id))}</td>
+<td class="f-type">${competitionTags(row.game)}</td><td class="f-venue">${row.game.venue}${row.game.playhqGone ? html`<span class="gone">Not on PlayHQ any more</span>` : ""}</td><td class="f-status">${status(row, p.nowLocal, p.live.get(row.game.id), p.scores.has(row.game.id))}</td>
 <td class="f-acts row-actions"><a class="btn quiet" href="/fixture?edit=${row.game.id}">Edit</a>${deleteAction(row, p.frame.member)}</td></tr>`);
 	return layout({ title: "Fixture", frame: p.frame, current: "fixture" }, html`${pageHead(null, "Fixture")}
 ${notice(p.message)}

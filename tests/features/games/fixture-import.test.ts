@@ -42,14 +42,19 @@ describe("fixture from a spreadsheet", () => {
 		const { games: read, problems } = readFixtureCsv(SAMPLE_CSV, "VJBL");
 		expect(problems).toEqual([]);
 		expect(read).toHaveLength(4);
-		expect(read[0]).toEqual({ startsAt: "2026-10-31T18:40", competition: "VJBL", roundLabel: "5", opponent: "Lakeside Rockets", venue: "Saints Stadium, Court 2", noVideo: false, liveStream: true });
-		expect(read[1]).toMatchObject({ startsAt: "2026-11-07T09:00", competition: "Tournament", noVideo: true });
+		expect(read[0]).toEqual({ startsAt: "2026-10-31T18:40", competition: "VJBL", roundLabel: "2", opponent: "Lakeside Rockets", venue: "Saints Stadium, Court 2", noVideo: false, liveStream: true, phase: "grading1" });
+		expect(read[1]).toMatchObject({ startsAt: "2026-11-07T09:00", competition: "Tournament", noVideo: true, phase: null });
 		expect(read[3]).toMatchObject({ competition: "Practice match", roundLabel: "" });
+	});
+	it("takes a league game's phase of the season from a Phase column, in a person's words; a tournament gets none", () => {
+		const { games: read, problems } = readFixtureCsv("Date,Time,Competition,Phase,Round,Opponent\n27/11/2026,7:40pm,VJBL,Grading phase 1,2,Hillcrest 2\n11/12/2026,6:40pm,,crossover,,Hillcrest 2\n5/2/2027,6:40pm,VJBL,,1,Westside 1\n28/11/2026,9am,Tournament,Grading phase 1,Round 1,Lakeside\n", "VJBL");
+		expect(problems).toEqual([]);
+		expect(read.map((g) => [g.competition, g.roundLabel, g.phase])).toEqual([["VJBL", "2", "grading1"], ["VJBL", "", "crossover"], ["VJBL", "1", null], ["Tournament", "Round 1", null]]);
 	});
 	it("says which rows it couldn't read, and needs a header row", () => {
 		const { games: read, problems } = readFixtureCsv("Opponent;Date;Time\nLakeside;32/10/2026;6:40pm\nRiverton;1/11/2026;soon\n;2/11/2026;9am\n", "Tournament");
 		expect(problems).toEqual(['Row 2: the date "32/10/2026" isn\'t one we can read (use 31/10/2026).', 'Row 3: the time "soon" isn\'t one we can read (use 6:40pm).']);
-		expect(read).toEqual([{ startsAt: "2026-11-02T09:00", competition: "Tournament", roundLabel: "", opponent: "TBC", venue: "", noVideo: false, liveStream: true }]);
+		expect(read).toEqual([{ startsAt: "2026-11-02T09:00", competition: "Tournament", roundLabel: "", opponent: "TBC", venue: "", noVideo: false, liveStream: true, phase: null }]);
 		expect(readFixtureCsv("Lakeside,31/10/2026\n", "VJBL").problems[0]).toMatch(/first row needs the column names/);
 	});
 	it("offers the sample to coaches, then shows the games to check, leaves out ones already there, and adds the ticked ones", async () => {
@@ -129,6 +134,22 @@ describe("fixture from any link (AI)", () => {
 		expect((await games(deps)).map((g) => [g.startsAt, g.competition, g.roundLabel, g.opponent, g.noVideo])).toEqual([
 			["2026-11-07T09:00", "Tournament", "Round 1", "Pine Valley Eagles", true], ["2026-11-08T18:40", "Tournament", "Semi Final", "TBC", true],
 		]);
+	});
+	it("asks the AI which phase of the league season each game is in, and keeps it on the games it adds", async () => {
+		const deps = createTestDeps();
+		vi.stubGlobal("fetch", async () => new Response(page, { headers: { "Content-Type": "text/html; charset=utf-8" } }));
+		deps.ai.json = { games: [
+			{ date: "2026-12-11", time: "18:40", round: "Round 1", opponent: "Hillcrest 2", venue: "", phase: "Crossover" },
+			{ date: "2027-02-05", time: "18:40", round: "Round 1", opponent: "Westside 1", venue: "", phase: "Grading phase 2" },
+			{ date: "2027-06-04", time: "18:40", round: "Round 14", opponent: "Lakeside 2", venue: "", phase: "" },
+		] };
+		const client = makeClient(deps);
+		const html = await (await client("/fixture/link", form({ url: "https://club.example/fixture", competition: "VJBL" }))).text();
+		expect(deps.ai.readSystem[0]).toContain("phase");
+		expect(html).toContain("Crossover game · vs Hillcrest 2");
+		expect(html).toContain('<span class="t src">VJBL</span> <span class="t src">Grading phase 2</span>');
+		await client("/fixture/import", addForm(html, [0, 1, 2]));
+		expect((await games(deps)).map((g) => [g.roundLabel, g.phase])).toEqual([["Round 1", "crossover"], ["Round 1", "grading2"], ["Round 14", null]]);
 	});
 	it("gives a game the page has no time for the team's own usual tip-off: 7:40pm for a U14 team", async () => {
 		const deps = createTestDeps();

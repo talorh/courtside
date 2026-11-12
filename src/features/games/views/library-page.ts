@@ -7,6 +7,7 @@ import { liveCards } from "../../live/views/live-card.ts";
 import type { Score } from "../../scores/scores-repository.ts";
 import { scoreSwitch, scoreTag } from "../../scores/views/score-line.ts";
 import { gamePhase, gameTitle } from "../game-format.ts";
+import { competitionTags } from "./phase-tag.ts";
 import type { Competition, Game } from "../games-repository.ts";
 import type { LibraryEntry } from "../library-repository.ts";
 import { teamCopy } from "../../teams/team-copy.ts";
@@ -55,7 +56,7 @@ function card(e: LibraryCard, p: LibraryPageProps): SafeHtml {
 	const pic = e.streamUid ? thumb(e.thumbUrl, dur) : html`<div class="thumb court"><img src="/court.webp" alt="" loading="lazy"></div>`;
 	const soon = state === "processing" ? html`<span class="soon">Ready to watch soon</span>` : "";
 	return html`<a class="game s-${state}" href="/games/${e.game.id}">${pic}
-<div class="gmeta"><span class="gstate"><i aria-hidden="true"></i>${label}</span>${soon}<h3>${gameTitle(e.game)}</h3><div class="tags">${e.isNew ? html`<span class="t new">New</span>` : ""}<span class="t src">${e.game.competition}</span>${scoreTag(p.scores.get(e.game.id), p.frame.member.hideScores)}${state === "upcoming" ? html`<span class="t src">${e.game.liveStream ? "Live stream" : "Recorded"}</span>` : ""}</div><div class="sub">${e.game.venue}</div></div>
+<div class="gmeta"><span class="gstate"><i aria-hidden="true"></i>${label}</span>${soon}<h3>${gameTitle(e.game)}</h3><div class="tags">${e.isNew ? html`<span class="t new">New</span>` : ""}${competitionTags(e.game)}${scoreTag(p.scores.get(e.game.id), p.frame.member.hideScores)}${state === "upcoming" ? html`<span class="t src">${e.game.liveStream ? "Live stream" : "Recorded"}</span>` : ""}</div><div class="sub">${e.game.venue}</div></div>
 <div class="when">${formatDay(e.game.startsAt)}<span class="clock">${formatClock(e.game.startsAt.slice(11, 16))}</span></div></a>`;
 }
 

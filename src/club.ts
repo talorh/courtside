@@ -33,6 +33,10 @@ export const CLUB = {
 	/** The league the club plays in, the first choice when a game is added; a game's round number is shown as "Round 5"
 	 * only in the league. */
 	league: "VJBL",
+	/** The league season's phases, as its fixtures name them: the grading rounds, the crossover game and the season
+	 * proper. PlayHQ names a game's grade for its phase ("12 Boys Grading 1 - Pool 2D", "... Grading 1 - Crossover",
+	 * "... Grading 2 - AA Pool B"); anything else is the season proper (games/season-phase.ts). */
+	seasonPhases: { grading1: "Grading phase 1", crossover: "Crossover game", grading2: "Grading phase 2", championship: "Championship season" },
 	/** The uniforms a game can be played in, home first. Two or more ("Navy", "White"): the match day message lets the
 	 * team manager pick one and says to pack the other, the clash uniform. One, for a club with a single kit or a
 	 * reversible singlet ("Reversible singlet"): no choice, and the message just names it. */

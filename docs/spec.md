@@ -262,7 +262,12 @@ game with no time yet, and a game a fixture page gives no time for, get it too.
  the game back to Video, to upload it after all, gives it another week from then. A game whose video a
  person deleted is left alone, and a week's or a PlayHQ fixture's Video switch leaves the site's No video as it is
  (Edit undoes it, one game at a time).
-- **Add game**, by hand (a practice match, say).
+- **Add game**, by hand (a practice match, say). A league game has a **Phase**: a VJBL season runs as three rounds of
+  grading phase 1, a crossover game, three rounds of grading phase 2, then the championship season (rounds and finals),
+  each phase's rounds starting from 1 again. It's kept on the game (`games.phase`), shows as a tag beside the league on
+  the Fixture and Watch games, and a grading or crossover game's title says it ("Grading phase 1, Round 2 · vs Hillcrest
+  2", "Crossover game · vs Hillcrest 2"); the championship season's games are titled by their round alone. The labels
+  are the club's (`seasonPhases` in `club.ts`). Tournaments and practice matches have none.
 - **Add fixture** takes a PlayHQ team link (VJBL or Tournament) and brings in all its games. Added fixtures are listed
  with **Check now** and **Remove**, and each is checked again every 8 hours until it's over: six weeks after its last
  game for VJBL (later rounds after a break, and finals, still come in). A tournament runs over four days (Friday to
@@ -270,13 +275,16 @@ game with no time yet, and a game a fixture page gives no time for, get it too.
  day to the end of its fourth (its last game's, if PlayHQ lists one later), then stops. A fixture
  that never gets a game stops 60 days after it was added. Each says on Fixture when it's checked and the day it stops. Opponents are shortened ("Hillcrest 3"). A check never removes a game: one PlayHQ drops (grading
  games) is marked "Not on PlayHQ any more". Adding a PlayHQ fixture brings back its games deleted
- earlier (if they have no video); later checks leave deletions alone.
+ earlier (if they have no video); later checks leave deletions alone. Each league game's phase is read from its PlayHQ
+ grade's name on every check ("12 Boys Grading 1 - Pool 2D", "12 Boys Grading 1 - Crossover", "U12 Boys Grading 2 -
+ AA Pool B"; anything else, such as "U12 Boys - VJL1 (P1)", is the championship season), and stays once PlayHQ drops
+ the played grading games after each phase.
 - **Any public fixture page** works too: the site fetches it and Workers AI (Gemma 4, JSON mode) reads out the
  team's games, looking for the team by the name its code gives it (b12.1 is "Saints U12 Boys 1", as on PlayHQ, and
  the other ways a draw writes it), so nothing is typed. A page that only draws its fixture with
  JavaScript can't be read, and it says so.
-- **A spreadsheet**: a CSV with Date, Time, Competition, Round, Opponent, Venue and Video (Australian dates; there's a
- sample to download).
+- **A spreadsheet**: a CSV with Date, Time, Competition, Phase (the league season's, in words), Round, Opponent, Venue
+ and Video (Australian dates; there's a sample to download). The AI reader asks for each game's phase too.
 - **Checking first:** however they come in, the games are shown to check first, with problems listed and games already
  in the fixture left out (the same day and time, or the same day against the same opponent), and only the ticked ones
  are added.
