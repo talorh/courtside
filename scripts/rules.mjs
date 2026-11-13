@@ -95,6 +95,14 @@ const HISTORY = [
 const COMMENT = /(?:^|\s)(?:\/\/|\/\*+|\*|--)\s(.*)$|\b(?:it|describe)\("([^"]*)"/;
 
 /** Comments (and test names) that say who asked for something or when, in any file of code, tests or migrations. */
+/** The folders whose source files keep to the line caps (check-loc.mjs): the site, its page scripts, the Back soon page
+ * and the video joiner. Tests, docs, migrations and scripts aren't counted. */
+export const LOC_ROOTS = ["src", "public", "maintenance", "join"];
+/** Every folder of code, tests, scripts and migrations, for the comment rules (check-rules.mjs). */
+export const COMMENT_DIRS = ["src", "public", "scripts", "tests", "migrations", "maintenance", "join"];
+/** A file the line caps apply to: TypeScript or JavaScript (the joiner's plain Node .mjs too), not a declaration file. */
+export const isCodeFile = (name) => /\.(ts|js|mjs)$/.test(name) && !name.endsWith(".d.ts");
+
 export function commentProblems(path, text) {
 	return text.split("\n").flatMap((line, i) => {
 		const m = COMMENT.exec(line);

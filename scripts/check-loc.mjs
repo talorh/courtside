@@ -1,8 +1,9 @@
-// Development standards: source files soft cap 140 lines, hard cap 160 (tests, docs, migrations excluded).
+// Development standards: source files soft cap 140 lines, hard cap 160 (tests, docs, migrations excluded). The folders
+// and what counts as a source file: scripts/rules.mjs.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { isCodeFile, LOC_ROOTS } from "./rules.mjs";
 
-const ROOTS = ["src", "public", "maintenance"];
 const SOFT = 140, HARD = 160;
 // Copied in as is from elsewhere, not written here.
 const VENDORED = new Set([join("public", "stream-sdk.js")]);
@@ -13,10 +14,10 @@ const walk = (dir) => {
 	for (const name of readdirSync(dir)) {
 		const path = join(dir, name);
 		if (statSync(path).isDirectory()) { if (name !== "node_modules" && !name.startsWith(".")) walk(path); } // not packages or build output
-		else if (/\.(ts|js)$/.test(name) && !name.endsWith(".d.ts") && !VENDORED.has(path) && !GENERATED.has(path)) files.push(path);
+		else if (isCodeFile(name) && !VENDORED.has(path) && !GENERATED.has(path)) files.push(path);
 	}
 };
-ROOTS.forEach(walk);
+LOC_ROOTS.forEach(walk);
 
 let failed = false;
 for (const file of files) {

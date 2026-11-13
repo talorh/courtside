@@ -17,8 +17,9 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 - File names are `kebab-case.ts`. Types and interfaces are `PascalCase`; functions and variables `camelCase`;
  module constants `UPPER_SNAKE_CASE` (`MAX_MEMBERS` in `members-service.ts`, `LIVE_PART_SIZE` in
  `browser-live-service.ts`, `STORAGE_CACHE_MS` in `platform/storage-cache.ts`).
-- Source files in `src/` and `public/` are 140 lines at most, 160 as a hard cap (`scripts/check-loc.mjs`, run by
- `npm run check`). Tests, docs, migrations, scripts, `.d.ts` files and the vendored `public/stream-sdk.js` are not
+- Source files in `src/`, `public/`, `maintenance/` and `join/` (the video joiner's plain Node `.mjs` too) are 140 lines
+ at most, 160 as a hard cap (`scripts/check-loc.mjs`, run by `npm run check`; the folders are `LOC_ROOTS` in
+ `scripts/rules.mjs`). Tests, docs, migrations, scripts, `.d.ts` files and the vendored `public/stream-sdk.js` are not
  counted. A file over the cap is split by responsibility (as `playhq-service.ts`, `playhq-repository.ts` and
  `playhq-alert.ts` are), never by line range.
 - No barrel files (`index.ts` re-exports), and no `import * as` in `src/`. Every import names the file that owns

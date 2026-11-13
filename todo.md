@@ -29,7 +29,3 @@ Things a club other than the example one would hit:
       the release ask for another staging deploy. Add it.
 - [ ] Check `INSTALL.md` tells a club to put its admins in `maintenance/cloudflare.config.ts` (`ADMIN_EMAILS` is
       `admin@example.com`); without that the maintenance page lets nobody through.
-
-Shared with the upstream site (the same code):
-
-- [ ] `join/*.mjs` is outside `scripts/check-loc.mjs` and the comment rules in `scripts/check-rules.mjs`. Add it.
