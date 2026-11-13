@@ -63,12 +63,16 @@ export async function editGame(deps: TeamDeps, id: number, input: GameInput, vid
 	await updateGame(db, deps.team.id, id, input, video === "none" ? null : video === "live", video === "none" ? deps.now().toISOString() : null, deps.now().toISOString());
 }
 
-export async function deleteGame(db: D1Database, teamId: string, id: number, now: Date): Promise<void> {
-	await requireGame(db, teamId, id);
-	if ((await countActiveVideosForGame(db, teamId, id)) > 0) {
+/** Only a game without video; a stream only set up for it (Go live opened) is closed, after the video check, so a
+ * refused delete leaves the stream as it was. */
+export async function deleteGame(deps: TeamDeps, id: number): Promise<void> {
+	const { db } = deps;
+	await requireGame(db, deps.team.id, id);
+	if ((await countActiveVideosForGame(db, deps.team.id, id)) > 0) {
 		throw conflict("This game has video. Delete or move the video first.");
 	}
-	await softDeleteGame(db, teamId, id, now.toISOString());
+	await closeUnusedLive(deps, id, "deleted");
+	await softDeleteGame(db, deps.team.id, id, deps.now().toISOString());
 }
 
 /** No video yet (or only one that failed): free for an upload or Go live. */

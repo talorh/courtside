@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createGame } from "../../../src/features/games/games-repository.ts";
 import { deleteGame, pickerGames, requireGame, toGameInput } from "../../../src/features/games/games-service.ts";
 import { createTestDb } from "../../helpers/d1-sqlite.ts";
-import { B12_1 } from "../../helpers/fakes.ts";
+import { B12_1, createTestDeps } from "../../helpers/fakes.ts";
 
 const TEAM = "b12.1-2026";
 const base = { startsAt: "2026-10-18T09:00", competition: "VJBL" as const, roundLabel: "9", opponent: "Bayside Comets", venue: "Northside" };
@@ -19,10 +19,10 @@ describe("games service", () => {
 		await expect(requireGame(createTestDb(), TEAM, 5)).rejects.toMatchObject({ status: 404 });
 	});
 	it("refuses to delete a game with video", async () => {
-		const db = createTestDb();
-		const id = await createGame(db, TEAM, base, 1);
-		await db.prepare("INSERT INTO videos (team_id, game_id, status, delete_after) VALUES (?, ?, 'ready', 'x')").bind(TEAM, id).run();
-		await expect(deleteGame(db, TEAM, id, new Date())).rejects.toMatchObject({ status: 409 });
+		const deps = createTestDeps();
+		const id = await createGame(deps.db, TEAM, base, 1);
+		await deps.db.prepare("INSERT INTO videos (team_id, game_id, status, delete_after) VALUES (?, ?, 'ready', 'x')").bind(TEAM, id).run();
+		await expect(deleteGame(deps, id)).rejects.toMatchObject({ status: 409 });
 	});
 	it("offers every game dated in its team's season's two years, newest first, until the team's videos are due", async () => {
 		const db = createTestDb();

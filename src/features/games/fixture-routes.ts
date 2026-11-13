@@ -7,7 +7,7 @@ import { gameName, logGameChange } from "./game-log.ts";
 import { getGame, listGamesWithVideoStatus } from "./games-repository.ts";
 import { addGame, deleteGame, editGame, gameFormSchema, requireGame, toGameInput } from "./games-service.ts";
 import { deleteGameWithFootage } from "../videos/game-removal-service.ts";
-import { closeLiveForGame, closeUnusedLive } from "../live/live-service.ts";
+import { closeLiveForGame } from "../live/live-service.ts";
 import { listOpenLive, wasStreamed } from "../live/live-repository.ts";
 import { listPlayhqFixtures } from "./playhq-repository.ts";
 import { FIXTURE_MESSAGES, fixturePage } from "./views/fixture-page.ts";
@@ -58,8 +58,7 @@ export function registerFixtureRoutes(router: Router): void {
 	router.post("/fixture/:id/delete", "manager", async ({ params, member, viewer, deps }) => {
 		const id = idParam(params.id, "Game");
 		const game = await requireGame(deps.db, deps.team.id, id);
-		await closeUnusedLive(deps, id, "deleted");
-		await deleteGame(deps.db, deps.team.id, id, deps.now());
+		await deleteGame(deps, id);
 		await logGameChange(deps, { email: viewer.email, memberId: member.id }, "game_deleted", gameName(game), id);
 		return redirect("/fixture?done=deleted");
 	}, { confirm: true });

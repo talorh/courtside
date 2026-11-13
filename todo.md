@@ -32,9 +32,6 @@ Things a club other than the example one would hit:
 
 Shared with the upstream site (the same code):
 
-- [ ] Deleting a game cancels its opened Go live stream before the delete is refused. `/fixture/:id/delete` runs
-      `closeUnusedLive` and then `deleteGame`, whose "has a video" check can refuse; a refused delete has still closed
-      the stream. Check first, close after.
 - [ ] The sign-in page logs whatever was typed. `requestCode` (auth/sign-in-service.ts) records an `unknown_email`
       event with the lower-cased input before `isEmail` is checked, so a non-address lands in `sign_in_events.email`
       and the admin Log. Keep the count for the limit, but store a masked or empty address for anything that isn't one.

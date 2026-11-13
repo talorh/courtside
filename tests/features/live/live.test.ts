@@ -218,6 +218,13 @@ describe("watching live", () => {
 		expect(await status(deps)).toBe("cancelled");
 		expect(deps.live.inputs.get("live-1")!.enabled).toBe(false);
 	});
+	it("a game with a video and a stream only set up refuses the delete and leaves the stream as it was", async () => {
+		const { deps, gameId } = await goLive();
+		await seedVideo(deps, { gameId, streamUid: "u1" });
+		expect((await makeClient(deps)(`/fixture/${gameId}/delete`, form({ confirm: "yes" }))).status).toBe(409);
+		expect(await status(deps)).toBe("open");
+		expect(deps.live.inputs.get("live-1")!.enabled).toBe(true);
+	});
 	it("a game being streamed can't be marked No video or deleted (its video is on the way), except by admin with footage", async () => {
 		const { deps, gameId, startStreaming } = await goLive();
 		await startStreaming();
