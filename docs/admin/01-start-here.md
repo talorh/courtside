@@ -18,7 +18,7 @@ Courtside is a private website where each Saints team keeps its game videos and 
 | Teams | Onboard a team; open any team as its team manager, or view it as any role; each running team's setup progress; end a season, reopen, or delete a team tonight. | A new team, or a team manager asking for help |
 | Support | Team managers' questions and the site's own monitoring tickets, with replies, private notes and status. | Daily, and whenever an email says a ticket's waiting |
 | Platform | The site's health, each thing once: every figure watched with its limit and alert, last night's backup and clean-up, Cloudflare's last 30 days. | Weekly, and when an alert is raised |
-| Costs | What each team costs on Cloudflare, this month and this season, against its budget, in Australian or US dollars. | Monthly, and when the Team budgets alert is raised |
+| Costs | What each team costs on Cloudflare, this month and this season, against its budget, in Australian dollars or US dollars. | Monthly, and when the Team budgets alert is raised |
 | Admins | Who the site's admins are. | Adding or removing an admin |
 | Changelog | Release notes, newest first: what changed on the site and when, under a heatmap of the last twelve months' activity, a square a day. | After a release, or when someone asks what changed |
 | Log | What's happening right now in every team (live streams, uploads, processing, removal requests waiting), then everything that happened: who changed what, videos and photos, every sign-in attempt from the last month, and anything that didn't work (Problems), each with the device it came from. | Game nights and the morning after; something odd about a sign-in, or a problem; who changed what |

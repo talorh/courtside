@@ -1,6 +1,7 @@
 // What the Costs page reads: every team that isn't deleted, what each stores in Stream and R2 (from its videos and clips),
 // which team each Stream video and live input is, and the minutes watched saved by month. Admins only, so it reads every
 // team (a CROSS_TEAM exception in scripts/rules.mjs). Figures only: no names or emails. And the exchange rate saved.
+import { CLUB } from "../../club.ts";
 import { DEFAULT_BUDGET_LOCAL } from "./costs-prices.ts";
 
 /** `budget`: its season's, in the club's currency (the default unless one's been set: `budgetDefault`); `players`: in its
@@ -58,9 +59,12 @@ export async function saveViews(db: D1Database, months: string[], rows: Array<Om
 export const setBudget = (db: D1Database, teamId: string, budget: number | null) =>
 	db.prepare("UPDATE teams SET budget = ? WHERE id = ? AND status <> 'deleted'").bind(budget, teamId);
 
+/** The one rate Costs keeps: US dollars to the club's currency ("USD/AUD"). */
+const RATE_PAIR = `USD/${CLUB.currency.code}`;
+
 /** The exchange rate last saved: US dollars to the club's currency, its day, and when it was read. */
 export const savedRate = (db: D1Database) =>
-	db.prepare("SELECT rate, rate_date AS date, fetched_at AS fetchedAt FROM exchange_rates WHERE pair = 'USD/AUD'").first<{ rate: number; date: string; fetchedAt: string }>();
+	db.prepare("SELECT rate, rate_date AS date, fetched_at AS fetchedAt FROM exchange_rates WHERE pair = ?").bind(RATE_PAIR).first<{ rate: number; date: string; fetchedAt: string }>();
 
 export const saveRate = (db: D1Database, rate: number, date: string, fetchedAt: string) => db.prepare(`INSERT INTO exchange_rates (pair, rate, rate_date, fetched_at)
-	VALUES ('USD/AUD', ?, ?, ?) ON CONFLICT (pair) DO UPDATE SET rate = excluded.rate, rate_date = excluded.rate_date, fetched_at = excluded.fetched_at`).bind(rate, date, fetchedAt).run();
+	VALUES (?, ?, ?, ?) ON CONFLICT (pair) DO UPDATE SET rate = excluded.rate, rate_date = excluded.rate_date, fetched_at = excluded.fetched_at`).bind(RATE_PAIR, rate, date, fetchedAt).run();

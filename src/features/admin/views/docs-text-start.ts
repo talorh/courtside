@@ -1,10 +1,11 @@
 // The Documentation page's opening section for a new admin: what the site is, what the admin area's pages are for,
 // the routine, the rules that matter, and where to read more.
+import { CLUB } from "../../../club.ts";
 import { html } from "../../../shared/html.ts";
 import { code, type DocSection, table } from "./docs-blocks.ts";
 
 export const start = (): DocSection => ({ id: "start", title: "Start here", body: html`
-<p>Courtside is a private website where each Saints team keeps its game videos and photos for its
+<p>Courtside is a private website where each ${CLUB.name} team keeps its game videos and photos for its
 families. It runs entirely on Cloudflare, in the club's own account, as one program (a Worker) with
 one database, plus a small helper that joins a live stream's parts into one video. Team managers run their own teams; a site admin looks after the whole site from this admin area, and can
 open any team to help. This page explains how it all works. If Cloudflare's words are new to you, the Glossary at the
@@ -21,7 +22,7 @@ ${table(["Page", "What it's for", "When you look"], [
 		["Teams", "Onboard a team; open any team as its team manager, or view it as any role; each running team's setup progress; end a season, reopen, or delete a team tonight.", "A new team, or a team manager asking for help"],
 		["Support", "Team managers' questions and the site's own monitoring tickets, with replies, private notes and status.", "Daily, and whenever an email says a ticket's waiting"],
 		["Platform", "The site's health, each thing once: every figure watched with its limit and alert, last night's backup and clean-up, Cloudflare's last 30 days.", "Weekly, and when an alert is raised"],
-		["Costs", "What each team costs on Cloudflare, this month and this season, against its budget, in Australian or US dollars.", "Monthly, and when the Team budgets alert is raised"],
+		["Costs", `What each team costs on Cloudflare, this month and this season, against its budget, in ${CLUB.currency.name} or US dollars.`, "Monthly, and when the Team budgets alert is raised"],
 		["Admins", "Who the site's admins are.", "Adding or removing an admin"],
 		["Changelog", "Release notes, newest first: what changed on the site and when, under a heatmap of the last twelve months' activity, a square a day.", "After a release, or when someone asks what changed"],
 		["Log", "What's happening right now in every team (live streams, uploads, processing, removal requests waiting), then everything that happened: who changed what, videos and photos, every sign-in attempt from the last month, and anything that didn't work (Problems), each with the device it came from.", "Game nights and the morning after; something odd about a sign-in, or a problem; who changed what"],

@@ -15,7 +15,7 @@ export const RIVAL_CLUBS: readonly string[] = CLUB.rivals;
 /** Each group's name (in the Log too) and when its lines are used. */
 export const LINE_GROUPS: Record<LineKind, { name: string; when: string }> = {
 	upcoming: { name: "Coming up", when: "Before the game." },
-	away: { name: "Coming up, away from Saints Stadium", when: "Before a game somewhere other than Saints Stadium: these are used along with Coming up's." },
+	away: { name: `Coming up, away from ${CLUB.homeVenue}`, when: `Before a game somewhere other than ${CLUB.homeVenue}: these are used along with Coming up's.` },
 	rivals_upcoming: { name: "Coming up, against a local rival", when: `Before a game against ${RIVAL_CLUBS.join(" or ")}, in place of the others.` },
 	playing: { name: "Being played now", when: "While the game is on." },
 	rivals_playing: { name: "Being played now, against a local rival", when: `While a game against ${RIVAL_CLUBS.join(" or ")} is on.` },

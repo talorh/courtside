@@ -65,7 +65,7 @@ export const STAGING_REF = "refs/courtside/staging";
 
 // What changes nothing the site runs, so needn't go to staging again (AGENTS.md): docs and notes, tests, provisioning
 // bodies, and the maintenance Worker (deployed by its own script). The changelog does: the site shows it.
-const SKIPS_STAGING = [/^docs\//, /^tests\//, /^infra\//, /^maintenance\//, /^(README|AGENTS|INSTALL|LICENSE)(\.md)?$/];
+const SKIPS_STAGING = [/^docs\//, /^tests\//, /^infra\//, /^maintenance\//, /^(README|AGENTS|INSTALL|LICENSE|todo)(\.md)?$/];
 export const skipsStaging = (path) => SKIPS_STAGING.some((re) => re.test(path));
 
 /**

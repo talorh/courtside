@@ -1,4 +1,5 @@
 // A team manager's questions on Help: the fixture and the roster.
+import { CLUB } from "../../../club.ts";
 import { html } from "../../../shared/html.ts";
 import { faqItem, type HelpFor } from "./faq-item.ts";
 import { shot } from "./faq-mock.ts";
@@ -13,7 +14,7 @@ ${faqItem("g-game", "Adding a game", html`<ol class="steps">
 ${shot("fixture-add-game", "The Add game form on the Fixture: date, tip-off, competition, round, opponent, venue and the Video choice, then Save game", 358, 751)}`)}
 ${faqItem("g-playhq", "Linking PlayHQ, so games fill in by themselves", html`<ol class="steps">
 <li>On PlayHQ, open your team's <b>public</b> page and copy its link: find the team on playhq.com without signing in. Its address has <b>/org/</b> and <b>/teams/</b> in it.</li>
-<li>On <b>Fixture</b>, tap <b>Add fixture</b>, paste the link, pick VJBL or Tournament, and tap <b>Read fixture</b>. Its games come straight in.</li></ol>
+<li>On <b>Fixture</b>, tap <b>Add fixture</b>, paste the link, pick ${CLUB.league} or Tournament, and tap <b>Read fixture</b>. Its games come straight in.</li></ol>
 <p class="small">League games come in with their phase of the season, from how PlayHQ names the grade: <b>Grading phase 1</b>,
 the <b>Crossover game</b>, <b>Grading phase 2</b>, then the <b>Championship season</b>. A grading game stays here after
 PlayHQ drops it, marked "Not on PlayHQ any more". Gone up or down a grade? If PlayHQ gives the team a new page, add that
@@ -37,7 +38,7 @@ ${faqItem("g-edit", "Changing or deleting a game", html`<p>Tap <b>Edit</b> next 
 <b>Delete game and video</b> instead.</p>
 ${shot("fixture", "The Fixture page: Add game, Add fixture and Add from a spreadsheet buttons, then each game with Edit and Delete")}`)}
 ${faqItem("g-lines", "The line under each game's title", html`<p>Each game's page has a line under its title, like
-"Nothing but net: the Saints beat Lakeside at Saints Stadium. Final score 34 to 28." To change them for your team:</p>
+"Nothing but net: the ${CLUB.nickname} beat Lakeside at ${CLUB.homeVenue}. Final score 34 to 28." To change them for your team:</p>
 <ol class="steps"><li>On <b>Manage team</b>, under <b>Game lines</b>, tap <b>Edit game lines</b>.</li>
 <li>Change, add or take out lines in any group (Coming up, Won, Lost and so on), one line a row. Write
 <b>{opponent}</b>, <b>at {venue}</b>, and in the Won, Won by one point, Lost and Drew lines <b>{ours}</b> and <b>{them}</b>, where the

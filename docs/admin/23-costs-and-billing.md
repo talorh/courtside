@@ -31,7 +31,7 @@ In short below; where each figure comes from, and how it's kept, is in The admin
 
 - **A team's own costs** are its storage (its videos' and clips' minutes in Stream), its watching (Stream's minutes watched, read from Cloudflare by video) and its uploads (its originals in R2).
 - **The site's fixed costs** (Workers Paid, the bundle, the domain) are shared by the days each team ran in the month, so a team that joined mid-month carries its share only from then.
-- **Dollars** are Cloudflare's US dollars, or Australian at the European Central Bank's rate for the day, read a few times a day and kept if the rate can't be read.
+- **Dollars** are Cloudflare's US dollars, or Australian dollars at the European Central Bank's rate for the day, read a few times a day and kept if the rate can't be read.
 - **The estimate** for a season uses the team's own figures once it has three games; before that, 30 games of an hour, three clips a game and nine families each watching twice.
 - **The budget** is $200 a season until one is set on the team's Costs page. Over budget so far is urgent, and estimated to go over is a warning: the Team budgets alert, checked each night.
 - **Download for Excel**, beside the seasons, is the season and currency on the page as a workbook: Summary (the tiles' figures, each actual or estimated), Teams (a row each), Months (a row a team's month, by kind of cost, to sort or pivot), Team by team, and Cloudflare's bill for the season's days (US dollars). Figures stay numbers, so Excel adds them up.

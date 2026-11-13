@@ -33,7 +33,7 @@ const readSchema = z.object({
 });
 
 const system = (today: string) => `You read sports fixture web pages and list the games one junior basketball team plays.
-Today is ${today} (local, Australia). Reply with JSON only. For each game the team plays:
+Today is ${today} (local time, ${CLUB.timeZone}). Reply with JSON only. For each game the team plays:
 - date: YYYY-MM-DD. If the page leaves out the year, use the year that puts the game closest after today.
 - time: tip-off, 24-hour HH:MM local time, or "" if the page doesn't give one.
 - round: as the page names it ("Round 3", "Semi Final", "Pool A Game 2"), or "".

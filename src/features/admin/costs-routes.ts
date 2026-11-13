@@ -1,6 +1,6 @@
 // The admin area's Costs: every team of a season (/admin/costs) and each team's own page (/admin/costs/:id), in the club's currency
-// or Cloudflare's own US dollars (?cur=usd), the season's report for Excel, and setting a team's budget there (Australian
-// dollars; logged). Each page checks the budgets (in the club's currency, as they're set) as it opens.
+// or Cloudflare's own US dollars (?cur=usd), the season's report for Excel, and setting a team's budget there (the club's
+// currency; logged). Each page checks the budgets (in the club's currency, as they're set) as it opens.
 import { z } from "zod";
 import type { AdminRouter } from "../../app/admin-router.ts";
 import { notFound } from "../../app/errors.ts";

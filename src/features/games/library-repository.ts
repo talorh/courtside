@@ -46,7 +46,7 @@ export async function listLibrary(db: D1Database, teamId: string, competition: C
 
 /** Competitions that have at least one game (drives the filter chips). */
 export async function listLibraryCompetitions(db: D1Database, teamId: string): Promise<Competition[]> {
-	// Fixed order (VJBL, Tournament, Practice match) rather than whatever order the rows come back in.
+	// Fixed order (the league, Tournament, Practice match) rather than whatever order the rows come back in.
 	const { results } = await db
 		.prepare(`SELECT DISTINCT g.competition FROM games g WHERE g.team_id = ? AND g.deleted_at IS NULL`)
 		.bind(teamId)

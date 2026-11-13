@@ -1,6 +1,6 @@
 // Costs in either currency: Cloudflare's own US dollars, or the club's currency at the day's rate. The model counts in
-// US dollars; a page turns every dollar it shows into the one asked for, and a team's budget (set in Australian
-// dollars) into the same, so the two are always compared like for like.
+// US dollars; a page turns every dollar it shows into the one asked for, and a team's budget (set in the club's
+// currency) into the same, so the two are always compared like for like.
 import type { TeamCosts } from "./costs-estimate.ts";
 import type { MonthCost } from "./costs-model.ts";
 

@@ -12,7 +12,7 @@ of the site follows it: Upload and Go live offer its games, Watch games lists th
 game its duties, and PlayHQ's games get their final scores by themselves.</p>
 ${fixtureInDiagram()}
 <h3>A game by hand</h3>
-<p><b>Add game</b> takes the date and tip-off (the coming Friday at the team's usual tip-off, below, to start with), the competition (VJBL,
+<p><b>Add game</b> takes the date and tip-off (the coming Friday at the team's usual tip-off, below, to start with), the competition (${CLUB.league},
 Tournament or Practice match), in the league the phase of the season (below), the round, the opponent and the venue, and the game's <b>Video</b>: Live stream (the
 default), Record and upload after, or No video. No video takes the game out of Upload and Go live and off the roster's
 video duty, and can't be chosen while the game has a video. Any game can be edited or deleted later.</p>
@@ -37,12 +37,12 @@ or practice match never has one.</p>
 <ul class="docs-points">
 <li><b>The link</b> is a team's public page on playhq.com, with /org/ and /teams/ in it; its last part is PlayHQ's
 id for the team. A My teams link (from a parent signed in to PlayHQ, with their own id in it) is refused and never
-stored. A PlayHQ fixture is VJBL or a tournament, never a practice match.</li>
+stored. A PlayHQ fixture is ${CLUB.league} or a tournament, never a practice match.</li>
 <li><b>The feed</b> is not PlayHQ's official API, which needs a key PlayHQ issues to clubs. It's the same public feed
 playhq.com's own team pages use: ${code("api.playhq.com/graphql")}, asked for ${code("discoverTeam")} and
 ${code("discoverTeamFixture")}, sent with Origin: https://www.playhq.com and a ${code("tenant")} header naming the sport
 (example-association). If PlayHQ changes it, a check fails and says so, and nothing in the fixture changes.</li>
-<li><b>What comes in</b> for each game: its date, its tip-off (the team's usual one until PlayHQ sets one), its round (VJBL's
+<li><b>What comes in</b> for each game: its date, its tip-off (the team's usual one until PlayHQ sets one), its round (${CLUB.league}'s
 "Round 4" shows as 4; a tournament keeps PlayHQ's name, such as "Semi Final"), in the league its phase of the season from
 its grade's name (the game's own grade, else its round's, else the team's), the opponent shortened ("Hillcrest U12
 Boys 3" becomes "Hillcrest 3"), and the venue with its court. A game PlayHQ lists twice comes in once.</li>
@@ -84,8 +84,8 @@ with JavaScript after it loads, and the site says so rather than asking the mode
 off, in JSON mode (a schema of date, time, round, phase, opponent and venue for each game), at temperature 0, with
 up to 4,000 tokens to answer in: under a hundred of the account's free daily neurons a page. It's told today's date in
 local, so a page that leaves out the year gets the one that puts the game closest after today, and the names a
-draw may give the team: b12.1 is "Saints U12 Boys 1", which a page may write "Saints U12 Boys 1",
-"Saints U12B1", or just "Saints 1" on a page for U12 Boys alone. Its instructions say to list only that team's
+draw may give the team: b12.1 is "${CLUB.fixtureName} U12 Boys 1", which a page may write "${CLUB.fixtureName} U12 Boys 1",
+"${CLUB.fixtureName} U12B1", or just "${CLUB.fixtureName} 1" on a page for U12 Boys alone. Its instructions say to list only that team's
 games, to leave out byes, results, ladders and other teams' games, and: Never make up a game, date or time.</li>
 <li><b>Checking its answer:</b> an answer that isn't the JSON asked for is refused (try again, or use a spreadsheet),
 and at most 200 games are taken. A game without a real date is left out and listed; one without a clear tip-off gets
@@ -93,7 +93,7 @@ the team's usual tip-off and is listed to fix; no opponent is "TBC"; the round, 
 characters.</li></ul>
 <h3>From a spreadsheet</h3>
 <p>A CSV, up to 300 KB, one game a row under a header row naming the columns in any order: Date, Time, Competition,
-Phase (the league season's, in words), Round, Opponent, Venue and Video (other names work too, such as Against or Court). Dates are Australian, day first (31/10 is 31 October), a
+Phase (the league season's, in words), Round, Opponent, Venue and Video (other names work too, such as Against or Court). Dates are day first (31/10 is 31 October), a
 semicolon works in place of a comma, and an Excel file is refused with how to save it as CSV. The Fixture has a
 sample to download.</p>
 <h3>Checking before adding</h3>

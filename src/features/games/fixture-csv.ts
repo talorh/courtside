@@ -6,13 +6,13 @@ import type { ImportedGame } from "./fixture-import.ts";
 import { phaseOfWords } from "./season-phase.ts";
 
 // A fixture spreadsheet, saved as CSV (Excel: File → Save As → CSV; Google Sheets: File → Download → CSV).
-// One game per row, with a header row naming the columns (any order, any case). Dates are Australian (31/10/2026).
+// One game per row, with a header row naming the columns (any order, any case). Dates are day first (31/10/2026).
 
 export const SAMPLE_CSV = `Date,Time,Competition,Phase,Round,Opponent,Venue,Video
-31/10/2026,6:40pm,${CLUB.league},Grading phase 1,2,Lakeside Rockets,"Saints Stadium, Court 2",Live
+31/10/2026,6:40pm,${CLUB.league},Grading phase 1,2,Lakeside Rockets,"${CLUB.homeVenue}, Court 2",Live
 7/11/2026,9:00am,Tournament,,Round 1,Pine Valley Eagles,"Hillcrest Stadium, Court 4",No
 7/11/2026,1:20pm,Tournament,,Round 2,Westside Storm,"Hillcrest Stadium, Court 4",No
-14/11/2026,10:30am,Practice match,,,Riverton Wolves,"Saints Stadium, Court 1",Record
+14/11/2026,10:30am,Practice match,,,Riverton Wolves,"${CLUB.homeVenue}, Court 1",Record
 `;
 
 const COLUMNS: Record<string, keyof Row> = {
@@ -71,7 +71,7 @@ export function readFixtureCsv(text: string, fallback: Competition): { games: Im
 		keys.forEach((k, j) => { if (k) r[k] = (cells[j] ?? "").trim(); });
 		const date = parseDate(r.date), time = parseTime(r.time), competition = competitionOf(r.competition, fallback);
 		const why = !date ? `the date "${r.date}" isn't one we can read (use 31/10/2026)` : !time ? `the time "${r.time}" isn't one we can read (use 6:40pm)`
-			: !competition ? `the competition "${r.competition}" should be VJBL, Tournament or Practice match` : null;
+			: !competition ? `the competition "${r.competition}" should be ${CLUB.league}, Tournament or Practice match` : null;
 		if (why || !date || !time || !competition) { problems.push(`Row ${i + 2}: ${why}.`); return; }
 		games.push({
 			startsAt: `${date}T${time}`, competition, roundLabel: r.round.slice(0, 40), opponent: (r.opponent || "TBC").slice(0, 80),

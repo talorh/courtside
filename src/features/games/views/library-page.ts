@@ -1,3 +1,4 @@
+import { CLUB } from "../../../club.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { formatClock, formatDay, formatDuration } from "../../../shared/time.ts";
 import { thumb } from "../../../ui/components.ts";
@@ -86,7 +87,7 @@ function chips(p: LibraryPageProps): SafeHtml | "" {
 export function libraryPage(p: LibraryPageProps): SafeHtml {
 	const empty = p.competition ? "No games in this competition yet." : "No games yet. The court's quiet, for now.";
 	return layout({ title: "Games", frame: p.frame, current: "games", scripts: ["/thumbs.js", "/games-refresh.js"] }, html`
-<div class="libhead"><div><div class="eyebrow">${teamCopy(p.frame.team).long.replace("Saints ", "")} · Season ${p.season}</div><h1>Game footage</h1></div>
+<div class="libhead"><div><div class="eyebrow">${teamCopy(p.frame.team).long.replace(`${CLUB.name} `, "")} · Season ${p.season}</div><h1>Game footage</h1></div>
 <div class="libtools">${chips(p)}${p.scores.size ? scoreSwitch(p.frame.member.hideScores, libraryHref(p.competition)) : ""}</div></div>${liveCards(p.live)}${favourites(p)}
 <div class="games">${p.entries.length ? p.entries.map((e) => card(e, p)) : html`<p class="small">${empty}</p>`}</div>`);
 }

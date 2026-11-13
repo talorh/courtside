@@ -62,7 +62,7 @@ A VJBL season (the example league; the labels are the club's, `seasonPhases` in 
 
 ### From a spreadsheet
 
-A CSV, up to 300 KB, one game a row under a header row naming the columns in any order: Date, Time, Competition, Phase (the league season's, in words), Round, Opponent, Venue and Video (other names work too, such as Against or Court). Dates are Australian, day first (31/10 is 31 October), a semicolon works in place of a comma, and an Excel file is refused with how to save it as CSV. The Fixture has a sample to download.
+A CSV, up to 300 KB, one game a row under a header row naming the columns in any order: Date, Time, Competition, Phase (the league season's, in words), Round, Opponent, Venue and Video (other names work too, such as Against or Court). Dates are day first (31/10 is 31 October), a semicolon works in place of a comma, and an Excel file is refused with how to save it as CSV. The Fixture has a sample to download.
 
 ### Checking before adding
 

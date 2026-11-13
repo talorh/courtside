@@ -1,5 +1,6 @@
 // The Documentation page's sections on what members do day to day: watching, highlight clips and coaches' notes; and
 // Home, the desktop view, the Home Screen app, Notifications and removal requests.
+import { CLUB } from "../../../club.ts";
 import { html } from "../../../shared/html.ts";
 import { code, type DocSection, table } from "./docs-blocks.ts";
 import { clipDiagram, removalDiagram } from "./docs-diagrams-features.ts";
@@ -47,7 +48,7 @@ export const home = (): DocSection => ({ id: "home", title: "Home, notifications
 <h3>Home</h3>
 <p>The landing page after sign-in: the court picture with the team's name, big Upload video and Go live buttons for
 those who film, Watch games, then the Roster, Fixture, Photos and Help, the latest game with its score, what's coming
-up, and the squad. Each game's line on its page ("The Saints take on Northside 2 at Saints Stadium, Court 1.") comes
+up, and the squad. Each game's line on its page ("The ${CLUB.nickname} take on Northside 2 at ${CLUB.homeVenue}, Court 1.") comes
 from templates, not AI, so nothing is made up about the players and a game always gets the same line: the club's, or the
 team's own for any group its team manager changed (Manage team, Game lines, ${code("game_lines")}), checked as they're
 saved and in the Log. Team managers see when the season's

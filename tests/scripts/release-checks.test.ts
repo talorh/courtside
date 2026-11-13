@@ -95,7 +95,7 @@ describe("staging first, then live (everything is tried on staging before it goe
 
 	it("counts the changelog, the scripts and the config as the site's (the changelog shows on the site; Builds runs a script)", () => {
 		for (const path of ["CHANGELOG.md", "scripts/deploy-from-builds.mjs", "package-lock.json", "vite.config.ts", "src/index.ts"]) expect(skipsStaging(path), path).toBe(false);
-		for (const path of ["docs/runbooks/staging.md", "tests/e2e/help.e2e.mjs", "AGENTS.md"]) expect(skipsStaging(path), path).toBe(true);
+		for (const path of ["docs/runbooks/staging.md", "tests/e2e/help.e2e.mjs", "AGENTS.md", "todo.md"]) expect(skipsStaging(path), path).toBe(true);
 	});
 });
 

@@ -848,7 +848,7 @@ section and keeps one More menu open at a time.
  (`costs-reconcile.ts`, shared out by minutes watched and GB of originals) and its other charges join the shared costs;
  the plan's free watching it shows comes off the estimate. Every figure carries an Actual or Estimated pill; the chart
  says each month's; the Cloudflare's bill widget shows the period's charges, fees and each product's free allowance.
- - **Currency**: Australian dollars, or Cloudflare's own US dollars (`?cur=usd`). The model counts in US dollars
+ - **Currency**: the club's (`CLUB.currency`), or Cloudflare's own US dollars (`?cur=usd`). The model counts in US dollars
  (`costs-prices.ts`); a page turns them into the currency asked for (`costs-currency.ts`) at the day's rate: the
  European Central Bank's, from Frankfurter (`platform/exchange-rates.ts`), saved in `exchange_rates` and read again
  after six hours, the last saved when it doesn't answer (asked again 15 minutes later, not on every page), a set
@@ -862,7 +862,7 @@ section and keeps one More menu open at a time.
  video, three clips and 9 families each watching it twice, until the team has three games still on the site
  (`costs-estimate.ts`).
  - **Budgets**: every team's season budget is $200 until one's set on its Costs page
- (Australian dollars; logged; empty goes back to the default). Over budget so far is the `budget` alert's urgent,
+ (the club's currency; logged; empty goes back to the default). Over budget so far is the `budget` alert's urgent,
  estimated to go over its warning (one alert for every team, the worst first; checked when Costs or Alerts opens
  and by the 3am job). Cloudflare's bill is the true figure.
 - **Admins**: add (the email typed twice) and remove (it asks first; never yourself, never the last admin, checked in
@@ -948,13 +948,13 @@ erDiagram
 
 | Table | Key columns | Lifecycle |
 | --- | --- | --- |
-| teams | id (`<code>-<season>`: `b12.1-2026`), name, code (`b12.1`; one active team per code), season_start, ask_name (who members are told to ask; null: "your team manager"), status (active/closed/deleted), closed_at, delete_after, deleted_at, budget (its season's, Australian dollars; null: the default, $250) | Closed, then deleted; the row stays as a tombstone |
+| teams | id (`<code>-<season>`: `b12.1-2026`), name, code (`b12.1`; one active team per code), season_start, ask_name (who members are told to ask; null: "your team manager"), status (active/closed/deleted), closed_at, delete_after, deleted_at, budget (its season's, in the club's currency; null: the default, $250) | Closed, then deleted; the row stays as a tombstone |
 | admins | email (case-insensitive), added_by, added_at, removed_at | The site's admins, managed in the admin area; site-wide |
 | members | team_id, email (unique per team, case-insensitive), name, role (watcher/filmer/coach/manager: Watch only, Watch and film, Coach, Team manager), last_seen_at, hide_scores, hidden (an admin's own way into a team: never listed or counted, no Last seen), removed_at | Soft delete; adding them again brings them back. A person has a row in each team they're in |
 | games | team_id, starts_at, competition, round_label, phase (the league season's: grading1, crossover, grading2, championship; null otherwise, `games/season-phase.ts`), opponent, venue, live_stream (1, or 0: record and upload after), no_video_at (set: No video, which wins), no_video_auto_at (when the site set it, a week on with nothing filmed; cleared when it's set back to Video), waiting_since (when it was last set from No video back to Video: it waits a week from then), playhq_game_id, playhq_fixture_id, playhq_gone_at, score_checked_at, deleted_at | Soft delete, only when the game has no video; the row goes 90 days after, once its last video has |
 | game_scores | team_id, game_id (one row per game), ours, opponent (0 to 300), source (playhq/manual), entered_by, entered_at | The final score; Clear score hard-deletes a typed one. Never replaced by PlayHQ |
 | game_lines | team_id, kind (upcoming, away, rivals_upcoming, playing, rivals_playing, played, rivals_played, won, won_by_one, lost, drew; one row each), lines (one a row, up to 20), updated_at | A team's own lines for a group its team manager changed on Manage team, Game lines; a group with no row uses the club's (`games/game-lines-club.ts`). Saving the club's lines, or an empty box, deletes the row. Deleted with the team |
-| playhq_fixtures | team_id, competition (VJBL/Tournament), playhq_team_id, url, name, auto_check, game_count, checked_at, last_error, no_video | Hard delete on Remove (its games stay) |
+| playhq_fixtures | team_id, competition (the league or Tournament), playhq_team_id, url, name, auto_check, game_count, checked_at, last_error, no_video | Hard delete on Remove (its games stay) |
 | recording_segments | team_id, video_id, n (2 up), r2_key, r2_upload_id (NULL once complete), created_at, completed_at: a carried-on recording's later segments; videos also carry join_tries, join_tried_at, join_failed_at |
 | live_streams | team_id, game_id, live_input_uid, started_by, status (open/saved/cancelled), source (camera/app), last_live_at, end_requested_at, recording_video_id, cancel_reason, created_at, finished_at | One open per game (unique index); a test's row is reopened for the next Go live, with its input; closed rows are kept. started_by is whoever's phone is streaming (set when it starts; until then whoever opened Go live for the game) |
 | videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after, hd_ready_at, hd_failed_at, processing_at | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
@@ -987,7 +987,7 @@ erDiagram
 | problems | team_id (no foreign key; null when it's no team's), kind (server_error/job_failed/email_failed/golive_problem/upload_problem/photo_problem/stream_problem/ai_failed/site_problem), who (an email, or "site"), what, detail, device, times, first_at, at | Anything that failed, for the admin Log's Problems; the same one again within 30 minutes counts on its line. A month (the 3am job); a deleted team's go with it |
 | cost_views | month (UTC), team_id ('' for no team's), minutes (Stream's minutes watched), saved_at | Costs' minutes watched, from Cloudflare by video; kept when a team is deleted |
 | billed_usage | day (UTC), service, family, quantity, billable, unit, billed (US$), period_start, saved_at | Cloudflare's own bill, day by day (its billable usage): read every night and when Costs's copy is 20 hours old, each read replacing the days it returns; kept 400 days. The days it covers are actual on Costs (`costs-bill.ts`, `costs-reconcile.ts`) |
-| exchange_rates | pair ('USD/AUD'), rate, rate_date (the European Central Bank's day), fetched_at | Costs' Australian dollars; read again after six hours |
+| exchange_rates | pair ('USD/<the club's currency code>'), rate, rate_date (the European Central Bank's day), fetched_at | Costs' club currency; read again after six hours |
 | platform_alerts | kind (stream_storage/images/daily_job/sync_job/database/site_errors/email/email_allowance/budget), level (ok/warn/urgent), detail, since, failures, checked_at, ticket_id (its latest) | One row a kind: where it stands, and its ticket |
 | server_errors | hour (UTC, `YYYY-MM-DDTHH`), n | The 5xx answers the site gave, for the "site failing" alert; kept two days |
 

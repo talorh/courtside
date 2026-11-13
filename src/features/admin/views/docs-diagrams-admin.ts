@@ -1,5 +1,6 @@
 // The Documentation page's admin area diagrams: where each page's figures come from, and how a team's month of costs is
 // worked out.
+import { CLUB } from "../../../club.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { type Box, draw, figure } from "./docs-draw.ts";
 
@@ -43,7 +44,7 @@ export function costFlowDiagram(): SafeHtml {
 	const y = (i: number) => 20 + i * 66;
 	return figure("costflow", {
 		w: 760, h: 290, min: 640, title: "A team's month of costs",
-		desc: "A team's month adds up its own video storage past the bundle, its minutes watched, its originals in R2 past the free 10 GB, and a share of the site's fixed costs by the days it ran; that is turned from US dollars into Australian at the day's rate and set against the team's season budget, which raises the Team budgets alert if it's over or heading over.",
+		desc: `A team's month adds up its own video storage past the bundle, its minutes watched, its originals in R2 past the free 10 GB, and a share of the site's fixed costs by the days it ran; that is turned from US dollars into ${CLUB.currency.name} at the day's rate and set against the team's season budget, which raises the Team budgets alert if it's over or heading over.`,
 		caption: "Cloudflare's list prices are in the code (costs-prices.ts). The estimate for the rest of a season uses the team's own figures once it has three games with a video. Cloudflare's bill is the true figure.",
 	}, html`${inputs.map((s, i) => d.box({ ...s, x: 10, y: y(i), w: 250, h: 52 }))}
 ${d.box({ x: 310, y: 112, w: 180, title: "The team's month", sub: "in US dollars", kind: "job" })}

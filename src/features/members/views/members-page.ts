@@ -1,3 +1,4 @@
+import { CLUB } from "../../../club.ts";
 import { ROLE_LABELS, ROLES } from "../../../auth/permissions.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { formatClock, formatGameDate, localTime } from "../../../shared/time.ts";
@@ -93,7 +94,7 @@ Sheets, File → Download → <b>CSV</b>. You'll see everyone before they're add
 
 /** The line under each game's title, the team's own or the club's: changed on its own page. */
 const GAME_LINES = html`<section class="panel stack" aria-labelledby="lines-h"><h2 id="lines-h">Game lines</h2>
-<p class="small">The line under each game's title ("Nothing but net: the Saints beat Lakeside at Saints Stadium. Final score 34 to 28.").
+<p class="small">The line under each game's title ("Nothing but net: the ${CLUB.nickname} beat Lakeside at ${CLUB.homeVenue}. Final score 34 to 28.").
 Change them for your team, or add your own.</p><p><a class="btn" href="/manage/game-lines">Edit game lines</a></p></section>`;
 
 export interface MembersPageProps {

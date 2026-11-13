@@ -92,7 +92,7 @@ ${faqItem("labels", "What do Ready to watch, Processing and the other labels mea
 <li>${label("playing", "In progress")}: the game is on right now.</li>
 <li>${label("waiting", "Waiting for video")}: the game has been played, but no one has uploaded the video yet.</li>
 <li><span class="t score">Won 34 to 28</span>: the final score, ours first. It goes in after the game: from PlayHQ for
-VJBL games, or ${h.c.ask} enters it.</li>
+${CLUB.league} games, or ${h.c.ask} enters it.</li>
 <li>${label("novideo", "No video")} (greyed): this game isn't being filmed, or wasn't.</li></ul>`)}`;
 
 /** Last under Watching. The dates follow the team's own season (October to September), so they never need changing. */

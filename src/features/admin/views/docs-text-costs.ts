@@ -51,7 +51,7 @@ When the bill can't be read, the 3am job raises its ticket and Costs shows the c
 watched, read from Cloudflare by video) and its uploads (its originals in R2).</li>
 <li><b>The site's fixed costs</b> (Workers Paid, the bundle, the domain) are shared by the days each team ran in the
 month, so a team that joined mid-month carries its share only from then.</li>
-<li><b>Dollars</b> are Cloudflare's US dollars, or Australian at the European Central Bank's rate for the day, read a
+<li><b>Dollars</b> are Cloudflare's US dollars, or ${CLUB.currency.name} at the European Central Bank's rate for the day, read a
 few times a day and kept if the rate can't be read.</li>
 <li><b>The estimate</b> for a season uses the team's own figures once it has three games; before that, 30 games of an
 hour, three clips a game and nine families each watching twice.</li>

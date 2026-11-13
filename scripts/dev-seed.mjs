@@ -8,16 +8,17 @@ import { DatabaseSync } from "node:sqlite";
 import { LOCAL_STATE } from "./dev-db.mjs";
 
 const email = /\bdevEmail:\s*"([^"]*)"/.exec(readFileSync("deploy.config.ts", "utf8"))?.[1] ?? "you@example.com";
+const league = /\bleague:\s*"([^"]*)"/.exec(readFileSync("src/club.ts", "utf8"))?.[1] ?? "VJBL";
 const team = "b12.1-2026";
 const now = "2026-10-01T00:00:00.000Z";
 const games = [
-	["2026-10-09T18:40", "VJBL", "1", "Lakeside Rockets", "Lakeside Stadium, Court 2", 41, 36],
-	["2026-10-16T18:40", "VJBL", "2", "Riverton Wolves", "Saints Stadium, Court 1", 38, 44],
-	["2026-10-23T18:40", "VJBL", "3", "Westside Storm", "Westside Centre, Court 4", 52, 51],
-	["2026-10-30T18:40", "VJBL", "4", "Hillcrest Rovers", "Saints Stadium, Court 1", 47, 30],
-	["2026-11-06T18:40", "VJBL", "5", "Bayside Comets", "Saints Stadium, Court 2", null, null],
-	["2026-11-13T18:40", "VJBL", "6", "Pine Valley Eagles", "Pine Valley Stadium, Court 1", null, null],
-	["2026-11-20T18:40", "VJBL", "7", "Seaview Breakers", "Saints Stadium, Court 1", null, null],
+	["2026-10-09T18:40", league, "1", "Lakeside Rockets", "Lakeside Stadium, Court 2", 41, 36],
+	["2026-10-16T18:40", league, "2", "Riverton Wolves", "Saints Stadium, Court 1", 38, 44],
+	["2026-10-23T18:40", league, "3", "Westside Storm", "Westside Centre, Court 4", 52, 51],
+	["2026-10-30T18:40", league, "4", "Hillcrest Rovers", "Saints Stadium, Court 1", 47, 30],
+	["2026-11-06T18:40", league, "5", "Bayside Comets", "Saints Stadium, Court 2", null, null],
+	["2026-11-13T18:40", league, "6", "Pine Valley Eagles", "Pine Valley Stadium, Court 1", null, null],
+	["2026-11-20T18:40", league, "7", "Seaview Breakers", "Saints Stadium, Court 1", null, null],
 ];
 const sql = [
 	"DELETE FROM game_scores; DELETE FROM roster_slots; DELETE FROM roster_families; DELETE FROM players; DELETE FROM games; DELETE FROM members; DELETE FROM admins; DELETE FROM teams;",

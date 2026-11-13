@@ -104,7 +104,7 @@ The agent fills both from your answers:
 | Where your state body's child safety standards are | `childSafety` | A name and a link |
 | Your domain | `domain` | saints.example |
 | Your logo files, or "draw one" | `public/` | logo.png and club-mark.webp |
-| Your email, for the first site admin and the account's alerts | `npm run admin`, Cloudflare notifications | you@yourclub.org |
+| Your email, for the first site admin, the account's alerts and the Back soon page's own list | `npm run admin`, Cloudflare notifications, `maintenance/cloudflare.config.ts` `ADMIN_EMAILS` | you@yourclub.org |
 | The region nearest your club | `deploy.config.ts` `region` | aws:ap-southeast-2 |
 | A name for the Worker, if not `courtside` | `deploy.config.ts` `worker` | courtside |
 
@@ -116,7 +116,10 @@ a dry run first, then for real after your yes. Read-only commands need no yes.
 1. **The club** (`src/club.ts`): fills in your answers, then `npm run check` to be sure everything still passes with
    your names. If you have no logo, `npm run club -- placeholder`; otherwise your files go in `public/` at the sizes the
    runbook's Branding section lists. Then `npm run club -- all` for the court picture and the launch screen's copy, and
-   `npm run docs` so the Documentation carries your names.
+   `npm run docs` so the Documentation carries your names. Your email goes in `ADMIN_EMAILS` in
+   `maintenance/cloudflare.config.ts` too (comma-separated for several): the people the Back soon page lets through to
+   the real site while maintenance is on. It's the page's own list, kept apart from the site's admins table so it works
+   when the database doesn't; with the example address left there, nobody gets through.
 2. **The domain** (§1): registers it through Cloudflare Registrar, or adds the existing zone, with DNSSEC on. Records
    the zone id in `deploy.config.ts`.
 3. **The databases** (§1, §3): D1 `courtside` (live) and `courtside-staging`, in the region nearest you; applies

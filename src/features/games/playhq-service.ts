@@ -43,7 +43,7 @@ export const shortTeamName = (name: string) => name.replace(/\bU\d{1,2}\s+(Boys|
 
 /** `usualTime`: the team's usual tip-off (team-code.ts), until PlayHQ sets one. */
 export function toPlayhqGameInput(competition: PlayhqCompetition, g: PlayhqGame, usualTime: string): GameInput {
-	// VJBL rounds show as "Round 4" (gameTitle); a tournament keeps PlayHQ's own name ("Round 1", "Semi Final").
+	// League rounds show as "Round 4" (gameTitle); a tournament keeps PlayHQ's own name ("Round 1", "Semi Final").
 	const round = (competition === CLUB.league && /^Round (\d+)$/i.exec(g.round)?.[1]) || g.round;
 	return {
 		startsAt: `${g.date}T${g.time ?? usualTime}`, competition, roundLabel: round.slice(0, 40),

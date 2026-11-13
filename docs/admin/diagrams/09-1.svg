@@ -30,7 +30,7 @@
 <g class="dg-box k-person"><rect x="275" y="20" width="210" height="56" rx="10"/>
 <text class="dg-t" x="380" y="45">Any fixture page</text><text class="dg-s" x="380" y="62">a club site, a draw, a tournament</text></g>
 <g class="dg-box k-person"><rect x="540" y="20" width="210" height="56" rx="10"/>
-<text class="dg-t" x="645" y="45">A spreadsheet</text><text class="dg-s" x="645" y="62">a CSV, Australian dates</text></g>
+<text class="dg-t" x="645" y="45">A spreadsheet</text><text class="dg-s" x="645" y="62">a CSV, dates day first</text></g>
 <g class="dg-box k-service"><rect x="10" y="120" width="210" height="56" rx="10"/>
 <text class="dg-t" x="115" y="145">PlayHQ&#39;s feed</text><text class="dg-s" x="115" y="162">api.playhq.com/graphql</text></g>
 <g class="dg-box k-service"><rect x="275" y="120" width="210" height="56" rx="10"/>

@@ -1,5 +1,6 @@
 // The Documentation page's fixture diagrams: the ways games come in, a fixture page read by AI, PlayHQ's checks, and
 // the final scores.
+import { CLUB } from "../../../club.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { draw, figure } from "./docs-draw.ts";
 
@@ -9,9 +10,9 @@ export function fixtureInDiagram(): SafeHtml {
 		w: 760, h: 300, min: 640, title: "How games come into the fixture",
 		desc: "A PlayHQ team link is read from PlayHQ's feed and its games saved straight away, then checked again by themselves; any other public fixture page is read by Workers AI, and a spreadsheet is read in the Worker; those two are shown to check first, and only the ticked games are added.",
 		caption: "A game can always be added, changed or deleted by hand too. PlayHQ's games need no check page: they're PlayHQ's own, and later checks keep them in step.",
-	}, html`${d.box({ x: 10, y: 20, w: 210, title: "A PlayHQ team link", sub: "VJBL or a tournament", kind: "person" })}
+	}, html`${d.box({ x: 10, y: 20, w: 210, title: "A PlayHQ team link", sub: `${CLUB.league} or a tournament`, kind: "person" })}
 ${d.box({ x: 275, y: 20, w: 210, title: "Any fixture page", sub: "a club site, a draw, a tournament", kind: "person" })}
-${d.box({ x: 540, y: 20, w: 210, title: "A spreadsheet", sub: "a CSV, Australian dates", kind: "person" })}
+${d.box({ x: 540, y: 20, w: 210, title: "A spreadsheet", sub: "a CSV, dates day first", kind: "person" })}
 ${d.box({ x: 10, y: 120, w: 210, title: "PlayHQ's feed", sub: "api.playhq.com/graphql", kind: "service" })}
 ${d.box({ x: 275, y: 120, w: 210, title: "Workers AI", sub: "reads the page's text", kind: "service" })}
 ${d.box({ x: 540, y: 120, w: 210, title: "Read in the Worker", sub: "columns found by their names", kind: "worker" })}
@@ -51,7 +52,7 @@ ${d.box({ x: 520, y: 16, w: 230, title: "Match each game", sub: "by PlayHQ's id,
 ${d.box({ x: 10, y: 128, w: 230, title: "New: added", sub: "usual tip-off until PlayHQ sets one", kind: "done" })}
 ${d.box({ x: 265, y: 128, w: 230, title: "Changed: updated", sub: "time, venue, opponent, round", kind: "done" })}
 ${d.box({ x: 520, y: 128, w: 230, title: "Dropped: marked", sub: "Not on PlayHQ any more", kind: "service" })}
-${d.box({ x: 10, y: 228, w: 360, title: "Checks stop by themselves", sub: "VJBL six weeks after its last game", kind: "step" })}
+${d.box({ x: 10, y: 228, w: 360, title: "Checks stop by themselves", sub: `${CLUB.league} six weeks after its last game`, kind: "step" })}
 ${d.box({ x: 390, y: 228, w: 360, title: "A failed read changes nothing", sub: "saved on the fixture, shown to team managers", kind: "stop" })}
 ${d.arrow([[240, 44], [263, 44]])}${d.arrow([[495, 44], [518, 44]])}
 ${d.arrow([[635, 72], [635, 100], [125, 100], [125, 126]])}${d.arrow([[380, 100], [380, 126]])}${d.arrow([[635, 100], [635, 126]])}`);
