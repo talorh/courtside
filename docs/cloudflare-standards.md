@@ -43,6 +43,9 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  jobs and the tests have no `defer`, so there the same writes are awaited.
 - Cron handlers must be idempotent and safe to re-run. A failed run throws, so it shows as failed (and six in a row
  raise a ticket for the admins).
+- Cron triggers are UTC, and Cloudflare numbers the day of the week from 1 = Sunday to 7 = Saturday, not the usual
+ 0 = Sunday: a Thursday UTC trigger is written `… * * 5`. A job that must land on a local day checks the day in its
+ handler too (`gameDayDue`), so a trigger a day out does nothing rather than run early.
 - **Deploys come from `main` only**: `npm run release` pushes it to the Artifacts repo `courtside/courtside`, and Workers
  Builds checks and deploys it (development standards §11). Never `cf deploy` by hand.
 - **Staging is a Worker Preview** of the same Worker (`npm run staging`), on its own database and bucket.

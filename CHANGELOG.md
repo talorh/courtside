@@ -8,6 +8,10 @@ was wrong), the area in bold, then a plain sentence saying what changed for the 
 where ..."). Every deploy adds its lines at the top of today's date, and the deploy (`npm run release`, then Workers
 Builds) sends the top line, in plain words, as its message.
 
+## 14 Nov 2026
+
+- [Fix] **Platform:** Fixed an issue where the Friday check never ran: Cloudflare numbers the days of the week from Sunday as 1, so its triggers fired a day early and were skipped as not a Friday. It now runs at 6am every Friday in the club's time zone.
+
 ## 12 Nov 2026
 
 - [Fix] **Fixture:** Fixed an issue where a game whose only video had been deleted, such as a live recording that was lost, stayed Waiting for video for good. It now goes to No video a week after tip-off like a game nobody filmed, unless a video is uploaded by then.

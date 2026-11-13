@@ -8,6 +8,10 @@ import { localTime, weekdayOf } from "../shared/time.ts";
  * the zone has daylight saving), and only the one landing on 6am runs it. cloudflare.config.ts makes its triggers the
  * same way from club.ts, and tests/jobs/game-day.test.ts holds them to each other.
  */
+/** The day of the week as Cloudflare's cron reads it: 1 = Sunday to 7 = Saturday (not the usual 0 = Sunday), from
+ * the date's UTC weekday. */
+export const cloudflareWeekday = (date: Date): number => date.getUTCDay() + 1;
+
 export const GAME_DAY_CRONS = new Set(sixAmFridays());
 
 /** Whether a Friday trigger's scheduled time (ms) is 6am on a Friday in the club's time zone. */
@@ -22,7 +26,7 @@ function sixAmFridays(): string[] {
 	for (let ms = Date.UTC(2026, 0, 1); ms < Date.UTC(2027, 0, 1); ms += 1_800_000) {
 		if (!gameDayDue(ms)) continue;
 		const at = new Date(ms);
-		crons.add(`${at.getUTCMinutes()} ${at.getUTCHours()} * * ${at.getUTCDay()}`);
+		crons.add(`${at.getUTCMinutes()} ${at.getUTCHours()} * * ${cloudflareWeekday(at)}`);
 	}
 	return [...crons];
 }

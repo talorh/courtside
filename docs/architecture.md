@@ -624,8 +624,8 @@ which is why rows go in parents first. `--sqlite <file>` runs the same restore i
 ## The Friday check: are the weekend's games good to go
 
 At 6am in the club's time zone every Friday (`src/jobs/game-day.ts`: `GAME_DAY_CRONS` is every UTC weekday and time
-that is 6am Friday there across a year, and `gameDayDue` picks the trigger that lands on it; `cloudflare.config.ts`
-makes the same triggers from the club's time zone) and from Platform's **Run the Friday check now**, `checkGameDay`
+that is 6am Friday there across a year, the weekday written as Cloudflare numbers it, 1 = Sunday to 7 = Saturday, and
+`gameDayDue` picks the trigger that lands on it; `cloudflare.config.ts` makes the same triggers from the club's time zone) and from Platform's **Run the Friday check now**, `checkGameDay`
 (`src/features/admin/game-day-checks.ts`) reads every running team's live games up to Sunday in one trip
 (`game-day-repository.ts`, a `CROSS_TEAM` read) and asks: does Stream answer, with `MINUTES_A_GAME` (150) free for each
 game; is each game's open Go live input still in Stream (gone is a warning: `openLive` sets up a new one); does the

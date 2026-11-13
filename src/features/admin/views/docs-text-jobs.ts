@@ -70,7 +70,8 @@ ${table(["Step", "What it does"], [
 	])}
 <h3>The Friday check</h3>
 <p>At 6am local time every Friday (a trigger for each UTC time that is 6am Friday in the club's time zone across the
-year, and only the one landing on 6am runs it), ahead of the weekend's games, the site asks itself whether they're good
+year, written with Cloudflare's weekday numbers, 1 = Sunday to 7 = Saturday, and only the one landing on 6am Friday runs
+it), ahead of the weekend's games, the site asks itself whether they're good
 to go, and Platform's <b>Run the Friday check now</b> asks the same any day. It reads every running team's live games
 up to Sunday (not No video, not recorded and uploaded), then checks what they'll need. The answer is the Friday check
 alert: ok says what was found; a problem raises a ticket for the admins saying what to do, and the next fine check

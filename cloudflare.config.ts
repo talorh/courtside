@@ -15,7 +15,8 @@ const club = {
 };
 
 /** The UTC cron lines that are 6am Friday in the club's time zone over a year (the Friday check, jobs/game-day.ts makes
- * the same set): half an hour at a time, so a half-hour zone gets its minutes. */
+ * the same set): half an hour at a time, so a half-hour zone gets its minutes. Cloudflare numbers the day of the week
+ * from 1 = Sunday to 7 = Saturday, so the UTC weekday is written one up. */
 function sixAmFridays(timeZone: string): string[] {
 	const fmt = new Intl.DateTimeFormat("en-CA", { timeZone, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 	const crons = new Set<string>();
@@ -23,7 +24,7 @@ function sixAmFridays(timeZone: string): string[] {
 		const p = Object.fromEntries(fmt.formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
 		if (p.weekday !== "Fri" || p.hour !== "06" || p.minute !== "00") continue;
 		const at = new Date(ms);
-		crons.add(`${at.getUTCMinutes()} ${at.getUTCHours()} * * ${at.getUTCDay()}`);
+		crons.add(`${at.getUTCMinutes()} ${at.getUTCHours()} * * ${at.getUTCDay() + 1}`);
 	}
 	return [...crons];
 }
