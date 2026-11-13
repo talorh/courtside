@@ -62,6 +62,9 @@ describe("asking for a code", () => {
 		expect(await requestCode(deps, "not an email", "1.2.3.4")).toBe("unknown");
 		expect(deps.email.sent).toEqual([]);
 		expect(await signInFigures(deps.db, "2026-10-31T00:00:00.000Z")).toEqual({ codesSent: 0, wrong: 0, refused: 2, signedIn: 0 });
+		// Whatever isn't an address is kept masked in the sign-in events too (the admin Log shows them), the real address as is.
+		const rows = await deps.db.prepare("SELECT email FROM sign_in_events WHERE kind = 'unknown_email' ORDER BY id").all<{ email: string }>();
+		expect(rows.results.map((r) => r.email)).toEqual(["stranger@example.com", "n…"]);
 	});
 	it("an admin on no team's list, and someone on a closed team's list, still get a code", async () => {
 		const { deps } = clocked();

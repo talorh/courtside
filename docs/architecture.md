@@ -155,7 +155,8 @@ flowchart TD
  gym's Wi-Fi, or a phone company's shared address, is many families), 10 addresses on no list in 15 minutes from one
  IP address, 200 an hour for the whole site (past which codes pause and a
  **Sign-in flood** ticket is raised for the admins, once while it's open), and 30 wrong codes an hour from one IP
- address. Every request, code and check is a row in `sign_in_events` (a month, 31 days; the admin Log shows them) and a log line with the address
+ address. Every request, code and check is a row in `sign_in_events` (a month, 31 days; the admin Log shows them; anything
+ typed that isn't an address is stored masked, as `n…`) and a log line with the address
  masked (`signin_code_sent`, `signin_checked`, `signin_refused`); Platform's Sign-ins row sums the last 24 hours.
 - **The code** (`sign_in_codes`): six digits, hashed with the email (so a code is good for its own address only),
  10 minutes, five wrong tries, and voided when a newer one is asked for. The page's Send a new code waits a minute

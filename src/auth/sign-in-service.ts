@@ -25,6 +25,9 @@ export const maskEmail = (email: string) => (email.includes("@") ? email.replace
 const log = (event: string, email: string, detail: Record<string, unknown>) => console.log(JSON.stringify({ event, teamId: null, email: maskEmail(email), ...detail }));
 
 const hashOf = (email: string, code: string) => sha256Hex(`${email}:${code.replace(/\s+/g, "")}`);
+/** What a sign-in event stores: the address, or, for anything typed that isn't one, its masked form (the admin Log shows
+ * these rows, so nothing typed into the field is kept as it was). */
+const stored = (email: string) => (isEmail(email) ? email : maskEmail(email));
 
 /** Whether this address is anyone's: on a team's list (a closed team's too, for its videos) or a site admin. */
 async function isKnown(deps: AppDeps, email: string): Promise<boolean> {
@@ -37,7 +40,7 @@ async function isKnown(deps: AppDeps, email: string): Promise<boolean> {
 export async function requestCode(deps: AppDeps, rawEmail: string, ip: string): Promise<CodeRequest> {
 	const email = rawEmail.trim().toLowerCase();
 	const at = deps.now().toISOString();
-	const note = (kind: SignInEvent) => recordSignInEvent(deps.db, { kind, email, ip, at, device: deps.device });
+	const note = (kind: SignInEvent) => recordSignInEvent(deps.db, { kind, email: stored(email), ip, at, device: deps.device });
 	// An IP address trying address after address (none on a list) is slowed like one asking for code after code.
 	if (await countSignInEvents(deps.db, "unknown_email", since(deps.now(), 15 * MINUTE), { ip }) >= LIMITS.unknownPerIp15m) {
 		await note("limited");
@@ -68,7 +71,7 @@ export async function requestCode(deps: AppDeps, rawEmail: string, ip: string): 
 export async function verifyCode(deps: AppDeps, rawEmail: string, code: string, ip: string, device: string): Promise<CodeCheck> {
 	const email = rawEmail.trim().toLowerCase();
 	const now = deps.now(), at = now.toISOString();
-	const note = (kind: SignInEvent) => recordSignInEvent(deps.db, { kind, email, ip, at, device: deps.device });
+	const note = (kind: SignInEvent) => recordSignInEvent(deps.db, { kind, email: stored(email), ip, at, device: deps.device });
 	if (await countSignInEvents(deps.db, "wrong", since(now, HOUR), { ip }) >= LIMITS.wrongPerIpHour) {
 		await note("limited");
 		log("signin_refused", email, { why: "wrong codes" });

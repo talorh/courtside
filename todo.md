@@ -32,9 +32,6 @@ Things a club other than the example one would hit:
 
 Shared with the upstream site (the same code):
 
-- [ ] The sign-in page logs whatever was typed. `requestCode` (auth/sign-in-service.ts) records an `unknown_email`
-      event with the lower-cased input before `isEmail` is checked, so a non-address lands in `sign_in_events.email`
-      and the admin Log. Keep the count for the limit, but store a masked or empty address for anything that isn't one.
 - [ ] Coaches' notes show to an admin using View as coach, though they're "for coaches only". Decide whether that's
       wanted; document it, or leave the notes out under View as.
 - [ ] PlayHQ adopts hand-added games by date alone (`bringUpToDate`): two games added by hand on one day are paired
