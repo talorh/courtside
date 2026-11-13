@@ -1,0 +1,61 @@
+# To do
+
+Outstanding tasks only (done items are deleted). Ideas for later are in `docs/spec.md` ("Later, not now").
+
+## 1. Bugs found in the 13 Nov 2026 scrub (fixes first, each on its own branch, tests first)
+
+Things a club other than the example one would hit:
+
+- [ ] The Friday check never runs. Cloudflare's cron day-of-week numbers start at 1 = Sunday, but `sixAmFridays` in
+      `cloudflare.config.ts` and `src/jobs/game-day.ts` write `getUTCDay()` (0 = Sunday), so each trigger fires a day
+      early (Thursday 6am in the club's time zone), and `gameDayDue` then refuses it as not a Friday. Write the weekday
+      as Cloudflare reads it (the UTC weekday plus one), keep `gameDayDue` as it is, and add a test that pins
+      Cloudflare's numbering. Update the Documentation's jobs section.
+- [ ] The schema hard-codes the league. `migrations/0001_schema.sql` gives `games.competition` and
+      `playhq_fixtures.competition` a CHECK of `'VJBL'`, while `CLUB.league` is configurable and `COMPETITIONS`,
+      the game form and the PlayHQ form all offer it: a club whose league isn't called VJBL can't add a game or a
+      fixture (every insert fails the CHECK). `scripts/dev-seed.mjs` writes `'VJBL'` too. Drop the CHECK on
+      competition (the code validates it) or have the install write the club's league into it, and seed from
+      `CLUB.league`.
+- [ ] The club's currency is only half configurable. `exchange_rates.pair` is CHECKed to `'USD/AUD'`,
+      `savedRate` and `saveRate` (admin/costs-repository.ts) read and write `'USD/AUD'`, and `costs-words.ts` labels
+      the rate "AUD" and the chip "$AUD" whatever `CLUB.currency.code` says. Key the row and the labels by
+      `CLUB.currency.code`.
+- [ ] Watch games' eyebrow strips the example club's name: `library-page.ts` does `.replace("Saints ", "")` on the
+      team's long name. Use `CLUB.name`.
+- [ ] The game lines' "away" group is named for the example venue: `LINE_GROUPS.away` in `games/game-lines.ts` says
+      "Saints Stadium" in its name and description. Use `CLUB.homeVenue`.
+- [ ] Words that assume Australia or VJBL: the fixture reader's prompt says "(local, Australia)" (`fixture-link.ts`),
+      Help says scores come "from PlayHQ for VJBL games" (`faq-basics.ts`) and "pick VJBL or Tournament"
+      (`manager-games.ts`), the CSV reader says dates are Australian (`fixture-csv.ts`), and the Documentation's
+      fixture section describes the VJBL season as the league's. Use `CLUB.league`, and a club setting for the date
+      order, or say "day first".
+- [ ] `todo.md` isn't in `SKIPS_STAGING` (`scripts/release-checks.mjs`), so a commit that only changes this file makes
+      the release ask for another staging deploy. Add it.
+- [ ] Check `INSTALL.md` tells a club to put its admins in `maintenance/cloudflare.config.ts` (`ADMIN_EMAILS` is
+      `admin@example.com`); without that the maintenance page lets nobody through.
+
+Shared with the upstream site (the same code):
+
+- [ ] An HD download Stream couldn't make fails the 5-minute job for ever. `trackHdDownloads`
+      (videos/processing-service.ts) throws when Stream's download state is `error`, and nothing marks the video's HD as
+      failed: it stays in `listVideosAwaitingHd`, takes one of the five `HD_BATCH` slots, throws again every run, and the
+      run's failures raise the 5-minute job alert and a ticket that never clears. Note the failure on the video, log one
+      problem, and ask Stream once more rather than every run.
+- [ ] Deleting a game cancels its opened Go live stream before the delete is refused. `/fixture/:id/delete` runs
+      `closeUnusedLive` and then `deleteGame`, whose "has a video" check can refuse; a refused delete has still closed
+      the stream. Check first, close after.
+- [ ] The sign-in page logs whatever was typed. `requestCode` (auth/sign-in-service.ts) records an `unknown_email`
+      event with the lower-cased input before `isEmail` is checked, so a non-address lands in `sign_in_events.email`
+      and the admin Log. Keep the count for the limit, but store a masked or empty address for anything that isn't one.
+- [ ] Coaches' notes show to an admin using View as coach, though they're "for coaches only". Decide whether that's
+      wanted; document it, or leave the notes out under View as.
+- [ ] PlayHQ adopts hand-added games by date alone (`bringUpToDate`): two games added by hand on one day are paired
+      with PlayHQ's in list order. Match on the time too when both have one.
+- [ ] Insights counts a saved-late recording as stuck: the "processing over 4 hours" check uses `videos.created_at`,
+      which for a recording is the Go live tap. Count from when processing began.
+- [ ] The 5-minute run's closing checks can lose its errors: `syncAll` awaits the alert checks without a catch, so a
+      thrown database error there skips `logJobProblems`. Wrap them like the rest.
+- [ ] End game with nothing recorded ends the stream anyway (`stopBrowserLive` with no `recordingVideoId` takes the
+      length as infinite). Treat no recording as a cancel, not an end.
+- [ ] `join/*.mjs` is outside `scripts/check-loc.mjs` and the comment rules in `scripts/check-rules.mjs`. Add it.
