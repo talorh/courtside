@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 14 Nov 2026
 
+- [Fix] **Sign in:** Fixed an issue where Request access's name and team boxes didn't look like the email box, and the team box showed an example team that could read as already filled in.
 - [Feature] **Sign in:** Someone who can't get in can now raise an access request from the sign-in page (Can't get in? Ask your team manager, or raise an access request here): their name, team and email open a ticket for the site's admins, who add them to the team's list.
 - [Enhancement] **Help:** What is the aim here? now says the code is open source, with the GitHub link (github.com/talorh/courtside), and that there's no desire to make money from any of it.
 - [Enhancement] **Setup:** A club can put the site on a subdomain of its own domain (courtside.yourclub.org) when that domain is already on Cloudflare, though a domain of its own is still recommended. The install guide's new section 8 says what changes, every zone rule now matches the site's own hostname alone, and the Documentation, Costs and Platform read right on a subdomain.

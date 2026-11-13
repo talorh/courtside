@@ -31,7 +31,9 @@ describe("Request access, from the sign-in page", () => {
 		const res = await call(createTestDeps(), "/signin/access");
 		const page = await text(res);
 		expect(res.status).toBe(200);
-		for (const field of ['name="name"', 'name="team"', 'type="email" name="email"']) expect(page).toContain(field);
+		// Text boxes like the email's (the stylesheet styles text and email inputs), and no example team to read as typed.
+		for (const field of ['type="text" name="name"', 'type="text" name="team"', 'type="email" name="email"']) expect(page).toContain(field);
+		expect(page).not.toMatch(/name="team"[^>]*placeholder/);
 		expect(page).toContain('<div class="cf-turnstile" data-sitekey="0xSITEKEY"');
 		expect(res.headers.get("Content-Security-Policy")).toContain("https://challenges.cloudflare.com");
 	});

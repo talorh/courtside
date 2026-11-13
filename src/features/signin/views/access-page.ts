@@ -1,6 +1,5 @@
 // Request access: the form the sign-in page's "Can't get in?" opens (name, team, email, and the same robot check as the
 // code), and what it says once it's sent.
-import { CLUB } from "../../../club.ts";
 import { html } from "../../../shared/html.ts";
 import { entryPage } from "../../../ui/status-pages.ts";
 import type { AccessResult } from "../access-service.ts";
@@ -24,8 +23,8 @@ export function accessPage(p: AccessProps) {
 	return entryPage({ title: "Request access", scripts: ["/signin.js"] }, "Request access", html`${warn}${signIn}
 <p>Not on your team's list yet? Tell the site's admin who you are and which team you're with, and they'll add you.</p>
 <form method="post" action="/signin/access">
-<label>Your name<input name="name" value="${p.name}" maxlength="80" autocomplete="name" required></label>
-<label>Your team<input name="team" value="${p.team}" maxlength="80" placeholder="${CLUB.nickname} B12.1, say" required></label>
+<label>Your name<input type="text" name="name" value="${p.name}" maxlength="80" autocomplete="name" required></label>
+<label>Your team<input type="text" name="team" value="${p.team}" maxlength="80" required></label>
 <label>Email<input type="email" name="email" value="${p.email}" placeholder="example@email.com" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" required></label>
 ${robotCheck(p.siteKey)}<button class="btn primary big">Send request</button></form>
 <p class="small"><a href="/signin">Back to sign in</a></p>`);
