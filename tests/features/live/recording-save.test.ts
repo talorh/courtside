@@ -112,19 +112,38 @@ describe("saving what was recorded when the phone stopped", () => {
 		expect((await save(makeClient(deps, "alex@x.com"), gameId)).status).toBe(403);
 		expect(await statusOf(await save(makeClient(deps, "coach@x.com"), gameId))).toBe("saved");
 	});
-	it("a recording nothing has come from for 24 hours saves itself; one quiet for less doesn't, so a phone has a day to find Wi-Fi", async () => {
+	it("a recording nothing has come from for 12 hours saves itself; one quiet for less doesn't, so a phone has the night to find Wi-Fi", async () => {
 		const { deps, video, later, reached } = await filmed();
-		later(20 * 60);
-		reached([1, 2], 16 * 60);
+		later(10 * 60);
+		reached([1, 2], 8 * 60);
 		await runSync(deps);
 		expect((await video()).status).toBe("uploading");
-		// A day old now, but its last part came 21 hours ago.
-		later(5 * 60);
+		// 13 hours old now, but its last part came 11 hours ago.
+		later(3 * 60);
 		await runSync(deps);
 		expect((await video()).status).toBe("uploading");
-		later(4 * 60);
+		later(2 * 60);
 		await runSync(deps);
 		expect((await video()).status).toBe("processing");
+	});
+	it("after End game the phone has only the last parts to send: 30 quiet minutes and it saves itself", async () => {
+		const { deps, gameId, sam, video, later, reached, row } = await filmed();
+		later(60);
+		expect((await sam(`/api/live/${gameId}/end`, jsonBody({ recordedSeconds: 3600, cause: "tapped" }))).status).toBe(200);
+		reached([1, 2], 1);
+		later(10);
+		await runSync(deps);
+		expect((await video()).status).toBe("uploading");
+		// Half an hour since End game, but the last part arrived 22 minutes ago: still sending.
+		reached([1, 2, 3], 1);
+		later(21);
+		await runSync(deps);
+		expect((await video()).status).toBe("uploading");
+		later(12);
+		await runSync(deps);
+		expect(await video()).toMatchObject({ status: "processing", streamUid: "uid-1" });
+		expect(deps.originals.completed[0]?.parts.map((p) => p.partNumber)).toEqual([1, 2, 3]);
+		expect(await row()).toMatchObject({ status: "saved" });
 	});
 	it("once stopped, a stream Stream still calls connected isn't live: the game isn't shown live and its recording still saves itself", async () => {
 		const { deps, gameId, sam, video, later, reached } = await filmed();

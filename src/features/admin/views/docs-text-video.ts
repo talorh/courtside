@@ -47,8 +47,9 @@ the phone that was filming is offered it. It first makes sure the closed page ha
 two minutes, with a countdown.</li>
 <li><b>Save what was recorded</b> ends the game there, with whatever reached R2 (it waits, asking again every 20
 seconds, while a part arrived in the last two minutes or Stream still sees a phone). If nobody taps either, the
-5-minute job saves it by itself after 24 quiet hours, so a phone has a day to reach Wi-Fi or better signal. Each save's outcome is a
-${code("live_save")} line in Workers Logs.</li>
+5-minute job saves it by itself: half an hour after End game with nothing more from the phone (it had only its last
+parts to send), or, where the page died mid-game with no End game, after 12 quiet hours, so a phone has the night to
+reach Wi-Fi or better signal. Each save's outcome is a ${code("live_save")} line in Workers Logs.</li>
 <li><b>What the closed page hadn't sent is kept.</b> What a page has recorded but not yet sent sits on the phone
 (IndexedDB, ${code("golive-store.js")}). The reopened page sends it while the game streams again, and keeps it through
 a second close too (${code("golive-kept.js")}).</li>

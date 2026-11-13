@@ -41,7 +41,8 @@ says <b>Saved</b>. The game is in Watch games about 20 to 25 minutes later, and 
 <li><b>Weak signal?</b> The live picture reconnects by itself, and the saved video is unaffected. The video may be sent
 behind the game: if the page says minutes of the game are only on this phone, keep the page open after the final
 buzzer until it says <b>Saved</b> (on Wi-Fi if you can). Closed it before then? Those minutes are kept on the phone:
-open <b>Go live</b> again on that phone and tap <b>Save what was recorded</b>, and they're sent first.</li>
+open <b>Go live</b> again on that phone and tap <b>Save what was recorded</b>, and they're sent first. Closed the page
+just as it said Saving? It saves itself half an hour later, and the video turns up in Watch games as usual.</li>
 <li><b>Safari's bars back over the picture?</b> They can come back if the phone turns or locks. On an iPhone, tap the
 button at the left of the address and choose <b>Hide Toolbar</b> (on older iPhones it's under <b>aA</b>). The stream and
 the recording carry on either way.${SAFARI_BARS}</li>

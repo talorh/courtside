@@ -12,8 +12,11 @@ import { listSegments } from "./recording-segments-repository.ts";
 
 // While a phone films or saves, a part reaches R2 about every 25 seconds: a newer one means it's still sending.
 export const STILL_SENDING_SECONDS = 120;
-// The cron saves a recording by itself once it's this old and nothing has come from its phone for as long.
-const QUIET_HOURS = 24;
+// The cron saves a recording by itself: with no End game (the page died mid-game), once it's this old and nothing has
+// come from its phone for as long, so a phone has the night to find Wi-Fi; after End game the phone has only its last
+// parts to send, so this long with none means its page has gone.
+export const QUIET_HOURS = 12;
+export const ENDED_QUIET_MINUTES = 30;
 
 /**
  * A recording whose phone stopped part way (page closed, flat battery) becomes the game video from R2's own list of
@@ -85,14 +88,17 @@ async function decideSave(deps: TeamDeps, member: Member, gameId: number): Promi
 }
 
 /**
- * Cron, for an open stream whose phone isn't streaming: a recording this old that nothing has come from in as long
- * is saved by itself (flat battery, page closed for good). True if it was dealt with.
+ * Cron, for an open stream whose phone isn't streaming: a recording nothing has come from for long enough is saved by
+ * itself (flat battery, the page closed for good or closed as Saving appeared). Half an hour after End game; without
+ * one, 12 hours after Go live. True if it was dealt with.
  */
 export async function saveIfStopped(deps: TeamDeps, stream: LiveStream): Promise<boolean> {
 	const video = stream.recordingVideoId ? await getVideo(deps.db, deps.team.id, stream.recordingVideoId) : null;
-	const before = new Date(deps.now().getTime() - QUIET_HOURS * 3_600_000).toISOString();
-	if (video?.status !== "uploading" || video.createdAt > before) return false;
-	const result = await saveRecordedSoFar(deps, stream, video, QUIET_HOURS * 3600);
+	if (video?.status !== "uploading") return false;
+	const quietSeconds = stream.endRequestedAt ? ENDED_QUIET_MINUTES * 60 : QUIET_HOURS * 3600;
+	const since = Date.parse(stream.endRequestedAt ?? video.createdAt);
+	if (deps.now().getTime() - since < quietSeconds * 1000) return false;
+	const result = await saveRecordedSoFar(deps, stream, video, quietSeconds);
 	console.log(JSON.stringify({ event: "live_saved_by_itself", teamId: deps.team.id, liveStreamId: stream.id, videoId: video.id, result }));
 	return result !== "sending";
 }

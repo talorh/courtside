@@ -318,8 +318,9 @@ sequenceDiagram
  minutes after one has gone), or a part came in during the last 2 minutes, it answers wait (`streaming`, `sending`,
  with `retryIn`) and the page asks again every 20 seconds, saying so beside the button, until it's saved; every
  answer is a `live_save` log line. If nothing reached R2, the recording is deleted and the game is free. The
- 5-minute job does the same by itself once a recording is 24 hours old and has been quiet that long (a day for the
- phone to reach Wi-Fi or better signal and send the rest).
+ 5-minute job does the same by itself: half an hour after End game with no part since (the phone had only its last
+ parts to send, so its page has gone), or, with no End game, once a recording is 12 hours old and has been quiet that
+ long (the night for the phone to reach Wi-Fi or better signal and send the rest).
 - **Carrying on after the page closed** (`browser-live-continue.ts`, `recording-segments-*.ts`, `join-service.ts`,
  `public/golive-recover.js`, `golive-stream.js`; design: the design notes): the same
  phone, reopening Go live while the stream is open and not ended, is offered **Carry on streaming** (the panel sits
@@ -398,7 +399,7 @@ sequenceDiagram
  call to Stream. Not on `/`, `/games` (their Live now cards), `/live` or the live game's own page. A failed read
  leaves the bar off (`live_bar_failed`).
 - **The 5-minute job** (`live-sync.ts`, its first step): connected, once the recording has started and until Stop, logs
- `live_started` once and bumps `last_live_at`; a recording quiet for 24 hours is saved; one that was deleted closes its
+ `live_started` once and bumps `last_live_at`; a recording quiet for half an hour after End game, or 12 hours without one, is saved; one that was deleted closes its
  row; an input nobody used closes after a day.
 
 ### From an external app (RTMPS)

@@ -6,11 +6,6 @@ Outstanding tasks only (done items are deleted). Ideas for later are in `docs/sp
 
 Things a club other than the example one would hit:
 
-- [ ] The Friday check never runs. Cloudflare's cron day-of-week numbers start at 1 = Sunday, but `sixAmFridays` in
-      `cloudflare.config.ts` and `src/jobs/game-day.ts` write `getUTCDay()` (0 = Sunday), so each trigger fires a day
-      early (Thursday 6am in the club's time zone), and `gameDayDue` then refuses it as not a Friday. Write the weekday
-      as Cloudflare reads it (the UTC weekday plus one), keep `gameDayDue` as it is, and add a test that pins
-      Cloudflare's numbering. Update the Documentation's jobs section.
 - [ ] The schema hard-codes the league. `migrations/0001_schema.sql` gives `games.competition` and
       `playhq_fixtures.competition` a CHECK of `'VJBL'`, while `CLUB.league` is configurable and `COMPETITIONS`,
       the game form and the PlayHQ form all offer it: a club whose league isn't called VJBL can't add a game or a
@@ -58,10 +53,4 @@ Shared with the upstream site (the same code):
       thrown database error there skips `logJobProblems`. Wrap them like the rest.
 - [ ] End game with nothing recorded ends the stream anyway (`stopBrowserLive` with no `recordingVideoId` takes the
       length as infinite). Treat no recording as a cancel, not an end.
-- [ ] Save a stopped recording sooner. `saveIfStopped` (live/recording-save-service.ts) waits until the recording is
-      24 hours old and nothing has come from the phone for 24 hours, so a game whose page closed as Saving appeared (every
-      part in R2, the complete never sent) waits until the next evening unless the parent reopens Go live. Make it: End
-      game tapped (`end_requested_at`) and no part for 30 minutes, save; no End game, 12 quiet hours (was 24). The 2-minute
-      "still sending" rule and the segments path stay as they are. Test both rules, and that a phone still sending holds
-      it off. The Documentation's video section and Help's "If the page closes mid-game" say the new times.
 - [ ] `join/*.mjs` is outside `scripts/check-loc.mjs` and the comment rules in `scripts/check-rules.mjs`. Add it.
