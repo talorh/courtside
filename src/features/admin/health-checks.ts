@@ -24,8 +24,8 @@ interface HealthInputs {
 }
 
 const HOUR_MS = 3_600_000;
-/** A video processing this long since it started is stuck: a live game's starts with the stream, so a game of up to
- * two hours and Stream's half hour or so of processing fit inside it. */
+/** A video processing this long since its processing began (the upload finished, or the recording was saved) is stuck:
+ * Stream takes half an hour or so, so this is a wide margin. */
 export const STUCK_HOURS = 4;
 /** A night missed: the backup and clean-up run every night. */
 const STALE_HOURS = 36;

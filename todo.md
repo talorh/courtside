@@ -32,8 +32,6 @@ Things a club other than the example one would hit:
 
 Shared with the upstream site (the same code):
 
-- [ ] Insights counts a saved-late recording as stuck: the "processing over 4 hours" check uses `videos.created_at`,
-      which for a recording is the Go live tap. Count from when processing began.
 - [ ] The 5-minute run's closing checks can lose its errors: `syncAll` awaits the alert checks without a catch, so a
       thrown database error there skips `logJobProblems`. Wrap them like the rest.
 - [ ] End game with nothing recorded ends the stream anyway (`stopBrowserLive` with no `recordingVideoId` takes the

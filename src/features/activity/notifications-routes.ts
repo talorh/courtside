@@ -32,7 +32,7 @@ export function registerNotificationRoutes(router: Router): void {
 			...live.filter(wasStreamed).map((l) => ({ game: byId.get(l.gameId) ?? null, stage: "live" as const, since: l.createdAt })),
 			// A live stream's recording is listed as the live stream, not as an upload as well.
 			...uploading.filter((v) => !live.some((l) => l.recordingVideoId === v.id)).map((v) => ({ game: byId.get(v.gameId) ?? null, stage: "uploading" as const, since: v.createdAt })),
-			...processing.map((v) => ({ game: byId.get(v.gameId) ?? null, stage: "processing" as const, since: v.createdAt })),
+			...processing.map((v) => ({ game: byId.get(v.gameId) ?? null, stage: "processing" as const, since: v.processingAt ?? v.createdAt })),
 			...awaitingHd.map((v) => ({ game: byId.get(v.gameId) ?? null, stage: "hd" as const, since: v.createdAt })),
 		];
 		return htmlResponse(notificationsPage({ frame, inProgress, activity, games: byId, openRemovals: removals.length + clipRemovals.length + photoRemovals.length }));

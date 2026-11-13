@@ -19,17 +19,17 @@ export const insertUploadVideo = async (db: D1Database, v: NewUpload): Promise<n
 /** An external app's stream, recorded by Stream: the video's already there (no original in R2), so it starts at
  * processing. To batch with closing its live stream. Fails (UNIQUE) if the game already has a video. */
 export function insertLiveVideoWrite(db: D1Database, v: { teamId: string; gameId: number; streamUid: string; uploadedBy: number | null; deleteAfter: string; createdAt: string }) {
-	return db.prepare(`INSERT INTO videos (team_id, game_id, status, stream_uid, original_name, original_bytes, uploaded_by, delete_after, created_at)
-		VALUES (?, ?, 'processing', ?, 'Live stream', 0, ?, ?, ?)`).bind(v.teamId, v.gameId, v.streamUid, v.uploadedBy, v.deleteAfter, v.createdAt);
+	return db.prepare(`INSERT INTO videos (team_id, game_id, status, stream_uid, original_name, original_bytes, uploaded_by, delete_after, created_at, processing_at)
+		VALUES (?, ?, 'processing', ?, 'Live stream', 0, ?, ?, ?, ?)`).bind(v.teamId, v.gameId, v.streamUid, v.uploadedBy, v.deleteAfter, v.createdAt, v.createdAt);
 }
 
 async function update(db: D1Database, sql: string, params: unknown[]): Promise<void> {
 	assertChanged(await db.prepare(sql).bind(...params).run(), "video");
 }
 
-/** R2 multipart finished; Stream copy still to be requested (stream_uid NULL until setStreamUid). */
-export const markUploaded = (db: D1Database, teamId: string, id: number) =>
-	update(db, "UPDATE videos SET status = 'processing', r2_upload_id = NULL WHERE team_id = ? AND id = ? AND status = 'uploading' AND deleted_at IS NULL", [teamId, id]);
+/** R2 multipart finished, processing begins now; Stream copy still to be requested (stream_uid NULL until setStreamUid). */
+export const markUploaded = (db: D1Database, teamId: string, id: number, nowIso: string) =>
+	update(db, "UPDATE videos SET status = 'processing', processing_at = ?, r2_upload_id = NULL WHERE team_id = ? AND id = ? AND status = 'uploading' AND deleted_at IS NULL", [nowIso, teamId, id]);
 
 export const setStreamUid = (db: D1Database, teamId: string, id: number, uid: string) =>
 	update(db, "UPDATE videos SET stream_uid = ? WHERE team_id = ? AND id = ? AND stream_uid IS NULL", [uid, teamId, id]);

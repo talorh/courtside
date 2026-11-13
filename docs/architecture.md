@@ -812,7 +812,8 @@ section and keeps one More menu open at a time.
  is the site all right, in one answer: "All green" when it is, else how many urgent and warnings. Then what needs an
  admin (Insights' list without the alerts), and every check as a light, worst first: the ten alerts as they stand
  (the team budgets checked as it opens), and what it checks itself (the nightly backup and clean-up, older than 36
- hours; Stream answering; videos processing over 4 hours, as a live game's video starts with its stream; uploads failed
+ hours; Stream answering; videos processing over 4 hours since their processing began (`processing_at`, so a recording
+ the site saved late isn't stuck the moment it starts); uploads failed
  in 7 days; the Worker's errors in the last 24 hours, 1% warns and 5% is urgent; over 100 sign-ins refused in a day),
  then what's going on now (live streams open, uploads under way, devices signed in). Grey for what hasn't been checked
  yet (staging's jobs). Support's menu link counts tickets waiting and alerts that aren't ok.
@@ -953,7 +954,7 @@ erDiagram
 | playhq_fixtures | team_id, competition (VJBL/Tournament), playhq_team_id, url, name, auto_check, game_count, checked_at, last_error, no_video | Hard delete on Remove (its games stay) |
 | recording_segments | team_id, video_id, n (2 up), r2_key, r2_upload_id (NULL once complete), created_at, completed_at: a carried-on recording's later segments; videos also carry join_tries, join_tried_at, join_failed_at |
 | live_streams | team_id, game_id, live_input_uid, started_by, status (open/saved/cancelled), source (camera/app), last_live_at, end_requested_at, recording_video_id, cancel_reason, created_at, finished_at | One open per game (unique index); a test's row is reopened for the next Go live, with its input; closed rows are kept. started_by is whoever's phone is streaming (set when it starts; until then whoever opened Go live for the game) |
-| videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after, hd_ready_at, hd_failed_at | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
+| videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after, hd_ready_at, hd_failed_at, processing_at | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
 | downloads | team_id, video_id, member_id, kind (hd/original), created_at | Audit log, hard-deleted after 2 years |
 | media_downloads | team_id, member_id, kind (photo/clip), item_id (no foreign key: the log outlives the photo or clip), name (the file it came as), created_at | The download log's other half: every photo (each in a zip too) and clip downloaded, with who took it; kept two years, and its people with it when the team is deleted, as `downloads` keeps its own |
 | removal_requests | team_id, video_id, member_id, reason, status (open/video_deleted/kept), note, resolved_by, resolved_at | Kept |

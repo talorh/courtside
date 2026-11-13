@@ -62,6 +62,10 @@ describe("Insights' Alerts section", () => {
 		await seedVideo(deps, { gameId: g1, status: "failed", createdAt: "2026-11-13T00:00:00.000Z" });
 		// Processing since five hours ago (a live game's video starts with the stream, so 4 hours is the limit).
 		await seedVideo(deps, { gameId: g2, status: "processing", createdAt: "2026-11-14T19:00:00.000Z" });
+		// A recording the site saved late: Go live ten hours ago, processing only since an hour ago, so not stuck.
+		const g3 = await seedGame(deps, { startsAt: "2026-11-14T10:00" });
+		const late = await seedVideo(deps, { gameId: g3, status: "processing", createdAt: "2026-11-14T14:00:00.000Z" });
+		await deps.db.prepare("UPDATE videos SET processing_at = '2026-11-14T23:00:00.000Z' WHERE team_id = ? AND id = ?").bind(deps.team.id, late).run();
 		const page = await health((deps.originals.puts.clear(), deps));
 		expect(lightOf(page, "Nightly backup")).toBe("warn");
 		expect(page).toContain("1 video processing for over 4 hours");

@@ -18,12 +18,12 @@ describe("videos repository", () => {
 		const gameId = await seedGame(deps);
 		const id = await insertUploadVideo(db, upload(teamId, gameId));
 		expect(await getVideo(db, teamId, id)).toMatchObject({ status: "uploading", r2UploadId: "up-1" });
-		await markUploaded(db, teamId, id);
+		await markUploaded(db, teamId, id, "2026-10-15T00:00:00.000Z");
 		await setStreamUid(db, teamId, id, "uid-1");
 		expect((await listVideosByStatus(db, teamId, "processing")).map((v) => v.id)).toEqual([id]);
 		await markReady(db, teamId, id, 2830);
 		expect(await getActiveVideoForGame(db, teamId, gameId)).toMatchObject({ id, status: "ready", durationSeconds: 2830, r2UploadId: null });
-		await expect(markUploaded(db, teamId, id)).rejects.toThrow(/video/);
+		await expect(markUploaded(db, teamId, id, "2026-10-15T00:00:00.000Z")).rejects.toThrow(/video/);
 	});
 
 	it("allows one video per game; failed and deleted ones don't count", async () => {

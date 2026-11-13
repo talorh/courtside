@@ -78,7 +78,7 @@ export async function finishSegments(deps: TeamDeps, video: Video, current: { n:
 		await deleteSegmentRows(deps.db, deps.team.id, video.id);
 		return finishUpload(deps, { ...video, r2Key: first.r2Key, r2UploadId: null }, [], video.uploadedBy, { completed: true });
 	}
-	await markUploaded(deps.db, deps.team.id, video.id);
+	await markUploaded(deps.db, deps.team.id, video.id, deps.now().toISOString());
 	await record(deps, { kind: "upload_finished", gameId: video.gameId, memberId: video.uploadedBy });
 	await closeBrowserLive(deps, video);
 	return "joining";

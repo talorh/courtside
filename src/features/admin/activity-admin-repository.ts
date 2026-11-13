@@ -36,8 +36,9 @@ export async function listActivityLog(db: D1Database, range: LogRange, limit: nu
 }
 
 // As Notifications counts it: a live stream once Go live started its recording (whose upload is the stream, not an upload
-// too) or once an external app's has been seen arriving, uploads, processing, and ready videos whose HD download is still being made.
-const VIDEOS = (stage: string, where: string) => `SELECT '${stage}' AS stage, v.team_id, v.created_at AS since, ${GAME} FROM videos v JOIN teams t ON t.id = v.team_id
+// too) or once an external app's has been seen arriving, uploads, processing (since it began, not since Go live was
+// tapped), and ready videos whose HD download is still being made.
+const VIDEOS = (stage: string, where: string) => `SELECT '${stage}' AS stage, v.team_id, ${stage === "processing" ? "COALESCE(v.processing_at, v.created_at)" : "v.created_at"} AS since, ${GAME} FROM videos v JOIN teams t ON t.id = v.team_id
 	LEFT JOIN games g ON g.id = v.game_id AND g.team_id = v.team_id WHERE t.status <> 'deleted' AND (?1 IS NULL OR v.team_id = ?1) AND v.deleted_at IS NULL AND ${where}`;
 
 export async function listSiteInProgress(db: D1Database, teamId: string | null): Promise<SiteInProgress[]> {

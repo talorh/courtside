@@ -38,7 +38,7 @@ export async function finishUpload(deps: TeamDeps, upload: Video, parts: Uploade
 			if (!(await deps.originals.exists(r2Key))) throw err;
 		});
 	}
-	await markUploaded(deps.db, deps.team.id, upload.id);
+	await markUploaded(deps.db, deps.team.id, upload.id, deps.now().toISOString());
 	await record(deps, { kind: "upload_finished", gameId: upload.gameId, memberId });
 	await closeBrowserLive(deps, upload);
 	try {
