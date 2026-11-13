@@ -882,7 +882,8 @@ section and keeps one More menu open at a time.
  filters show.
 - **Problems** (`problem-log.ts`, `problems-repository.ts`, migration 0062): anything that failed, a line each,
  written beside the Worker log line where it happens: a request answered 5xx (`app/request-errors.ts`, with who and
- their device), each job failure (`jobs/job-problems.ts`, under its team), an email that didn't send, an alert that
+ their device), each job failure (`jobs/job-problems.ts`, under its team; the 5-minute run's closing checks are
+ wrapped like its steps, so a check that fails never loses the others), an email that didn't send, an alert that
  couldn't be updated, Stream, PlayHQ, Images, Cloudflare, Frankfurter or Workers AI not answering, and what the phones
  report: Go live's notes marked as problems (`p: true`: the camera or sound lost, the connection dropping, Go live
  refused, Resume camera failing) and `/api/problems` from the upload and photo pages (`public/problems.js`; not for a

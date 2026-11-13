@@ -3,6 +3,7 @@ import { setAlert } from "../../src/features/admin/alerts-service.ts";
 import { runDaily } from "../../src/jobs/daily.ts";
 import { runSync } from "../../src/jobs/sync-videos.ts";
 import { createTestDeps, type TestDeps } from "../helpers/fakes.ts";
+import { seedGame, seedVideo } from "../helpers/seed.ts";
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -17,6 +18,22 @@ describe("the jobs feed the admins' alerts", () => {
 		expect(await alerts(deps)).toEqual({ sync_job: "ok/0", stream_storage: "ok/0", site_errors: "ok/0", email: "ok/0", email_allowance: "ok/0" });
 		const db = { prepare: (sql: string) => { if (sql.includes("FROM teams WHERE status IN")) throw new Error("D1 hiccup"); return deps.db.prepare(sql); }, batch: deps.db.batch.bind(deps.db) } as unknown as D1Database;
 		await expect(runSync({ ...deps, db })).rejects.toThrow("D1 hiccup");
+		expect((await alerts(deps)).sync_job).toBe("ok/1");
+	});
+
+	it("a closing check that fails is one more failure of the run: the teams' failures still reach the Log's Problems", async () => {
+		const deps = createTestDeps();
+		vi.spyOn(console, "log").mockImplementation(() => {});
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		await seedVideo(deps, { gameId: await seedGame(deps), status: "processing", streamUid: "u1" });
+		deps.stream.broken.add("u1");
+		const db = { prepare: (sql: string) => { if (sql.includes("FROM support_messages WHERE email_to IS NOT NULL")) throw new Error("D1 hiccup"); return deps.db.prepare(sql); }, batch: deps.db.batch.bind(deps.db) } as unknown as D1Database;
+		await expect(runSync({ ...deps, db })).rejects.toBeInstanceOf(AggregateError);
+		const problems = (await deps.db.prepare("SELECT team_id, what, detail FROM problems WHERE kind = 'job_failed' ORDER BY id").all()).results;
+		expect(problems).toEqual([
+			{ team_id: deps.team.id, what: "The 5-minute job", detail: expect.stringContaining("Stream GET u1 failed") },
+			{ team_id: null, what: "The 5-minute job", detail: "D1 hiccup" },
+		]);
 		expect((await alerts(deps)).sync_job).toBe("ok/1");
 	});
 

@@ -40,7 +40,8 @@ the week after tip-off (one read for every team: no video of any kind, a deleted
 that was used; a Go live only opened is closed; one a team manager set back to Video waits a week from then, and a
 week's or a PlayHQ fixture's Video switch leaves the site's No video alone; a line in the Log by the site), deletes a slice of any closed team whose date has passed (media first, 20
 calls a run, then the rows), sends any ticket email that didn't go (one failing again is logged, never failing the
-run), records that the run happened, and runs the checks below. Steps share one budget of 200 calls to outside
+run), records that the run happened, and runs the checks below (a check that fails counts as one more failure of the run,
+and every failure of the run reaches the Log's Problems). Steps share one budget of 200 calls to outside
 services a run; work past it isn't a failure, it's counted as deferred and the next run picks it up.</p>
 ${table(["Check, every run", "Warns", "Urgent", "Clears"], [
 		["Stream's minutes left (at most hourly)", "Under 400 minutes", "Under 100", "450 or more"],

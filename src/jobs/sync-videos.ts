@@ -137,12 +137,10 @@ async function syncAll(deps: AppDeps): Promise<SyncSummary> {
 	// Support tickets' emails that didn't go, every team's and the site's own. One that
 	// fails again is logged, and the email alert raises it: only failing to look for them fails the run.
 	await retryTicketEmails(deps).catch((err: unknown) => void errors.push(err));
-	await checkStreamStorage(deps);
-	// Basic monitoring: the site failing, and emails not going.
-	await checkSiteErrors(deps);
-	await checkEmails(deps);
-	await checkEmailAllowance(deps);
-	await checkJobRan(deps, "daily_job");
+	// Basic monitoring: Stream's minutes, the site failing, emails not going, and the 3am job running. A check that fails
+	// (a database hiccup) is one more failure of the run, never one that loses the others before they reach the Log.
+	const checks = [checkStreamStorage, checkSiteErrors, checkEmails, checkEmailAllowance, (d: AppDeps) => checkJobRan(d, "daily_job")];
+	for (const check of checks) await check(deps).catch((err: unknown) => void errors.push(err));
 	console.log(JSON.stringify({ event: "sync_videos", teams: teams.length, deletedTeams: deleted.length, busy: picked.busy.length, turn: picked.turn.length, ...summary, teamsDeleted: deleting.deleted, noVideoSet: unfilmed.noVideoSet, deferred, errorCount: errors.length }));
 	await logJobProblems(deps, "sync", runs, errors);
 	if (errors.length > 0) throw new AggregateError(errors, `sync_videos: ${errors.length} record(s) failed`);
