@@ -51,6 +51,13 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 - Runtime dependencies are `zod`, `jose` and `aws4fetch` only (`package.json`). A new one needs the site owner's yes.
  Versions are release numbers (a range in `package.json`, the exact one in `package-lock.json`, which `npm ci`
  installs), never a dist-tag like `latest`.
+- **Software ages out, so every plan checks.** When planning any change, find out whether anything the site uses is
+ deprecated or near its end of life: Node (`.node-version`), the npm packages (`npm install`'s deprecation notices,
+ `npm outdated`, an `engines` range that leaves our Node behind), Playwright's image, the joiner's base image
+ (`join/Dockerfile`), the Workers compatibility date, the Workers AI model, and any Cloudflare API or `cf` command
+ marked deprecated. Say so in the plan, with the date its support ends and the update recommended, so it's surfaced
+ and goes on the todo with the site owner's yes, never found at the deadline (Node 22, say, whose support ends on
+ 30 April 2027).
 
 ## 3. Requests, routes and responses
 
@@ -281,7 +288,8 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 ## 9. Security and privacy
 
 - Every path is behind the site's own sign-in, static files included (`runWorkerFirst`); the only open paths are
- the sign-in's own pages and files (`features/signin/`, `app/static-files.ts`) and the launch spinner. Identity comes
+ the sign-in's own pages and files (`features/signin/`, Request access included; `app/static-files.ts`) and the launch
+ spinner. Identity comes
  only from the session cookie's row (`auth/session.ts`: the token's SHA-256 in `sessions`); the local dev email
  (`DEV_AUTH_EMAIL`) works only on localhost. Codes go only to an address on a team's list or an admin's, are hashed,
  last 10 minutes and five tries, and are limited per address, per IP address and site-wide
