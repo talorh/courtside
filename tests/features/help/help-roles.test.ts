@@ -44,7 +44,7 @@ describe("Help for each person (only the help that's relevant to them)", () => {
 		const coach = help("coach");
 		for (const words of ["Recording and uploading", "Live streaming", "Go live", "Upload video", "On video duty"]) expect(coach, words).toContain(words);
 		expect(section(coach, "notes")).toContain("<summary>Coaches&#39; notes</summary>");
-		expect(section(coach, "notes")).toContain("Only coaches see them.");
+		expect(section(coach, "notes")).toContain("Only coaches see them: not team managers, and not a site admin trying\nthe site as a coach.");
 	});
 
 	it("gives everyone the same child safety answer: the standards body's link, and the club's handbook and website", () => {

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { form, makeClient, MANAGER } from "../../helpers/app.ts";
 import { B12_1, createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 import { addMember, addTeam, G14_5 } from "../../helpers/two-teams.ts";
+import { insertNote } from "../../../src/features/notes/notes-repository.ts";
+import { seedGame } from "../../helpers/seed.ts";
 
 const B = B12_1.id;
 const G = G14_5.id;
@@ -127,5 +129,25 @@ describe("View as (an admin trying a team as another role)", () => {
 	it("refuses a role that isn't one", async () => {
 		const deps = await setup();
 		expect((await makeClient(deps)("/view-as", form({ role: "admin" }))).status).toBe(400);
+	});
+});
+
+describe("View as coach and the coaches' notes", () => {
+	it("leaves the notes out: they're the coaches' own, so the page says so and the notes routes refuse", async () => {
+		const deps = await setup();
+		const gameId = await seedGame(deps);
+		await deps.db.prepare("INSERT INTO members (team_id, email, role, name) VALUES (?, 'coach@x.com', 'coach', 'Coach Pop')").bind(B).run();
+		const coach = (await deps.db.prepare("SELECT id FROM members WHERE team_id = ? AND email = 'coach@x.com'").bind(B).first<{ id: number }>())!;
+		await insertNote(deps.db, B, { gameId, atSeconds: 222, body: "Press after every made basket", createdBy: coach.id });
+		const viewing = makeClient(deps, { viewAs: `${B}:coach` });
+		const page = await (await viewing(`/games/${gameId}`)).text();
+		expect(page).not.toContain("Press after every made basket");
+		expect(page).not.toContain('id="notes-title"');
+		expect(page).toContain("Coaches' notes are the coaches' own, so View as leaves them out.");
+		expect((await viewing(`/games/${gameId}/notes`, form({ at: "", body: "A note" }))).status).toBe(403);
+		expect((await viewing(`/games/${gameId}/notes.xlsx`)).status).toBe(403);
+		// The real coach still has them.
+		const own = await (await makeClient(deps, { email: "coach@x.com" })(`/games/${gameId}`)).text();
+		expect(own).toContain("Press after every made basket");
 	});
 });

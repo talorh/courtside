@@ -7,6 +7,7 @@ import { XLSX_TYPE, xlsxFile } from "../../shared/xlsx.ts";
 import { parseClock } from "../clips/clips-service.ts";
 import { downloadBaseName } from "../games/game-format.ts";
 import { requireGame } from "../games/games-service.ts";
+import type { Role } from "../../auth/permissions.ts";
 import type { Member } from "../members/members-repository.ts";
 import { notesSheet } from "./notes-export.ts";
 import { getNoteGameId, insertNote, listNotes, softDeleteNote } from "./notes-repository.ts";
@@ -16,16 +17,17 @@ const noteSchema = z.object({
 	body: z.string().trim().min(1, "Write the note first").max(1000),
 });
 
-/** Coaches' notes are for coaches only: team managers outrank coaches but must not see them. */
-export const isCoach = (member: Member) => member.role === "coach";
+/** Coaches' notes are for coaches only: team managers outrank coaches but must not see them, and nor does an admin
+ * trying the team as a coach (View as). */
+export const isCoach = (member: Member, viewAs: Role | null) => member.role === "coach" && viewAs === null;
 
-function requireCoach(member: Member): void {
-	if (!isCoach(member)) throw forbidden("Coaches' notes are only for coaches.");
+function requireCoach(member: Member, viewAs: Role | null): void {
+	if (!isCoach(member, viewAs)) throw forbidden("Coaches' notes are only for coaches.");
 }
 
 export function registerNoteRoutes(router: Router): void {
-	router.post("/games/:id/notes", "coach", async ({ req, params, member, deps }) => {
-		requireCoach(member);
+	router.post("/games/:id/notes", "coach", async ({ req, params, member, viewAs, deps }) => {
+		requireCoach(member, viewAs);
 		const { db } = deps;
 		const game = await requireGame(db, deps.team.id, idParam(params.id, "Game"));
 		const form = await parseForm(req, noteSchema);
@@ -35,15 +37,15 @@ export function registerNoteRoutes(router: Router): void {
 	});
 
 	// The game's notes for Excel, for coaches only, as the notes are.
-	router.get("/games/:id/notes.xlsx", "coach", async ({ params, member, deps }) => {
-		requireCoach(member);
+	router.get("/games/:id/notes.xlsx", "coach", async ({ params, member, viewAs, deps }) => {
+		requireCoach(member, viewAs);
 		const game = await requireGame(deps.db, deps.team.id, idParam(params.id, "Game"));
 		const sheet = notesSheet(deps.team, game, await listNotes(deps.db, deps.team.id, game.id), deps.now());
 		return fileResponse(xlsxFile(sheet), XLSX_TYPE, `${downloadBaseName(deps.team, game)}-coaches-notes.xlsx`);
 	});
 
-	router.post("/notes/:id/delete", "coach", async ({ params, member, deps }) => {
-		requireCoach(member);
+	router.post("/notes/:id/delete", "coach", async ({ params, member, viewAs, deps }) => {
+		requireCoach(member, viewAs);
 		const id = idParam(params.id, "Note");
 		const gameId = await getNoteGameId(deps.db, deps.team.id, id);
 		if (gameId === null) throw notFound("Note");

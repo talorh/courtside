@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { htmlResponse, redirect } from "../../app/respond.ts";
+import { html } from "../../shared/html.ts";
 import type { Router } from "../../app/router.ts";
 import { localTime } from "../../shared/time.ts";
 import { doneMessage, idParam, parseForm } from "../../shared/validation.ts";
@@ -28,7 +29,7 @@ import { starredBy } from "../favourites/favourites-repository.ts";
 const moveSchema = z.object({ gameId: z.coerce.number().int().positive() });
 
 export function registerWatchRoutes(router: Router): void {
-	router.get("/games/:id", "watcher", async ({ url, params, frame, member, deps }) => {
+	router.get("/games/:id", "watcher", async ({ url, params, frame, member, viewAs, deps }) => {
 		const { db, config } = deps;
 		const { game, video } = await loadWatch(db, deps.team.id, idParam(params.id, "Game"));
 		const uid = video?.status === "ready" ? video.streamUid : null;
@@ -61,7 +62,8 @@ export function registerWatchRoutes(router: Router): void {
 		const liveNote = last?.status === "cancelled" && last.cancelReason ? last.cancelReason : null;
 		// A closed season: nothing new on the page (notes, scores, moving the video); the banner says why.
 		const open_ = deps.team.status === "active";
-		const coachNotes = isCoach(member) && open_ ? notesPanel(game.id, await listNotes(db, deps.team.id, game.id), view.playerSrc !== null) : "";
+		const coachNotes = isCoach(member, viewAs) && open_ ? notesPanel(game.id, await listNotes(db, deps.team.id, game.id), view.playerSrc !== null)
+			: member.role === "coach" && viewAs ? html`<p class="small">Coaches' notes are the coaches' own, so View as leaves them out.</p>` : "";
 		const back = `/games/${game.id}${view.currentClip ? `?clip=${view.currentClip.id}` : ""}`;
 		const result = { score, inProgress: phase === "in_progress", hidden: member.hideScores, back };
 		const scoreForm = member.role === "manager" && phase !== "upcoming" && open_ ? scorePanel(game, score, member.hideScores) : "";

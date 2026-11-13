@@ -32,8 +32,6 @@ Things a club other than the example one would hit:
 
 Shared with the upstream site (the same code):
 
-- [ ] Coaches' notes show to an admin using View as coach, though they're "for coaches only". Decide whether that's
-      wanted; document it, or leave the notes out under View as.
 - [ ] PlayHQ adopts hand-added games by date alone (`bringUpToDate`): two games added by hand on one day are paired
       with PlayHQ's in list order. Match on the time too when both have one.
 - [ ] Insights counts a saved-late recording as stuck: the "processing over 4 hours" check uses `videos.created_at`,

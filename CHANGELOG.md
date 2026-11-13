@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 14 Nov 2026
 
+- [Fix] **Admin:** Fixed an issue where View as coach showed the team's coaches' notes. The notes are the coaches' own, so View as leaves them out and says so on the game page.
 - [Fix] **Sign in:** Fixed an issue where something typed into the sign-in page's email field that wasn't an address was kept as typed in the sign-in records the admin Log shows. Anything that isn't an address is now stored masked, as the logs already did.
 - [Fix] **Fixture:** Fixed an issue where Delete on a game that has a video was refused as it should be, but had already closed a Go live stream set up for the game. The game's video is checked first now, and the stream is only closed when the game is deleted.
 - [Fix] **Platform:** Fixed an issue where a video whose HD download Stream couldn't make failed the 5-minute job every run from then on, keeping the job alert raised. The failure is now noted on the video and logged once, Stream is asked once more, and the job moves on.

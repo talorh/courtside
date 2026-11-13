@@ -4,7 +4,8 @@ import { shot } from "./faq-mock.ts";
 
 /** A coach's own question (each person's own Help): the private notes on a game (notes-panel.ts). */
 export const faqCoachNotes = () => faqItem("notes", "Coaches' notes", html`<p>Each game's page has <b>Coaches' notes</b>, on a
-clipboard below the video (beside it on a computer). Only coaches see them.</p>
+clipboard below the video (beside it on a computer). Only coaches see them: not team managers, and not a site admin trying
+the site as a coach.</p>
 <ol class="steps">
 <li>Open the game in <b>Watch games</b>.</li>
 <li>To tie a note to a moment, play the video there and tap <b>Mark time</b> (or type the time). Leave it empty for the

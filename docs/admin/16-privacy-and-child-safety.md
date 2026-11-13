@@ -14,7 +14,7 @@ The site holds footage of children, so privacy isn't a setting: it's how the sit
 | Nothing is kept for keeps | Everything a team puts up is deleted at the end of 31 December of the year its season ends; the download log is the one record kept longer, two years. |
 | No real names outside a team | Help, the documentation and tests use made-up names after NBA players; counts on Insights, never anyone's email. |
 | Nothing about where a photo was taken | Photos are made smaller on the phone, which drops the location; the Worker strips any metadata left. |
-| Admins see counts, not people | Insights and Costs show figures; the Log shows who changed what, sign-in attempts, which device each line came from ("iPhone, Safari", nothing finer) and what failed for whom, for a month, because that's what safety and support need. |
+| Admins see counts, not people | Insights and Costs show figures; the Log shows who changed what, sign-in attempts, which device each line came from ("iPhone, Safari", nothing finer) and what failed for whom, for a month, because that's what safety and support need. Coaches' notes are the coaches' own: View as coach leaves them out, and the notes' pages refuse. |
 
 ### What the site can't do
 

@@ -17,7 +17,7 @@ Manage team is where a team manager runs the team's people. Who's on its list de
 - **Removing someone** works at once: every request checks the list, so their next page no longer lets them into this team.
 - **Waiting to sign in** appears at the top while anyone on the team is held by the sign-in's limits (too many codes, or too many wrong ones), with when they can ask again and **Let them sign in**, which ends the wait now.
 - **Who's using the site** counts the people by role and by when they last opened the site (in the last 7 days, 8 to 30 days ago, longer, or not yet), from each person's Last seen, written at most hourly. The list sorts by name, role or Last seen.
-- **Site admins** open a team through a hidden membership that Manage team doesn't list and a team manager can't change. **View as** lets an admin try the team as Watch only, Watch and film or a coach for that browser session; what they do meanwhile is recorded as their own.
+- **Site admins** open a team through a hidden membership that Manage team doesn't list and a team manager can't change. **View as** lets an admin try the team as Watch only, Watch and film or a coach for that browser session; what they do meanwhile is recorded as their own. Coaches' notes stay out of sight under View as coach: they're the coaches' own.
 
 ### Players
 

@@ -32,7 +32,8 @@ to 30 days ago, longer, or not yet), from each person's Last seen, written at mo
 or Last seen.</li>
 <li><b>Site admins</b> open a team through a hidden membership that Manage team doesn't list and a team manager can't
 change. <b>View as</b> lets an admin try the team as Watch only, Watch and film or a coach for that browser session;
-what they do meanwhile is recorded as their own.</li></ul>
+what they do meanwhile is recorded as their own. Coaches' notes stay out of sight under View as coach: they're the
+coaches' own.</li></ul>
 <h3>Players</h3>
 <p>The squad: a name (a first name or a full name, as the team manager likes, in letters of any language with spaces,
 hyphens and apostrophes) and a jersey number, at most 10 players, each number one current player's. Players never sign
