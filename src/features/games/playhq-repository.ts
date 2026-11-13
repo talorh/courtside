@@ -1,5 +1,6 @@
 import { assertChanged } from "../../shared/d1.ts";
 import { type GameInput, phaseFor } from "./games-repository.ts";
+import type { HandGame } from "./playhq-adopt.ts";
 
 /** The league (club.ts) or a tournament: the kinds of game PlayHQ carries. */
 export type PlayhqCompetition = string;
@@ -114,13 +115,13 @@ export function reviveGameWrite(db: D1Database, teamId: string, id: number) {
 		AND NOT EXISTS (SELECT 1 FROM videos v WHERE v.team_id = games.team_id AND v.game_id = games.id AND v.deleted_at IS NULL)`).bind(teamId, id);
 }
 
-/** Games added by hand on these days for that competition, not linked to PlayHQ yet, oldest first. */
-export async function unlinkedGamesOn(db: D1Database, teamId: string, competition: PlayhqCompetition, dates: string[]): Promise<Array<{ id: number; date: string }>> {
+/** Games added by hand on these days for that competition, not linked to PlayHQ yet, with their times, oldest first. */
+export async function unlinkedGamesOn(db: D1Database, teamId: string, competition: PlayhqCompetition, dates: string[]): Promise<HandGame[]> {
 	const { results } = await db
-		.prepare(`SELECT id, substr(starts_at, 1, 10) AS date FROM games WHERE team_id = ? AND competition = ? AND playhq_game_id IS NULL
-			AND deleted_at IS NULL AND substr(starts_at, 1, 10) IN (SELECT value FROM json_each(?)) ORDER BY id`)
+		.prepare(`SELECT id, substr(starts_at, 1, 10) AS date, substr(starts_at, 12, 5) AS time FROM games WHERE team_id = ? AND competition = ?
+			AND playhq_game_id IS NULL AND deleted_at IS NULL AND substr(starts_at, 1, 10) IN (SELECT value FROM json_each(?)) ORDER BY id`)
 		.bind(teamId, competition, JSON.stringify(dates))
-		.all<{ id: number; date: string }>();
+		.all<HandGame>();
 	return results;
 }
 

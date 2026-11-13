@@ -32,8 +32,6 @@ Things a club other than the example one would hit:
 
 Shared with the upstream site (the same code):
 
-- [ ] PlayHQ adopts hand-added games by date alone (`bringUpToDate`): two games added by hand on one day are paired
-      with PlayHQ's in list order. Match on the time too when both have one.
 - [ ] Insights counts a saved-late recording as stuck: the "processing over 4 hours" check uses `videos.created_at`,
       which for a recording is the Go live tap. Count from when processing began.
 - [ ] The 5-minute run's closing checks can lose its errors: `syncAll` awaits the alert checks without a catch, so a

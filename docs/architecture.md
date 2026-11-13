@@ -546,7 +546,8 @@ the videos, games and people only that log named.
 7. **PlayHQ fixtures.** Each added fixture still being checked is read again once its last check is 8 hours old
  (`playhq-service.ts`). Each league game's phase of the season comes from its grade's name in the feed (the game's,
  else its round's, else the team's). Games are matched by PlayHQ's game id (deleted games too, so a deleted game stays deleted), or
- else to a hand-added game on the same day and competition. New games are added, changed ones updated, and ones
+ else to a hand-added game on the same day and competition, the one at the same time first, so two games on one day (a
+ tournament) each take their own (`playhq-adopt.ts`). New games are added, changed ones updated, and ones
  PlayHQ dropped get `playhq_gone_at` (never deleted). When a fixture is checked, and stops, is in one place
  (`playhq-checks.ts`), for the checks and Fixture's words alike. A tournament is read every hour from its first
  game's day to the end of its fourth (its last game's, if later), as it runs Friday to Monday and its finals appear

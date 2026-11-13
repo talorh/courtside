@@ -98,6 +98,31 @@ describe("Add fixture", () => {
 });
 
 
+describe("Two games added by hand on one day (a tournament)", () => {
+	it("each takes the PlayHQ game at its own time, whatever order they were added in; a lone game's moved time still pairs it", async () => {
+		const deps = createTestDeps();
+		const client = makeClient(deps);
+		const add = (date: string, hour: string, minute: string, opponent: string) =>
+			client("/fixture", form({ date, hour, minute, period: "pm", competition: "Tournament", roundLabel: "", opponent, venue: "", video: "live" }));
+		await add("2026-11-21", "2", "30", "Second by hand");
+		await add("2026-11-21", "12", "0", "First by hand");
+		await add("2026-11-22", "9", "0", "Sunday by hand");
+		const t = team();
+		t.games = [
+			{ id: "t1", round: "Round 1", date: "2026-11-21", time: "12:00", opponent: "Knox U12 Boys 2", venue: "Knox" },
+			{ id: "t2", round: "Round 2", date: "2026-11-21", time: "14:30", opponent: "Eltham U12 Boys 1", venue: "Knox" },
+			{ id: "t3", round: "Semi Final", date: "2026-11-22", time: "10:00", opponent: "Casey U12 Boys 1", venue: "Knox" },
+		];
+		deps.playhq.teams.set("8fab8b8c", t);
+		expect((await client("/fixture/playhq", form({ url: LINK, competition: "Tournament" }))).status).toBe(303);
+		// In the order they were added by hand: each kept its own row, with the PlayHQ game at its time.
+		const rows = await deps.db.prepare("SELECT starts_at, opponent, playhq_game_id FROM games WHERE team_id = ? ORDER BY id").bind(deps.team.id).all();
+		expect(rows.results.map((r) => [r.starts_at, r.opponent, r.playhq_game_id])).toEqual([
+			["2026-11-21T14:30", "Eltham 1", "t2"], ["2026-11-21T12:00", "Knox 2", "t1"], ["2026-11-22T10:00", "Casey 1", "t3"],
+		]);
+	});
+});
+
 describe("The season's phases", () => {
 	it("reads each VJBL game's phase of the season from its PlayHQ grade, and the Fixture shows it", async () => {
 		const t = team();

@@ -47,8 +47,9 @@ ${code("discoverTeamFixture")}, sent with Origin: https://www.playhq.com and a $
 its grade's name (the game's own grade, else its round's, else the team's), the opponent shortened ("Hillcrest U12
 Boys 3" becomes "Hillcrest 3"), and the venue with its court. A game PlayHQ lists twice comes in once.</li>
 <li><b>Adding it</b> saves the fixture and all its games at once, with no check page: they're PlayHQ's own. A game
-added by hand on the same day in the same competition is taken over, not doubled, and games of this fixture deleted
-here earlier come back if they have no video. The team's name on PlayHQ is kept as the fixture's name.</li>
+added by hand on the same day in the same competition is taken over, not doubled (the one at the same time first, so a
+tournament's two games on one day each take their own), and games of this fixture deleted here earlier come back if
+they have no video. The team's name on PlayHQ is kept as the fixture's name.</li>
 <li><b>No video for these games</b>, ticked when adding (a tournament that doesn't allow filming), marks every game
 the fixture brings in, now or later, No video. Each fixture's No video and Allow video switch changes its games, and
 the ones it adds later, either way.</li></ul>

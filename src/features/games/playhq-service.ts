@@ -12,6 +12,7 @@ import {
 	addPlayhqFixture, gamesForPlayhqIds, goneFromPlayhqWrite, listPlayhqFixturesDue, type PlayhqCompetition, type PlayhqFixture,
 	playhqCheckWrite, playhqGameWrite, removePlayhqFixture, reviveGameWrite, unlinkedGamesOn,
 } from "./playhq-repository.ts";
+import { adoptByHand } from "./playhq-adopt.ts";
 import { CHECK_EVERY_HOURS, stillChecked, TOURNAMENT_EVERY_HOURS } from "./playhq-checks.ts";
 import { setPlayhqFixtureVideo } from "./playhq-video-repository.ts";
 import { phaseOfGrade } from "./season-phase.ts";
@@ -63,10 +64,10 @@ async function bringUpToDate(deps: TeamDeps, fixture: PlayhqFixture, team: Playh
 	const ids = team.games.map((g) => g.id);
 	const linked = await gamesForPlayhqIds(db, deps.team.id, ids);
 	const byHand = await unlinkedGamesOn(db, deps.team.id, fixture.competition, team.games.map((g) => g.date));
+	const adopted = adoptByHand(team.games.filter((g) => !linked.has(g.id)), byHand);
 	const revived = revive ? [...linked.values()].filter((l) => l.deleted).map((l) => reviveGameWrite(db, deps.team.id, l.id)) : [];
 	const writes = [...revived, ...team.games.filter((g) => revive || !linked.get(g.id)?.deleted).map((g) => {
-		const handIndex = linked.has(g.id) ? -1 : byHand.findIndex((h) => h.date === g.date);
-		const gameId = linked.get(g.id)?.id ?? (handIndex >= 0 ? byHand.splice(handIndex, 1)[0]!.id : null);
+		const gameId = linked.get(g.id)?.id ?? adopted.get(g.id) ?? null;
 		return playhqGameWrite(db, deps.team.id, fixture.id, g.id, toPlayhqGameInput(fixture.competition, g, usualTipOff(deps.team.code)), gameId, fixture.noVideo ? now.toISOString() : null);
 	})];
 	// An empty fixture (not out yet, or PlayHQ mid-change) marks nothing.
