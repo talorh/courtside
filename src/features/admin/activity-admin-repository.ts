@@ -46,7 +46,7 @@ export async function listSiteInProgress(db: D1Database, teamId: string | null):
 			AND (s.recording_video_id IS NOT NULL OR (s.source = 'app' AND s.last_live_at IS NOT NULL))
 		UNION ALL ${VIDEOS("uploading", "v.status = 'uploading' AND NOT EXISTS (SELECT 1 FROM live_streams o WHERE o.team_id = v.team_id AND o.status = 'open' AND o.recording_video_id = v.id)")}
 		UNION ALL ${VIDEOS("processing", "v.status = 'processing'")}
-		UNION ALL ${VIDEOS("hd", "v.status = 'ready' AND v.stream_uid IS NOT NULL AND v.hd_ready_at IS NULL")}
+		UNION ALL ${VIDEOS("hd", "v.status = 'ready' AND v.stream_uid IS NOT NULL AND v.hd_ready_at IS NULL AND v.hd_failed_at IS NULL")}
 		ORDER BY since`).bind(teamId).all<GameCols & { stage: SiteInProgress["stage"]; team_id: string; since: string }>();
 	return results.map((r) => ({ teamId: r.team_id, stage: r.stage, game: game(r), since: r.since }));
 }

@@ -4,7 +4,7 @@ import { record } from "../activity/activity-service.ts";
 import { dropShortTest } from "../live/browser-live-service.ts";
 import { ticketFailedVideo } from "./failed-video-ticket.ts";
 import { requestStreamCopy } from "./upload-finish.ts";
-import { dropStreamCopy, markFailed, markHdReady, markReady } from "./video-writes-repository.ts";
+import { dropStreamCopy, markFailed, markHdFailed, markHdReady, markReady } from "./video-writes-repository.ts";
 import { listVideosAwaitingHd, listVideosByStatus, type Video } from "./videos-repository.ts";
 import { logProblem } from "../admin/problem-log.ts";
 import { videosWithSegments } from "../live/recording-segments-repository.ts";
@@ -81,9 +81,18 @@ export async function advanceProcessing(deps: TeamDeps) {
 	return { ...counts, errors: result.errors };
 }
 
+/** Stream couldn't make the MP4: noted on the video so the job stops asking (the game page's download still asks Stream
+ * itself), one problem in the Log, and one more request in case it was a hiccup. Never fails the run. */
+async function hdFailed(deps: TeamDeps, video: Video, uid: string): Promise<void> {
+	await markHdFailed(deps.db, deps.team.id, video.id, deps.now().toISOString());
+	console.warn(JSON.stringify({ event: "hd_failed", teamId: deps.team.id, videoId: video.id, uid }));
+	await logProblem(deps, { kind: "stream_problem", teamId: deps.team.id, what: "Stream couldn't make a video's HD MP4 (asked once more; the video plays as usual)" });
+	await requestHd(deps, uid, { videoId: video.id });
+}
+
 /**
- * Ready videos whose HD MP4 isn't confirmed: note when it's done (Notifications shows it), and ask again if Stream
- * has no download for it (e.g. the request after markReady failed).
+ * Ready videos whose HD MP4 isn't confirmed: note when it's done (Notifications shows it), ask again if Stream has no
+ * download for it (e.g. the request after markReady failed), and stop asking once Stream says it can't make it.
  */
 export async function trackHdDownloads(deps: TeamDeps) {
 	const waiting = (await listVideosAwaitingHd(deps.db, deps.team.id)).slice(0, HD_BATCH);
@@ -100,7 +109,7 @@ export async function trackHdDownloads(deps: TeamDeps) {
 			if (await deps.stream.details(uid)) await requestHd(deps, uid, { videoId: video.id });
 			else await replaceMissingCopy(deps, video, uid);
 		} else if (state === "error") {
-			throw new Error(`Stream could not make the HD MP4 for video ${video.id}`);
+			await hdFailed(deps, video, uid);
 		}
 	});
 	return { ...counts, errors: result.errors };

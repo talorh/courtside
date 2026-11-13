@@ -528,7 +528,9 @@ the videos, games and people only that log named.
 3. **Processing to ready.** Read Stream's details, store the duration, and ask Stream to build the MP4 download. A
  Stream error marks the video `failed` (a team manager deletes it, which frees the game for another upload).
 4. **HD MP4s.** For ready videos without `hd_ready_at`, check the download: ready means store the time and log it for
- Notifications; none means ask Stream again (which covers a failed request in step 3).
+ Notifications; none means ask Stream again (which covers a failed request in step 3). Stream saying it can't make
+ it sets `hd_failed_at`, which takes the video out of this step (and out of "busy" and Right now), writes one
+ Problems line and asks Stream once more; the game page's Download HD video still asks Stream itself.
 5. **Clips.** Processing clips become ready (and get their MP4 started) or failed.
 6. **Retention and clean-up.** Delete videos past `delete_after` (the Stream copy, the R2 original if R2's 30-day rule
  hasn't already, then the row, softly). Cancel uploads abandoned for 7 days. Delete download log rows older than 2
@@ -949,7 +951,7 @@ erDiagram
 | playhq_fixtures | team_id, competition (VJBL/Tournament), playhq_team_id, url, name, auto_check, game_count, checked_at, last_error, no_video | Hard delete on Remove (its games stay) |
 | recording_segments | team_id, video_id, n (2 up), r2_key, r2_upload_id (NULL once complete), created_at, completed_at: a carried-on recording's later segments; videos also carry join_tries, join_tried_at, join_failed_at |
 | live_streams | team_id, game_id, live_input_uid, started_by, status (open/saved/cancelled), source (camera/app), last_live_at, end_requested_at, recording_video_id, cancel_reason, created_at, finished_at | One open per game (unique index); a test's row is reopened for the next Go live, with its input; closed rows are kept. started_by is whoever's phone is streaming (set when it starts; until then whoever opened Go live for the game) |
-| videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
+| videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after, hd_ready_at, hd_failed_at | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
 | downloads | team_id, video_id, member_id, kind (hd/original), created_at | Audit log, hard-deleted after 2 years |
 | media_downloads | team_id, member_id, kind (photo/clip), item_id (no foreign key: the log outlives the photo or clip), name (the file it came as), created_at | The download log's other half: every photo (each in a zip too) and clip downloaded, with who took it; kept two years, and its people with it when the team is deleted, as `downloads` keeps its own |
 | removal_requests | team_id, video_id, member_id, reason, status (open/video_deleted/kept), note, resolved_by, resolved_at | Kept |

@@ -59,6 +59,10 @@ export const markPurged = (db: D1Database, teamId: string, id: number) =>
 export const markHdReady = (db: D1Database, teamId: string, id: number, nowIso: string) =>
 	update(db, "UPDATE videos SET hd_ready_at = ? WHERE team_id = ? AND id = ? AND hd_ready_at IS NULL", [nowIso, teamId, id]);
 
+/** Stream couldn't make the HD MP4: the job stops asking about it (processing-service.ts trackHdDownloads). */
+export const markHdFailed = (db: D1Database, teamId: string, id: number, nowIso: string) =>
+	update(db, "UPDATE videos SET hd_failed_at = ? WHERE team_id = ? AND id = ? AND hd_failed_at IS NULL", [nowIso, teamId, id]);
+
 /** A join begun (the 5-minute job), or one that couldn't be asked for: one more try, now. */
 export const countJoinTry = (db: D1Database, teamId: string, id: number, nowIso: string) =>
 	update(db, "UPDATE videos SET join_tries = join_tries + 1, join_tried_at = ? WHERE team_id = ? AND id = ?", [nowIso, teamId, id]);

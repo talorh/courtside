@@ -8,7 +8,7 @@ import type { Game } from "../features/games/games-repository.ts";
  * awaited. One trip. */
 export async function busyTeamIds(db: D1Database, today: string): Promise<Set<string>> {
 	const { results } = await db.prepare(`SELECT team_id FROM live_streams WHERE status = 'open'
-		UNION SELECT team_id FROM videos WHERE deleted_at IS NULL AND (status IN ('uploading', 'processing') OR (status = 'ready' AND stream_uid IS NOT NULL AND hd_ready_at IS NULL))
+		UNION SELECT team_id FROM videos WHERE deleted_at IS NULL AND (status IN ('uploading', 'processing') OR (status = 'ready' AND stream_uid IS NOT NULL AND hd_ready_at IS NULL AND hd_failed_at IS NULL))
 		UNION SELECT team_id FROM clips WHERE deleted_at IS NULL AND status = 'processing'
 		UNION SELECT team_id FROM games WHERE deleted_at IS NULL AND substr(starts_at, 1, 10) = ?`).bind(today).all<{ team_id: string }>();
 	return new Set(results.map((r) => r.team_id));

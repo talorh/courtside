@@ -32,11 +32,6 @@ Things a club other than the example one would hit:
 
 Shared with the upstream site (the same code):
 
-- [ ] An HD download Stream couldn't make fails the 5-minute job for ever. `trackHdDownloads`
-      (videos/processing-service.ts) throws when Stream's download state is `error`, and nothing marks the video's HD as
-      failed: it stays in `listVideosAwaitingHd`, takes one of the five `HD_BATCH` slots, throws again every run, and the
-      run's failures raise the 5-minute job alert and a ticket that never clears. Note the failure on the video, log one
-      problem, and ask Stream once more rather than every run.
 - [ ] Deleting a game cancels its opened Go live stream before the delete is refused. `/fixture/:id/delete` runs
       `closeUnusedLive` and then `deleteGame`, whose "has a video" check can refuse; a refused delete has still closed
       the stream. Check first, close after.

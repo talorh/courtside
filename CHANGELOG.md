@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 14 Nov 2026
 
+- [Fix] **Platform:** Fixed an issue where a video whose HD download Stream couldn't make failed the 5-minute job every run from then on, keeping the job alert raised. The failure is now noted on the video and logged once, Stream is asked once more, and the job moves on.
 - [Fix] **Go live:** Fixed an issue where a game whose page was closed just as Saving appeared waited a day before the site saved it. A recording nothing more comes from is now saved half an hour after End game, or after 12 quiet hours when the page died mid-game, so the video is in Watch games the same night.
 - [Fix] **Platform:** Fixed an issue where the Friday check never ran: Cloudflare numbers the days of the week from Sunday as 1, so its triggers fired a day early and were skipped as not a Friday. It now runs at 6am every Friday in the club's time zone.
 
