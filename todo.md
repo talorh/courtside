@@ -58,4 +58,10 @@ Shared with the upstream site (the same code):
       thrown database error there skips `logJobProblems`. Wrap them like the rest.
 - [ ] End game with nothing recorded ends the stream anyway (`stopBrowserLive` with no `recordingVideoId` takes the
       length as infinite). Treat no recording as a cancel, not an end.
+- [ ] Save a stopped recording sooner. `saveIfStopped` (live/recording-save-service.ts) waits until the recording is
+      24 hours old and nothing has come from the phone for 24 hours, so a game whose page closed as Saving appeared (every
+      part in R2, the complete never sent) waits until the next evening unless the parent reopens Go live. Make it: End
+      game tapped (`end_requested_at`) and no part for 30 minutes, save; no End game, 12 quiet hours (was 24). The 2-minute
+      "still sending" rule and the segments path stay as they are. Test both rules, and that a phone still sending holds
+      it off. The Documentation's video section and Help's "If the page closes mid-game" say the new times.
 - [ ] `join/*.mjs` is outside `scripts/check-loc.mjs` and the comment rules in `scripts/check-rules.mjs`. Add it.
