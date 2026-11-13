@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 14 Nov 2026
 
+- [Fix] **Go live:** Fixed an issue where End game tapped before the camera had started ended the game's stream for good, so the game couldn't be streamed until the 5-minute job tidied it up. Nothing recorded now counts as a test, and the game is free to go live again at once.
 - [Fix] **Platform:** Fixed an issue where a failure in one of the 5-minute job's closing checks ended the run before its failures were written to the Log's Problems. Each check is now one more failure of the run, and every failure reaches the Log.
 - [Fix] **Admin:** Fixed an issue where Insights counted a Go live recording the site saved late as stuck the moment its processing began, as the count ran from the Go live tap. It and Right now's processing times now run from when processing began.
 - [Fix] **Fixture:** Fixed an issue where adding a PlayHQ fixture could pair two games added by hand on the same day (a tournament) the wrong way round, so each took the other's details. A hand-added game now takes the PlayHQ game at its own time first.

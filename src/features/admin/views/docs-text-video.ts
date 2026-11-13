@@ -28,8 +28,8 @@ starts a camera only from one. It's the same video, with the gap left out.</li>
 Web Audio, not the camera itself. The recording is always landscape, whichever way the phone was held when the camera
 started. A recording that hands over nothing for 20 seconds says so on the camera screen with Reload and carry on, and
 takes the warning back if it carries on by itself.</li>
-<li><b>Only End game ends a stream, and it's final.</b> Under a minute recorded (pauses left out) counts as a test and
-is thrown away, so a try at home leaves the game free to stream. On a weak signal the page says how many minutes of the
+<li><b>Only End game ends a stream, and it's final.</b> Under a minute recorded (pauses left out), or nothing recorded
+at all, counts as a test and is thrown away, so a try at home leaves the game free to stream. On a weak signal the page says how many minutes of the
 game are still only on the phone.</li>
 <li><b>Watching</b> uses short-lived signed links, so only signed-in members can play anything. A picture that freezes
 asks whether the game has ended: if so the page shows the Full time card (the Game Break card's look) within seconds,

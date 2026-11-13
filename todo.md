@@ -32,6 +32,4 @@ Things a club other than the example one would hit:
 
 Shared with the upstream site (the same code):
 
-- [ ] End game with nothing recorded ends the stream anyway (`stopBrowserLive` with no `recordingVideoId` takes the
-      length as infinite). Treat no recording as a cancel, not an end.
 - [ ] `join/*.mjs` is outside `scripts/check-loc.mjs` and the comment rules in `scripts/check-rules.mjs`. Add it.

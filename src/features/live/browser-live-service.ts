@@ -14,7 +14,7 @@ import {
 } from "./live-repository.ts";
 import { endLive, openLive, switchOff } from "./live-service.ts";
 import { footageDue } from "../teams/team-code.ts";
-import { recordedReason, streamSeconds } from "./live-test-rule.ts";
+import { cancelUnrecorded, recordedReason, streamSeconds } from "./live-test-rule.ts";
 import { CAUSE_WORDS, logLive, type StopCause, testWords } from "./live-log.ts";
 import { teamCopy } from "../teams/team-copy.ts";
 
@@ -111,12 +111,17 @@ export async function advanceBrowserLive(deps: TeamDeps, stream: LiveStream, con
 /**
  * End game. Under a minute since Go live, or recorded (live-test-rule.ts), it was a test (say, at home): the
  * recording is thrown away before it's uploaded or processed, and the game is free to stream again (the page says why).
- * Otherwise the stream ends for good and the recording, still uploading, becomes the game video. Both go in the Log.
+ * Nothing recorded at all (Go live opened, the camera never started) is the same, with nothing to throw away.
+ * Otherwise the stream ends for good and the recording, still uploading, becomes the game video. All go in the Log.
  */
 export async function stopBrowserLive(deps: TeamDeps, member: Member, gameId: number, page: { recordedSeconds?: number; cause?: StopCause } = {}): Promise<{ status: "ended" } | { status: "test"; seconds: number }> {
 	const { db } = deps;
 	const open = await getOpenLiveForGame(db, deps.team.id, gameId);
 	if (!open) throw notFound("Live stream");
+	if (!open.endRequestedAt && !open.recordingVideoId && await cancelUnrecorded(deps, open)) {
+		await logLive(deps, member.email, "live_test", gameId, "nothing recorded, then End game was tapped");
+		return { status: "test", seconds: 0 };
+	}
 	const video = !open.endRequestedAt && open.recordingVideoId ? await getVideo(db, deps.team.id, open.recordingVideoId) : null;
 	// End game is final, so only the phone streaming (its recording's uploader), a coach or a team manager can.
 	if (video && video.uploadedBy !== member.id && !hasRole(member.role, "coach")) {

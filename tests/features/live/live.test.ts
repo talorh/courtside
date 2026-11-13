@@ -218,6 +218,17 @@ describe("watching live", () => {
 		expect(await status(deps)).toBe("cancelled");
 		expect(deps.live.inputs.get("live-1")!.enabled).toBe(false);
 	});
+	it("End game with nothing recorded (the camera never started) cancels the stream, so the game can go live again", async () => {
+		const { deps, gameId } = await goLive();
+		const res = await makeClient(deps)(`/api/live/${gameId}/end`, jsonBody({ recordedSeconds: 0, cause: "tapped" }));
+		expect((await res.json() as { data: unknown }).data).toEqual({ status: "test", seconds: 0 });
+		expect(await status(deps)).toBe("cancelled");
+		expect(deps.live.inputs.get("live-1")!.enabled).toBe(false);
+		// Opening Go live again reopens it for the game, and streaming works.
+		await makeClient(deps)("/live");
+		expect(await status(deps)).toBe("open");
+		expect((await makeClient(deps)(`/api/live/${gameId}/browser`, jsonBody({ mimeType: "video/mp4" }))).status).toBe(201);
+	});
 	it("a game with a video and a stream only set up refuses the delete and leaves the stream as it was", async () => {
 		const { deps, gameId } = await goLive();
 		await seedVideo(deps, { gameId, streamUid: "u1" });

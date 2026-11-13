@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { TeamDeps } from "../../app/deps.ts";
 import type { Video } from "../videos/videos-repository.ts";
+import { cancelLiveWithRecording, type LiveStream } from "./live-repository.ts";
+import { switchOff } from "./live-service.ts";
 
 // What End game sends: how much the phone recorded, pauses left out, and whether End game was tapped or the camera
 // stopped (an older page sends neither).
@@ -27,3 +29,12 @@ export async function streamSeconds(deps: TeamDeps, video: Video, recordedSecond
 }
 
 export const recordedReason = (seconds: number) => `Only ${Math.round(seconds)} seconds were recorded, so it was treated as a test and not saved.`;
+
+/** End game on a stream with no recording at all (Go live opened, the camera never started): a test with nothing to
+ * throw away, cancelled only while it still has no recording (a filmer may tap Go live meanwhile). True if it was. */
+export async function cancelUnrecorded(deps: TeamDeps, open: LiveStream): Promise<boolean> {
+	const reason = "End game was tapped before the camera started, so there was nothing to save.";
+	if (!(await cancelLiveWithRecording(deps.db, deps.team.id, open.id, null, deps.now().toISOString(), reason))) return false;
+	await switchOff(deps, open);
+	return true;
+}

@@ -293,7 +293,9 @@ sequenceDiagram
 - **End game** (it asks Yes, end game or Keep streaming) calls `POST /api/live/:gameId/end` (`stopBrowserLive`), with
  how long the phone recorded, pauses left out (`recordedSeconds`). Under 60 seconds since Go live, or under 60 seconds
  recorded while R2 holds no more than two parts (`live-test-rule.ts`: a minute is about 20 MB; R2 not answering counts as more, so the recording is kept), it's a test: the upload is aborted and deleted (`live_test`), the input disabled and the row
- cancelled with the reason, nothing is processed, and the game is free again (the next Go live reuses the input).
+ cancelled with the reason, nothing is processed, and the game is free again (the next Go live reuses the input). A
+ stream with no recording at all (Go live opened, the camera never started) is cancelled the same way, with nothing to
+ throw away.
  Otherwise `endLive` sets `end_requested_at` and switches the input off (`switchOff`: the database first, Stream
  best-effort), so the game can't be streamed again. The phone finishes uploading, and completing it closes the row as
  saved (`closeBrowserLive`, `live_saved`). A recording under 60 seconds that slipped past (Stop didn't reach the server,
