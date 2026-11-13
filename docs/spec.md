@@ -471,7 +471,7 @@ open any team to help, and how someone in two teams switches. Fiddly steps have 
 Save to Files and Choose File, Go live's Pause and Stop), and the questions about a page of the site show a screenshot of
 it (`public/help/`, taken on staging with test data): signing in, the home page's buttons, Watch
 games, making a highlight clip and the clip it makes, Upload, Go live, Photos, the Roster, and for a team manager Add a person, Waiting to sign in,
-Players, the Fixture and the roster's panels. Virtual Team Manager reads none of them. "What is the aim here?" is the last question.
+Players, the Fixture and the roster's panels. Virtual Team Manager reads none of them. "What is the aim here?" is the last question; it ends by saying the code is open source (github.com/talorh/courtside) and that nobody aims to make money from it.
 
 **A team manager's Help** is everything a team manager does, a question at a time: a first-week checklist (taking it
 that they have the team's WhatsApp group, with every family in it, and their emails), members and roles, players, the

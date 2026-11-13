@@ -224,3 +224,13 @@ describe("Help", () => {
 		expect(deps.ai.asked[0]?.system).toContain("Later weeks");
 	});
 });
+
+describe("Help's aim", () => {
+	it("says the code is open source, with where it is, and that nobody's making money from it", async () => {
+		const page = (await (await makeClient(createTestDeps())("/help")).text()).replaceAll("&#39;", "'");
+		const aim = page.slice(page.indexOf("What is the aim here?"));
+		expect(aim).toContain('<a href="https://github.com/talorh/courtside" target="_blank" rel="noopener">github.com/talorh/courtside</a>');
+		expect(aim).toContain("open source");
+		expect(aim).toContain("There's no desire to make money from any of it");
+	});
+});

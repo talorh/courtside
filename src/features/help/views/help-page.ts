@@ -39,7 +39,9 @@ email.</li>
 can ask for a video, clip or photo to be removed.</li></ul>
 <p>What it isn't trying to do:</p>
 <ul class="steps"><li><b>Not the team chat:</b> WhatsApp or similar is the main way teams talk.</li>
-<li><b>Not game analysis:</b> coaches may wish to use Superstat (superstat.com.au) or similar.</li></ul>`);
+<li><b>Not game analysis:</b> coaches may wish to use Superstat (superstat.com.au) or similar.</li></ul>
+<p><b>Open source, not for profit:</b> this site runs Courtside, which is open source: anyone can read its code or run it
+for their own club, at <a href="https://github.com/talorh/courtside" target="_blank" rel="noopener">github.com/talorh/courtside</a>. There's no desire to make money from any of it: no ads, and nothing is sold.</p>`);
 
 // Recording and live streaming: for those who film (everyone but Watch only).
 const filming = (h: HelpFor) => html`${faqDuty(h)}${FAQ_RECORD_IOS}${FAQ_RECORD_ANDROID}${faqUploadHelp(h)}<h3 class="faqsub">Live streaming</h3>${faqLiveGame(h)}${FAQ_LIVE_BROWSER}${faqAiCameras(h)}`;
