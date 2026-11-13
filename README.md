@@ -5,8 +5,9 @@
 <h1 align="center">Courtside</h1>
 
 <p align="center">
-  Private game video for a basketball club's junior teams.<br>
-  Stream the game live from a phone's browser, watch it back, cut the highlights, keep the photos.
+  Private game video and day-to-day team management for a basketball club's junior teams.<br>
+  Stream the game live from a phone's browser, watch it back, cut the highlights, keep the photos,<br>
+  and run the fixture, the people, the squad and the game-day roster in the same place.
 </p>
 
 <p align="center">
@@ -28,9 +29,12 @@
 
 A parent films the game on their phone and streams it live from the site's Go live page, right there in the phone's
 browser with nothing to install, or uploads the video when they get home. Everyone on the team's list signs in with a
-code sent to their email, watches the game live or later, downloads it, cuts highlight clips and adds photos. Team
-managers run their team's fixture, people, squad and game-day roster. A site admin looks after the whole club from an
-admin area with its own documentation, costs, log and alerts.
+code sent to their email, watches the game live or later, downloads it, cuts highlight clips and adds photos. It's as
+much the team's day-to-day home as its video: team managers run the fixture (by hand, from PlayHQ, from a spreadsheet
+or from any fixture page read by AI), the people and their roles, the squad, the game-day roster with its duties and
+WhatsApp message, and the line under each game; coaches keep private notes on each game. An AI tracking camera fits
+in too: its app streams the game to the site, or its recording is uploaded afterwards. A site admin looks after the
+whole club from an admin area with its own documentation, costs, log and alerts.
 
 It was built for one club's teams by a parent who films, and made generic so any club can run it: the club's names,
 colours and words live in one file, where it runs in another, and an AI coding agent can set it up in an afternoon.
@@ -55,7 +59,8 @@ team's photos, newest first. Ask for a video, clip or photo to be removed. Sign 
 Tap Go live, point the phone at the court, and families are watching. Pause for the break and they see a Game break
 card. A locked phone or a closed page doesn't end the game: Resume camera and Carry on streaming pick it up, and the
 parts are joined into one video. Or record on the phone and upload later, over a weak signal, carrying on where it
-left off.
+left off. Filming with an AI tracking camera instead? Its app streams to the site over RTMPS with the Server and
+Stream key the Go live page shows, or its recording is uploaded after the game like any other video.
 
 </td>
 </tr>
@@ -64,10 +69,11 @@ left off.
 
 **Coaches and team managers**
 
-Private coaching notes on each game. The fixture by hand, from a PlayHQ link, from any public fixture page read by
-AI, or from a spreadsheet, with final scores filled in by themselves. The people and their roles, the squad with
-numbers, a game-day roster with a ready-made WhatsApp message, the line under each game's title, and a Help page
-that answers questions for their team.
+The team's day-to-day running, not only its video. The fixture by hand, from a PlayHQ link, from any public fixture
+page read by AI, or from a spreadsheet, with final scores filled in by themselves. The people and their roles, the
+squad with numbers, a game-day roster with duties and a ready-made WhatsApp message, the line under each game's
+title, a Notifications page, private coaching notes on each game, and a Help page that answers questions for their
+team.
 
 </td>
 <td valign="top">
@@ -89,6 +95,11 @@ club's own Cloudflare account on short-lived signed links, is stored and played 
 and reaches only the people on the team's list, so children's game video has a private home instead of reliance on
 social media. The made-up Saints club and a squad named after the 1992
 Dream Team stand in for real people throughout the code, the tests and these docs.
+
+**What it isn't.** Courtside keeps no stats and makes no attempt at game analysis: that's what
+[Superstat](https://superstat.com.au) does, and the two sit side by side. Any video on the site downloads in HD, so a
+team with its own Superstat subscription downloads the game from Courtside and puts it into Superstat for the
+breakdown. There are no live scores, comments or chat either; the team's WhatsApp group stays the team chat.
 
 ## What it looks like
 
