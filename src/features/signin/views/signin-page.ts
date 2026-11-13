@@ -8,11 +8,11 @@ import { entryPage } from "../../../ui/status-pages.ts";
 
 export const TITLE = `Log in to ${CLUB.siteName}`;
 export const CODE_TITLE = "Enter your login code";
-const FOOTER = "Private to each team's families and coaches. Can't get in? Ask your team manager.";
+const FOOTER = html`Private to each team's families and coaches. Can't get in? Ask your team manager, or <a href="/signin/access">raise an access request here</a>.`;
 
 /** What the page says when something's wrong: fixed words, never anything typed. */
 export const SIGN_IN_MESSAGES = {
-	unknown: "That email address isn't on a team's list. Ask your team manager for access.",
+	unknown: "That email address isn't on a team's list. Ask your team manager for access, or raise an access request (below).",
 	limited: "Too many codes have been asked for. Try again later, or ask your team manager to let you back in sooner.",
 	wrongLimited: "Too many wrong codes. Wait an hour and try again.",
 	wrongHeld: "Too many wrong codes for this email address today. Ask your team manager to let you back in, or try again tomorrow.",
@@ -37,7 +37,7 @@ export interface SignInProps {
 
 /** Turnstile (platform/turnstile.ts) on every form that sends a code: seen only if Cloudflare wants a tap, and its token
  * goes with the form (public/signin.js waits for it). */
-const robotCheck = (siteKey: string) =>
+export const robotCheck = (siteKey: string) =>
 	html`<div class="cf-turnstile" data-sitekey="${siteKey}" data-action="${TURNSTILE_ACTION}" data-appearance="interaction-only" data-size="flexible"></div>`;
 
 const warn = (message: SignInMessage | null) => (message ? html`<p class="note warn" role="alert">${SIGN_IN_MESSAGES[message]}</p>` : "");

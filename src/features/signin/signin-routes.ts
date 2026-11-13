@@ -1,5 +1,6 @@
-// The sign-in's own pages, answered before anyone is signed in: /signin (the email, then the code),
-// /signout, and /signin/whoami (the maintenance Worker asks it who a request is). Everything else needs a session.
+// The sign-in's own pages, answered before anyone is signed in: /signin (the email, then the code), /signin/access (a
+// request to be added to a team's list), /signout, and /signin/whoami (the maintenance Worker asks it who a request is).
+// Everything else needs a session.
 import { z } from "zod";
 import type { AppDeps } from "../../app/deps.ts";
 import { sitePath } from "../../app/landing.ts";
@@ -11,6 +12,8 @@ import { deviceLabel } from "../../shared/device.ts";
 import { logProblem } from "../admin/problem-log.ts";
 import { parseForm } from "../../shared/validation.ts";
 import { signedOutPage, signInPage, type SignInMessage, signOutPage } from "./views/signin-page.ts";
+import { accessSchema, requestAccess } from "./access-service.ts";
+import { accessPage, accessSentPage } from "./views/access-page.ts";
 
 const emailForm = z.object({ email: z.string().trim().max(254).default(""), next: z.string().max(2000).default("/") });
 // The Turnstile widget's token (views/signin-page.ts), on the forms that send a code.
@@ -54,6 +57,22 @@ async function sendCode(req: Request, url: URL, deps: AppDeps): Promise<Response
 	return page(deps, "email", email, next, result === "unknown" ? "unknown" : "limited", result === "unknown" ? 200 : 429);
 }
 
+/** Request access: the same robot check as a code (Cloudflare not answering leaves the form's own limits to hold). */
+async function askForAccess(req: Request, url: URL, deps: AppDeps): Promise<Response> {
+	const form = await parseForm(req, accessSchema);
+	const again = (message: Parameters<typeof accessPage>[0]["message"], status: number) =>
+		htmlResponse(accessPage({ name: form.name, team: form.team, email: form.email, message, siteKey: deps.config.turnstileSiteKey }), status);
+	const check = await deps.turnstile.verify(form["cf-turnstile-response"], ipOf(req), url.hostname);
+	if (check.result === "failed") return again("robot", 400);
+	if (check.result === "unreachable") {
+		console.warn(JSON.stringify({ event: "turnstile_unreachable", teamId: null, detail: check.detail }));
+		await logProblem(deps, { kind: "site_problem", teamId: null, what: "The access request form's robot check (Turnstile) didn't answer, so only its limits held", detail: check.detail });
+	}
+	const result = await requestAccess(deps, form);
+	if (result === "sent") return htmlResponse(accessSentPage());
+	return again(result, result === "busy" ? 429 : result === "missing" || result === "notEmail" ? 400 : 200);
+}
+
 async function checkCode(req: Request, deps: AppDeps): Promise<Response> {
 	const { email, next, code } = await parseForm(req, codeForm);
 	const result = await verifyCode(deps, email, code, ipOf(req), deviceLabel(req.headers.get("User-Agent")));
@@ -86,6 +105,9 @@ export async function signInRoutes(req: Request, url: URL, deps: AppDeps): Promi
 			}
 			return post ? sendCode(req, url, deps) : null;
 		case "/signin/code": return post ? checkCode(req, deps) : null;
+		case "/signin/access":
+			if (get) return htmlResponse(accessPage({ name: "", team: "", email: "", message: null, siteKey: deps.config.turnstileSiteKey }));
+			return post ? askForAccess(req, url, deps) : null;
 		case "/signout": return post ? signOut(req, deps) : get ? htmlResponse(signOutPage()) : null;
 		case "/signin/whoami": {
 			if (!get) return null;

@@ -14,7 +14,8 @@ export const faqSignin = (h: HelpFor) => faqItem("signin", "How do I sign in?", 
 <b>Not junk</b> and add ${mailFrom()} to your contacts, so the next one comes to your inbox.</li></ol>
 ${shots(shot("signin-email", "The sign-in page: Log in to Courtside, an Email box and a green Send login code button"), shot("signin-code", "The second step: Enter your login code, with the six-digit code box and a Log in button"))}
 <p class="small">You'll be asked for a new code about once a month. If it says your email isn't on the list,
-ask ${h.c.ask} to add you.</p>
+ask ${h.c.ask} to add you, or tap <b>raise an access request here</b> at the bottom of the sign-in page and the site's
+admin will add you.</p>
 <p class="small">To sign out, tap the door at the top right, then <b>Sign out</b>.</p>
 <p class="small">On more than one team? Tap <b>Switch team</b>, under the team's name at the top left.</p>
 ${shots(shot("signout", "The door at the top right tapped: a Sign out? box with Sign out and Cancel buttons"), shot("teams", "The Which team? page: each of your teams as a button to tap"))}`);

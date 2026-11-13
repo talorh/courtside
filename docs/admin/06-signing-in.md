@@ -4,6 +4,8 @@
 
 There are no passwords. Someone types their email, gets a six-digit code by email, types it, and stays signed in for 30 days on that device. A code is only ever sent to an address on a team's list, or a site admin's, and only once Cloudflare Turnstile says a person, not a script, asked: the check is invisible unless Cloudflare wants a tap, and if Cloudflare can't be reached the code still goes, with the limits below holding.
 
+Someone not on a list can tap **raise an access request here** at the foot of the sign-in page: their name, their team and their email, behind the same Turnstile check, open one of the site's own tickets on the support desk (Access request: the name, the team), emailed to the admins. An address gets one open request at a time, an address already on a list is told to sign in, and the whole site takes ten an hour. Nothing is ever emailed to the address typed: an admin adds it to the team's list (Manage team) and resolves the ticket, and the person signs in as everyone does.
+
 ![Signing in](diagrams/06-1.svg)
 
 *Nobody gets a code unless their email is on a team's list (or they're a site admin). Sessions are per device, so a phone and a computer each sign in once.*

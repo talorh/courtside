@@ -158,6 +158,13 @@ flowchart TD
  address. Every request, code and check is a row in `sign_in_events` (a month, 31 days; the admin Log shows them; anything
  typed that isn't an address is stored masked, as `n…`) and a log line with the address
  masked (`signin_code_sent`, `signin_checked`, `signin_refused`); Platform's Sign-ins row sums the last 24 hours.
+- **Request access** (`/signin/access`, `features/signin/access-service.ts`): the sign-in page's footer ("Can't get in?
+ Ask your team manager, or raise an access request here") opens a form for a name, a team and an email, behind the
+ same Turnstile check. It opens one of the support desk's own tickets (`source` 'site', `alert_kind`
+ `access:<email>`, topic members, title "Access request: <name>, <team>", `contact` the address), emailed to the
+ admins as every ticket is. The unique index on open site tickets makes it one open request an address; an address on
+ a list is told to sign in; ten an hour for the whole site, then a 429. Nothing is emailed to the address typed: an
+ admin adds it to the team's list and resolves the ticket. Logged as `access_requested`.
 - **The code** (`sign_in_codes`): six digits, hashed with the email (so a code is good for its own address only),
  10 minutes, five wrong tries, and voided when a newer one is asked for. The page's Send a new code waits a minute
  (`public/signin.js`). The email (`auth/sign-in-mail.ts`, the one email to an address a visitor typed, after the check
@@ -737,7 +744,7 @@ ticket resolved before its first email could go never sends it.
 
 The site's own tickets (below) have no team and nobody to reply to: they're open or resolved, never waiting on
 anyone, and an old one can't reopen while a newer one about the same thing is open (a unique index allows one open
-ticket a kind).
+ticket a kind). Access requests from the sign-in page are site tickets too (kind `access:<email>`, Signing in).
 
 ### Monitoring
 

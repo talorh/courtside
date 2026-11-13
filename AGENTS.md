@@ -59,7 +59,7 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
   section 8), never change a zone-wide setting, or a rule that isn't the site's, without the club's yes. The site's
   rules each match its own hostname and are added beside the club's (a phase's update replaces all its rules).
 - **Absolutely private.** Every page and file stays behind the sign-in, with no bypass. The only open paths are the
-  sign-in page and its own few files, and `/.well-known/security.txt`. Pages send `noindex`, and AI bots are blocked at
+  sign-in pages (signing in, and Request access) and their own few files, and `/.well-known/security.txt`. Pages send `noindex`, and AI bots are blocked at
   the zone (`infra/zone/bot-management.json`).
 - **No real people named.** Help, docs, tests and the example data use made-up names after the 1992 Dream Team (Jordan #9,
   Magic #15) and the fictional Saints club. Never a real child, family, email address or phone number.
