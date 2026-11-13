@@ -6,6 +6,8 @@ There are no passwords. Someone types their email, gets a six-digit code by emai
 
 Someone not on a list can tap **raise an access request here** at the foot of the sign-in page: their name, their team and their email, behind the same Turnstile check, open one of the site's own tickets on the support desk (Access request: the name, the team), emailed to the admins. An address gets one open request at a time, an address already on a list is told to sign in, and the whole site takes ten an hour. Nothing is ever emailed to the address typed: an admin adds it to the team's list (Manage team) and resolves the ticket, and the person signs in as everyone does.
 
+An address Email Sending won't send to (its emails bounced, or its owner marked one as spam, so it's on Email Sending's suppression list: a day for a short bounce) can't get a code. The sign-in page says the address is bouncing and to ask the team manager for another, not to try again, and the admins get one ticket (Emails to the address are bouncing) while it's open. Add another address for them, or lift it sooner on Email Sending's suppression list.
+
 ![Signing in](diagrams/06-1.svg)
 
 *Nobody gets a code unless their email is on a team's list (or they're a site admin). Sessions are per device, so a phone and a computer each sign in once.*

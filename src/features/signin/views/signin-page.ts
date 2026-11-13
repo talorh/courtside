@@ -19,6 +19,7 @@ export const SIGN_IN_MESSAGES = {
 	wrong: "That code isn't right. Use the code in the newest email: asking for a new code stops the earlier ones working.",
 	expired: "That code has run out. Send a new one.",
 	notSent: "The code couldn't be emailed just now. Try again in a minute.",
+	bounced: "Emails to this address are bouncing, so they've stopped for now. Ask your team manager to add another email address for you. The site's admins have been told.",
 	robot: "The page couldn't confirm you're a person, not a robot. Wait a moment and try again.",
 } as const;
 

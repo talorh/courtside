@@ -7,12 +7,14 @@ import { sitePath } from "../../app/landing.ts";
 import { htmlResponse, jsonError, jsonOk, redirect } from "../../app/respond.ts";
 import { currentSession, clearedSessionCookie, endRequestSession, sessionCookie } from "../../auth/session.ts";
 import { recordSignInEvent } from "../../auth/sign-in-codes-repository.ts";
+import { isBounced } from "../../auth/sign-in-mail.ts";
 import { maskEmail, requestCode, verifyCode } from "../../auth/sign-in-service.ts";
 import { deviceLabel } from "../../shared/device.ts";
 import { logProblem } from "../admin/problem-log.ts";
 import { parseForm } from "../../shared/validation.ts";
 import { signedOutPage, signInPage, type SignInMessage, signOutPage } from "./views/signin-page.ts";
 import { accessSchema, requestAccess } from "./access-service.ts";
+import { reportBounced } from "./bounced-service.ts";
 import { accessPage, accessSentPage } from "./views/access-page.ts";
 
 const emailForm = z.object({ email: z.string().trim().max(254).default(""), next: z.string().max(2000).default("/") });
@@ -47,10 +49,13 @@ async function sendCode(req: Request, url: URL, deps: AppDeps): Promise<Response
 	try {
 		result = await requestCode(deps, email, ipOf(req));
 	} catch (err) {
-		// The email didn't go (Email Sending down, say): logged with the cause, and the page says to try again.
+		// The email didn't go: logged with the cause. Email Sending down, say: the page says to try again. An address it
+		// won't send to (it bounced): trying again won't help, so the page says so and the admins get a ticket.
+		const who = email.trim().toLowerCase(), bounced = isBounced(err);
 		console.error(JSON.stringify({ event: "signin_email_failed", teamId: null, error: String(err) }));
-		await logProblem(deps, { kind: "email_failed", teamId: null, who: email.trim().toLowerCase(), what: "A sign-in code's email didn't send", error: err });
-		return page(deps, "email", email, next, "notSent", 502);
+		await logProblem(deps, { kind: "email_failed", teamId: null, who, what: bounced ? "A sign-in code's email didn't send: the address is bouncing" : "A sign-in code's email didn't send", error: err });
+		if (bounced) await reportBounced(deps, who);
+		return page(deps, "email", email, next, bounced ? "bounced" : "notSent", 502);
 	}
 	if (result === "sent") return page(deps, "code", email.trim().toLowerCase(), next, null);
 	// An unknown address is an ordinary answer (200); over a limit is 429, as the zone's own limits answer.

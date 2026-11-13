@@ -10,6 +10,14 @@ export interface EmailPort {
 	send(email: OutgoingEmail): Promise<void>;
 }
 
+/** An email the binding didn't send, with its error code (E_RECIPIENT_SUPPRESSED: Email Sending won't send to that
+ * address, after bounces or a spam report). */
+export class EmailFailed extends Error {
+	constructor(readonly code: string, detail: string, options?: ErrorOptions) {
+		super(`Email failed (${code}): ${detail}`, options);
+	}
+}
+
 // A line break in a header would let text add headers of its own (another Bcc, say).
 const LINE_BREAK = /[\r\n]/;
 
@@ -22,7 +30,7 @@ export function createEmail(binding: SendEmail, from: { email: string; name: str
 				await binding.send({ to, from, subject, text, ...(html ? { html } : {}), ...(replyTo ? { replyTo } : {}) });
 			} catch (err) {
 				const code = (err as { code?: unknown }).code;
-				throw new Error(`Email failed (${typeof code === "string" ? code : "no code"}): ${err instanceof Error ? err.message : String(err)}`, { cause: err });
+				throw new EmailFailed(typeof code === "string" ? code : "no code", err instanceof Error ? err.message : String(err), { cause: err });
 			}
 		},
 	};

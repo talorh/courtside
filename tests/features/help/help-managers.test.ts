@@ -41,7 +41,7 @@ const EMPHASIS = new Set(["end-of-season pack", "Lots of people at once?", "temp
 	"25", "plus trick", "parent@saints.example", "parent+grandma@saints.example", "New number or name:", "Leaving the team:", "Live stream:", "Record and upload after:", "No video:",
 	"Video", "Players", "People", "Duties", "Families on the roster", "31 December 2027", "Virtual Sam", "Virtual Team Manager",
 	"public", "/org/", "/teams/", "My teams", "/account/my-teams/", // PlayHQ's public team page, not its private My teams one
-	"Too many codes?", "email", "name", "role",
+	"Too many codes?", "Emails bouncing?", "email", "name", "role",
 	"{opponent}", "at {venue}", "{ours}", "{them}", // what a game line is written with, on Game lines
 	"Waiting for video", // a played game's status on the Fixture, not a button (fixture tests check it)
 	"Phase", "Grading phase 1", "Crossover game", "Grading phase 2", "Championship season", // the game form's Phase and the Fixture's phase tags (playhq.test.ts)

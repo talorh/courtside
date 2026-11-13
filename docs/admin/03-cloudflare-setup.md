@@ -47,7 +47,7 @@ The site's own sign-in is the main gate. Before a request even reaches it, the z
 
 ### Email and DNS
 
-The site sends from `alerts@saints.example` only, through Email Sending's binding, which refuses any other sender. Its SPF and DKIM records sit on `cf-bounce.saints.example`. DMARC reports go to Cloudflare's DMARC Management, which shows who sends mail as saints.example. The domain's own SPF and a DMARC policy of reject mean mail forged in saints.example's name is refused. Email Routing forwards `security@saints.example`.
+The site sends from `alerts@saints.example` only, through Email Sending's binding, which refuses any other sender. Its SPF and DKIM records sit on `cf-bounce.saints.example`. DMARC reports go to Cloudflare's DMARC Management, which shows who sends mail as saints.example. The domain's own SPF and a DMARC policy of reject mean mail forged in saints.example's name is refused. Email Routing forwards `security@saints.example`. An address whose emails bounce, or that marks one as spam, goes on Email Sending's suppression list (a day for a short bounce), and the binding refuses to send to it: a sign-in code then raises a ticket (Signing in).
 
 ### Keys and secrets
 

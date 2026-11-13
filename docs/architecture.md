@@ -165,6 +165,12 @@ flowchart TD
  admins as every ticket is. The unique index on open site tickets makes it one open request an address; an address on
  a list is told to sign in; ten an hour for the whole site, then a 429. Nothing is emailed to the address typed: an
  admin adds it to the team's list and resolves the ticket. Logged as `access_requested`.
+- **An address that bounces** (`features/signin/bounced-service.ts`): Email Sending puts an address whose emails
+ bounce, or that marks one as spam, on its suppression list (a soft bounce for a day), and the binding refuses it
+ with `E_RECIPIENT_SUPPRESSED` (`platform/email.ts` keeps the code on its `EmailFailed`). A code to it then says the
+ address is bouncing and to ask the team manager for another (not "try again in a minute"), logs an `email_failed`
+ problem, and opens one site ticket (`alert_kind` `bounced:<email>`, topic members, "Emails to <email> are
+ bouncing"), emailed to the admins, one open an address. Hotmail and Outlook soft-bounce a new sender's mail at times.
 - **The code** (`sign_in_codes`): six digits, hashed with the email (so a code is good for its own address only),
  10 minutes, five wrong tries, and voided when a newer one is asked for. The page's Send a new code waits a minute
  (`public/signin.js`). The email (`auth/sign-in-mail.ts`, the one email to an address a visitor typed, after the check
@@ -744,7 +750,8 @@ ticket resolved before its first email could go never sends it.
 
 The site's own tickets (below) have no team and nobody to reply to: they're open or resolved, never waiting on
 anyone, and an old one can't reopen while a newer one about the same thing is open (a unique index allows one open
-ticket a kind). Access requests from the sign-in page are site tickets too (kind `access:<email>`, Signing in).
+ticket a kind). Access requests from the sign-in page are site tickets too (kind `access:<email>`, Signing in), and so are sign-in
+codes to an address that bounces (kind `bounced:<email>`).
 
 ### Monitoring
 

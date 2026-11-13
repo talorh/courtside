@@ -49,6 +49,11 @@ describe("the email port", () => {
 		const { binding } = fakeBinding({ code: "E_SENDER_NOT_VERIFIED", message: "sender domain not verified" });
 		await expect(createEmail(binding, { email: "alerts@saints.example", name: "Courtside" }).send({ to: ["a@x.com"], subject: "S", text: "T" })).rejects.toThrow("Email failed (E_SENDER_NOT_VERIFIED): sender domain not verified");
 	});
+
+	it("keeps the code on the error, so a caller can tell an address Email Sending won't send to", async () => {
+		const { binding } = fakeBinding({ code: "E_RECIPIENT_SUPPRESSED", message: "recipient suppressed" });
+		await expect(createEmail(binding, { email: "alerts@saints.example", name: "Courtside" }).send({ to: ["a@x.com"], subject: "S", text: "T" })).rejects.toMatchObject({ code: "E_RECIPIENT_SUPPRESSED" });
+	});
 });
 
 describe("emailing the admins", () => {

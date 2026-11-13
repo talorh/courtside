@@ -16,6 +16,7 @@ const CROSS_TEAM = new Set([
 	// The sign-in: a person's sessions and codes, before any team is known.
 	"src/auth/session-repository.ts", "src/auth/sign-in-codes-repository.ts", "src/auth/device-view-repository.ts",
 	"src/features/signin/access-repository.ts",
+	"src/features/signin/bounced-repository.ts",
 	// The jobs' reads across every team at once (which teams are busy; what every team's records know of, for the sweep).
 	"src/jobs/all-teams-repository.ts",
 	// The Friday check's read of every team's weekend games.

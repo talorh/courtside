@@ -3,6 +3,7 @@ import { CLUB, mailFrom } from "../club.ts";
 // typed, and only once sign-in-service.ts has found it on a team's list or the admins table, so it's allowed the email
 // port alongside features/admin/admin-mail.ts (scripts/rules.mjs).
 import type { AppDeps } from "../app/deps.ts";
+import { EmailFailed } from "../platform/email.ts";
 import { codeEmailHtml } from "./sign-in-email.ts";
 
 /** How long a code is good for, as the email says it. */
@@ -23,6 +24,9 @@ ${JUNK_TIP.before} Not junk ${JUNK_TIP.after}
 
 If you didn't ask for a code, you can ignore this email: nobody can sign in without it.`;
 }
+
+/** A code the binding refused because Email Sending won't send to the address (it bounced, or was marked as spam). */
+export const isBounced = (err: unknown) => err instanceof EmailFailed && err.code === "E_RECIPIENT_SUPPRESSED";
 
 export async function sendCodeEmail(deps: AppDeps, email: string, code: string): Promise<void> {
 	const subject = `${deps.config.staging ? "[Staging] " : ""}Your ${CLUB.siteName} sign-in code is ${spaced(code)}`;

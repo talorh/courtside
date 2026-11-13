@@ -13,7 +13,7 @@ import type { LiveRecording } from "../../src/platform/stream-live-app.ts";
 import type { PlayhqPort, PlayhqResult, PlayhqTeamFixture } from "../../src/platform/playhq.ts";
 import type { AiPort, ModelStanding } from "../../src/platform/workers-ai.ts";
 import { createTestDb } from "./d1-sqlite.ts";
-import type { EmailPort, OutgoingEmail } from "../../src/platform/email.ts";
+import { EmailFailed, type EmailPort, type OutgoingEmail } from "../../src/platform/email.ts";
 import type { JoinAnswer, JoinerPort, JoinRequest, JoinResult } from "../../src/platform/joiner.ts";
 
 export const TEST_CONFIG: AppConfig = {
@@ -288,7 +288,7 @@ export class FakeEmail implements EmailPort {
 		if (this.failNext) {
 			const code = this.failNext;
 			this.failNext = null;
-			throw new Error(`Email failed (${code}): the binding refused it`);
+			throw new EmailFailed(code, "the binding refused it");
 		}
 		this.sent.push(email);
 	}

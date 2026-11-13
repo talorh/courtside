@@ -80,7 +80,9 @@ ${table(["Protection", "What it does"], [
 <p>The site sends from ${code(`${mailFrom()}`)} only, through Email Sending's binding, which refuses any other
 sender. Its SPF and DKIM records sit on ${code(`cf-bounce.${CLUB.domain}`)}. DMARC reports go to Cloudflare's DMARC
 Management, which shows who sends mail as ${CLUB.domain}. The domain's own SPF and a DMARC policy of
-reject mean mail forged in ${CLUB.domain}'s name is refused. Email Routing forwards ${code(`security@${CLUB.domain}`)}.</p>
+reject mean mail forged in ${CLUB.domain}'s name is refused. Email Routing forwards ${code(`security@${CLUB.domain}`)}. An
+address whose emails bounce, or that marks one as spam, goes on Email Sending's suppression list (a day for a short
+bounce), and the binding refuses to send to it: a sign-in code then raises a ticket (Signing in).</p>
 <h3>Keys and secrets</h3>
 <p>Secrets are stored on the Worker, never in the code. Most services are bindings and need no key at all.</p>
 ${table(["Secret", "What it unlocks"], [

@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 14 Nov 2026
 
+- [Fix] **Sign in:** Fixed an issue where someone whose emails bounce was told to try again in a minute. The page now says their address is bouncing and to ask their team manager for another, and the site's admins get a ticket about it.
 - [Fix] **Sign in:** Fixed an issue where Request access's name and team boxes didn't look like the email box, and the team box showed an example team that could read as already filled in.
 - [Feature] **Sign in:** Someone who can't get in can now raise an access request from the sign-in page (Can't get in? Ask your team manager, or raise an access request here): their name, team and email open a ticket for the site's admins, who add them to the team's list.
 - [Enhancement] **Help:** What is the aim here? now says the code is open source, with the GitHub link (github.com/talorh/courtside), and that there's no desire to make money from any of it.

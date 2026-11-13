@@ -50,6 +50,8 @@ ${faqItem("g-signin", "Someone can't sign in", html`<ul class="steps">
 <li>The code goes to the email on the list, so check it's spelt right on <b>Manage team</b>.</li>
 <li>Check the junk or spam folder. On Hotmail or Outlook, they mark it <b>Not junk</b> and add ${mailFrom()} to their
 contacts.</li>
+<li><b>Emails bouncing?</b> If emails to their address bounce, the site stops sending to it for a while, and the sign-in
+page tells them so. Add another email address for them on <b>Manage team</b>, a Gmail one if they have it.</li>
 <li><b>Too many codes?</b> Someone who asks for 10 codes in an hour (or 20 in a day), or types too many wrong codes,
 has to wait, and the sign-in page tells them so. While they're waiting, they're listed under <b>Waiting to sign in</b> at the top of <b>Manage team</b>.
 Checked it's really them? Tap <b>Let them sign in</b> and they can ask for a new code straight away.</li>

@@ -29,6 +29,10 @@ team and their email, behind the same Turnstile check, open one of the site's ow
 request: the name, the team), emailed to the admins. An address gets one open request at a time, an address already on a
 list is told to sign in, and the whole site takes ten an hour. Nothing is ever emailed to the address typed: an admin
 adds it to the team's list (Manage team) and resolves the ticket, and the person signs in as everyone does.</p>
+<p>An address Email Sending won't send to (its emails bounced, or its owner marked one as spam, so it's on Email
+Sending's suppression list: a day for a short bounce) can't get a code. The sign-in page says the address is bouncing and
+to ask the team manager for another, not to try again, and the admins get one ticket (Emails to the address are
+bouncing) while it's open. Add another address for them, or lift it sooner on Email Sending's suppression list.</p>
 ${signInDiagram()}
 ${table(["Limit", "Why"], [
 		["10 codes an hour for one address (then a 15-minute wait, again while the hour still has 10), and 20 a day (then a day's wait)", "Stops one inbox being flooded, and code after code being guessed. A team manager can end the wait from Manage team"],
