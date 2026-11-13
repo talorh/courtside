@@ -1,4 +1,4 @@
-import { CLUB, mailFrom } from "../../../club.ts";
+import { CLUB, mailFrom, onSubdomain } from "../../../club.ts";
 // The Documentation page's opening sections: what the site is, and how it's set up on Cloudflare.
 import { html } from "../../../shared/html.ts";
 import { code, type DocSection, table } from "./docs-blocks.ts";
@@ -27,12 +27,15 @@ already worked is told it's done.</li></ul>`});
 
 export const platform = (): DocSection => ({ id: "cloudflare", title: "Cloudflare setup", body: html`
 <p>Everything runs in the club's own Cloudflare account (its id in ${code("deploy.config.ts")}), on the
-Workers Paid plan (US$5 a month) with the Images and Stream bundle (US$5 a month), and the domain registered through
-Cloudflare Registrar, renewing by itself, with DNSSEC on. Each piece below is one Cloudflare product; the Glossary says
+Workers Paid plan (US$5 a month) with the Images and Stream bundle (US$5 a month), and ${onSubdomain()
+		? html`a subdomain of the club's own ${CLUB.zone}, a zone in the same account that the club's website shares`
+		: "the domain registered through Cloudflare Registrar, renewing by itself, with DNSSEC on"}. Each piece below is one Cloudflare product; the Glossary says
 what each is in plain English, and the dashboard's left-hand menu is organised the same way (Compute for the Worker,
 Artifacts, Builds and Containers; Storage &amp; databases for D1 and R2; Images &amp; Stream; Email; the domain under its zone).</p>
 ${table(["Piece", "What it is", "What it's for"], [
-		["Domain", html`${code(`${CLUB.domain}`)}, its zone id in ${code("deploy.config.ts")}`, "Registered at Cloudflare, renewing automatically, with DNSSEC on"],
+		["Domain", html`${code(`${CLUB.domain}`)}, its zone id in ${code("deploy.config.ts")}`, onSubdomain()
+			? `A subdomain of the club's own ${CLUB.zone}: the zone's rules for the site are its own, each matching ${CLUB.domain} alone, and the zone's own settings stay the club's`
+			: "Registered at Cloudflare, renewing automatically, with DNSSEC on"],
 		["Worker", html`${code("courtside")} on the custom domain ${CLUB.domain} only`, "Every page, the API, the sign-in and the scheduled jobs. Its workers.dev address is off"],
 		["D1", html`${code("courtside")}, in the region nearest the club`, "All the site's data, with 30 days of Time Travel to undo a bad change"],
 		["R2", html`${code("courtside-originals")}, in the same region`, "Uploaded videos (deleted after 30 days, once Stream has its copy) and the nightly backups (kept 14 days, locked so nothing can delete or overwrite one before then)"],

@@ -3,7 +3,7 @@
 import { CLUB } from "../../src/club.ts";
 
 export const EXAMPLE_CLUB: typeof CLUB = {
-	siteName: "Courtside", domain: "saints.example", name: "Saints", nickname: "Saints", fixtureName: "Saints",
+	siteName: "Courtside", domain: "saints.example", zone: "saints.example", name: "Saints", nickname: "Saints", fixtureName: "Saints",
 	homeVenue: "Saints Stadium", rivals: ["Westside", "Bayside"], league: "VJBL", seasonPhases: { grading1: "Grading phase 1", crossover: "Crossover game", grading2: "Grading phase 2", championship: "Championship season" }, uniforms: ["Navy", "White"], cheer: "Go Saints!",
 	timeZone: "Australia/Melbourne", dailyJobUtcHours: [16, 17], seasonStartMonth: 10, english: "Australian",
 	childSafety: { body: "Basketball Victoria", url: "https://www.basketballvictoria.com.au/resources/child-safe-standards" },

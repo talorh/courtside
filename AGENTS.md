@@ -55,6 +55,9 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
   account-level (deleting videos or data, buying plans, DNS, Email Routing, zone rules, secrets) needs an explicit yes
   for that step. Read-only `cf` commands, `cf dev`, `cf build`, `cf workers types` and `--local` are always fine.
   `--dry-run` first.
+- **A zone the club shares is the club's.** When the site is on a subdomain (`CLUB.domain` isn't `CLUB.zone`, INSTALL.md
+  section 8), never change a zone-wide setting, or a rule that isn't the site's, without the club's yes. The site's
+  rules each match its own hostname and are added beside the club's (a phase's update replaces all its rules).
 - **Absolutely private.** Every page and file stays behind the sign-in, with no bypass. The only open paths are the
   sign-in page and its own few files, and `/.well-known/security.txt`. Pages send `noindex`, and AI bots are blocked at
   the zone (`infra/zone/bot-management.json`).

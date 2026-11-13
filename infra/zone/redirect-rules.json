@@ -3,7 +3,7 @@
   "rules": [
     {
       "description": "<worker>: always HTTPS (independent of the zone-wide Always Use HTTPS setting)",
-      "expression": "(not ssl)",
+      "expression": "(http.host eq \"<domain>\" and not ssl)",
       "action": "redirect",
       "action_parameters": {
         "from_value": {

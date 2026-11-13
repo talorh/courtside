@@ -1,4 +1,4 @@
-import { CLUB } from "../../club.ts";
+import { CLUB, onSubdomain } from "../../club.ts";
 // What the Costs page charges with: Cloudflare's list prices for what the site has (the account's subscriptions:
 // Workers Paid, the Images and Stream bundle, R2, and the domain), in US dollars; the baseline a team's season is
 // estimated from; and the months it counts in (UTC months, as Cloudflare bills them).
@@ -22,8 +22,11 @@ export const SET_LOCAL_PER_USD = CLUB.currency.perUsd;
  * twice, three highlight clips a game. */
 export const BASELINE = { games: 30, gameMinutes: 60, families: 9, viewsPerFamily: 2, clipsAGame: 3, clipMinutes: 0.5, originalGb: 5 } as const;
 
+/** The domain's yearly fee: none on a subdomain of the club's own domain, which the club pays for anyway. */
+export const domainAYear = () => (onSubdomain() ? 0 : PRICES.domainAYear);
+
 /** The site's own fixed costs a month, shared between the teams running that month by the days each ran in it. */
-export const fixedAMonth = () => PRICES.workersPaid + PRICES.bundle + PRICES.domainAYear / 12;
+export const fixedAMonth = () => PRICES.workersPaid + PRICES.bundle + domainAYear() / 12;
 
 /** "2026-11" for the UTC month `iso` is in. */
 export const monthOf = (iso: string) => iso.slice(0, 7);

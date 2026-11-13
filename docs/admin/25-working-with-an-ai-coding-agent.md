@@ -142,6 +142,8 @@ of the same repository: you work there, on `staging` and on your own branches.
 - No real player's name anywhere but a team's own pages: tests, Help and staging use made-up names after NBA players.
 - Nothing about the club beyond `src/club.ts`, and nothing about the account beyond `deploy.config.ts`: no names,
   ids, addresses or keys anywhere else in the code or the docs.
+- On a subdomain of the club's domain (`CLUB.domain` isn't `CLUB.zone`), the zone and its settings are the club's: the
+  site's rules match its own hostname and go beside the club's, never in place of them.
 - Use the `cf` CLI, never wrangler. Find a command with `cf cli search "<what you want to do>"`.
 
 ## 5. What you may do, and what needs the admin's yes

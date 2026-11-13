@@ -1,4 +1,4 @@
-import { CLUB } from "../../../club.ts";
+import { CLUB, onSubdomain } from "../../../club.ts";
 // The Documentation page's costs and billing section: what Cloudflare charges, what a team costs, and how Costs works.
 import { html } from "../../../shared/html.ts";
 import { type DocSection, table } from "./docs-blocks.ts";
@@ -13,7 +13,7 @@ ${table(["What", "Cloudflare's price", "Notes"], [
 		["Stream storage past the bundle", "US$5 for each further 1,000 minutes stored, a month", "About 60 minutes a game: a 30-game season is about 1,800 minutes, so the second thousand"],
 		["Stream watching", "US$1 for each 1,000 minutes watched", "Nine families watching a game twice is about 1,000 minutes a game"],
 		["R2 originals", "US$0.015 a GB a month past the free 10 GB", "Originals are kept 30 days, so a few games' worth at a time"],
-		["The domain", "About US$14 a year", `${CLUB.domain}, renewing by itself`],
+		["The domain", onSubdomain() ? "US$0" : "About US$14 a year", onSubdomain() ? `${CLUB.domain} is a subdomain of the club's own ${CLUB.zone}, so it costs the site nothing` : `${CLUB.domain}, renewing by itself`],
 		["Containers (the video joiner)", "Inside Workers Paid: 25 GiB-hours of memory, 375 vCPU-minutes and 200 GB-hours of disk a month, then about US$0.04 for each hour it's awake", "Awake about ten minutes a night for its test (about 20 of the 25 GiB-hours a month) and about a quarter of an hour for each game joined, so a busy month costs a few cents"],
 		["Everything else", "US$0", "D1, the WAF, Turnstile, Email Routing, Workers AI's daily free allowance and Artifacts all sit inside free tiers"],
 	])}

@@ -1,4 +1,4 @@
-import { CLUB, mailFrom } from "../../../club.ts";
+import { CLUB, mailFrom, onSubdomain } from "../../../club.ts";
 // The Documentation page's glossary: Cloudflare's words and the site's own, in plain English, for a new admin.
 import { html } from "../../../shared/html.ts";
 import { type DocSection, table } from "./docs-blocks.ts";
@@ -25,7 +25,7 @@ ${table(["Word", "What it means here"], [
 		["Images", "Cloudflare's picture service: it stores each photo privately and serves two sizes (a thumbnail and a large copy) through signed links. The bundle includes 100,000 photos."],
 		["Workers AI", "Cloudflare's AI models. The site uses one (Gemma 4) for Ask Virtual Team Manager, which answers from the asker's own Help page, the Documentation AI assistant and reading PlayHQ fixture pages. Questions aren't stored."],
 		["Turnstile", "Cloudflare's \"are you a person\" check on the sign-in page, usually invisible. A code is only emailed once it passes."],
-		["Zone", `A domain on Cloudflare and its settings: ${CLUB.domain}, its DNS, certificate, and the protections below.`],
+		["Zone", onSubdomain() ? `A domain on Cloudflare and its settings: ${CLUB.zone}, the club's own domain, with ${CLUB.domain} in it beside the club's website. Its DNS, certificate and settings are the club's; the site adds its own rules, for ${CLUB.domain} alone.` : `A domain on Cloudflare and its settings: ${CLUB.domain}, its DNS, certificate, and the protections below.`],
 		["WAF", "The web application firewall: rules at the edge that turn away attacks before a request reaches the Worker. Cloudflare's managed rules plus three of our own."],
 		["Managed challenge", "Cloudflare's own check on a page load from someone not signed in: a verify-you're-human page when Cloudflare isn't sure."],
 		["Rate limiting", "Too many requests from one address in a short time are blocked for a while: here, more than 60 writes or API calls in 10 seconds."],

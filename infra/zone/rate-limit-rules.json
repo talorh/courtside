@@ -3,7 +3,7 @@
   "rules": [
     {
       "description": "<worker>: limit API and form posts per IP",
-      "expression": "(starts_with(http.request.uri.path, \"/api/\") or http.request.method eq \"POST\")",
+      "expression": "(http.host eq \"<domain>\" and (starts_with(http.request.uri.path, \"/api/\") or http.request.method eq \"POST\"))",
       "action": "block",
       "ratelimit": {
         "characteristics": [

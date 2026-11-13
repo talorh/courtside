@@ -12,8 +12,11 @@ Courtside is published; your club's copy of the code lives in your own Cloudflar
 
 - **A Cloudflare account** on the Workers Paid plan (US$5 a month) with the Images and Stream bundle (US$5 a month),
   billing set up. You'll be the account's owner; add anyone else who'll run the site as a member.
-- **A domain**: one you'll register through Cloudflare Registrar (the agent can do it), or one already on Cloudflare
-  as a zone in this account, or one elsewhere whose nameservers you can point at Cloudflare.
+- **A domain of its own for the site** (recommended): one you'll register through Cloudflare Registrar (the agent can
+  do it, about US$14 a year), or one already on Cloudflare as a zone in this account, or one elsewhere whose nameservers
+  you can point at Cloudflare. A domain of its own keeps the site's security rules, email and costs apart from
+  everything else the club runs. If the club would rather put it on a subdomain of its own domain
+  (`videos.yourclub.org.au`), it can, when that domain is already on Cloudflare: section 8 says what that looks like.
 - **A computer**, Linux or a Mac, that you'll set up in section 2.
 - **Your club's logo** as a square PNG on white (any size from 512 px up) and, if you have one, the mark alone on a
   transparent background. The agent makes every size the site needs from them. No logo yet is fine: a stand-in is drawn
@@ -102,7 +105,8 @@ The agent fills both from your answers:
 | Your currency, for the Costs page | `currency` | AUD, Australian dollars, 1.42 to the US dollar |
 | Four colours: the deep bar colour, the button colour, its darker ink, its pale tint; and a dark-mode set | `colors` | The example file shows the shape |
 | Where your state body's child safety standards are | `childSafety` | A name and a link |
-| Your domain | `domain` | saints.example |
+| Your domain: one of its own (recommended), or a subdomain of the club's domain (section 8) | `domain` | saints.example; or videos.yourclub.org.au |
+| The Cloudflare zone it's in: the domain itself, or for a subdomain the club's domain | `zone` | saints.example; or yourclub.org.au |
 | Your logo files, or "draw one" | `public/` | logo.png and club-mark.webp |
 | Your email, for the first site admin, the account's alerts and the Back soon page's own list | `npm run admin`, Cloudflare notifications, `maintenance/cloudflare.config.ts` `ADMIN_EMAILS` | you@yourclub.org |
 | The region nearest your club | `deploy.config.ts` `region` | aws:ap-southeast-2 |
@@ -121,7 +125,7 @@ a dry run first, then for real after your yes. Read-only commands need no yes.
    the real site while maintenance is on. It's the page's own list, kept apart from the site's admins table so it works
    when the database doesn't; with the example address left there, nobody gets through.
 2. **The domain** (§1): registers it through Cloudflare Registrar, or adds the existing zone, with DNSSEC on. Records
-   the zone id in `deploy.config.ts`.
+   the zone id in `deploy.config.ts`. On a subdomain, nothing to register: the club's zone's id (section 8).
 3. **The databases** (§1, §3): D1 `courtside` (live) and `courtside-staging`, in the region nearest you; applies
    `migrations/` to both; records both ids.
 4. **The buckets** (§1, §3): R2 `courtside-originals` and `courtside-staging`, with the CORS, lifecycle and lock
@@ -130,9 +134,9 @@ a dry run first, then for real after your yes. Read-only commands need no yes.
 5. **Stream** (§1): a signing key for playback links, and a token with Stream Edit for uploads, clips and live inputs;
    records the account's customer code in `deploy.config.ts`.
 6. **Turnstile** (§1): a widget for the site and one for staging's address; the site keys go in `deploy.config.ts`.
-7. **Email** (§1): Email Sending onboarded for the domain (its DNS records added), the sender `alerts@<domain>`;
+7. **Email** (§1; on a subdomain, section 8): Email Sending onboarded for the domain (its DNS records added), the sender `alerts@<domain>`;
    Email Routing forwarding `security@<domain>` to you; the SPF and DMARC records from `infra/zone/`.
-8. **The zone's protections** (§3): the WAF rules, rate limit, redirects, security headers and bot settings from
+8. **The zone's protections** (§3; on a subdomain, section 8): the WAF rules, rate limit, redirects, security headers and bot settings from
    `infra/zone/`, each applied with the domain filled in.
 9. **A read-only token** (Secrets) for the admin area's Platform and Costs pages: account analytics, the zone's
    analytics, Security Center insights and billing read.
@@ -171,3 +175,54 @@ Your club's details belong in `src/club.ts`, `deploy.config.ts`, the images in `
 files, and nowhere else. The tests describe the example Saints club and keep passing however you fill the config in,
 so `npm run check` stays green and later improvements to Courtside can be merged into your copy from GitHub, then
 released the usual way.
+
+## 8. If you'd rather use a subdomain
+
+We recommend a domain of its own (section 1). If the club would rather the site lived at, say,
+`videos.yourclub.org.au`, it can, as long as `yourclub.org.au` is already a zone on Cloudflare. The site then shares
+that zone with the club's website, so it takes care to change nothing of the club's. This is what's different.
+
+**What it needs**
+
+- **The club's domain in the site's Cloudflare account.** A Worker can only take a hostname in a zone of its own
+  account, and making the subdomain a zone of its own is an Enterprise feature. If the club's domain is in someone
+  else's account (a web designer's, say), either the site goes in that account, with you as a member, or the domain
+  moves into the club's account first.
+- **A name nothing uses yet.** A Worker's custom domain can't take a hostname that already has a DNS record (a CNAME,
+  say). Pick one the club's website doesn't use.
+- **The two settings:** in `src/club.ts`, `domain: "videos.yourclub.org.au"` and `zone: "yourclub.org.au"`; in
+  `deploy.config.ts`, `zoneId` is `yourclub.org.au`'s zone id.
+
+**What the agent does differently** (section 5's steps)
+
+- **The domain (step 2):** nothing to register. DNSSEC is the club's choice for its own domain, and is left as it is.
+- **Email (step 7):** Email Sending onboards `videos.yourclub.org.au` as a sending domain of its own (its `cf-bounce`,
+  SPF, DKIM and DMARC records go on the subdomain). Email Routing adds the subdomain under its Settings, then the rule
+  forwarding `security@videos.yourclub.org.au`. The SPF and DMARC from `infra/zone/` go on the subdomain's names
+  (`videos.yourclub.org.au` and `_dmarc.videos.yourclub.org.au`), one record of each: where onboarding already made one,
+  it's edited to match, never doubled. The club's own mail records on `yourclub.org.au` aren't touched.
+- **The zone's protections (step 8):** the zone is the club's.
+  - Every rule in `infra/zone/` matches the site's own hostname alone (`http.host eq "<domain>"`), so it can't touch
+    the club's website. Each is added beside the club's own rules, never in place of them: updating a phase's rules
+    replaces all of them, so the agent reads the phase's rules first and sends them back with the site's added.
+  - On the Free plan a zone has five custom rules and one rate-limiting rule. The site uses two and one. If the club's
+    zone has no room, the agent stops and asks: the club may change its plan or its own rules, or go without the site's
+    rate limit (the site's own sign-in limits still hold).
+  - The zone-wide settings stay as the club has them. HSTS: the site's Worker sends its own header on every answer.
+    Always Use HTTPS: the site's redirect rule covers its hostname. Browser Cache TTL: the site's cache rule
+    (`cache-rules.json`) keeps phones from holding an old script, in its place. Blocking AI bots: the site's pages are
+    already `noindex` and behind its sign-in, so it's only changed if the club wants it for its whole domain.
+  - After the first deploy, `curl -sI https://videos.yourclub.org.au/signin.js` shows the file's own `Cache-Control`,
+    not hours. If it shows hours, the club's zone setting is winning, and the agent asks the club about it.
+
+**What it means afterwards**
+
+- **Platform's request count is the whole zone's,** the club's website included, and it says so.
+- **Costs carry no domain fee,** as the club pays for its domain anyway. But Costs' Actual shares out every charge by
+  use on the account's bill other than watching and R2, so if the club's website also runs in this account and is
+  billed by use (another Worker, another bucket), that lands in the teams' costs. A domain and an account of its own
+  keep those figures clean.
+- **Whoever runs the site has a seat in the account the club's website is in.** Give each person only the role they
+  need.
+- **The site's own addresses are on the subdomain:** `alerts@videos.yourclub.org.au` sends, and
+  `security@videos.yourclub.org.au` reaches you.

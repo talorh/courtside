@@ -19,6 +19,10 @@ export const CLUB = {
 	/** The site's domain, a zone in the Cloudflare account (cloudflare.config.ts puts the Worker on it): links in emails,
 	 * the sender alerts@ and security@ addresses. */
 	domain: "saints.example",
+	/** The zone in this Cloudflare account the domain sits in. The same as `domain` for a domain of its own (recommended);
+	 * for a subdomain of the club's own domain (videos.yourclub.org.au), that domain (yourclub.org.au), already a zone in
+	 * this account, which the site shares with the club's website (INSTALL.md section 8). */
+	zone: "saints.example",
 	/** The club's full name, as its teams are named on Home: "Saints U12 Boys 12.1". */
 	name: "Saints",
 	/** The short name teams go by in the top bar and titles ("Saints B12.1"), in game lines ("the Saints take on") and
@@ -62,6 +66,9 @@ export const CLUB = {
 		dark: { bar: "#0E1A33", button: "#4B86E8", buttonInk: "#8FB4F2", soft: "#142447" } as ClubColors,
 	},
 };
+
+/** The site is on a subdomain of the club's own domain, in a zone it shares with the club's website. */
+export const onSubdomain = () => CLUB.domain !== CLUB.zone;
 
 /** "https://saints.example": the site's address, for links in emails. */
 export const siteOrigin = () => `https://${CLUB.domain}`;

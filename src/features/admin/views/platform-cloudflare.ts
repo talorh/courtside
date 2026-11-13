@@ -1,4 +1,4 @@
-import { CLUB } from "../../../club.ts";
+import { CLUB, onSubdomain } from "../../../club.ts";
 // Platform's Cloudflare part (what the Cloudflare dashboard says about the site and its security): the
 // Worker, its database, the originals, Stream, Workers AI and the zone over the last 30 days, against what's included.
 import type { CloudflareFigures } from "../../../platform/cloudflare-insights.ts";
@@ -29,5 +29,7 @@ ${row("Database rows written", `${thousands(f.d1.rowsWritten)} of ${thousands(D1
 ${row("Uploaded originals (R2)", `${gb(f.r2.bytes)} in ${thousands(f.r2.objects)} ${f.r2.objects === 1 ? "file" : "files"}`, "Kept 30 days, then Stream's copy is the video. 10 GB is free, then US$0.015 a GB a month.")}
 ${row("Minutes watched (Stream)", thousands(f.streamMinutesWatched), "Free within the plan's allowance, then US$1 for every 1,000; Costs shows what Cloudflare charged.")}
 ${row("Workers AI", `${thousands(aiADay)} of ${thousands(AI_NEURONS_A_DAY)} a day`, "Neurons, a day on average (Ask, the Documentation assistant, fixture pages); the first 10,000 each day are free.", aiADay, AI_NEURONS_A_DAY)}
-${row(`Requests to ${CLUB.domain}`, `${thousands(f.zone.requests)}; ${thousands(f.zone.threats)} threats stopped`, "Everything that reached the address, the human check and blocked bots included.")}`);
+${row(`Requests to ${CLUB.zone}`, `${thousands(f.zone.requests)}; ${thousands(f.zone.threats)} threats stopped`, onSubdomain()
+		? `The whole zone, so the club's other sites too, not ${CLUB.domain} alone; the human check and blocked bots included.`
+		: "Everything that reached the address, the human check and blocked bots included.")}`);
 }

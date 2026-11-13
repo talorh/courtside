@@ -21,7 +21,7 @@ cf auth whoami                            # your email, this account
 | Piece | What it is | Where it's set |
 | --- | --- | --- |
 | Account | The club's own, Workers Paid, with the Images and Stream bundle | Nothing to do with the site lives anywhere else |
-| Domain | `CLUB.domain` (`src/club.ts`): registered through Cloudflare Registrar or an existing zone, auto-renew, DNSSEC on | `cf zones get -z $z` |
+| Domain | `CLUB.domain` (`src/club.ts`) in the zone `CLUB.zone`. Recommended, a domain of its own (the two the same): registered through Cloudflare Registrar or an existing zone, auto-renew, DNSSEC on. Or a subdomain of the club's own domain, a zone already in this account that the club's website shares (On a subdomain, below) | `cf zones get -z $z` |
 | Worker | `DEPLOY.worker` (`courtside` unless renamed): the custom domain only, workers.dev off, Preview URLs on (staging), crons `*/5 * * * *`, one an hour for the 3am job (`CLUB.dailyJobUtcHours`) and one for each UTC time that is 6am Friday in `CLUB.timeZone` (the Friday check), placed in `DEPLOY.region`, observability and Issues on | `cloudflare.config.ts` |
 | D1 | `<worker>` (live) and `<worker>-staging`, in the region nearest the club | `cf d1 list`; migrations in `migrations/` |
 | R2 | `<worker>-originals`: uploaded videos and the nightly backups; `<worker>-staging` | `infra/r2-cors.json`, `r2-lifecycle.json`, `r2-lock.json`; `infra/staging/` |
@@ -54,7 +54,8 @@ made with `cf user tokens create --name <name> --policies @<git-ignored file>` o
 
 ### Protection at the edge (zone rules in `infra/zone/`)
 
-Each file carries `<domain>` and `<worker>` as placeholders: fill them in as the file is applied.
+Each file carries `<domain>` and `<worker>` as placeholders: fill them in as the file is applied. Every rule matches
+the site's own hostname alone (`http.host eq "<domain>"`), so the same files do for a zone the site shares.
 
 | Protection | How |
 | --- | --- |
@@ -64,9 +65,23 @@ Each file carries `<domain>` and `<worker>` as placeholders: fill them in as the
 | Rate limiting | `rate-limit-rules.json`: 60 POST or `/api/` requests in 10 s from one address, then blocked 10 s |
 | Bots | `bot-management.json`: AI bots blocked, JavaScript detections off, Bot Fight Mode off (it can challenge the upload script) |
 | HTTPS | `redirect-rules.json`: HTTP to HTTPS 301, and the zone's Always Use HTTPS setting on as well; HSTS with preload from the zone (`security-header.json`) and from the Worker |
-| Browser Cache TTL | 0 (Respect Existing Headers), so a deploy's new scripts aren't held for hours by phones |
+| Browser Cache TTL | 0 (Respect Existing Headers), so a deploy's new scripts aren't held for hours by phones; on a subdomain, `cache-rules.json` (browsers keep the site's own headers) in place of the zone's setting |
 | Web Analytics, email obfuscation | Off: every page is behind the sign-in, and their scripts would be blocked by the CSP |
 | Mail | Root SPF `v=spf1 include:_spf.mx.cloudflare.net ~all` (Email Routing only), DMARC `p=reject; sp=reject` with reports to DMARC Management (`dns-spf.json`, `dns-dmarc.json`), Email Sending's own records on `cf-bounce` |
+
+### On a subdomain of the club's domain
+
+A domain of its own is recommended (`INSTALL.md` section 8 says why and what changes). When `CLUB.domain` is a
+subdomain of `CLUB.zone`, the zone is the club's, shared with its website, and:
+
+| What | On a subdomain |
+| --- | --- |
+| The zone | Must be in this account: a Worker's custom domain takes a hostname in a zone of its own account, and a subdomain as a zone of its own is Enterprise only. `zoneId` is the club's zone's. The hostname must have no DNS record yet |
+| Rules (`infra/zone/`) | Each matches the site's hostname alone. Added beside the club's: a phase's update replaces all its rules, so get the phase's rules, keep every one whose description doesn't start with `<worker>:`, add the file's, and send the whole list. The Free plan has five custom rules and one rate-limiting rule a zone: no room, ask |
+| Zone-wide settings | Left as the club has them: `security_header` (the Worker sends HSTS itself), `always_use_https` (the redirect rule covers the hostname), `browser_cache_ttl` (`cache-rules.json` instead), bot management (the club's call), DNSSEC (the club's) |
+| Email Sending | The subdomain onboarded as its own sending domain: `cf-bounce.<domain>`, SPF, DKIM and DMARC on it |
+| Email Routing | The subdomain added under the zone's Email Routing settings, then a literal rule for `security@<domain>` (catch-all is the apex's only). SPF and DMARC from `infra/zone/` on the subdomain's names, one of each |
+| Platform, Costs | The zone's request count is the whole zone's (Platform says so); no domain fee in Costs; the account's other charges by use are shared between the teams |
 
 ### Cloudflare's own notifications
 
@@ -80,7 +95,7 @@ cf workers get <worker>                             # domain, subdomain off, pre
 cf workers secrets list --worker <worker>           # the seven secrets
 cf d1 list; cf r2 buckets list
 cf r2 buckets cors get <worker>-originals; cf r2 buckets lifecycle get <worker>-originals; cf r2 buckets locks get <worker>-originals
-cf rulesets entrypoint get http_request_firewall_custom -z $z   # and _managed, http_ratelimit, http_request_dynamic_redirect
+cf rulesets entrypoint get http_request_firewall_custom -z $z   # and _managed, http_ratelimit, http_request_dynamic_redirect, http_request_cache_settings (a subdomain)
 cf bot-management get -z $z
 for s in email_obfuscation security_header browser_cache_ttl always_use_https min_tls_version; do cf zones settings get $s -z $z; done
 cf dns records list -z $z; cf email-routing settings get -z $z
@@ -100,8 +115,9 @@ Dry run, the owner's yes, then for real; then update `infra/` (or this file) in 
 d=infra/zone
 cf rulesets entrypoint update http_request_firewall_managed -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/waf-managed.json)" --dry-run
 cf rulesets entrypoint update http_request_firewall_custom -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/waf-custom-rules.json)" --dry-run
-cf rulesets entrypoint update http_ratelimit -z $z --body "$(cat $d/rate-limit-rules.json)" --dry-run
+cf rulesets entrypoint update http_ratelimit -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/rate-limit-rules.json)" --dry-run
 cf rulesets entrypoint update http_request_dynamic_redirect -z $z --body "$(sed "s/<domain>/$DOMAIN/g" $d/redirect-rules.json)" --dry-run
+cf rulesets entrypoint update http_request_cache_settings -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/cache-rules.json)" --dry-run   # a subdomain only
 cf bot-management update -z $z --body "$(cat $d/bot-management.json)" --dry-run   # send enable_js too: a bare update turns it on
 cf zones settings edit security_header -z $z --body "$(cat $d/security-header.json)" --dry-run
 cf zones settings edit browser_cache_ttl -z $z --body '{"value":0}' --dry-run
@@ -119,7 +135,9 @@ beside the old, the release reads either and writes the new, and a later migrati
 known good. Run `npm run release -- --check-only` first, so the gap between the migration and the deploy is short, and
 take a Time Travel bookmark (§5) before a migration that rewrites rows.
 
-A zone-level ruleset update replaces every rule in that phase, so merge with the file first. The nightly backups'
+A zone-level ruleset update replaces every rule in that phase, so merge with the file first (in a zone the site
+shares, the club's own rules stay as they are: On a subdomain, above). The zone-wide settings above (`bot-management`,
+`security_header`, `browser_cache_ttl`) are for a domain of the site's own only. The nightly backups'
 lock means nothing can delete or overwrite one in its first 14 days; the lifecycle rule deletes each at 14 days.
 
 Onboarding a new team needs nothing here: Stream, Images, D1 and R2 are shared by every team.

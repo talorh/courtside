@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 14 Nov 2026
 
+- [Enhancement] **Setup:** A club can put the site on a subdomain of its own domain (videos.yourclub.org.au) when that domain is already on Cloudflare, though a domain of its own is still recommended. The install guide's new section 8 says what changes, every zone rule now matches the site's own hostname alone, and the Documentation, Costs and Platform read right on a subdomain.
 - [Fix] **Setup:** Fixed an issue where a club whose league isn't called VJBL couldn't add a game or a PlayHQ fixture, and whose currency isn't Australian dollars couldn't keep its Costs rate: the database named both. It now takes the club's own, from its club file, and the example data, Help, the Documentation and the fixture readers say the club's league, venue, name and currency rather than the example club's.
 - [Fix] **Setup:** The install guide now says to put the club's admins in the Back soon page's own list (ADMIN_EMAILS in its config), without which nobody gets through while maintenance is on, and a change to todo.md alone no longer asks for another staging deploy.
 - [Fix] **Platform:** Fixed an issue where the video joiner's code was outside the line-length and comment checks every change runs. The checks now cover it.
