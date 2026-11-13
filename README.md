@@ -99,7 +99,9 @@ Dream Team stand in for real people throughout the code, the tests and these doc
 **What it isn't.** Courtside keeps no stats and makes no attempt at game analysis: that's what
 [Superstat](https://superstat.com.au) does, and the two sit side by side. Any video on the site downloads in HD, so a
 team with its own Superstat subscription downloads the game from Courtside and puts it into Superstat for the
-breakdown. There are no live scores, comments or chat either; the team's WhatsApp group stays the team chat.
+breakdown. Live scores aren't here either: the My Hoops app or PlayHQ has them, whichever a family prefers, and the
+site takes the final score once a team manager enters it. There are no comments or chat; the team's WhatsApp group
+stays the team chat.
 
 ## What it looks like
 
