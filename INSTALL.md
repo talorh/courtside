@@ -16,7 +16,7 @@ Courtside is published; your club's copy of the code lives in your own Cloudflar
   do it, about US$14 a year), or one already on Cloudflare as a zone in this account, or one elsewhere whose nameservers
   you can point at Cloudflare. A domain of its own keeps the site's security rules, email and costs apart from
   everything else the club runs. If the club would rather put it on a subdomain of its own domain
-  (`videos.yourclub.org.au`), it can, when that domain is already on Cloudflare: section 8 says what that looks like.
+  (`courtside.yourclub.org`), it can, when that domain is already on Cloudflare: section 8 says what that looks like.
 - **A computer**, Linux or a Mac, that you'll set up in section 2.
 - **Your club's logo** as a square PNG on white (any size from 512 px up) and, if you have one, the mark alone on a
   transparent background. The agent makes every size the site needs from them. No logo yet is fine: a stand-in is drawn
@@ -105,8 +105,8 @@ The agent fills both from your answers:
 | Your currency, for the Costs page | `currency` | AUD, Australian dollars, 1.42 to the US dollar |
 | Four colours: the deep bar colour, the button colour, its darker ink, its pale tint; and a dark-mode set | `colors` | The example file shows the shape |
 | Where your state body's child safety standards are | `childSafety` | A name and a link |
-| Your domain: one of its own (recommended), or a subdomain of the club's domain (section 8) | `domain` | saints.example; or videos.yourclub.org.au |
-| The Cloudflare zone it's in: the domain itself, or for a subdomain the club's domain | `zone` | saints.example; or yourclub.org.au |
+| Your domain: one of its own (recommended), or a subdomain of the club's domain (section 8) | `domain` | saints.example; or courtside.yourclub.org |
+| The Cloudflare zone it's in: the domain itself, or for a subdomain the club's domain | `zone` | saints.example; or yourclub.org |
 | Your logo files, or "draw one" | `public/` | logo.png and club-mark.webp |
 | Your email, for the first site admin, the account's alerts and the Back soon page's own list | `npm run admin`, Cloudflare notifications, `maintenance/cloudflare.config.ts` `ADMIN_EMAILS` | you@yourclub.org |
 | The region nearest your club | `deploy.config.ts` `region` | aws:ap-southeast-2 |
@@ -179,7 +179,7 @@ released the usual way.
 ## 8. If you'd rather use a subdomain
 
 We recommend a domain of its own (section 1). If the club would rather the site lived at, say,
-`videos.yourclub.org.au`, it can, as long as `yourclub.org.au` is already a zone on Cloudflare. The site then shares
+`courtside.yourclub.org`, it can, as long as `yourclub.org` is already a zone on Cloudflare. The site then shares
 that zone with the club's website, so it takes care to change nothing of the club's. This is what's different.
 
 **What it needs**
@@ -190,17 +190,17 @@ that zone with the club's website, so it takes care to change nothing of the clu
   moves into the club's account first.
 - **A name nothing uses yet.** A Worker's custom domain can't take a hostname that already has a DNS record (a CNAME,
   say). Pick one the club's website doesn't use.
-- **The two settings:** in `src/club.ts`, `domain: "videos.yourclub.org.au"` and `zone: "yourclub.org.au"`; in
-  `deploy.config.ts`, `zoneId` is `yourclub.org.au`'s zone id.
+- **The two settings:** in `src/club.ts`, `domain: "courtside.yourclub.org"` and `zone: "yourclub.org"`; in
+  `deploy.config.ts`, `zoneId` is `yourclub.org`'s zone id.
 
 **What the agent does differently** (section 5's steps)
 
 - **The domain (step 2):** nothing to register. DNSSEC is the club's choice for its own domain, and is left as it is.
-- **Email (step 7):** Email Sending onboards `videos.yourclub.org.au` as a sending domain of its own (its `cf-bounce`,
+- **Email (step 7):** Email Sending onboards `courtside.yourclub.org` as a sending domain of its own (its `cf-bounce`,
   SPF, DKIM and DMARC records go on the subdomain). Email Routing adds the subdomain under its Settings, then the rule
-  forwarding `security@videos.yourclub.org.au`. The SPF and DMARC from `infra/zone/` go on the subdomain's names
-  (`videos.yourclub.org.au` and `_dmarc.videos.yourclub.org.au`), one record of each: where onboarding already made one,
-  it's edited to match, never doubled. The club's own mail records on `yourclub.org.au` aren't touched.
+  forwarding `security@courtside.yourclub.org`. The SPF and DMARC from `infra/zone/` go on the subdomain's names
+  (`courtside.yourclub.org` and `_dmarc.courtside.yourclub.org`), one record of each: where onboarding already made one,
+  it's edited to match, never doubled. The club's own mail records on `yourclub.org` aren't touched.
 - **The zone's protections (step 8):** the zone is the club's.
   - Every rule in `infra/zone/` matches the site's own hostname alone (`http.host eq "<domain>"`), so it can't touch
     the club's website. Each is added beside the club's own rules, never in place of them: updating a phase's rules
@@ -212,7 +212,7 @@ that zone with the club's website, so it takes care to change nothing of the clu
     Always Use HTTPS: the site's redirect rule covers its hostname. Browser Cache TTL: the site's cache rule
     (`cache-rules.json`) keeps phones from holding an old script, in its place. Blocking AI bots: the site's pages are
     already `noindex` and behind its sign-in, so it's only changed if the club wants it for its whole domain.
-  - After the first deploy, `curl -sI https://videos.yourclub.org.au/signin.js` shows the file's own `Cache-Control`,
+  - After the first deploy, `curl -sI https://courtside.yourclub.org/signin.js` shows the file's own `Cache-Control`,
     not hours. If it shows hours, the club's zone setting is winning, and the agent asks the club about it.
 
 **What it means afterwards**
@@ -224,5 +224,5 @@ that zone with the club's website, so it takes care to change nothing of the clu
   keep those figures clean.
 - **Whoever runs the site has a seat in the account the club's website is in.** Give each person only the role they
   need.
-- **The site's own addresses are on the subdomain:** `alerts@videos.yourclub.org.au` sends, and
-  `security@videos.yourclub.org.au` reaches you.
+- **The site's own addresses are on the subdomain:** `alerts@courtside.yourclub.org` sends, and
+  `security@courtside.yourclub.org` reaches you.

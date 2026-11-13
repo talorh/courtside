@@ -8,9 +8,9 @@ import { cloudflareSection } from "../../../src/features/admin/views/platform-cl
 import type { CloudflareFigures } from "../../../src/platform/cloudflare-insights.ts";
 import { useExampleClub } from "../../helpers/example-club.ts";
 
-// A club can put the site on a subdomain of its own domain (videos.saints.example) when that domain is already a zone in
+// A club can put the site on a subdomain of its own domain (courtside.saints.example) when that domain is already a zone in
 // its Cloudflare account, beside its website. The example club has a domain of its own.
-const onASubdomain = () => Object.assign(CLUB, { domain: "videos.saints.example", zone: "saints.example" });
+const onASubdomain = () => Object.assign(CLUB, { domain: "courtside.saints.example", zone: "saints.example" });
 const figures = { workers: { requests: 1, errors: 0, subrequests: 0, cpuP50Ms: 1, cpuP99Ms: 2 }, d1: { rowsRead: 1, rowsWritten: 1, queries: 1 },
 	r2: { bytes: 1, objects: 1 }, streamMinutesWatched: 1, aiNeurons: 1, zone: { requests: 1200, threats: 3 } } as unknown as CloudflareFigures;
 const text = (s: { body: { __html: string } }) => s.body.__html.replace(/\s+/g, " ").replaceAll("&#39;", "'");
@@ -31,7 +31,7 @@ describe("the site on a subdomain of the club's own domain", () => {
 		onASubdomain();
 		expect(onSubdomain()).toBe(true);
 		expect(fixedAMonth()).toBeCloseTo(PRICES.workersPaid + PRICES.bundle, 6);
-		expect(text(costs())).toContain("videos.saints.example is a subdomain of the club's own saints.example, so it costs the site nothing");
+		expect(text(costs())).toContain("courtside.saints.example is a subdomain of the club's own saints.example, so it costs the site nothing");
 	});
 
 	it("the Documentation says whose zone it is and what the site leaves alone there", () => {
@@ -39,7 +39,7 @@ describe("the site on a subdomain of the club's own domain", () => {
 		const page = text(platform());
 		expect(page).toContain("a subdomain of the club's own saints.example");
 		expect(page).not.toContain("Registered at Cloudflare");
-		expect(page).toContain("each matching videos.saints.example alone");
+		expect(page).toContain("each matching courtside.saints.example alone");
 		expect(text(glossary())).toContain("saints.example, the club's own domain");
 	});
 

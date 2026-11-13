@@ -20,7 +20,7 @@ export const CLUB = {
 	 * the sender alerts@ and security@ addresses. */
 	domain: "saints.example",
 	/** The zone in this Cloudflare account the domain sits in. The same as `domain` for a domain of its own (recommended);
-	 * for a subdomain of the club's own domain (videos.yourclub.org.au), that domain (yourclub.org.au), already a zone in
+	 * for a subdomain of the club's own domain (courtside.yourclub.org), that domain (yourclub.org), already a zone in
 	 * this account, which the site shares with the club's website (INSTALL.md section 8). */
 	zone: "saints.example",
 	/** The club's full name, as its teams are named on Home: "Saints U12 Boys 12.1". */
