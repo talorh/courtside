@@ -10,7 +10,7 @@ import { twoTeams } from "../isolation/setup.ts";
 const minRole = new Map(buildRouter().list().map((r) => [`${r.method} ${r.path}`, r.minRole]));
 // Help's own copy has its own tests; the Changelog is the site's own history, in the admin area.
 const NOT_HELP = (route: string) => !/^GET \/(help|faq|changelog)$/.test(route);
-const B12 = /Sam|B12\.1|U12 Boys|12-1/;
+const B12 = /\bSam\b|B12\.1|U12 Boys|12-1/;
 
 describe("a team with no ask name, Saints G14.5", () => {
 	it("every page, for every role, names it and its team manager, never Sam or B12.1", async () => {

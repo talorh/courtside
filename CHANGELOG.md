@@ -10,6 +10,8 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 14 Nov 2026
 
+- [Enhancement] **Help:** What is the aim here? now says live scores, each player's own points, fouls and games, the ladder and the results history are on the league's own scoring app, not here.
+- [Enhancement] **Roster:** One family filming every game is easier to set: a Team duties link at the top of the Roster and in each week's Change, and the choice reads Who films: The Curry family, every week.
 - [Enhancement] **Platform:** The site's tools, tests, builds and video joiner run on Node 26, ahead of Node 22's end of life in April 2027, with the cf CLI and the test tools updated too.
 - [Fix] **Sign in:** Fixed an issue where someone whose emails bounce was told to try again in a minute. The page now says their address is bouncing and to ask their team manager for another, and the site's admins get a ticket about it.
 - [Fix] **Sign in:** Fixed an issue where Request access's name and team boxes didn't look like the email box, and the team box showed an example team that could read as already filled in.

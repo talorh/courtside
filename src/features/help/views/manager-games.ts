@@ -49,12 +49,13 @@ game's details go.</li>
 ${faqItem("g-families", "Families and duties", html`<ol class="steps">
 <li>On <b>Roster</b>, under <b>Families on the roster</b>, type a family's surname, one family a row. <b>+ Add another</b>
 adds a row, then tap <b>Add families</b>.${shot("roster-families", "Add families on the Roster: one surname a row, with + Add another and Add families", 358, 801)}</li>
-<li>Under <b>Duties</b>, choose your team's game day duties, then tap <b>Save duties</b>.</li>
+<li>Under <b>Team duties</b>, choose your team's game day duties, then tap <b>Save duties</b>.</li>
 <li>Tap <b>Generate roster</b>: every game gets its families, shared out fairly.</li></ol>
-<p class="small">Picking a family for video under <b>Duties</b> gives them every game's video and no other duty.</p>
+<p class="small">One family filming every game? Under <b>Team duties</b>, set <b>Who films</b> to that family, then tap
+<b>Save duties</b>: they get every game's video and no other duty, and the rest share the other duties fairly.</p>
 ${h.duties.video ? html`<p>Each family on video duty needs someone set to <b>Watch and film</b> on <b>Manage team</b>, or they can't film their
 turn.</p>` : ""}
-${shot("roster-duties", "The Roster's Duties panel: An extra duty ticked with its name Lollies and Who, Video ticked with Who, and Save duties", 358, 626)}`)}
+${shot("roster-duties", "The Roster's Team duties panel: An extra duty ticked with its name Lollies and who does it, Video ticked with who films, and Save duties", 358, 626)}`)}
 ${faqItem("g-swap", "Swapping a week by hand", html`<p>Tap <b>Change</b> on the week, pick the families and tap <b>Save week</b>. A change
 made by hand stays put when the roster is generated again. A family can only do one duty a game.</p>
 ${h.duties.lollies ? html`<p class="small">A tournament weekend starts with fewer duties. For all of them, tap <b>Change</b> on it, then

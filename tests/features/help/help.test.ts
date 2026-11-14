@@ -232,5 +232,6 @@ describe("Help's aim", () => {
 		expect(aim).toContain('<a href="https://github.com/talorh/courtside" target="_blank" rel="noopener">github.com/talorh/courtside</a>');
 		expect(aim).toContain("open source");
 		expect(aim).toContain("There's no desire to make money from any of it");
+		expect(aim).toContain("<li><b>Not live scores or player stats:</b> live scores, each player's own points, fouls and games, the ladder and the results history are on the league's own scoring app, which has the full fixtures too.</li>");
 	});
 });

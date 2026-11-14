@@ -109,6 +109,7 @@ export function rosterPage(p: RosterPageProps): SafeHtml {
 	return layout({ title: "Roster", frame: p.frame, current: "roster", scripts: p.frame.member.role === "manager" && p.frame.team.status === "active" ? ["/roster.js", "/rows.js"] : ["/roster.js"] }, html`${pageHead(words.charAt(0).toUpperCase() + words.slice(1), "Roster")}
 ${notice(p.message)}${yours}
 <p class="small">${dutySentence(p.duties, p.names)}${p.duties.video ? html`, unless filming isn't allowed` : ""}.${p.duties.lollies ? html` A tournament weekend starts as scorers only.` : ""} Can't make it? Swap with another family, then let ${teamCopy(p.frame.team).ask} know.</p>
+${p.frame.member.role === "manager" && p.frame.team.status === "active" ? html`<p class="small"><a href="#duties">Team duties</a>: switch ${p.duties.lolliesLabel === "Lollies" ? "lollies" : p.duties.lolliesLabel} or video off, or give one to the same family every week (a parent who films every game, say).</p>` : ""}
 ${hasRole(p.frame.member.role, "filmer") ? html`<div class="row-actions"><a class="btn" href="/roster/export.xlsx">Export to Excel</a></div>` : ""}
 ${empty}${upcoming.length ? html`<ol class="duty-weeks">${upcoming.slice(0, UPCOMING_SHOWN).map((w) => weekCard(p, w, mine?.id ?? null))}</ol>` : html`<p>No upcoming games in the fixture.</p>`}
 ${later.length ? html`<details class="panel duty-later"><summary>Later weeks (${later.length})</summary><ol class="duty-weeks">${later.map((w) => weekCard(p, w, mine?.id ?? null))}</ol></details>` : ""}

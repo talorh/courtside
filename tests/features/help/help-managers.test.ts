@@ -39,7 +39,7 @@ const BUTTONS: Record<string, (s: Seeded, today: number) => string | [string, Re
 const EMPHASIS = new Set(["end-of-season pack", "Lots of people at once?", "template", "CSV", "Carry on", 
 	"Players:", "People:", "Games:", "Roster:", "Tell the families:", "saints.example", "Not junk", "Watch only:", "Watch and film:", "Coach:", "Team manager:", "Watch only", "Watch and film",
 	"25", "plus trick", "parent@saints.example", "parent+grandma@saints.example", "New number or name:", "Leaving the team:", "Live stream:", "Record and upload after:", "No video:",
-	"Video", "Players", "People", "Duties", "Families on the roster", "31 December 2027", "Virtual Sam", "Virtual Team Manager",
+	"Video", "Players", "People", "Team duties", "Who films", "Families on the roster", "31 December 2027", "Virtual Sam", "Virtual Team Manager",
 	"public", "/org/", "/teams/", "My teams", "/account/my-teams/", // PlayHQ's public team page, not its private My teams one
 	"Too many codes?", "Emails bouncing?", "email", "name", "role",
 	"{opponent}", "at {venue}", "{ours}", "{them}", // what a game line is written with, on Game lines

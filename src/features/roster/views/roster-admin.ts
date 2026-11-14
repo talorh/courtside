@@ -37,7 +37,7 @@ export function weekEditor(w: RosterWeek, held: Slot[], families: RosterFamily[]
 <details class="duty-edit"><summary class="btn quiet">Change</summary>
 <form method="post" action="/roster/week/${w.week}" class="stack"><div class="duty-picks">${slotsFor(needOf(w), duties).map(select)}</div>
 <p class="small">Pick a family to set a duty by hand: Generate roster keeps it, and a family can only do one duty a game. Leave
-Roster's pick and the roster shares that duty out fairly.</p>
+Roster's pick and the roster shares that duty out fairly. Same family every week? Set it once in <a href="#duties">Team duties</a>.</p>
 <div class="row-actions"><button class="btn primary">Save week</button></div></form>
 <div class="row-actions">${videoSwitch}${extraSwitch}</div>
 <p class="small">No video this week marks the week's games No video so they're not offered for upload. Use it for a tournament that doesn't allow filming.${extraNote}</p></details></div>`;
@@ -47,9 +47,9 @@ Roster's pick and the roster shares that duty out fairly.</p>
  * unless they change it), and video, each on or off, shared out or always one family. */
 export function dutiesPanel(d: RosterDuties, families: RosterFamily[]): SafeHtml {
 	const box = (name: "lollies" | "video", label: SafeHtml) => html`<label class="check"><input type="checkbox" name="${name}" value="1"${d[name] ? html` checked` : ""}> ${label}</label>`;
-	const who = (name: "lolliesFamily" | "videoFamily", chosen: number | null) => html`<label>Who<select name="${name}"><option value="">Shared out fairly</option>${families.map((f) =>
-		html`<option value="${f.id}"${f.id === chosen ? html` selected` : ""}>${f.surname}, every week</option>`)}</select></label>`;
-	return html`<section class="panel stack" id="duties"><h2>Duties</h2>
+	const who = (name: "lolliesFamily" | "videoFamily", chosen: number | null) => html`<label>${name === "videoFamily" ? "Who films" : "Who does it"}<select name="${name}"><option value="">Shared out fairly</option>${families.map((f) =>
+		html`<option value="${f.id}"${f.id === chosen ? html` selected` : ""}>The ${f.surname} family, every week</option>`)}</select></label>`;
+	return html`<section class="panel stack" id="duties"><h2>Team duties</h2>
 <form method="post" action="/roster/duties" class="stack"><p class="small">Two families keep score at every game. Your team can also have:</p>
 <div class="duty-setting">${box("lollies", html`An extra duty`)}<label>Its name<input name="lolliesLabel" type="text" maxlength="30" value="${d.lolliesLabel}" placeholder="Lollies"></label>${who("lolliesFamily", d.lolliesFamily)}</div>
 <div class="duty-setting">${box("video", html`Video: one family films the game on the site`)}${who("videoFamily", d.videoFamily)}</div>

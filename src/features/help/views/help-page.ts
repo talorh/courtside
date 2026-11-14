@@ -39,7 +39,8 @@ email.</li>
 can ask for a video, clip or photo to be removed.</li></ul>
 <p>What it isn't trying to do:</p>
 <ul class="steps"><li><b>Not the team chat:</b> WhatsApp or similar is the main way teams talk.</li>
-<li><b>Not game analysis:</b> coaches may wish to use Superstat (superstat.com.au) or similar.</li></ul>
+<li><b>Not game analysis:</b> coaches may wish to use Superstat (superstat.com.au) or similar.</li>
+<li><b>Not live scores or player stats:</b> live scores, each player's own points, fouls and games, the ladder and the results history are on the league's own scoring app, which has the full fixtures too.</li></ul>
 <p><b>Open source, not for profit:</b> this site runs Courtside, which is open source: anyone can read its code or run it
 for their own club, at <a href="https://github.com/talorh/courtside" target="_blank" rel="noopener">github.com/talorh/courtside</a>. There's no desire to make money from any of it: no ads, and nothing is sold.</p>`);
 
