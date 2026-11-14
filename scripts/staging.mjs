@@ -1,7 +1,7 @@
 // npm run staging [-- --dry-run]   |   npm run staging -- setup [--dry-run]   (docs/runbooks/staging.md)
 // Staging: the site as a Worker Preview of the Worker, on its own database and bucket, behind the same sign-in, with test
 // data only: for trying a change on real phones before npm run release. Deploying: the staging branch, committed, npm run check,
-// staging's migrations, then cf previews deploy staging. setup (once, and after a key changes): staging's keys, through
+// staging's migrations, then cf previews deploy --preview-name staging. setup (once, and after a key changes): staging's keys, through
 // the API and never printed, and the Worker's Preview URLs on. It never touches the live site's database or bucket.
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";

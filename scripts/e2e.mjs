@@ -19,7 +19,7 @@ mkdirSync(out, { recursive: true });
 const env = process.env.PHONES ? ["-e", `PHONES=${process.env.PHONES}`] : [];
 const run = spawnSync("podman", [
 	"run", "--rm", "--init", "--shm-size=1g", ...env, "-v", `${repo}:/repo:ro,z`, "-v", `${out}:/out:z`, "-w", "/repo", IMAGE,
-	"node", "--experimental-strip-types", "--no-warnings", "tests/e2e/run.mjs", ...process.argv.slice(2),
+	"node", "--no-warnings", "tests/e2e/run.mjs", ...process.argv.slice(2),
 ], { stdio: "inherit" });
 if (run.error) console.error(`e2e: couldn't start podman: ${run.error.message}`);
 process.exit(run.status ?? 1);

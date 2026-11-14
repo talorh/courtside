@@ -101,7 +101,7 @@ for s in email_obfuscation security_header browser_cache_ttl always_use_https mi
 cf dns records list -z $z; cf email-routing settings get -z $z
 cf stream keys list; cf turnstile widgets list; cf alerting policies list
 cf workers scripts search --name <worker>           # the Worker's tag, for the builds
-cf builds list --external-script-id <worker tag> --per-page 5
+cf builds list --worker <worker tag> --per-page 5
 cf workers deployments list --worker <worker>
 ```
 
@@ -156,7 +156,7 @@ cf builds triggers list                                   # the three triggers, 
 cf artifacts namespaces tokens create <worker> --repo <worker> --scope read --ttl 600   # a 10-minute read token, to fetch by hand
 git -c http.extraHeader="Authorization: Bearer <token>" fetch https://<account id>.artifacts.cloudflare.net/git/<worker>/<worker>.git main
 cf artifacts namespaces repos tokens list --namespace <worker> --name <worker> --state active   # tidy: revoke leftovers
-cf builds logs get <build uuid>
+cf builds logs <build uuid>
 cf builds create <trigger id> --branch main              # build main again by hand
 ```
 

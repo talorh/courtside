@@ -57,7 +57,7 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
  (`join/Dockerfile`), the Workers compatibility date, the Workers AI model, and any Cloudflare API or `cf` command
  marked deprecated. Say so in the plan, with the date its support ends and the update recommended, so it's surfaced
  and goes on the todo with the site owner's yes, never found at the deadline (Node 22, say, whose support ends on
- 30 April 2027).
+ 30 April 2027: the site moved to Node 26 ahead of it).
 
 ## 3. Requests, routes and responses
 

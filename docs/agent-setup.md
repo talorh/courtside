@@ -142,7 +142,7 @@ You may be asked to deal with a problem on the admin's behalf. Find out before y
 
 1. **Look first, read-only.** The admin area's Insights page says what's wrong; Platform shows every limit. Read the
    Worker's logs (the command in section 4, step 8), the build
-   (`cf builds list --worker courtside`, `cf builds logs get <build id>`), and the database read-only
+   (`cf builds list --worker <the Worker's tag>`, the tag from `cf workers scripts search --name courtside`; `cf builds logs <build id>`), and the database read-only
    (`cf d1 query <id> --sql "SELECT ..."`).
 2. **Say what you found** to the admin: what's broken, since when, who it affects, and what you'd do.
 3. **Then the remedy, in the Documentation's "When something goes wrong"**, each step by step in

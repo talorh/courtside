@@ -14,7 +14,7 @@ ${table(["What", "Where"], [
 		["The repository", html`Namespace and repository both the Worker's name, ${code("courtside")}, default branch ${code("main")}`],
 		["Its address", html`${code("https://<account id>.artifacts.cloudflare.net/git/courtside/courtside.git")}: the release pushes to it by address, with a token made for the moment`],
 		["In the dashboard", "Compute, Artifacts: the repository and its branches; Workers & Pages, courtside, Deployments: each build and what it deployed"],
-		["From the command line", html`${code("cf artifacts namespaces repos list --namespace courtside")}; ${code("cf builds list --worker courtside")}; ${code("cf builds logs get <build id>")}`],
+		["From the command line", html`${code("cf artifacts namespaces repos list --namespace courtside")}; ${code("cf builds list --worker <the Worker's tag>")} (the tag from ${code("cf workers scripts search --name courtside")}); ${code("cf builds logs <build id>")}`],
 	])}
 <h3>On a computer: one repository, two folders</h3>
 ${worktreesDiagram()}

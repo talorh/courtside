@@ -8,7 +8,7 @@ import { agentSetupModule } from "./agent-setup-text.mjs";
 import { docsFiles } from "./docs-markdown.mjs";
 
 writeFileSync("src/features/admin/views/agent-setup-text.ts", agentSetupModule(readFileSync("docs/agent-setup.md", "utf8")));
-// The views are TypeScript: this script runs under node --experimental-strip-types (package.json), as the browser suite does.
+// The views are TypeScript: Node strips their types itself, as it does for the browser suite.
 const { GROUPS } = await import("../src/features/admin/views/docs-groups.ts");
 const { CLUB } = await import("../src/club.ts");
 const out = "docs/admin";

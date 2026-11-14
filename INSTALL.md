@@ -29,9 +29,10 @@ Run these yourself, once. The agent checks them before it starts and stops if on
 them first.
 
 ```bash
-# Node 22 (.node-version has the exact release the site is tested with), from your system's own packages
-sudo dnf install -y nodejs22                                       # Fedora
-# brew install node@22 && brew link --overwrite node@22            # a Mac
+# Node 26, 26.12 or later (.node-version has the exact release the site is tested with), from your system's own
+# packages. On Fedora the -bin packages make it the node and npm (--allowerasing swaps out another version's links).
+sudo dnf install -y --allowerasing nodejs26 nodejs26-bin nodejs26-npm-bin   # Fedora
+# brew install node@26 && brew link --overwrite node@26            # a Mac
 # Debian and Ubuntu package an older Node. Take the official build from nodejs.org instead: download the
 # Linux tar.xz for your machine from https://nodejs.org/en/download, check it against the SHASUMS256.txt
 # published beside it, unpack it into ~/.local and put ~/.local/bin on your PATH. Nothing is piped into a shell.

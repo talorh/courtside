@@ -23,7 +23,7 @@ Staging is the same Worker deployed as a Worker Preview of `courtside`, told it'
 | From | The `staging` branch, committed | `main`, fast-forwarded to `staging` |
 | Checked first | `npm run check`: types, unit tests, line limits | Everything in Releases below, the browser tests included |
 | Migrations | Applied to staging's database by the command itself | Must already be on the live database; the release refuses otherwise |
-| How it's deployed | `cf previews deploy staging` from the computer, then the commit is recorded as `refs/courtside/staging` | Pushed to Cloudflare Artifacts; Workers Builds checks it again and deploys it |
+| How it's deployed | `cf previews deploy --preview-name staging` from the computer, then the commit is recorded as `refs/courtside/staging` | Pushed to Cloudflare Artifacts; Workers Builds checks it again and deploys it |
 | Keys | Staging's own, set once with `npm run staging -- setup` and kept on the preview | The Worker's own secrets, untouched by a deploy |
 | Changelog | Not needed | The deploy's line at the top, which becomes the deployment's message |
 | When | Any time, as often as needed | Not on a day a team plays, unless it fixes something broken; never while anyone is uploading or streaming |

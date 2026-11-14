@@ -26,7 +26,7 @@ export function deployPlan({ d1Id, dryRun }) {
 	return [
 		{ what: "npm run check", cmd: "npm", args: ["run", "check"] },
 		{ what: "staging's migrations", cmd: "npx", args: ["cf", "d1", "migrations", "apply", d1Id, "--dir", "migrations", ...profileArgs(), ...dry] },
-		{ what: "the code on staging", cmd: "npx", args: ["cf", "previews", "deploy", PREVIEW, ...profileArgs(), ...dry] },
+		{ what: "the code on staging", cmd: "npx", args: ["cf", "previews", "deploy", "--preview-name", PREVIEW, ...profileArgs(), ...dry] },
 	];
 }
 

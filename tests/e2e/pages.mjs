@@ -1,5 +1,5 @@
 // Pages for the browser tests, rendered by the site's own views (src/), so the tests see the markup families get.
-// Imported with `node --experimental-strip-types` (scripts/e2e.mjs), which reads the .ts views as they are.
+// Imported by Node (scripts/e2e.mjs), which strips the .ts views' types itself.
 import { useExampleClub } from "../helpers/example-club.ts";
 import { teamsListPage } from "../../src/features/admin/views/teams-page.ts";
 import { helpFor } from "../../src/features/help/views/faq-item.ts";

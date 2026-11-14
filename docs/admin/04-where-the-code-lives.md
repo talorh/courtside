@@ -13,7 +13,7 @@ The code the site deploys from is a git repository hosted by Cloudflare itself, 
 | The repository | Namespace and repository both the Worker's name, `courtside`, default branch `main` |
 | Its address | `https://.artifacts.cloudflare.net/git/courtside/courtside.git`: the release pushes to it by address, with a token made for the moment |
 | In the dashboard | Compute, Artifacts: the repository and its branches; Workers & Pages, courtside, Deployments: each build and what it deployed |
-| From the command line | `cf artifacts namespaces repos list --namespace courtside`; `cf builds list --worker courtside`; `cf builds logs get ` |
+| From the command line | `cf artifacts namespaces repos list --namespace courtside`; `cf builds list --worker ` (the tag from `cf workers scripts search --name courtside`); `cf builds logs ` |
 
 ### On a computer: one repository, two folders
 

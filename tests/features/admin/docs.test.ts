@@ -67,7 +67,7 @@ describe("the admin area's Documentation", () => {
 		// Environments: how a staging deploy differs from a production one, side by side.
 		expect(html).toContain("<h3>Environments</h3>");
 		expect(html).toContain('<th scope="col">Staging deploy</th><th scope="col">Production deploy</th>');
-		for (const words of ["cf previews deploy staging", "npm run staging -- setup", "Applied to staging's database by the command itself", "Not on a day a team plays"]) {
+		for (const words of ["cf previews deploy --preview-name staging", "npm run staging -- setup", "Applied to staging's database by the command itself", "Not on a day a team plays"]) {
 			expect(html, words).toContain(words);
 		}
 		expect(html).toContain("<h3>Branches</h3>");

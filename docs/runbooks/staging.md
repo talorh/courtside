@@ -38,7 +38,7 @@ flowchart LR
 
 ```bash
 npm run staging -- --dry-run # npm run check, then dry runs of staging's migrations and the deploy
-npm run staging # the committed code on staging: check, staging's migrations, cf previews deploy staging
+npm run staging # the committed code on staging: check, staging's migrations, cf previews deploy --preview-name staging
 ```
 
 It refuses uncommitted changes, so it's always clear what staging runs, and it deploys only the `staging` branch. A change is built on a `feature/<name>` or `fix/<name>` branch off

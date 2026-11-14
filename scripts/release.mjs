@@ -5,7 +5,7 @@
 // site; CHANGELOG.md has this deploy's line; cf deploy --dry-run; then it pushes the commit to main on Cloudflare,
 // where Workers Builds runs npm run check again and deploys it with that line as its message and the commit as its tag
 // (scripts/release-push.mjs), and follows that build. Nothing skips a step.
-// Run with --experimental-strip-types (package.json), as it reads the changelog and R2 with the site's own code.
+// Node strips its types itself, as it reads the changelog and R2 with the site's own code.
 // `npm run release -- --check-only` does every check and the dry run, then stops without pushing.
 // `npm run release -- --maintenance`: a release behind the maintenance page (docs/runbooks/maintenance.md). It refuses
 // unless the page is on, and waits 2 quiet minutes instead of 15, as nobody can start anything behind it.
@@ -122,7 +122,7 @@ try {
 if (!moved) stop(`main on Cloudflare already has ${tag}, so no build starts. To build it again: cf builds create <trigger> --branch main (cf builds triggers list).`);
 step(`Workers Builds: npm ci && npm run check, then npm run deploy:builds`);
 const build = await waitForBuild({ scriptId, commit, pushedAt, say: (s) => console.log(`  ${s}`) });
-if (build.state === "failed") stop(`The build of ${tag} failed (${build.outcome}); the site still runs the previous version. Its log: cf builds logs get ${build.uuid}`);
+if (build.state === "failed") stop(`The build of ${tag} failed (${build.outcome}); the site still runs the previous version. Its log: cf builds logs ${build.uuid}`);
 if (build.state !== "deployed") fail(`The build of ${tag} hadn't finished after 20 minutes: it may still deploy. Check: cf builds get ${build.uuid ?? "(none started)"}`);
 if (liveMessage() !== line) fail(`The build of ${tag} says it deployed, but the live deployment's message isn't "${line}". Check: cf workers deployments list --worker ${site.name}`);
 console.log(`\nrelease: deployed ${tag}: ${line} (Workers Builds, build ${build.uuid})\nWatch the logs for 10 minutes (cf o11y telemetry, service ${site.name}).`);

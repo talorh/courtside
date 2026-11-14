@@ -5,10 +5,12 @@ import { execFileSync } from "node:child_process";
 import { buildFor } from "./release-checks.mjs";
 
 
-const cfJson = (args) => {
-	const out = execFileSync("cf", args, { encoding: "utf8", maxBuffer: 64e6, stdio: ["ignore", "pipe", "pipe"] });
-	return JSON.parse(out.slice(out.search(/[[{]/)));
-};
+/** cf's JSON answer: from the first line that starts one, past any summary line it prints first ("result_info: {...}"). */
+export const parseCfJson = (out) => JSON.parse(out.slice(out.search(/^\s*[[{]/m)));
+const cfJson = (args) => parseCfJson(execFileSync("cf", args, { encoding: "utf8", maxBuffer: 64e6, stdio: ["ignore", "pipe", "pipe"] }));
+
+/** The Worker's newest builds, by its tag. */
+export const buildsListArgs = (scriptId) => ["builds", "list", "--worker", scriptId, "--per-page", "10"];
 const list = (x) => (Array.isArray(x) ? x : (x.result ?? x.builds ?? []));
 
 /**
@@ -48,7 +50,7 @@ export function pushMain(accountId, name) {
 	}
 }
 
-/** The Worker's tag, which Workers Builds files its builds under (`cf builds list --external-script-id`). */
+/** The Worker's tag, which Workers Builds files its builds under (`cf builds list --worker`). */
 export function workerTag(name) {
 	const tag = list(cfJson(["workers", "scripts", "search", "--name", name])).find((s) => s.script_name === name)?.id;
 	if (!tag) throw new Error(`no Worker called ${name} in this account`);
@@ -62,7 +64,7 @@ export async function waitForBuild({ scriptId, commit, pushedAt, say }) {
 	let said = "";
 	while (Date.now() < end) {
 		try {
-			now = buildFor(list(cfJson(["builds", "list", "--external-script-id", scriptId, "--per-page", "10"])), commit, pushedAt);
+			now = buildFor(list(cfJson(buildsListArgs(scriptId))), commit, pushedAt);
 			const line = now.uuid ? `${now.state} (build ${now.uuid})` : "waiting for Workers Builds to start";
 			if (line !== said) say((said = line));
 			if (now.state === "deployed" || now.state === "failed") return now;

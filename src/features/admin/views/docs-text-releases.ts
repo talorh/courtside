@@ -24,7 +24,7 @@ ${table(["", "Staging deploy", "Production deploy"], [
 		["From", html`The ${code("staging")} branch, committed`, html`${code("main")}, fast-forwarded to ${code("staging")}`],
 		["Checked first", html`${code("npm run check")}: types, unit tests, line limits`, "Everything in Releases below, the browser tests included"],
 		["Migrations", html`Applied to staging's database by the command itself`, "Must already be on the live database; the release refuses otherwise"],
-		["How it's deployed", html`${code("cf previews deploy staging")} from the computer, then the commit is recorded as ${code("refs/courtside/staging")}`, "Pushed to Cloudflare Artifacts; Workers Builds checks it again and deploys it"],
+		["How it's deployed", html`${code("cf previews deploy --preview-name staging")} from the computer, then the commit is recorded as ${code("refs/courtside/staging")}`, "Pushed to Cloudflare Artifacts; Workers Builds checks it again and deploys it"],
 		["Keys", html`Staging's own, set once with ${code("npm run staging -- setup")} and kept on the preview`, "The Worker's own secrets, untouched by a deploy"],
 		["Changelog", "Not needed", "The deploy's line at the top, which becomes the deployment's message"],
 		["When", "Any time, as often as needed", "Not on a day a team plays, unless it fixes something broken; never while anyone is uploading or streaming"],

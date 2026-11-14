@@ -23,7 +23,7 @@ describe("npm run staging (docs/runbooks/staging.md)", () => {
 		expect(plan.map((s: { cmd: string; args: string[] }) => [s.cmd, ...s.args].join(" "))).toEqual([
 			"npm run check",
 			`npx cf d1 migrations apply ${d1Id} --dir migrations${profile} --dry-run`,
-			`npx cf previews deploy staging${profile} --dry-run`,
+			`npx cf previews deploy --preview-name staging${profile} --dry-run`,
 		]);
 	});
 

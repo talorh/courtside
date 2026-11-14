@@ -13,7 +13,7 @@ time follows the repository's ${code("INSTALL.md")} instead, which ends here.</p
 key to everything else: the dashboard, the ${code("cf")} command line, and the deploys.</p>
 <h3>2. The tools</h3>
 ${table(["Tool", "Why", "How"], [
-		["Node 22 (.node-version has the exact release the site is tested with)", "The Worker's tools, tests and scripts run on it", "The system's own package: nodejs22 on Fedora, node@22 from Homebrew on a Mac. Where the system's Node is older, the official build from nodejs.org, checked against its published checksum and unpacked into ~/.local. Never a script piped into a shell"],
+		["Node 26 (.node-version has the exact release the site is tested with)", "The Worker's tools, tests and scripts run on it. Its npm runs a package's install script only when package.json's allowScripts names it (workerd's, for cf)", "The system's own package: nodejs26 on Fedora (with nodejs26-bin and nodejs26-npm-bin, to make it the node and npm), node@26 from Homebrew on a Mac. Where the system's Node is older, the official build from nodejs.org, checked against its published checksum and unpacked into ~/.local. Never a script piped into a shell"],
 		["git", "The code, its branches and the second folder", "The system's own package"],
 		["podman", "The browser test suite runs Playwright in a container, and the release won't run without it", "On Fedora, sudo dnf install podman; on a Mac, brew install podman, then podman machine init and podman machine start"],
 		[html`The ${code("cf")} command line`, "Cloudflare's own CLI: staging deploys, the release's tokens, reading the account", html`${code("npm install -g cf")} (with sudo where npm's global folder needs it). The project's own copy in node_modules is what the scripts run`],

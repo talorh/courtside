@@ -14,7 +14,7 @@
   <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-2F6FDB"></a>
   <img alt="Runs on Cloudflare Workers" src="https://img.shields.io/badge/runs%20on-Cloudflare%20Workers-14274E">
   <img alt="Tests" src="https://img.shields.io/badge/tests-1%2C700%20unit%20%C2%B7%20198%20browser-2F6FDB">
-  <img alt="Node 22" src="https://img.shields.io/badge/node-22-14274E">
+  <img alt="Node 26" src="https://img.shields.io/badge/node-26-14274E">
 </p>
 
 <p align="center">
