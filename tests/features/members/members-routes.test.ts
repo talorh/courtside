@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findActiveMemberByEmail } from "../../../src/features/members/members-repository.ts";
+import { findActiveMemberByEmail } from "../../helpers/members.ts";
 import { form, makeClient, MANAGER } from "../../helpers/app.ts";
 import { createTestDeps } from "../../helpers/fakes.ts";
 import { addMember, addTeam, G14_5 } from "../../helpers/two-teams.ts";

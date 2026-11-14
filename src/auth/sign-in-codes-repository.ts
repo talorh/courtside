@@ -4,8 +4,8 @@ import { ALL_TIME, type LogRange } from "../shared/time.ts";
 
 export interface LiveCode { id: number; codeHash: string; tries: number }
 
-/** "robot": Turnstile said no (features/signin/signin-routes.ts). */
-/** What happened at the sign-in page; and, once signed in, which view a device uses (first seen, or changed). */
+/** What happened at the sign-in page ("robot": Turnstile said no, features/signin/signin-routes.ts); and, once signed in,
+ * which view a device uses (first seen, or changed). */
 export type SignInEvent = "code_sent" | "unknown_email" | "limited" | "wrong" | "signed_in" | "robot" | "desktop_view" | "mobile_view";
 
 export async function insertCode(db: D1Database, c: { email: string; codeHash: string; ip: string; createdAt: string; expiresAt: string }): Promise<void> {

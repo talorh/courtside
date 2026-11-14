@@ -43,7 +43,7 @@ Artifacts takes no passwords and no long-lived keys. Each fetch or push uses a t
 | Build caching | Off | Each build starts clean, so a stale cache can't make a build pass that shouldn't |
 | Also deploys | `courtside-maintenance` and `courtside-join`, each from its own trigger on `main` | Each builds only when its folder, its tests or the deploy step change, runs the same checks and deploys with the same message and tag; the maintenance page is deployed on or off as it is |
 
-The release follows the build to its end and only calls the deploy done when the live deployment carries the changelog line. A build that fails deploys nothing: the site stays as it was, the release says what failed, and the fix goes through staging and the release again. If a build needs running again by hand, `cf builds create --branch main` does it; the trigger id is in the Cloudflare runbook. Builds can't run the browser tests, which need phones and cameras, so the release runs them before it pushes.
+The release follows the build to its end and only calls the deploy done when the live deployment carries the changelog line. A build that fails deploys nothing: the site stays as it was, the release says what failed, and the fix goes through staging and the release again. If a build needs running again by hand, `cf builds create --branch main` does it (the tag as above; the Cloudflare runbook has it). Builds can't run the browser tests, which need phones and cameras, so the release runs them before it pushes.
 
 ### If a computer is lost
 

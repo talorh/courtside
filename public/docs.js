@@ -14,7 +14,6 @@ function setup(docs) {
 	// Each heading inside a section gets an address, for On this page and the search.
 	for (const s of sections) s.querySelectorAll("h3").forEach((h, i) => { h.id ||= `${s.id}-${i + 1}`; });
 
-	const current = () => sections.find((s) => s.classList.contains("current"));
 	const close = () => { toc.classList.remove("open"); toggle.setAttribute("aria-expanded", "false"); };
 
 	let watching = null;
@@ -69,7 +68,7 @@ function setup(docs) {
 	show();
 	// The browser scrolls to the named section itself as the page finishes loading; after that, back up to the contents.
 	if (location.hash && ids.has(location.hash.slice(1))) addEventListener("load", () => docs.scrollIntoView());
-	search(docs, sections, { current, show, nav, landOn });
+	search(docs, sections, { show, nav, landOn });
 }
 
 /** Brings a search result's place into the middle of the screen and marks it for a moment. */

@@ -1,7 +1,7 @@
 // Help: the search box narrows the questions as you type (every word must be in a question or its answer; a plural
 // finds its singular too, search-words.js), and a heading inside a section shows only while one of its questions does.
 // A link to a question (#watch, from this page or another) opens it.
-import { hasEvery } from "./search-words.js";
+import { hasEvery, linkedId } from "./search-words.js";
 
 const box = document.getElementById("help-search");
 const questions = [...document.querySelectorAll("details.faq")];
@@ -19,7 +19,7 @@ const headings = [...document.querySelectorAll(".helpgroup .faqgroup:not(.gtitle
 });
 
 function openLinked() {
-	const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+	const target = document.getElementById(linkedId(location.hash));
 	if (target instanceof HTMLDetailsElement) target.open = true;
 }
 openLinked();

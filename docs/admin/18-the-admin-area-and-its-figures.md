@@ -19,7 +19,7 @@ The admin area is for site admins only; anyone else gets "Page not found" there.
 | Log | Right now first: every team's live streams, uploads, processing and HD downloads, and removal requests waiting, each with Open (it follows the Team filter alone). Then everything that happened, in six groups: admins' changes; teams' people, players, games and game lines; videos (uploads, processing, clips, Go live, removal requests); photos (added, deleted, removal requests, a run of one person's photos as one line); every sign-in attempt from the last month, and which view each device uses; and problems, anything that failed. Each line says the device it came from ("iPhone, Safari"). A table a day at a time (100 lines a page): the last 7 days unless today, yesterday, the last month or any two dates are chosen, filtered by group, who, team, event, device or words (a person, team, event, device or address in the table filters to it), only warnings or device views hidden if asked, and the lines shown downloadable for Excel | admin_log, sign_in_events, the teams' activity and problems, merged newest first; Right now from the videos, live streams and removal requests |
 | Admins, Changelog, Documentation | Who the admins are; release notes under a heatmap of the last twelve months; this page | The admins table; CHANGELOG.md, built in; and the code itself |
 
-The counts beside Support in the menu (tickets waiting for an answer, and alerts that aren't ok) are read on every admin page.
+The counts in the menu, beside Insights (alerts that aren't ok, red when one is urgent) and Support (tickets waiting for an answer), are read on every admin page.
 
 ### Cloudflare's own figures
 

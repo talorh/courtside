@@ -1,5 +1,5 @@
 // What sets each alert: Stream's minutes from the 5-minute job, at most hourly;
-// people on teams, Images' photos and the database's size from the 3am job; server errors and emails waiting from every
+// Images' photos and the database's size from the 3am job; server errors and emails waiting from every
 // 5-minute run (basic monitoring); and each job's own failures. A level only drops once its figure
 // is past the clearing point, so one sitting on a threshold doesn't flap. A check never fails its job: an alert's ticket
 // is saved, and its email is sent later if it doesn't go now.

@@ -45,12 +45,13 @@ function postWhenChecked(form) {
 }
 
 const resend = document.querySelector("[data-resend]");
+let resendReady = false;
 if (resend) {
 	let left = WAIT_S;
 	const tick = () => {
 		resend.disabled = left > 0;
 		resend.textContent = left > 0 ? `Send a new code (ready in ${left}s)` : "Send a new code";
-		if (left-- <= 0) clearInterval(timer);
+		if (left-- <= 0) { resendReady = true; clearInterval(timer); }
 	};
 	const timer = setInterval(tick, 1000);
 	tick();
@@ -72,7 +73,8 @@ window.addEventListener("pageshow", (e) => {
 	for (const form of forms) {
 		delete form.dataset.sent;
 		delete form.dataset.checked;
-		for (const button of form.querySelectorAll("button:not([data-resend])")) button.disabled = false;
+		// Send a new code too, once its wait is over (until then its countdown enables it).
+		for (const button of form.querySelectorAll("button")) button.disabled = button === resend && !resendReady;
 	}
 });
 

@@ -3,11 +3,11 @@
 // another address. One open ticket an address, however often they try.
 import type { AppDeps } from "../../app/deps.ts";
 import { trySend } from "../admin/support-desk-service.ts";
-import { insertBouncedTicket } from "./bounced-repository.ts";
+import { insertAddressTicket } from "./access-repository.ts";
 
 export async function reportBounced(deps: AppDeps, email: string): Promise<void> {
-	const id = await insertBouncedTicket(deps.db, {
-		email, title: `Emails to ${email} are bouncing`, nowIso: deps.now().toISOString(),
+	const id = await insertAddressTicket(deps.db, {
+		kind: "bounced", email, title: `Emails to ${email} are bouncing`, nowIso: deps.now().toISOString(),
 		message: `A sign-in code couldn't be emailed to ${email}. Cloudflare Email Sending has stopped sending to that address `
 			+ "because emails to it bounced, or its owner marked one as spam, so they can't sign in.\n\n"
 			+ "To let them in, ask them for another email address and add it to their team's list (Teams, open the team, Manage team). "

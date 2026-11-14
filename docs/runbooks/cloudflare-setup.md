@@ -157,7 +157,7 @@ cf artifacts namespaces tokens create <worker> --repo <worker> --scope read --tt
 git -c http.extraHeader="Authorization: Bearer <token>" fetch https://<account id>.artifacts.cloudflare.net/git/<worker>/<worker>.git main
 cf artifacts namespaces repos tokens list --namespace <worker> --name <worker> --state active   # tidy: revoke leftovers
 cf builds logs <build uuid>
-cf builds create <trigger id> --branch main              # build main again by hand
+cf builds create <the Worker's tag> --branch main       # build main again by hand (the tag: cf workers scripts search)
 ```
 
 ## 5. Rolling back and restoring

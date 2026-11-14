@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 // @ts-expect-error: a plain JS script (scripts/), tested here on its own.
-import { buildFor, buildsDeployArgs, busyComputer, busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, sameAsLive, siteFromConfig, skipsStaging, STAGING_REF, stagingProblem, UPLOADING_SQL } from "../../scripts/release-checks.mjs";
+import { buildFor, buildsDeployArgs, busyComputer, busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, rebuildHint, sameAsLive, siteFromConfig, skipsStaging, STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL } from "../../scripts/release-checks.mjs";
 
 const now = new Date("2026-10-30T08:00:00Z"); // 7pm local, game night
 const minutesAgo = (m: number) => new Date(now.getTime() - m * 60_000).toISOString();
@@ -35,6 +35,11 @@ describe("npm run release's checks", () => {
 			.toEqual(["video 26 (game 3) started uploading 2 min ago"]);
 		expect(busyOnSite({ streams: [], uploads: [], joins: [{ id: 5, gameId: 2, triedAt: minutesAgo(2) }], now })).toEqual(["video 5 (game 2) is being joined (tried 2 min ago)"]);
 		expect(busyOnSite({ streams: [], uploads: [], joins: [{ id: 5, gameId: 2, triedAt: minutesAgo(40) }, { id: 6, gameId: 3, triedAt: null }], now })).toEqual([]);
+	});
+	it("counts a stream set up just now that isn't live yet (an external app waiting for its first picture), not one set up long ago", () => {
+		expect(busyOnSite({ streams: [{ gameId: 12, lastLiveAt: null, createdAt: minutesAgo(2) }], uploads: [], now })).toEqual(["game 12's stream was set up 2 min ago"]);
+		expect(busyOnSite({ streams: [{ gameId: 12, lastLiveAt: null, createdAt: minutesAgo(90) }], uploads: [], now })).toEqual([]);
+		expect(OPEN_STREAMS_SQL).toMatch(/created_at AS createdAt/);
 	});
 
 	it("looks at every team's streams and uploads, not one team's (a release mustn't cut into another team's game)", () => {
@@ -96,6 +101,12 @@ describe("staging first, then live (everything is tried on staging before it goe
 	it("counts the changelog, the scripts and the config as the site's (the changelog shows on the site; Builds runs a script)", () => {
 		for (const path of ["CHANGELOG.md", "scripts/deploy-from-builds.mjs", "package-lock.json", "vite.config.ts", "src/index.ts"]) expect(skipsStaging(path), path).toBe(false);
 		for (const path of ["docs/runbooks/staging.md", "tests/e2e/help.e2e.mjs", "AGENTS.md", "todo.md"]) expect(skipsStaging(path), path).toBe(true);
+	});
+	it("lists a file moved out of the site under its old name too, so moving src/ into docs/ still needs staging", () => {
+		expect(stagingDiffArgs("abc", "def")).toEqual(["diff", "--name-only", "--no-renames", "abc", "def"]);
+	});
+	it("says how to build main again with this cf: by the Worker's tag", () => {
+		expect(rebuildHint("ef10")).toBe("cf builds create ef10 --branch main");
 	});
 });
 

@@ -38,13 +38,6 @@ export const toMember = (r: MemberRow): Member => ({
 	id: r.id, teamId: r.team_id, email: r.email, name: r.name, role: r.role, lastSeenAt: r.last_seen_at, hideScores: r.hide_scores === 1, hidden: r.hidden === 1,
 });
 
-export async function findActiveMemberByEmail(db: D1Database, teamId: string, email: string): Promise<Member | null> {
-	const row = await db
-		.prepare(`SELECT ${COLUMNS} FROM members WHERE team_id = ? AND email = ? AND removed_at IS NULL`)
-		.bind(teamId, email)
-		.first<MemberRow>();
-	return row ? toMember(row) : null;
-}
 
 export async function getActiveMember(db: D1Database, teamId: string, id: number): Promise<Member | null> {
 	const row = await db

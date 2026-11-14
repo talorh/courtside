@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { statSync } from "node:fs";
+import { existsSync, statSync, symlinkSync } from "node:fs";
 import { createServer } from "node:http";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -146,6 +146,15 @@ describe.skipIf(!hasFfmpeg)("the join itself", () => {
 		const result = await joinSegments([`file:${a}`, `file:${b}`], out, "mp4", [50_000_000, 50_000_000], dir);
 		expect(result).toMatchObject({ ok: false });
 		expect(result.reason).toContain("left out");
+	}, 60_000);
+	// The container's disk full part way through the transport stream: a refusal the job can report, not a crash.
+	it.skipIf(!existsSync("/dev/full"))("says the disk is full rather than falling over, when the stream can't be written", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "join-test-"));
+		symlinkSync("/dev/full", join(dir, "all.ts"));
+		const a = join(process.cwd(), "join", "test-a.mp4"), b = join(process.cwd(), "join", "test-b.mp4");
+		const result = await joinSegments([`file:${a}`, `file:${b}`], join(dir, "out.mp4"), "mp4", [statSync(a).size, statSync(b).size], dir);
+		expect(result).toMatchObject({ ok: false });
+		expect(result.reason).toContain("ENOSPC");
 	}, 60_000);
 	it("stops ffmpeg when the join is stopped", async () => {
 		const began = Date.now();

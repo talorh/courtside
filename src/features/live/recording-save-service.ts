@@ -61,7 +61,8 @@ export const ASK_AGAIN_SECONDS = 20;
 
 /** `sending`: a part arrived in the last 2 minutes; `streaming`: Stream still has a phone connected (it says so for up to
  * 2 minutes after one has gone). Both ask the page to wait `retryIn` seconds and ask again. */
-export type SaveAnswer = { status: "saved" | "nothing" } | { status: "sending" | "streaming"; retryIn: number };
+/** `waitLeft`: while parts are still arriving, the seconds until the last of them is two minutes old (the page counts it down). */
+export type SaveAnswer = { status: "saved" | "nothing" } | { status: "sending" | "streaming"; retryIn: number; waitLeft?: number };
 
 /** Go live's "Save what was recorded": the filmer, from any phone, or a coach or team manager. Asking twice is fine. */
 export async function saveRecording(deps: TeamDeps, member: Member, gameId: number): Promise<SaveAnswer> {
@@ -84,7 +85,9 @@ async function decideSave(deps: TeamDeps, member: Member, gameId: number): Promi
 	// A phone still streaming it, or one that just stopped (a Stream hiccup reads as not streaming, as on the pages).
 	if (!open.endRequestedAt && await deps.live.isConnected(open.liveInputUid).catch(() => false)) return { status: "streaming", retryIn: ASK_AGAIN_SECONDS };
 	const result = await saveRecordedSoFar(deps, open, video, STILL_SENDING_SECONDS);
-	return result === "sending" ? { status: "sending", retryIn: ASK_AGAIN_SECONDS } : { status: result };
+	if (result !== "sending") return { status: result };
+	const waitLeft = Math.max(1, Math.ceil(STILL_SENDING_SECONDS - (deps.now().getTime() - Date.parse(await lastPartAt(deps, video))) / 1000));
+	return { status: "sending", retryIn: Math.min(ASK_AGAIN_SECONDS, waitLeft), waitLeft };
 }
 
 /**

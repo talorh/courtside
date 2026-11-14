@@ -10,6 +10,15 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 14 Nov 2026
 
+- [Fix] **Video joiner:** Fixed an issue where a joiner whose disk filled up part way through a game's join stopped altogether: the join now fails and is tried again, as any failed join is (rebuild its image: npm run join -- image).
+- [Fix] **Copy buttons:** Fixed an issue where tapping Copy twice quickly left it saying Copied.
+- [Fix] **Help:** Fixed an issue where a link to Help with a stray % in it stopped the search box showing.
+- [Fix] **Sign in:** Fixed an issue where, back on the code page after signing in, Send a new code stayed greyed out.
+- [Fix] **Go live:** Fixed an issue where Save what was recorded, waiting for the last of a closed page's recording, counted down from 0:20 again and again: it now counts the whole wait down once.
+- [Fix] **Uploads and Go live:** Fixed an issue where a tap at the wrong moment could keep the phone's screen on after an upload or a live stream had finished.
+- [Fix] **Go live:** Fixed an issue where, after a page closed mid-game, Save what was recorded and Carry on streaming did nothing on a phone whose own storage couldn't be read: they now go ahead with what reached the site.
+- [Fix] **Photos:** Fixed an issue where swiping to the next photo on a weak signal could show that photo with the last one's caption and buttons: the photo's page now opens as usual when it can't be read in place.
+- [Fix] **Costs:** Fixed an issue where Cloudflare's bill showed the containers' memory, disk and vCPU as far over their free allowances: the allowances are in hours or minutes and the use in seconds, and now they're compared in the same unit. Durable Objects' compute allowance shows too.
 - [Enhancement] **Help:** What is the aim here? now says live scores, each player's own points, fouls and games, the ladder and the results history are on the league's own scoring app, not here.
 - [Enhancement] **Roster:** One family filming every game is easier to set: a Team duties link at the top of the Roster and in each week's Change, and the choice reads Who films: The Curry family, every week.
 - [Enhancement] **Platform:** The site's tools, tests, builds and video joiner run on Node 26, ahead of Node 22's end of life in April 2027, with the cf CLI and the test tools updated too.

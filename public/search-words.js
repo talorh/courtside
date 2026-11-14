@@ -27,3 +27,13 @@ export function marker(words) {
 	const all = [...new Set(words.flatMap(forms))].sort((a, b) => b.length - a.length);
 	return new RegExp(all.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "gi");
 }
+
+/** The id a link to a question names ("#watch" is "watch"); a hash that isn't valid encoding ("#50%") is taken as it is. */
+export function linkedId(hash) {
+	const id = hash.slice(1);
+	try {
+		return decodeURIComponent(id);
+	} catch {
+		return id;
+	}
+}

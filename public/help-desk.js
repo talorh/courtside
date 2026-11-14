@@ -4,6 +4,8 @@
 // headings, and Contact support is one too. A team manager's Help is in two parts (running the team, then what everyone
 // does): each part's name heads its sections in the contents. On a phone none of it shows (only desktop.css's media query styles these
 // classes and lists) and nothing here scrolls the page, so a phone's Help is as it always was.
+import { linkedId } from "./search-words.js";
+
 const page = document.querySelector(".helppage");
 const DESK = "(min-width: 1024px) and (hover: hover) and (pointer: fine)";
 const onDesktop = () => matchMedia(DESK).matches && document.documentElement.dataset.view !== "mobile";
@@ -94,7 +96,7 @@ function setup(page) {
 	});
 
 	function go(scroll) {
-		const id = decodeURIComponent(location.hash.slice(1));
+		const id = linkedId(location.hash);
 		show(sectionOf(id));
 		if (!scroll || !onDesktop()) return;
 		const at = id ? document.getElementById(id) : null;

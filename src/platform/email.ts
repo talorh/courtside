@@ -13,8 +13,11 @@ export interface EmailPort {
 /** An email the binding didn't send, with its error code (E_RECIPIENT_SUPPRESSED: Email Sending won't send to that
  * address, after bounces or a spam report). */
 export class EmailFailed extends Error {
-	constructor(readonly code: string, detail: string, options?: ErrorOptions) {
+	// Written out, not `constructor(readonly …)`, as app/errors.ts does, so Node's type stripping can load it.
+	readonly code: string;
+	constructor(code: string, detail: string, options?: ErrorOptions) {
 		super(`Email failed (${code}): ${detail}`, options);
+		this.code = code;
 	}
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Role } from "../../../src/auth/permissions.ts";
-import { findActiveMemberByEmail, listActiveMembers, type Member } from "../../../src/features/members/members-repository.ts";
+import { listActiveMembers, type Member } from "../../../src/features/members/members-repository.ts";
+import { findActiveMemberByEmail } from "../../helpers/members.ts";
 import { addMembers, memberActivity, removeMember, updateMember } from "../../../src/features/members/members-service.ts";
 import { createTestDb } from "../../helpers/d1-sqlite.ts";
 

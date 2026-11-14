@@ -1,5 +1,5 @@
 // Workers AI, through the Worker's AI binding (no keys, no other service), on the account's free 10,000 "neurons" a
-// day; on Workers Paid anything over that is billed, at cents a day (todo.md checks the bill).
+// day; on Workers Paid anything over that is billed, at cents a day (Costs shows what Cloudflare charged).
 // One model for everything, named only here, so staging and the live site always run the same one and a new model is
 // tried on staging like any change: Gemma 4, quick and cheap (4 billion of its 26 billion parameters an answer), with
 // its thinking off so the answer starts straight away. It answers Ask Virtual Team Manager, the Documentation AI

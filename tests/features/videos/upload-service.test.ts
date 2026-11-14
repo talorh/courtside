@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { findActiveMemberByEmail, type Member } from "../../../src/features/members/members-repository.ts";
+import { type Member } from "../../../src/features/members/members-repository.ts";
+import { findActiveMemberByEmail } from "../../helpers/members.ts";
 import { completeUpload, partUrls, startUpload } from "../../../src/features/videos/upload-service.ts";
 import { abortUpload } from "../../../src/features/videos/upload-abort-service.ts";
 import { getVideo } from "../../../src/features/videos/videos-repository.ts";

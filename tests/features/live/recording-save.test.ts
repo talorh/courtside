@@ -100,11 +100,12 @@ describe("saving what was recorded when the phone stopped", () => {
 		expect(await (await sam("/live")).text()).not.toContain(`data-recording="${videoId}"`);
 	});
 	it("asks the page to wait while a phone is still streaming it or still sending parts; refuses another filmer; a coach can", async () => {
-		const { deps, gameId, sam, reached } = await filmed();
+		const { deps, gameId, sam, reached, later } = await filmed();
+		later(30);
 		reached([1], 1);
 		const sending = await save(sam, gameId);
 		expect(sending.status).toBe(200);
-		expect(((await sending.json()) as { data: object }).data).toEqual({ status: "sending", retryIn: 20 });
+		expect(((await sending.json()) as { data: object }).data).toEqual({ status: "sending", retryIn: 20, waitLeft: 60 });
 		reached([1], 10);
 		deps.live.connected.add("live-1");
 		expect(((await (await save(sam, gameId)).json()) as { data: object }).data).toEqual({ status: "streaming", retryIn: 20 });

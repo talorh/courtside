@@ -332,7 +332,8 @@ sequenceDiagram
  `POST /api/live/:gameId/save` (`recording-save-service.ts`) completes the upload from R2's own list of the parts that
  reached it (S3 ListParts, `r2-presigner.ts`), as a run from part 1. While a phone is still streaming (Stream says so for up to 2
  minutes after one has gone), or a part came in during the last 2 minutes, it answers wait (`streaming`, `sending`,
- with `retryIn`) and the page asks again every 20 seconds, saying so beside the button, until it's saved; every
+ with `retryIn`, and for `sending` the seconds left in `waitLeft`, which the button counts down) and the page asks
+ again every 20 seconds, saying so beside the button, until it's saved; every
  answer is a `live_save` log line. If nothing reached R2, the recording is deleted and the game is free. The
  5-minute job does the same by itself: half an hour after End game with no part since (the phone had only its last
  parts to send, so its page has gone), or, with no End game, once a recording is 12 hours old and has been quiet that

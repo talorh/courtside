@@ -21,7 +21,8 @@ const pages = new Map(); // a photo's page's facts, by id, read in advance or on
 async function pageFor(id) {
 	if (pages.has(id)) return pages.get(id);
 	const res = await fetch(`/photos/${id}`, { headers: { Accept: "text/html" } }).catch(() => null);
-	const f = res?.ok ? facts(new DOMParser().parseFromString(await res.text(), "text/html")) : null;
+	const text = res?.ok ? await res.text().catch(() => null) : null;
+	const f = text ? facts(new DOMParser().parseFromString(text, "text/html")) : null;
 	if (f) pages.set(id, f);
 	return f;
 }
@@ -94,7 +95,9 @@ function setUp(figure) {
 	}
 
 	// After the snap: the neighbour's slide is the centre, the old centre goes to the other side, and the far side is the
-	// neighbour's own neighbour (known already when its page was read in advance).
+	// neighbour's own neighbour (known already when its page was read in advance). A page that can't be read (a weak
+	// signal) is opened as usual instead, so the buttons are never another photo's.
+	let busy = false;
 	async function become(which) {
 		const next = cur[which];
 		history.replaceState(history.state, "", `/photos/${next.id}`);
@@ -105,7 +108,8 @@ function setUp(figure) {
 		track.replaceChildren(which === "older" ? centre : slide(far), which === "older" ? right : left, which === "older" ? slide(far) : centre);
 		at(0, false);
 		f ??= await pageFor(next.id);
-		if (!f || f.id !== next.id || cur.id !== was.id) return;
+		if (!f || f.id !== next.id) return location.assign(`/photos/${next.id}`);
+		if (cur.id !== was.id) return;
 		if (!far && f[which]) track.children[which === "older" ? 2 : 0].replaceWith(slide(f[which]));
 		apply(f);
 	}
@@ -127,11 +131,13 @@ function setUp(figure) {
 	const settle = () => {
 		if (!tracking) return;
 		tracking = false;
+		if (busy) return at(0, true);
 		const flick = Math.abs(dx) / Math.max(1, Date.now() - startAt) > FLICK_PX_PER_MS;
 		const which = dx < 0 ? "older" : "newer";
 		if ((Math.abs(dx) < LEAST_PX && !flick) || !cur[which]) return at(0, true);
 		at(which === "older" ? -width() : width(), true);
-		snapped().then(() => become(which));
+		busy = true;
+		snapped().then(() => become(which)).finally(() => { busy = false; });
 	};
 	figure.addEventListener("touchend", settle, { passive: true });
 	figure.addEventListener("touchcancel", () => { tracking = false; at(0, true); }, { passive: true });

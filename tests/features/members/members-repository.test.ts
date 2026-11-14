@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-	countActiveManagers, findActiveMemberByEmail, getActiveMember, listActiveMembers, markMemberRemoved, type MemberSort,
-	touchLastSeen, updateMemberDetails, upsertMembers,
+	countActiveManagers, getActiveMember, listActiveMembers, markMemberRemoved, type MemberSort, touchLastSeen, updateMemberDetails, upsertMembers,
 } from "../../../src/features/members/members-repository.ts";
+import { findActiveMemberByEmail } from "../../helpers/members.ts";
 import { createTestDb } from "../../helpers/d1-sqlite.ts";
 
 const TEAM = "b12.1-2026";

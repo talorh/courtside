@@ -47,7 +47,7 @@ ${table(["Setting", "Value", "Why"], [
 <p>The release follows the build to its end and only calls the deploy done when the live deployment carries the
 changelog line. A build that fails deploys nothing: the site stays as it was, the release says what failed, and the fix
 goes through staging and the release again. If a build needs running again by hand,
-${code("cf builds create <trigger id> --branch main")} does it; the trigger id is in the Cloudflare runbook. Builds can't run the browser tests, which need
+${code("cf builds create <the Worker's tag> --branch main")} does it (the tag as above; the Cloudflare runbook has it). Builds can't run the browser tests, which need
 phones and cameras, so the release runs them before it pushes.</p>
 <h3>If a computer is lost</h3>
 <p>What's live is never lost with it: the repository on Artifacts has every commit of ${code("main")}, and a new computer

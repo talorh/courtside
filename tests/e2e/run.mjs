@@ -48,6 +48,9 @@ const PHONES = {
 	},
 };
 
+// WebKit's words for a fetch the page was making when it reloaded.
+const CUT_BY_RELOAD = /^(?:\w*Error: )?Fetch API cannot load .* due to access control checks\.?$/;
+
 const filter = process.argv.slice(2).join(" ").toLowerCase();
 const only = process.env.PHONES?.split(",") ?? Object.keys(PHONES);
 const OUT = "/out";
@@ -72,7 +75,9 @@ for (const phoneName of only) {
 		for (const init of [phone.init ?? [], scenario.init ?? []].flat()) await context.addInitScript(init);
 		const page = await context.newPage();
 		const errors = [];
-		page.on("pageerror", (err) => errors.push(String(err)));
+		// WebKit reports a fetch cut short by the page reloading as a page error ("… due to access control checks"), even
+		// though the page's own code catches it; anything else the page throws fails the scenario.
+		page.on("pageerror", (err) => { if (!(phoneName === "iphone" && CUT_BY_RELOAD.test(String(err)))) errors.push(String(err)); });
 		const started = Date.now();
 		const t = helpers({ page, harness, bridge, phone: phoneName, errors });
 		try {

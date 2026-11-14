@@ -50,17 +50,22 @@ export const concatArgs = (listPath, outPath, reencode) => {
 
 const why = (run) => `ffmpeg: ${run.err.trim().split("\n").slice(-3).join(" | ") || `exit ${run.code}`}`;
 
-/** Every segment appended to one transport stream at `tsPath`; the first run that failed, or null. */
+/** Every segment appended to one transport stream at `tsPath`; the first run that failed, or null. A stream that can't
+ * be written (the disk full) stops its ffmpeg and is that failure, never an error left to take the joiner down. */
 async function toTransportStream(segments, tsPath, signal) {
 	const out = createWriteStream(tsPath);
+	const stop = new AbortController();
+	let writeErr = null;
+	out.on("error", (e) => { writeErr ??= e; stop.abort(); });
+	const both = signal ? AbortSignal.any([signal, stop.signal]) : stop.signal;
 	let failed = null;
 	for (const segment of segments) {
-		const run = await runFfmpeg(tsArgs(segment), out, signal);
-		if (runFailed(run)) { failed = run; break; }
+		const run = await runFfmpeg(tsArgs(segment), out, both);
+		if (writeErr || runFailed(run)) { failed = run; break; }
 	}
 	out.end();
-	await finished(out);
-	return failed;
+	await finished(out).catch(() => {});
+	return writeErr ? { code: 1, err: `couldn't write the stream: ${writeErr.code ?? writeErr.message}` } : failed;
 }
 
 /**

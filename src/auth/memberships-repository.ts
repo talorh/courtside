@@ -22,11 +22,6 @@ export const toMembership = (r: Row): Membership => ({
 	team: toTeam({ id: r.team_id, name: r.team_name, code: r.code, season_start: r.season_start, ask_name: r.ask_name, status: r.status, closed_at: r.closed_at, delete_after: r.delete_after } as TeamRow),
 });
 
-export async function listMemberships(db: D1Database, email: string): Promise<Membership[]> {
-	const { results } = await membershipsStatement(db, email).all<Row>();
-	return results.map(toMembership);
-}
-
 /**
  * A site admin's own way into a team they aren't in: a hidden team manager membership, made the first time and the same
  * row after (a removed one comes back hidden). A real membership is never touched. Idempotent: a GET may call it.

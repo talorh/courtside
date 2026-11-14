@@ -249,6 +249,32 @@ export const scenarios = [
 		},
 	},
 	{
+		name: "a swipe on a weak signal, the next photo's page not reading: the whole page goes to that photo, its own buttons and all",
+		phones: ["android", "iphone"],
+		async run(t) {
+			let asked = 0;
+			t.harness.page("/photo", () => photoPage({ newer: 9, older: 5 }));
+			t.harness.page("/photos/9", () => photoPage({ id: 9, older: PHOTO.id }));
+			// The read in advance and the swipe's own read both fail; the page opened after them doesn't.
+			t.harness.page("/photos/5", () => (++asked <= 2 ? { status: 503, body: "" } : photoPage({ id: 5, newer: PHOTO.id })));
+			await t.page.goto(`${t.harness.url}/photo`);
+			await t.until(() => asked >= 1, "the older photo's page read in advance (and failing)");
+			await t.page.evaluate(async () => {
+				const at = document.querySelector(".photoview");
+				const fire = (type, x) => {
+					const e = new Event(type, { bubbles: true });
+					Object.defineProperty(e, "touches", { value: type === "touchend" ? [] : [{ clientX: x, clientY: 300 }] });
+					at.dispatchEvent(e);
+				};
+				fire("touchstart", 200);
+				for (let i = 1; i <= 5; i++) { fire("touchmove", 200 - 36 * i); await new Promise((r) => setTimeout(r, 24)); }
+				fire("touchend", 20);
+			});
+			await t.until(() => t.page.evaluate(() => document.querySelector(".photoview")?.dataset.id === "5"), "the page to be photo 5's", 15_000);
+			t.check(await t.page.evaluate(() => document.querySelector(".photoview").dataset.newer === "7"), "photo 5's own Newer, not the old photo's");
+		},
+	},
+	{
 		name: "saving a photo on an iPhone with no share menu: says to press and hold the photo, and keeps the page",
 		phones: ["iphone"],
 		init: [noShareMenu],

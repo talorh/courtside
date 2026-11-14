@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isAdmin } from "../../src/auth/admins-repository.ts";
-import { ensureHiddenManager, listMemberships } from "../../src/auth/memberships-repository.ts";
+import { ensureHiddenManager, membershipsStatement, toMembership } from "../../src/auth/memberships-repository.ts";
 import { loadViewer } from "../../src/auth/viewer.ts";
 import { listActiveMembers, upsertMembers } from "../../src/features/members/members-repository.ts";
 import { ownerTeamId } from "../../src/features/teams/owner-repository.ts";
@@ -9,6 +9,8 @@ import { countingDb } from "../helpers/counting-db.ts";
 import { createTestDb } from "../helpers/d1-sqlite.ts";
 
 const B12 = "b12.1-2026";
+const listMemberships = async (db: D1Database, email: string) =>
+	(await membershipsStatement(db, email).all<Parameters<typeof toMembership>[0]>()).results.map(toMembership);
 const G14 = "g14.5-2026";
 
 async function twoTeams() {

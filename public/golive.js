@@ -77,7 +77,7 @@ function setup(card) {
 		if (!s.live) return;
 		s.recam.end();
 		status.textContent = STOPPING;
-		const stream = { live: s.live, rec: s.rec, phone: s.phone, pause: s.pause, media, mix: s.mix, cam, saving, gameId, startedAt: s.startedAt, progress: () => s.progress };
+		const stream = { live: s.live, rec: s.rec, phone: s.phone, pause: s.pause, media, mix: s.mix, cam, saving, gameId, progress: () => s.progress };
 		s.live = null; // from here the recording's progress goes to the Saving panel
 		try {
 			await stopStream(stream);

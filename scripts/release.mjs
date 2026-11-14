@@ -18,8 +18,8 @@ import { cfToken } from "./deploy-config.mjs";
 import { listRoutes, maintenanceRoutes } from "./maintenance-steps.mjs";
 import {
 	busyComputer,
-	busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, QUIET_MINUTES, sameAsLive, siteFromConfig, STAGING_REF, stagingProblem,
-	UPLOADING_SQL, JOINING_SQL,
+	busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, QUIET_MINUTES, rebuildHint, sameAsLive, siteFromConfig,
+	STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL, JOINING_SQL,
 } from "./release-checks.mjs";
 import { pushMain, waitForBuild, workerTag } from "./release-push.mjs";
 
@@ -42,7 +42,7 @@ step("this commit was tried on staging (or only docs, tests or notes changed sin
 const git = (args) => spawnSync("git", args, { encoding: "utf8" });
 const staged = git(["rev-parse", "--verify", "--quiet", STAGING_REF]).stdout.trim() || null;
 const inHistory = staged !== null && git(["merge-base", "--is-ancestor", staged, commit]).status === 0;
-const changed = inHistory ? output("git", ["diff", "--name-only", staged, commit]).split("\n").filter(Boolean) : [];
+const changed = inHistory ? output("git", stagingDiffArgs(staged, commit)).split("\n").filter(Boolean) : [];
 const notStaged = stagingProblem({ staged, head: commit, inHistory, changed });
 if (notStaged) stop(`Staging first: ${notStaged}.`);
 
@@ -119,7 +119,7 @@ try {
 } catch (err) {
 	stop(`The push to Cloudflare was refused or failed: ${`${err.stderr ?? ""}`.trim() || err.message}`);
 }
-if (!moved) stop(`main on Cloudflare already has ${tag}, so no build starts. To build it again: cf builds create <trigger> --branch main (cf builds triggers list).`);
+if (!moved) stop(`main on Cloudflare already has ${tag}, so no build starts. To build it again: ${rebuildHint(scriptId)}.`);
 step(`Workers Builds: npm ci && npm run check, then npm run deploy:builds`);
 const build = await waitForBuild({ scriptId, commit, pushedAt, say: (s) => console.log(`  ${s}`) });
 if (build.state === "failed") stop(`The build of ${tag} failed (${build.outcome}); the site still runs the previous version. Its log: cf builds logs ${build.uuid}`);

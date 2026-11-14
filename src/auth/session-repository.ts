@@ -38,7 +38,6 @@ export async function touchSession(db: D1Database, id: string, nowIso: string): 
 	await db.prepare("UPDATE sessions SET last_seen_at = ? WHERE id = ?").bind(nowIso, id).run();
 }
 
-/** The device's view, as its latest page said. */
 /** Sets the session's view where it differs, so a statement after it can tell from changes() whether it did. */
 export const sessionViewStatement = (db: D1Database, id: string, view: DeviceView) => db.prepare("UPDATE sessions SET view = ? WHERE id = ? AND view IS NOT ?").bind(view, id, view);
 

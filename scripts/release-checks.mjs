@@ -13,7 +13,7 @@ export const MAINTENANCE_QUIET_MINUTES = 2;
 // What the quiet check reads, in every team (other teams are coming; one team's filter would let a
 // release go out in the middle of another team's game). A stopped stream (its input switched off) is left out: Stream
 // can go on calling it connected, and its recording's upload is what's left, which the uploads check watches.
-export const OPEN_STREAMS_SQL = "SELECT game_id AS gameId, last_live_at AS lastLiveAt FROM live_streams WHERE status = 'open' AND end_requested_at IS NULL";
+export const OPEN_STREAMS_SQL = "SELECT game_id AS gameId, last_live_at AS lastLiveAt, created_at AS createdAt FROM live_streams WHERE status = 'open' AND end_requested_at IS NULL";
 export const UPLOADING_SQL = `SELECT id, game_id AS gameId, r2_key AS r2Key, r2_upload_id AS r2UploadId, created_at AS createdAt FROM videos
 	WHERE status = 'uploading' AND deleted_at IS NULL AND r2_upload_id IS NOT NULL`;
 // A carried-on recording whose parts are being joined (the 5-minute job and the joiner): a deploy mid-join would be
@@ -39,14 +39,16 @@ const ago = (iso, now) => `${Math.round((now.getTime() - Date.parse(iso)) / 60_0
 /**
  * What a deploy mustn't cut into: an upload or a live recording that sent a part in the last `quietMinutes` (15; 2
  * behind the maintenance page), or started that recently and has sent none yet, or a live picture the 5-minute run saw
- * in that time, or a join of a recording's parts tried in that time. `streams`: open live streams ({ gameId, lastLiveAt });
+ * in that time (or a stream set up in that time with no picture seen yet), or a join of a recording's parts tried in
+ * that time. `streams`: open live streams ({ gameId, lastLiveAt, createdAt });
  * `uploads`: uploading videos ({ id, gameId, createdAt, lastPartAt }); `joins`: videos with parts to join ({ id, gameId,
  * triedAt }). The reasons; none: quiet.
  */
 export function busyOnSite({ streams, uploads, joins = [], now, quietMinutes = QUIET_MINUTES }) {
 	const recent = (iso) => typeof iso === "string" && now.getTime() - Date.parse(iso) < quietMinutes * 60_000;
 	return [
-		...streams.filter((s) => recent(s.lastLiveAt)).map((s) => `game ${s.gameId} was live ${ago(s.lastLiveAt, now)}`),
+		...streams.filter((s) => recent(s.lastLiveAt ?? s.createdAt))
+			.map((s) => (s.lastLiveAt ? `game ${s.gameId} was live ${ago(s.lastLiveAt, now)}` : `game ${s.gameId}'s stream was set up ${ago(s.createdAt, now)}`)),
 		...uploads.filter((u) => recent(u.lastPartAt ?? u.createdAt))
 			.map((u) => `video ${u.id} (game ${u.gameId}) ${u.lastPartAt ? "sent a part" : "started uploading"} ${ago(u.lastPartAt ?? u.createdAt, now)}`),
 		...joins.filter((j) => recent(j.triedAt)).map((j) => `video ${j.id} (game ${j.gameId}) is being joined (tried ${ago(j.triedAt, now)})`),
@@ -67,6 +69,12 @@ export const STAGING_REF = "refs/courtside/staging";
 // bodies, and the maintenance Worker (deployed by its own script). The changelog does: the site shows it.
 const SKIPS_STAGING = [/^docs\//, /^tests\//, /^infra\//, /^maintenance\//, /^(README|AGENTS|INSTALL|LICENSE|todo)(\.md)?$/];
 export const skipsStaging = (path) => SKIPS_STAGING.some((re) => re.test(path));
+
+/** What changed since staging's commit: a file moved is listed under both names, as the site lost the old one. */
+export const stagingDiffArgs = (staged, commit) => ["diff", "--name-only", "--no-renames", staged, commit];
+
+/** Building main again by hand, when it's on Cloudflare already: by the Worker's tag (cf workers scripts search). */
+export const rebuildHint = (scriptId) => `cf builds create ${scriptId} --branch main`;
 
 /**
  * Why this commit can't go live yet, staging-wise, or null (everything goes to staging

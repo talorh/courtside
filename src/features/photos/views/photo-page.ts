@@ -37,7 +37,6 @@ export interface PhotoPageProps {
 
 const size = (bytes: number) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
 
-
 /**
  * A computer or an Android phone downloads it. On an iPhone or iPad a download lands in Files, or in the Home Screen app
  * opens a page with no way back, so public/photo-save.js makes it Save photo there: the share menu,

@@ -171,12 +171,6 @@ img{max-width:100%}
 .appnav a[aria-current="page"]{color:#fff;background:rgba(255,255,255,.16)}
 .appnav a.big{flex:0 0 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--display);font-size:17px;font-weight:800;padding:10px 20px;border-radius:10px;border:2px solid rgba(255,255,255,.4);color:#fff;min-height:48px}
 .appnav a.big .ico{width:22px;height:22px;flex:none}
-.appnav a.big.up{background:var(--club);border-color:rgba(255,255,255,.55)}
-.appnav a.big[aria-current="page"]{background:#fff;color:var(--black);border-color:#fff}
-/* The "you are here" ring sits inside the button so every big button stays the same size. */
-.appnav a.big.up[aria-current="page"]{background:var(--club);color:#fff;box-shadow:inset 0 0 0 3px #fff}
-.appnav a.big.live{background:var(--live);border-color:var(--live)}
-.appnav a.big.live[aria-current="page"]{background:var(--live);color:#fff;box-shadow:inset 0 0 0 3px #fff}
 /* Phones: the big buttons share one row at equal width; the small links go on the next. */
 @media (max-width:760px){.appnav a.big{flex:1 1 30%;min-width:0;min-height:64px;font-size:17px;line-height:1.15;padding:8px 6px;gap:6px}.appnav a.big .ico{width:18px;height:18px}}
 a.game{color:inherit;text-decoration:none}
@@ -214,10 +208,8 @@ fieldset.clock select{width:auto}
 .drop-hint{display:none}
 @media (hover:hover) and (pointer:fine){.drop-hint{display:inline}}
 #upload.dragover,#addphotos.dragover{outline:3px dashed var(--club);outline-offset:4px;background:var(--club-soft)}
-/* Processing-time messages on the upload page */
-.after-note{margin:0;font-size:18px;font-weight:500;line-height:1.4;padding:12px 14px 12px 34px;display:grid;gap:6px;border-radius:10px;background:var(--club-soft);color:var(--fg)}
+/* The upload page's message once it's done */
 .done-note{margin:0;font-family:var(--display);font-size:24px;font-weight:700;line-height:1.2;padding:16px;border-radius:10px;background:var(--club);color:#fff}
-.done-note:not([hidden]) ~ .after-note{display:none}
 /* Thumbnails: a real frame when Stream has one, otherwise the club's logo on white. */
 .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .thumb.has-img::before,.thumb.has-img::after,.thumb.fallback::before,.thumb.fallback::after{display:none}
@@ -542,7 +534,7 @@ fieldset.players label{padding:6px 10px;font-size:14px}
 .askform{display:flex;gap:8px}.askform input{min-width:0;flex:1;font-size:16px}.askform .btn{flex:none}
 .askanswer{white-space:pre-line;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
 /* Top bar: Help (with Ask Virtual Team Manager first on it), an oval that says Help at the top right, then light or dark and
-   sign out (easier to spot than the round ? it was for a day, after Photos took its grey button).
+   sign out (an oval is easier to spot than a round ?).
    A little brighter than the round buttons beside it. The nav wraps onto the rows below. */
 .helpbtn{order:1;margin-left:auto;flex:none;height:40px;padding:0 14px 0 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;color:#fff;border:2px solid rgba(255,255,255,.7);background:rgba(255,255,255,.14);font-weight:700;font-size:15px;line-height:1;text-decoration:none}
 .helpbtn:hover{background:rgba(255,255,255,.24)}.helpbtn .ico{width:20px;height:20px;flex:none}
@@ -714,7 +706,7 @@ fieldset.players label{padding:6px 10px;font-size:14px}
 .signoutbtn:hover{background:rgba(255,255,255,.18)}.signoutbtn .ico{width:19px;height:19px}
 .modal p{margin:0}.modal .btn:disabled{opacity:.6;cursor:default}
 /* Phones narrower than an iPhone 13 (390px): a touch smaller, so the logo, Help and the two round buttons share one
-   row. (The reload button went on 26 Oct 2026: pull down to reload.) */
+   row (a page reloads by pulling down). */
 @media (max-width:389px){.brand b{font-size:15.5px}.themebtn,.signoutbtn{width:34px;height:34px}.helpbtn{height:34px;padding:0 11px 0 8px;gap:5px}
   .helpbtn + .themebtn,.themebtn + .signoutbtn{margin-left:2px}}
 /* Photos: squares under the day they were taken, newest first, three across on a phone; one
@@ -801,7 +793,6 @@ details.confirm[open]{display:block;flex-basis:100%}
 .tickets{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .trow{display:grid;grid-template-columns:auto auto minmax(0,1fr);grid-template-areas:"num stat main" "meta meta meta";gap:6px 12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:inherit;text-decoration:none}
 .trow:hover{border-color:var(--club)}
-.tnum{grid-area:num;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
 .tstat{grid-area:stat;justify-self:start;font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--line);white-space:nowrap}
 .tstat.s-new{background:var(--warn-soft);color:var(--warn-ink);border-color:transparent}
 .tstat.s-open{background:var(--club-soft);color:var(--club-ink);border-color:transparent}
@@ -812,7 +803,6 @@ details.confirm[open]{display:block;flex-basis:100%}
 .tstat.s-declined{color:var(--muted)}
 .tmain{grid-area:main;display:grid;min-width:0}
 .tline{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tmeta{grid-area:meta;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted)}
 .tickets.mine .trow{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"stat main when"}
 @media (max-width:560px){.trow{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"num stat" "main main" "meta meta"}
   .tickets.mine .trow{grid-template-columns:minmax(0,1fr);grid-template-areas:"stat" "main" "when"}}

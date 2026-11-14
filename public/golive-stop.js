@@ -4,7 +4,7 @@ import { fillScreen } from "./golive-screen.js";
 import { api, withRetries } from "./upload-net.js";
 
 /**
- * `s`: the stream's pieces from golive.js ({ live, rec, phone, pause, media, mix, cam, saving, gameId, startedAt,
+ * `s`: the stream's pieces from golive.js ({ live, rec, phone, pause, media, mix, cam, saving, gameId,
  * progress() }).
  */
 export async function stopStream(s) {

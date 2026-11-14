@@ -813,6 +813,22 @@ export const scenarios = [
 		},
 	},
 	{
+		name: "Save what was recorded when the phone's own storage can't be read: it still saves what reached the site",
+		phones: ["iphone", "android"],
+		init: () => {
+			try { if (location.port === "8799") localStorage.setItem("courtside-live:7", JSON.stringify({ videoId: 41, partSize: 131072, etags: { 1: '"e1"' }, segment: 1 })); } catch { /* about:blank */ }
+			// The browser lets go of its database part way (Safari can): every read of it fails.
+			IDBIndex.prototype.getAll = () => { throw new DOMException("The database connection is closing.", "InvalidStateError"); };
+		},
+		async run(t) {
+			await t.openGoLive({ recordingVideoId: VIDEO_ID, ended: true });
+			await t.until(() => t.visible(SEL.save), "Save what was recorded");
+			await t.tap(SEL.save);
+			await t.until(async () => /^Saved\./.test(await t.text(SEL.recoverMsg)), "Saved", 30_000);
+			t.check(t.harness.calls(`POST /api/live/${GAME_ID}/save`).length === 1, "the site asked to save it");
+		},
+	},
+	{
 		name: "no Carry on for an ended stream: only Save what was recorded",
 		phones: ["android"],
 		init: () => { try { if (location.port === "8799") localStorage.setItem("courtside-live:7", JSON.stringify({ videoId: 41, partSize: 131072, etags: { 1: '"e1"' }, segment: 1 })); } catch { /* about:blank */ } },

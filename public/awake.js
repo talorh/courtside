@@ -13,17 +13,25 @@ export function keepAwake(onChange = () => {}) {
 	let lock = null;
 	let on = true;
 	let held = null;
+	let asking = false;
 	const report = (now) => { if (on && now !== held) { held = now; onChange(now); } };
+	// One ask at a time: a tap while the phone is answering would otherwise leave a second lock that's never let go.
 	const take = async () => {
-		if (!on || (lock && !lock.released) || document.visibilityState !== "visible") return;
+		if (!on || asking || (lock && !lock.released) || document.visibilityState !== "visible") return;
 		if (!navigator.wakeLock) return report(false);
+		asking = true;
 		try {
-			lock = await navigator.wakeLock.request("screen");
+			const got = await navigator.wakeLock.request("screen");
+			// Released while the phone was answering: this lock goes straight back.
+			if (!on) return void got.release().catch((err) => console.warn(`wake lock: ${err}`));
+			lock = got;
 			lock.addEventListener("release", () => { report(false); take(); });
 			report(true);
 		} catch (err) {
 			console.warn(`wake lock: ${err}`);
 			report(false);
+		} finally {
+			asking = false;
 		}
 	};
 	const onVisible = () => { if (document.visibilityState === "visible") take(); };

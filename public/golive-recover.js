@@ -76,7 +76,8 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 			const minutes = minutesOf(k.bytes);
 			if (k.bytes > 0) tell(`${minutes > 0 ? `About ${minutes} ${minutes === 1 ? "minute" : "minutes"}` : "The last moments"} of the recording were still on this phone when the page closed: that's sent when you save or carry on.`);
 			return k;
-		}) : Promise.resolve(null);
+		// A phone whose storage can't be read has nothing kept to send: Save and Carry on still go ahead with what reached the site.
+		}).catch((err) => { console.warn(`recording store: ${err}`); return null; }) : Promise.resolve(null);
 		panel.hidden = false;
 		panel.querySelector("[data-recover-carry]").hidden = !canCarryOn;
 		panel.querySelector("[data-recover-here]").hidden = !(here && ended);

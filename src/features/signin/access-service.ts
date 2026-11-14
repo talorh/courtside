@@ -6,7 +6,7 @@ import type { AppDeps } from "../../app/deps.ts";
 import { loadViewer } from "../../auth/viewer.ts";
 import { trySend } from "../admin/support-desk-service.ts";
 import { isEmail } from "../members/members-service.ts";
-import { countAccessRequestsSince, hasOpenAccessRequest, insertAccessRequest } from "./access-repository.ts";
+import { countAccessRequestsSince, hasOpenAccessRequest, insertAddressTicket } from "./access-repository.ts";
 
 export const accessSchema = z.object({
 	name: z.string().trim().max(80).default(""),
@@ -33,8 +33,8 @@ export async function requestAccess(deps: AppDeps, form: AccessForm): Promise<Ac
 	if (await hasOpenAccessRequest(deps.db, email)) return "already";
 	const now = deps.now();
 	if (await countAccessRequestsSince(deps.db, new Date(now.getTime() - HOUR).toISOString()) >= ACCESS_PER_HOUR) return "busy";
-	const id = await insertAccessRequest(deps.db, {
-		email, title: `Access request: ${name}, ${team}`, nowIso: now.toISOString(),
+	const id = await insertAddressTicket(deps.db, {
+		kind: "access", email, title: `Access request: ${name}, ${team}`, nowIso: now.toISOString(),
 		message: `${name} asked for access on the sign-in page.\n\nName: ${name}\nTeam: ${team}\nEmail: ${email}\n\n`
 			+ `To let them in, add ${email} to the team's list (Teams, open the team, Manage team), then resolve this ticket. `
 			+ "Nothing is emailed to them: once they're on the list, they sign in with that address. If it isn't one of our teams, resolve it.",

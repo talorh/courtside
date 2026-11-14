@@ -34,7 +34,7 @@ async function open() {
 	vi.stubGlobal("window", win);
 	// @ts-expect-error: a browser script (plain JS), tested here on its own.
 	const mod = await import("../../public/signin.js");
-	return { mod, form, submit, code, email, resend, viewport, focus: (el: Fake) => { active = el; el.on.focus!(); } };
+	return { mod, form, submit, code, email, resend, viewport, win, focus: (el: Fake) => { active = el; el.on.focus!(); } };
 }
 
 // The sign-in page's script: the code field logs in by itself, and the keyboard never hides the field.
@@ -69,5 +69,13 @@ describe("the sign-in page's code field", () => {
 		expect([resend.disabled, resend.textContent]).toEqual([true, "Send a new code (ready in 60s)"]);
 		vi.advanceTimersByTime(60_000);
 		expect([resend.disabled, resend.textContent]).toEqual([false, "Send a new code"]);
+	});
+	it("Back to the page after its countdown ended: Send a new code works again, as the page's other buttons do", async () => {
+		const { resend, form, win } = await open();
+		vi.advanceTimersByTime(60_000);
+		form.querySelectorAll = (s: string) => (s.includes(":not([data-resend])") ? [] : [resend]);
+		resend.disabled = true; // tapped: the form's buttons are disabled as it goes
+		win.on.pageshow!({ persisted: true });
+		expect(resend.disabled).toBe(false);
 	});
 });

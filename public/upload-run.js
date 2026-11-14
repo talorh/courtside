@@ -16,8 +16,8 @@ async function sendMissingParts(file, key, state, signal, ui) {
 		const batch = todo.splice(0, URL_BATCH);
 		const { urls } = await api(`/api/uploads/${state.videoId}/part-urls`, { partNumbers: batch }, signal);
 		const queue = [...batch];
-		// Once a piece fails, the others finish what they're sending and stop, so the retry isn't sending the same pieces
-		// alongside them; a piece one of them finished meanwhile is skipped.
+		// Once a piece fails, the others take no more. The retry doesn't wait for them (on a dropped signal they may hang):
+		// after its own wait it skips any piece they finished meanwhile, and sends again only those still on their way.
 		let failed = false;
 		try {
 			await Promise.all(Array.from({ length: concurrency }, async () => {

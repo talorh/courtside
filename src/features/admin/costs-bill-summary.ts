@@ -7,10 +7,10 @@ import { PRICES } from "./costs-prices.ts";
 
 const SCALE: Record<string, number> = { k: 1e3, m: 1e6, million: 1e6, b: 1e9, billion: 1e9 };
 
-/** "(first 10M are included)", "(First 3,000 emails included)", "(6000 minutes included per month)": 10,000,000, 3,000,
- * 6,000. Null when the name says no allowance. */
+/** "(first 10M are included)", "(First 3,000 emails included)", "(6000 minutes included per month)", "(GB*S, First
+ * 400,000 GB*S is included)": 10,000,000, 3,000, 6,000, 400,000. Null when the name says no allowance. */
 export function allowanceOf(service: string): number | null {
-	const m = /\(\s*(?:first\s+)?([\d,.]+)\s*(?:(k|m|million|b|billion)\b)?[^)]*?\bincluded\b/i.exec(service);
+	const m = /\(\s*(?:[^()]*?\bfirst\s+)?([\d,.]+)\s*(?:(k|m|million|b|billion)\b)?[^)]*?\bincluded\b/i.exec(service);
 	if (!m) return null;
 	const n = Number(m[1]!.replace(/,/g, ""));
 	return Number.isFinite(n) ? n * (SCALE[(m[2] ?? "").toLowerCase()] ?? 1) : null;
@@ -18,6 +18,16 @@ export function allowanceOf(service: string): number | null {
 
 /** A product's name without its allowance or its unit in brackets: "Workers Standard Requests". */
 const nameOf = (service: string) => service.replace(/\s*\([^)]*\)\s*$/, "").trim();
+
+const SECONDS: Record<string, number> = { second: 1, minute: 60, hour: 3600 };
+const timeIn = (text: string) => /\b(?:GiB|GB|vCPU)?[- ]?(second|minute|hour)s?\b/i.exec(text)?.[1]?.toLowerCase();
+
+/** How many of the product's own units its allowance's one is: a product counted in GiB-seconds with an allowance in
+ * GiB-hours (containers) is 3,600; 1 where they're the same, or either names no time. */
+function allowanceScale(service: string, unit: string): number {
+	const allowed = timeIn(/\(([^)]*)\)\s*$/.exec(service)?.[1] ?? ""), counted = timeIn(unit) ?? timeIn(nameOf(service));
+	return allowed && counted ? SECONDS[allowed]! / SECONDS[counted]! : 1;
+}
 
 export interface Product { service: string; name: string; family: string; used: number; allowance: number | null; unit: string; billed: number }
 
@@ -27,7 +37,8 @@ export function periodProducts(rows: BilledRow[]): { periodStart: string | null;
 	const mine = rows.filter((r) => r.periodStart === periodStart);
 	const products = new Map<string, Product>();
 	for (const r of mine) {
-		const p = products.get(r.service) ?? { service: r.service, name: nameOf(r.service), family: r.family, used: 0, allowance: allowanceOf(r.service), unit: r.unit, billed: 0 };
+		const allowance = allowanceOf(r.service);
+		const p = products.get(r.service) ?? { service: r.service, name: nameOf(r.service), family: r.family, used: 0, allowance: allowance === null ? null : allowance * allowanceScale(r.service, r.unit), unit: r.unit, billed: 0 };
 		p.used += r.quantity;
 		p.billed += r.billed;
 		products.set(r.service, p);

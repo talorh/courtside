@@ -3,7 +3,7 @@ import type { Game } from "../../../src/features/games/games-repository.ts";
 import { CLUB } from "../../../src/club.ts";
 import { longDate, matchMessage, uniformLine } from "../../../src/features/roster/match-message.ts";
 import type { Slot } from "../../../src/features/roster/roster-plan.ts";
-import { findActiveMemberByEmail } from "../../../src/features/members/members-repository.ts";
+import { findActiveMemberByEmail } from "../../helpers/members.ts";
 import { messagePage } from "../../../src/features/roster/views/message-page.ts";
 import { familiesForm, form, makeClient } from "../../helpers/app.ts";
 import { createTestDeps } from "../../helpers/fakes.ts";

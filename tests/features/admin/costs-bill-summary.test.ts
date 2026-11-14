@@ -18,8 +18,26 @@ describe("Cloudflare's bill, summed up", () => {
 		expect(allowanceOf("Worker Build Minutes (6000 minutes included per month)")).toBe(6000);
 		expect(allowanceOf("D1 - Storage GB-mo (first 5GB included)")).toBe(5);
 		expect(allowanceOf("R2 Storage Class A Operations (First 1M included)")).toBe(1_000_000);
+		expect(allowanceOf("Durable Objects Compute Duration (GB*S, First 400,000 GB*S is included)")).toBe(400_000);
 		expect(allowanceOf(WATCH)).toBeNull();
 		expect(allowanceOf("Regular Twitch Neurons (RTN)")).toBeNull();
+	});
+
+	it("puts an allowance in hours or minutes in the seconds the product is counted in, so the two compare", () => {
+		const products = periodProducts([
+			row({ service: "Container Memory, per GiB-Second (First 25 GiB-hours included)", quantity: 42_288 }),
+			row({ service: "Container Disk, per GB second (First 200 GB hours included)", quantity: 90_433 }),
+			row({ service: "Container vCPU (First 375 vCPU-minutes included)", quantity: 252, unit: "vCPU-seconds" }),
+			row({ service: "Durable Objects Compute Duration (GB*S, First 400,000 GB*S is included)", quantity: 1555, unit: "GB-seconds" }),
+			row({ service: "Worker Build Minutes (6000 minutes included per month)", quantity: 207 }),
+		]).products.map((p) => [p.name, p.allowance]);
+		expect(products).toEqual([
+			["Container Memory, per GiB-Second", 90_000],
+			["Container Disk, per GB second", 720_000],
+			["Container vCPU", 22_500],
+			["Durable Objects Compute Duration", 400_000],
+			["Worker Build Minutes", 6000],
+		]);
 	});
 
 	it("adds up the billing period's use of each product, against its allowance, with what it was billed", () => {

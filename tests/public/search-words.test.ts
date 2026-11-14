@@ -28,3 +28,14 @@ describe("what a search box's words match (Help and the Documentation)", () => {
 		expect("a.b and axb".match(marker(["a.b"]))).toEqual(["a.b"]);
 	});
 });
+
+describe("the question a link names (#watch)", () => {
+	it("reads an encoded id, and takes a hash that isn't valid encoding as it is rather than failing", async () => {
+		// @ts-expect-error: a browser script (plain JS), tested here on its own.
+		const { linkedId } = await import("../../public/search-words.js");
+		expect(linkedId("#watch")).toBe("watch");
+		expect(linkedId("#g%2Dplus")).toBe("g-plus");
+		expect(linkedId("#50%")).toBe("50%");
+		expect(linkedId("")).toBe("");
+	});
+});
