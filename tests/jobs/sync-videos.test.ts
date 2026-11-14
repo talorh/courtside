@@ -9,6 +9,14 @@ import { testJpeg } from "../helpers/jpeg.ts";
 import { seedGame, seedVideo } from "../helpers/seed.ts";
 
 describe("runSync", () => {
+	it("checks a live game once it's 8 hours from tip-off (the game check)", async () => {
+		const deps = createTestDeps(new Date("2026-11-13T00:00:00Z")); // 11am Friday, the club's time zone
+		await seedGame(deps, { startsAt: "2026-11-13T18:40" });
+		await runSync(deps);
+		const checked = await deps.db.prepare("SELECT ready_checked_at FROM games").first<{ ready_checked_at: string | null }>();
+		expect(checked?.ready_checked_at).toBe("2026-11-13T00:00:00.000Z");
+		expect(await deps.db.prepare("SELECT detail FROM platform_alerts WHERE kind = 'game_day'").first<{ detail: string }>()).toMatchObject({ detail: expect.stringMatching(/^1 live game in the next 8 hours/) });
+	});
 	it("marks ready videos and builds the MP4 download", async () => {
 		const deps = createTestDeps();
 		const gameId = await seedGame(deps);

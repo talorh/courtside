@@ -2,7 +2,7 @@
 
 *Courtside Documentation › Running it. [Contents](README.md).*
 
-Two scheduled jobs keep things moving, one every five minutes and one at 3am local time, and a third, the Friday check, looks ahead to the weekend's games at 6am every Friday. Every step reads the current state, so running one twice does no harm; every record is processed even if one fails; and one team's or one step's failure never stops the rest. A run's failures are thrown together at its end, so the run shows as failed in Workers Observability; each one is also a problem in the admin Log, under the team whose step it was (the same one every run counts on one line). Each job watches the other: an alert is raised if the 5-minute job hasn't run for 15 minutes or the 3am job for 26 hours.
+Two scheduled jobs keep things moving, one every five minutes and one at 3am local time, and the 5-minute job checks each live game 8 hours before tip-off (the game check). Every step reads the current state, so running one twice does no harm; every record is processed even if one fails; and one team's or one step's failure never stops the rest. A run's failures are thrown together at its end, so the run shows as failed in Workers Observability; each one is also a problem in the admin Log, under the team whose step it was (the same one every run counts on one line). Each job watches the other: an alert is raised if the 5-minute job hasn't run for 15 minutes or the 3am job for 26 hours.
 
 ### The 5-minute job
 
@@ -61,13 +61,13 @@ Cron triggers are UTC only, so two fire, 16:00 and 17:00 UTC, and the job runs o
 | AI models | The site's one model (Ask Virtual Team Manager, the Documentation assistant, reading fixture pages) against Cloudflare's catalog: a planned retirement warns, two weeks before it (or a model gone from the catalog) is urgent, a current model clears. |
 | How the night went | The 3am job's own alert: urgent the night its backup, sweep or deletions fail; a good night clears it. Then the 5-minute job's heartbeat is checked. |
 
-### The Friday check
+### The game check
 
-At 6am local time every Friday (a trigger for each UTC time that is 6am Friday in the club's time zone across the year, written with Cloudflare's weekday numbers, 1 = Sunday to 7 = Saturday, and only the one landing on 6am Friday runs it), ahead of the weekend's games, the site asks itself whether they're good to go, and Platform's **Run the Friday check now** asks the same any day. It reads every running team's live games up to Sunday (not No video, not recorded and uploaded), then checks what they'll need. The answer is the Friday check alert: ok says what was found; a problem raises a ticket for the admins saying what to do, and the next fine check resolves it.
+Each run of the 5-minute job looks at every running team's live games in the next 8 hours (not No video, not recorded and uploaded). Once one of them hasn't been checked yet, so 8 hours before each game's tip-off, the site asks itself whether they're good to go; two games on one evening get a check each. The answer is the game check alert: ok says what was found; a problem raises a ticket for the admins saying what to do, and the check runs again every hour until tip-off, so the first fine check resolves it. Platform's **Run the game check now** checks the week's live games at once. Each game remembers when it was last checked (`games.ready_checked_at`).
 
 | Checked | Warns | Urgent |
 | --- | --- | --- |
-| Stream |  | Not answering, or fewer than 150 minutes free for each game up to Sunday |
+| Stream |  | Not answering, or fewer than 150 minutes free for each game checked |
 | Each game's Go live input | Set up but gone from Stream (Go live sets up a new one) |  |
 | The video joiner | Not answering, or its test join failed |  |
 | The 5-minute job |  | No run for 15 minutes (staging has none, and isn't asked) |

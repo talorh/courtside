@@ -14,21 +14,6 @@ const club = {
 	timeZone: /\btimeZone:\s*"([^"]+)"/.exec(clubText)?.[1] ?? "UTC",
 };
 
-/** The UTC cron lines that are 6am Friday in the club's time zone over a year (the Friday check, jobs/game-day.ts makes
- * the same set): half an hour at a time, so a half-hour zone gets its minutes. Cloudflare numbers the day of the week
- * from 1 = Sunday to 7 = Saturday, so the UTC weekday is written one up. */
-function sixAmFridays(timeZone: string): string[] {
-	const fmt = new Intl.DateTimeFormat("en-CA", { timeZone, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-	const crons = new Set<string>();
-	for (let ms = Date.UTC(2026, 0, 1); ms < Date.UTC(2027, 0, 1); ms += 1_800_000) {
-		const p = Object.fromEntries(fmt.formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
-		if (p.weekday !== "Fri" || p.hour !== "06" || p.minute !== "00") continue;
-		const at = new Date(ms);
-		crons.add(`${at.getUTCMinutes()} ${at.getUTCHours()} * * ${at.getUTCDay() + 1}`);
-	}
-	return [...crons];
-}
-
 // The site's Worker. Who it's for is src/club.ts; where it runs is deploy.config.ts (the account, zone, databases and
 // buckets the install made, INSTALL.md). `cf dev` evaluates this with mode "development"; `cf deploy` builds with mode
 // "production"; `cf previews deploy` (staging, docs/runbooks/staging.md) builds with isPreview: this same Worker as a
@@ -55,8 +40,8 @@ export default defineConfig(({ mode, isPreview }) => {
 			assets: { runWorkerFirst: true, notFoundHandling: "none" },
 			// Every 5 minutes: video sync. Daily at 3am in the club's time zone: backup and orphan sweep. Cron is UTC only, so
 			// one trigger fires for each UTC hour that is 3am there across the year (club.ts dailyJobUtcHours) and the job runs
-			// on the one that's 3am (jobs/daily.ts). And 6am Friday there, the Friday check (jobs/game-day.ts), the same way.
-			triggers: isPreview ? [] : [triggers.scheduled({ schedule: "*/5 * * * *" }), ...club.dailyJobUtcHours.map((h) => triggers.scheduled({ schedule: `0 ${h} * * *` })), ...sixAmFridays(club.timeZone).map((schedule) => triggers.scheduled({ schedule }))],
+			// on the one that's 3am (jobs/daily.ts).
+			triggers: isPreview ? [] : [triggers.scheduled({ schedule: "*/5 * * * *" }), ...club.dailyJobUtcHours.map((h) => triggers.scheduled({ schedule: `0 ${h} * * *` }))],
 			// Issues: Cloudflare groups the Worker's failures and emails the account when a new one starts, the
 			// one alert that still works when the Worker itself is failing. Every deploy must keep it on, or it goes off.
 			observability: { enabled: true, redactQueryString: true, issues: { enabled: true } },

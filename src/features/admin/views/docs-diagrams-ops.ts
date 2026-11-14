@@ -18,11 +18,11 @@ export function fiveMinuteDiagram(): SafeHtml {
 	const at = (i: number) => ({ x: i < 3 ? COL[i]! : COL[5 - i]!, y: i < 3 ? 130 : 200 });
 	const site: Step[] = [
 		{ title: "Closed teams", sub: "a slice deleted, when due", kind: "step" }, { title: "Emails", sub: "any that didn't go", kind: "service" },
-		{ title: "Health checks", sub: "Stream minutes, errors, email", kind: "step" },
+		{ title: "Health checks", sub: "the site, and games 8 hours out", kind: "step" },
 	];
 	return figure("five", {
 		w: 760, h: 400, min: 640, title: "The 5-minute job",
-		desc: "Every five minutes the job chooses this run's teams, then for each team handles live streams, video copies (a carried-on stream's parts joined into one first), HD downloads, clips, retention and PlayHQ, and then once a run deletes a slice of any closed team due to go, sends emails that didn't go and runs the health checks.",
+		desc: "Every five minutes the job chooses this run's teams, then for each team handles live streams, video copies (a carried-on stream's parts joined into one first), HD downloads, clips, retention and PlayHQ, and then once a run deletes a slice of any closed team due to go, sends emails that didn't go and runs the health checks, the coming games' among them.",
 		caption: "Busy teams (a game today, something streaming or processing) get a turn every run; quiet teams take turns, 12 a run, so every team is reached within the hour. One team's or one step's failure never stops the rest.",
 	}, html`${d.box({ x: 200, y: 16, w: 360, title: "Choose this run's teams", sub: "busy teams every run, quiet ones 12 at a time", kind: "job" })}
 ${d.zone(10, 100, 740, 170, "Each team")}${d.zone(10, 292, 740, 98, "Once a run")}

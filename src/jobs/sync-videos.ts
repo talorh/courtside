@@ -11,6 +11,7 @@ import { checkFinalScores } from "../features/scores/scores-service.ts";
 import { FetchBudgetSpent } from "../platform/fetch-budget.ts";
 import { retryTicketEmails } from "../features/admin/support-desk-service.ts";
 import { checkEmailAllowance, checkJobRan, checkEmails, checkSiteErrors, checkStreamStorage, recordSyncRun } from "../features/admin/usage-checks.ts";
+import { checkComingGames } from "../features/admin/game-day-checks.ts";
 import { localDate } from "../shared/time.ts";
 import { listTeamsIn } from "../features/teams/teams-repository.ts";
 import { busyTeamIds } from "./all-teams-repository.ts";
@@ -137,9 +138,10 @@ async function syncAll(deps: AppDeps): Promise<SyncSummary> {
 	// Support tickets' emails that didn't go, every team's and the site's own. One that
 	// fails again is logged, and the email alert raises it: only failing to look for them fails the run.
 	await retryTicketEmails(deps).catch((err: unknown) => void errors.push(err));
-	// Basic monitoring: Stream's minutes, the site failing, emails not going, and the 3am job running. A check that fails
+	// Basic monitoring: Stream's minutes, the site failing, emails not going, the 3am job running, and each live game 8
+	// hours before tip-off (game-day-checks.ts). A check that fails
 	// (a database hiccup) is one more failure of the run, never one that loses the others before they reach the Log.
-	const checks = [checkStreamStorage, checkSiteErrors, checkEmails, checkEmailAllowance, (d: AppDeps) => checkJobRan(d, "daily_job")];
+	const checks = [checkStreamStorage, checkSiteErrors, checkEmails, checkEmailAllowance, (d: AppDeps) => checkJobRan(d, "daily_job"), checkComingGames];
 	for (const check of checks) await check(deps).catch((err: unknown) => void errors.push(err));
 	console.log(JSON.stringify({ event: "sync_videos", teams: teams.length, deletedTeams: deleted.length, busy: picked.busy.length, turn: picked.turn.length, ...summary, teamsDeleted: deleting.deleted, noVideoSet: unfilmed.noVideoSet, deferred, errorCount: errors.length }));
 	await logJobProblems(deps, "sync", runs, errors);

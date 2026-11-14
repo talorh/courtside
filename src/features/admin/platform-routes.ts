@@ -2,7 +2,7 @@ import { CLUB, siteOrigin } from "../../club.ts";
 // The admin area's Platform and Changelog pages.
 import { logProblem } from "./problem-log.ts";
 import { checkAiModelsSoon } from "./ai-model-checks.ts";
-import { checkGameDay } from "./game-day-checks.ts";
+import { checkGames } from "./game-day-checks.ts";
 import changelog from "../../../CHANGELOG.md?raw";
 import type { AdminRouter } from "../../app/admin-router.ts";
 import { notFound } from "../../app/errors.ts";
@@ -90,9 +90,9 @@ export function platformRoutes(router: AdminRouter): void {
 		});
 		return redirect(`/admin/platform?done=${done}`);
 	});
-	// The Friday check, now (game-day-checks.ts): its row on Platform says what it found.
+	// The game check, now, for the week's live games (game-day-checks.ts): its row on Platform says what it found.
 	router.post("/admin/run-game-day", async ({ deps }) => {
-		await checkGameDay(deps);
+		await checkGames(deps);
 		return redirect("/admin/platform?done=gameday");
 	});
 	// Whether emails reach the admins (alerts, support requests): logged, and Platform says how it went.

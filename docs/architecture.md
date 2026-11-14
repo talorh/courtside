@@ -642,13 +642,13 @@ empty database with `npm run restore-d1 -- courtside-YYYY-MM-DD.sql <NEW_DB_ID>`
 runbook). `cf` has no import, so it goes in through `cf d1 query`, a request at a time, each its own transaction on D1,
 which is why rows go in parents first. `--sqlite <file>` runs the same restore into a local SQLite file, to drill it.
 
-## The Friday check: are the weekend's games good to go
+## The game check: is each coming game good to go
 
-At 6am in the club's time zone every Friday (`src/jobs/game-day.ts`: `GAME_DAY_CRONS` is every UTC weekday and time
-that is 6am Friday there across a year, the weekday written as Cloudflare numbers it, 1 = Sunday to 7 = Saturday, and
-`gameDayDue` picks the trigger that lands on it; `cloudflare.config.ts` makes the same triggers from the club's time zone) and from Platform's **Run the Friday check now**, `checkGameDay`
-(`src/features/admin/game-day-checks.ts`) reads every running team's live games up to Sunday in one trip
-(`game-day-repository.ts`, a `CROSS_TEAM` read) and asks: does Stream answer, with `MINUTES_A_GAME` (150) free for each
+Every 5-minute run, `checkComingGames` (`src/features/admin/game-day-checks.ts`) reads every running team's live games
+in the next `HOURS_AHEAD` (8) hours in one trip (`game-day-repository.ts`, a `CROSS_TEAM` read). When any of them has no
+`games.ready_checked_at` yet (so 8 hours before each tip-off), or the alert isn't ok and was last checked an hour ago, it
+checks them and stamps them; Platform's **Run the game check now** (`checkGames`) checks the next 7 days' at once. It
+asks: does Stream answer, with `MINUTES_A_GAME` (150) free for each
 game; is each game's open Go live input still in Stream (gone is a warning: `openLive` sets up a new one); does the
 joiner's self-test join; did the 5-minute job run in the last 15 minutes (not asked on staging); is any other alert up.
 `gameDayReadiness` turns that into the `game_day` alert's level and words, and `setAlert` raises or resolves its ticket

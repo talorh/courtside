@@ -676,8 +676,8 @@ The site sends email from alerts@saints.example, and never to families:
 
 **Monitoring** watches video storage, photos against Images' 100,000, the sign-in (Platform's Sign-ins row, and a ticket when codes are paused), the
 database's size, server errors, emails not going, the month's emails, the 3am and 5-minute jobs, each team against
-its season's budget (Costs), and, at 6am every Friday (the **Friday check**, also run from Platform's button), whether the
-weekend's live games are good to go: Stream answering with 150 minutes free a game, each game's Go live input still
+its season's budget (Costs), and, 8 hours before each live game's tip-off (the **game check**, from the 5-minute job,
+and Platform's button for the week's), whether the game is good to go: Stream answering with 150 minutes free a game, each game's Go live input still
 there, the video joiner answering, the 5-minute job running and no other alert up. Insights' Alerts section shows them all in one place, with what it checks as it opens. When something needs doing, it raises
 a ticket from the site saying what to do, emailed to the admins once; it emails again only if it gets worse, and
 resolves itself when it clears. There are no reminders.

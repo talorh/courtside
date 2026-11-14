@@ -18,7 +18,7 @@ const CROSS_TEAM = new Set([
 	"src/features/signin/access-repository.ts",
 	// The jobs' reads across every team at once (which teams are busy; what every team's records know of, for the sweep).
 	"src/jobs/all-teams-repository.ts",
-	// The Friday check's read of every team's weekend games.
+	// The game check's read of every team's coming live games.
 	"src/features/admin/game-day-repository.ts",
 	// The month's emails, for the allowance alert.
 	"src/features/admin/email-count-repository.ts",

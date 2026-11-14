@@ -22,7 +22,7 @@ cf auth whoami                            # your email, this account
 | --- | --- | --- |
 | Account | The club's own, Workers Paid, with the Images and Stream bundle | Nothing to do with the site lives anywhere else |
 | Domain | `CLUB.domain` (`src/club.ts`) in the zone `CLUB.zone`. Recommended, a domain of its own (the two the same): registered through Cloudflare Registrar or an existing zone, auto-renew, DNSSEC on. Or a subdomain of the club's own domain, a zone already in this account that the club's website shares (On a subdomain, below) | `cf zones get -z $z` |
-| Worker | `DEPLOY.worker` (`courtside` unless renamed): the custom domain only, workers.dev off, Preview URLs on (staging), crons `*/5 * * * *`, one an hour for the 3am job (`CLUB.dailyJobUtcHours`) and one for each UTC time that is 6am Friday in `CLUB.timeZone` (the Friday check), placed in `DEPLOY.region`, observability and Issues on | `cloudflare.config.ts` |
+| Worker | `DEPLOY.worker` (`courtside` unless renamed): the custom domain only, workers.dev off, Preview URLs on (staging), crons `*/5 * * * *`, one an hour for the 3am job (`CLUB.dailyJobUtcHours`), placed in `DEPLOY.region`, observability and Issues on | `cloudflare.config.ts` |
 | D1 | `<worker>` (live) and `<worker>-staging`, in the region nearest the club | `cf d1 list`; migrations in `migrations/` |
 | R2 | `<worker>-originals`: uploaded videos and the nightly backups; `<worker>-staging` | `infra/r2-cors.json`, `r2-lifecycle.json`, `r2-lock.json`; `infra/staging/` |
 | Stream | The account's: playback copies, clips, HD MP4s and a live input a streamed game; the customer code in `deploy.config.ts`; a signing key for playback links | Reached by REST with `STREAM_API_TOKEN` |

@@ -54,7 +54,7 @@ ${table(["Watched", "Warns", "Urgent"], [
 		["A team's costs (Costs)", "Its season estimated over its budget", "Over its budget so far"],
 		["An AI model (Workers AI)", "A planned retirement date", "Two weeks before it, or gone from the catalog"],
 		["The video joiner", "Not answering its nightly test, or the test join failed", "A game's parts couldn't be joined after six tries (Keep the first part clears it)"],
-		["The Friday check (6am every Friday, and Platform's button)", "A game's Go live input gone from Stream, the joiner not answering, another alert at a warning", "Stream not answering or short of minutes for the weekend's games, the 5-minute job stopped, another alert at urgent"],
+		["The game check (each live game 8 hours before tip-off, and Platform's button)", "A game's Go live input gone from Stream, the joiner not answering, another alert at a warning", "Stream not answering or short of minutes for the coming games, the 5-minute job stopped, another alert at urgent"],
 	])}
 <p>A team manager's question is a ticket too: answered on the site, emailed both ways, with private notes only admins
 see. Tickets are New, Open, Waiting (on the team manager) or Resolved. A ticket's emails are saved before they're
