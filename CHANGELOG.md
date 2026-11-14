@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 14 Nov 2026
 
+- [Fix] **Support:** Fixed an issue where an access request's ticket said it would resolve itself and didn't show who asked: it now shows their name, team and email, with Copy email, and says to write to them from your own email.
 - [Enhancement] **Platform:** The game check now runs for each live game 8 hours before tip-off, in place of 6am on Fridays, and checks again every hour while something's wrong, so a fix clears it by itself. Platform's button checks the week's live games.
 - [Fix] **Video joiner:** Fixed an issue where a joiner whose disk filled up part way through a game's join stopped altogether: the join now fails and is tried again, as any failed join is (rebuild its image: npm run join -- image).
 - [Fix] **Copy buttons:** Fixed an issue where tapping Copy twice quickly left it saying Copied.

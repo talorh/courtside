@@ -28,7 +28,8 @@ Cloudflare can't be reached the code still goes, with the limits below holding.<
 team and their email, behind the same Turnstile check, open one of the site's own tickets on the support desk (Access
 request: the name, the team), emailed to the admins. An address gets one open request at a time, an address already on a
 list is told to sign in, and the whole site takes ten an hour. Nothing is ever emailed to the address typed: an admin
-adds it to the team's list (Manage team) and resolves the ticket, and the person signs in as everyone does.</p>
+adds it to the team's list (Manage team) and resolves the ticket, and the person signs in as everyone does. The ticket
+shows who asked (their name, team and email, with Copy email); to write to them, an admin uses their own email.</p>
 <p>An address Email Sending won't send to (its emails bounced, or its owner marked one as spam, so it's on Email
 Sending's suppression list: a day for a short bounce) can't get a code. The sign-in page says the address is bouncing and
 to ask the team manager for another, not to try again, and the admins get one ticket (Emails to the address are

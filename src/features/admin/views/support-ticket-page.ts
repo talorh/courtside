@@ -20,6 +20,20 @@ export const TICKET_MESSAGES: Record<string, string> = { sent: "Reply sent.", no
 
 const when = (iso: string) => formatGameDate(localTime(new Date(iso)));
 
+/** The sign-in page's own tickets: an access request, or an address whose emails bounce. Nobody signed in asked. */
+const fromSignIn = (t: Ticket) => (t.alertKind?.startsWith("access:") ? "access" : t.alertKind?.startsWith("bounced:") ? "bounced" : null);
+/** A line of the request, as the access form wrote it ("Name: Steph Curry"). */
+const asked = (t: Ticket, label: string) => new RegExp(`^${label}: (.+)$`, "m").exec(t.message)?.[1] ?? "";
+
+/** Who asked, their email to copy, and how to reach them: from the admin's own email, as the site never writes to them. */
+function signInPanel(t: Ticket, kind: "access" | "bounced"): SafeHtml {
+	const who = kind === "access" ? html`<dt>Name</dt><dd>${asked(t, "Name")}</dd><dt>Team</dt><dd>${asked(t, "Team")}</dd>` : "";
+	const what = kind === "access" ? "The site doesn't email them: they aren't signed in. To write to them, use your own email."
+		: "Emails to this address are bouncing, so the site can't send them a code. Add another address for them on their team's list.";
+	return html`<dl class="kv">${who}<dt>Email</dt><dd><code id="asked-email">${t.contact}</code></dd></dl>
+<button class="btn" type="button" data-copy="asked-email">Copy email</button><p class="small">${what}</p>`;
+}
+
 function message(m: DeskMessage): SafeHtml {
 	if (m.kind === "event") return html`<li class="msg event"><p class="small">${m.body} <span>${when(m.createdAt)}</span></p></li>`;
 	const who = m.kind === "note" ? html`<b>${m.adminEmail}</b> <span class="t warn">Private note</span>` : html`<b>${m.memberName ?? m.adminEmail ?? "Someone"}</b>`;
@@ -39,11 +53,12 @@ function side(t: Ticket, admins: string[], me: string): SafeHtml {
 	const type = t.source === "team" ? html`<form method="post" action="/admin/support/${t.id}/type" class="sideform"><label>Type<select name="kind">${selectOptions(kinds, t.kind)}</select></label><button class="btn">Move</button></form>` : "";
 	const take = t.assignedTo?.toLowerCase() === me.toLowerCase() ? "" : html`<form method="post" action="/admin/support/${t.id}/assign"><input type="hidden" name="to" value="${me}"><button class="btn primary">Take it</button></form>`;
 	const asked = t.member ? html`<dl class="kv"><dt>Asked by</dt><dd>${t.member.name || t.member.email}</dd><dt>Role</dt><dd>${ROLE_LABELS[t.member.role]}</dd>
-<dt>Email</dt><dd>${t.member.email}</dd><dt>Reach them</dt><dd>${t.contact}</dd></dl>` : html`<p class="small">Raised by the site's own checks. It resolves itself once the problem's gone.</p>`;
+<dt>Email</dt><dd>${t.member.email}</dd><dt>Reach them</dt><dd>${t.contact}</dd></dl>`
+		: fromSignIn(t) ? signInPanel(t, fromSignIn(t)!) : html`<p class="small">Raised by the site's own checks. It resolves itself once the problem's gone.</p>`;
 	return html`<aside class="tside stack"><section class="panel stack"><h2>${t.kind === "feature" ? "Feature request" : "Ticket"}</h2>
 ${where}
 <form method="post" action="/admin/support/${t.id}/assign" class="sideform"><label>Owner<select name="to">${selectOptions(owners, t.assignedTo ?? "")}</select></label><button class="btn">Save</button></form>${take}${type}</section>
-<section class="panel stack"><h2>${t.team ? teamLabel(t.team) : "The site"}</h2>${asked}${t.team ? openTeamForm(t.team, "btn", `Open ${teamLabel(t.team)}`) : ""}</section></aside>`;
+<section class="panel stack"><h2>${t.team ? teamLabel(t.team) : fromSignIn(t) ? "Who asked" : "The site"}</h2>${asked}${t.team ? openTeamForm(t.team, "btn", `Open ${teamLabel(t.team)}`) : ""}</section></aside>`;
 }
 
 export function ticketPage(p: { frame: AdminFrame; ticket: Ticket; messages: DeskMessage[]; admins: string[]; message: string | null }): SafeHtml {
@@ -51,12 +66,12 @@ export function ticketPage(p: { frame: AdminFrame; ticket: Ticket; messages: Des
 	const first = html`<li class="msg"><p class="msgwho"><b>${t.member ? t.member.name || t.member.email : "The site"}</b> <span class="small">${when(t.createdAt)}</span></p><p class="msgtext">${t.message}</p></li>`;
 	const reply = t.source !== "team" ? "" : t.kind === "feature" ? html`<button class="btn primary" name="then" value="reply">Send reply</button>`
 		: html`<button class="btn primary" name="then" value="reply">Send reply</button><button class="btn" name="then" value="resolve">Send and resolve</button>`;
-	const to = t.member ? `${t.member.name || t.member.email}: it's emailed to them and shows on their Support page` : "nobody: the site raised this one";
+	const to = t.member ? `A reply goes to ${t.member.name || t.member.email}: it's emailed to them and shows on their Support page. ` : fromSignIn(t) ? "" : "A reply goes to nobody: the site raised this one. ";
 	const standing = t.kind === "feature" ? (t.stage ? STAGE_LABELS[t.stage] : "New") : STATUS_LABELS[t.status];
 	const lede = `${KIND_LABELS[t.kind].slice(0, -1)}. ${standing}${t.assignedTo ? `, ${t.assignedTo}'s` : ", nobody's yet"}. Asked ${when(t.createdAt)}.`;
-	return adminLayout({ title: `#${t.id} ${ticketTitle(t)}`, current: "support", frame: p.frame, back: { href: t.kind === "feature" ? "/admin/support?type=feature" : "/admin/support", label: t.kind === "feature" ? "Feature requests" : "Support" }, lede },
+	return adminLayout({ title: `#${t.id} ${ticketTitle(t)}`, current: "support", frame: p.frame, back: { href: t.kind === "feature" ? "/admin/support?type=feature" : "/admin/support", label: t.kind === "feature" ? "Feature requests" : "Support" }, lede, scripts: ["/copy.js"] },
 		html`${notice(p.message)}<div class="ticketgrid"><div class="stack"><ol class="thread">${first}${p.messages.map(message)}</ol>
 <form class="panel stack" method="post" action="/admin/support/${t.id}/message"><label>Write<textarea name="body" rows="5" required maxlength="4000"></textarea></label>
 <div class="row-actions">${reply}<button class="btn" name="then" value="note">Add a private note</button></div>
-<p class="small">A reply goes to ${to}. A private note is for the admins only.</p></form></div>${side(t, p.admins, me)}</div>`);
+<p class="small">${to}A private note is for the admins only.</p></form></div>${side(t, p.admins, me)}</div>`);
 }

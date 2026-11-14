@@ -47,5 +47,6 @@ ${table(["The admins see", "The team manager sees", "Meaning"], [
 <p>Every message is saved before its email goes, to the admins (Reply-To the team manager) or to the team manager
 (Reply-To the admin), and the 5-minute job sends any email that didn't go. The site's own monitoring raises tickets on
 the same desk (Monitoring and support), and so do the sign-in page's Request access and a sign-in code to an address that bounces (Signing in): those have
-nobody to reply to on the site, so an admin adds the person (or another address of theirs) to their team's list and resolves it. The tickets are ${code("support_requests")}, and their conversations
+nobody to reply to on the site, so an admin adds the person (or another address of theirs) to their team's list and resolves it. Their
+ticket shows the email they gave, with Copy email, for writing to them from the admin's own email if that's needed. The tickets are ${code("support_requests")}, and their conversations
 ${code("support_messages")}.</p>`});
