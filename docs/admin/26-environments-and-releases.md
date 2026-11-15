@@ -39,7 +39,7 @@ Staging is the same Worker deployed as a Worker Preview of `courtside`, told it'
 
 ### Branches
 
-One repository, two working folders: one for `staging` and the branches, one for `main`. A change is built on its own branch, `feature/` or `fix/`, off `staging`, its tests written first. When it's ready it's merged into `staging`, the staging environment's branch, and `npm run staging` puts that branch on the staging site: it checks the code, applies staging's migrations, deploys the preview and records the commit it deployed as `refs/courtside/staging`. `main` is production. Nothing is committed on it directly: it's only ever fast-forwarded to `staging` for a release, so what goes live is exactly what was tried. A merged branch is deleted.
+One repository, two working folders: one for `staging` and the branches, one for `main`. A change is built on its own branch, `feature/` or `fix/`, off `staging`, its tests written first. When it's ready it's merged into `staging`, the staging environment's branch, and `npm run staging` puts that branch on the staging site: it checks the code, applies staging's migrations, makes `firstAdmins` (`deploy.config.ts`) admins while staging has never had one, deploys the preview and records the commit it deployed as `refs/courtside/staging`. `main` is production. Nothing is committed on it directly: it's only ever fast-forwarded to `staging` for a release, so what goes live is exactly what was tried. A merged branch is deleted.
 
 ![The branches](diagrams/26-3.svg)
 

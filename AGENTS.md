@@ -97,7 +97,7 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
 | Staging: the committed code on the staging preview, to try on phones before a release | `npm run staging` (`-- --dry-run`; `-- setup` once, and after a key changes) |
 | Maintenance page on or off, or is it on (the owner's yes to change it) | `npm run maintenance -- on`, `-- off`, `-- status` (`-- deploy` by hand: a release deploys it when `maintenance/` changes) |
 | The video joiner's image, after `join/` changes (then commit `join/image-tag.txt` and release) | `npm run join -- image` (`-- dry-run`, `-- deploy` by hand) |
-| The first site admin, or another | `npm run admin -- add <email>` |
+| Another site admin, when the admin area isn't to hand (the first ones are `deploy.config.ts` `firstAdmins`, made by the first deploy) | `npm run admin -- add <email>` |
 | Restore a nightly backup into a new, empty D1 | `npm run restore-d1 -- <file.sql> <db-id> --account <id>` (`--sqlite <file.db>` to drill it locally) |
 
 The deploy (`npm run deploy:builds` in Workers Builds) passes `--message` (the newest `CHANGELOG.md` line) and `--tag`

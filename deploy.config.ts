@@ -19,6 +19,10 @@ export const DEPLOY = {
 	streamCustomerCode: "REPLACE_WITH_STREAM_CUSTOMER_CODE",
 	/** The sign-in page's Turnstile widget for the site. */
 	turnstileSiteKey: "REPLACE_WITH_TURNSTILE_SITE_KEY",
+	/** The site admins' emails, comma-separated: the site's first admins. npm run staging and npm run release make them
+	 * admins while the site has never had one (a new install), never after, so an admin removed in the admin area stays
+	 * removed; later admins are added on the Admins page. */
+	firstAdmins: "REPLACE_WITH_THE_ADMINS_EMAILS",
 	/** Who `cf dev` signs in as on this computer. */
 	devEmail: "you@example.com",
 	/** Staging (docs/runbooks/staging.md): its own database, bucket and Turnstile widget, in the same account. */

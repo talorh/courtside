@@ -65,6 +65,13 @@ ${cell(6, c.lastUpload ? formatShortDate(localTime(new Date(c.lastUpload))) : "N
 <div class="tablewrap cards"><table class="compare"><thead><tr><th scope="col">Team</th>${head.map((h) => html`<th scope="col">${h}</th>`)}</tr></thead><tbody>${teams.map(row)}</tbody></table></div></section>`;
 }
 
+/** A new install, before its first team: what to do, where the site's numbers go once there's a team to count. */
+const getStarted = html`<section class="panel stack" aria-labelledby="start-h"><h2 id="start-h">Get started</h2>
+<p>No teams yet. The site's numbers show here once the first team is onboarded.</p>
+<ol class="steps"><li><a href="/admin/teams/new">Onboard your first team</a>: its code, its season and its team manager.</li>
+<li>Check <a href="/admin/platform">Platform</a>: every piece green says the install worked. A few say Not checked yet until the 3am job runs.</li>
+<li>Read <a href="/admin/docs#start">Start here</a> in the Documentation: what each admin page is for, and the routine.</li></ol></section>`;
+
 export function insightsPage(p: InsightsProps): SafeHtml {
 	const s = p.series;
 	const table = [{ title: "First views", values: s.views }, { title: "Videos added", values: s.videos }, { title: "Clips made", values: s.clips },
@@ -72,8 +79,10 @@ export function insightsPage(p: InsightsProps): SafeHtml {
 		{ title: "Devices, desktop view", values: p.devices.weekly.desktop }];
 	const small = table.slice(1, 5).map((c) => weeklyChart(c.title, p.weeks, c.values));
 	const head = html`<a class="btn primary" href="/admin/teams/new">${ICON_PLUS}Onboard a team</a>`;
-	return adminLayout({ title: "Insights", current: "insights", frame: p.frame, head, lede: `Is the site all right, and the whole site at a glance, every team. Updated ${formatGameDate(localTime(p.now))}.` },
-		html`${alertsSection({ now: p.now, needs: p.attention, ...p.health })}
+	const layout = { title: "Insights", current: "insights" as const, frame: p.frame, head, lede: `Is the site all right, and the whole site at a glance, every team. Updated ${formatGameDate(localTime(p.now))}.` };
+	const alerts = alertsSection({ now: p.now, needs: p.attention, ...p.health });
+	if (!p.teams.length) return adminLayout(layout, html`${alerts}${getStarted}`);
+	return adminLayout(layout, html`${alerts}
 <section class="stack" aria-labelledby="numbers-h"><h2 id="numbers-h" class="sr">The site in numbers</h2>${board(p)}
 <div class="insightgrid">${weeklyChart("First views", p.weeks, s.views, true)}${heatmap(p.heat)}</div>
 <div class="charts">${small}</div>

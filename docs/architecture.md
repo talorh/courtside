@@ -98,8 +98,10 @@ flowchart TD
 7. **The site's own pages**: Which team? (`/teams`) and switching (`POST /teams/switch`, back to a page on this site
  with `next`), and View as (`POST /view-as` and `/view-as/stop`, admins only). Which team? opens the team straight
  away when there's only one to choose, and gives an admin Open Admin beneath every team.
-8. **No team?** Someone in several teams goes to Which team?, an admin in none to the admin area, and anyone else gets
- the "not on a team's list" page (403).
+8. **No team?** Someone in several teams goes to Which team?, an admin in none to the admin area (Which team? too, when
+ the site has no team to pick: a new install), and anyone else gets the "not on a team's list" page (403). The first
+ admins come from the first deploy: `npm run staging` and `npm run release` make `deploy.config.ts` `firstAdmins`
+ admins while the admins table has no row at all (`scripts/first-admin.mjs`), so a removed admin stays removed.
 9. **A write must say its team** (`src/app/team-guard.ts`). Every post form carries `_team` (`layout` adds it to
  every form written `method="post"`) and every page script call sends `X-Courtside-Team` (`upload-net.js`, `ask.js`).
  A form for a team other than the current one is refused (409, "reload"). A page script's write runs as its page's
@@ -812,7 +814,8 @@ section and keeps one More menu open at a time.
  removal requests in any team, a running team with no team manager), worst first. Then a scoreboard of the whole site
  with each figure's last 12 weeks, first views week by week, when families watch (a heatmap of days and hours,
  local time), the rest as small charts (`insights-chart.ts`), the teams side by side, and what stands out. Every
- team's figures come from one query; the weeks come from hourly counts put into the club's weeks in code.
+ team's figures come from one query; the weeks come from hourly counts put into the club's weeks in code. With no
+ team on the site (a new install), Get started takes the numbers' place.
  `/admin/insights` redirects here.
 - **Teams** (`/admin/teams`): every team that isn't deleted, running ones first (season, status, people against 25,
  team managers, setup (`teams/team-setup.ts`: "3 of 4" and what's left, as Manage team's checklist), last used, open

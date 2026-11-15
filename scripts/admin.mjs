@@ -1,8 +1,9 @@
-// npm run admin -- add <email> [--staging]   The site's first admin (and any later one, when the admin area isn't to
-// hand): a row in the admins table of the live database (or staging's), through cf's D1 query. Someone removed before
-// comes back. The site reads the table on their next request, so there's nothing to deploy.
+// npm run admin -- add <email> [--staging]   An admin when the admin area isn't to hand (the first ones are made by the
+// first deploy: scripts/first-admin.mjs): a row in the admins table of the live database (or staging's), through cf's
+// D1 query. Someone removed before comes back. The site reads the table on their next request, so there's nothing to deploy.
 import { execFileSync } from "node:child_process";
 import { deployConfig, profileArgs } from "./deploy-config.mjs";
+import { EMAIL } from "./first-admin.mjs";
 
 const [command, email, ...rest] = process.argv.slice(2);
 const fail = (text) => {
@@ -11,7 +12,7 @@ const fail = (text) => {
 };
 if (command !== "add" || !email) fail("Usage: npm run admin -- add <email> [--staging]");
 const address = email.trim().toLowerCase();
-if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address) || address.includes("'")) fail(`"${email}" isn't an email address.`);
+if (!EMAIL.test(address)) fail(`"${email}" isn't an email address.`);
 const deploy = deployConfig();
 const staging = rest.includes("--staging");
 const d1Id = staging ? deploy.staging.d1Id : deploy.d1Id;

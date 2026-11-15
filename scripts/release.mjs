@@ -2,7 +2,8 @@
 // stopping at the first that fails: the code is committed on main; it was tried on staging (npm run staging recorded
 // it, and only docs, tests or notes changed since); npm run check; the browser suite (npm run e2e:
 // Go live on Android, iPhone and Firefox); every migration on every database; nothing uploading or streaming on the live
-// site; CHANGELOG.md has this deploy's line; cf deploy --dry-run; then it pushes the commit to main on Cloudflare,
+// site; CHANGELOG.md has this deploy's line; cf deploy --dry-run; on a new install, the first admins (scripts/first-admin.mjs,
+// while the live site has never had one); then it pushes the commit to main on Cloudflare,
 // where Workers Builds runs npm run check again and deploys it with that line as its message and the commit as its tag
 // (scripts/release-push.mjs), and follows that build. Nothing skips a step.
 // Node strips its types itself, as it reads the changelog and R2 with the site's own code.
@@ -15,6 +16,7 @@ import { availableParallelism, homedir, loadavg } from "node:os";
 import { newestChange } from "../src/features/changelog/changelog.ts";
 import { createPresigner } from "../src/platform/r2-presigner.ts";
 import { cfToken } from "./deploy-config.mjs";
+import { firstAdminEmails, firstAdminSql } from "./first-admin.mjs";
 import { listRoutes, maintenanceRoutes } from "./maintenance-steps.mjs";
 import {
 	busyComputer,
@@ -45,6 +47,14 @@ const inHistory = staged !== null && git(["merge-base", "--is-ancestor", staged,
 const changed = inHistory ? output("git", stagingDiffArgs(staged, commit)).split("\n").filter(Boolean) : [];
 const notStaged = stagingProblem({ staged, head: commit, inHistory, changed });
 if (notStaged) stop(`Staging first: ${notStaged}.`);
+const config = readFileSync("deploy.config.ts", "utf8");
+const site = siteFromConfig(config);
+let firstAdmins;
+try {
+	firstAdmins = firstAdminEmails(site);
+} catch (err) {
+	stop(err.message);
+}
 
 // Before the release's own work (the unit tests spawn a worker a file), so it reads what else is running.
 step("the computer is quiet (the browser suite's camera timings need it)");
@@ -55,11 +65,9 @@ if (!passes("npm", ["run", "check"])) stop("npm run check failed.");
 step("the browser suite (npm run e2e)");
 if (!passes("npm", ["run", "e2e"])) stop("The browser suite failed: every scenario must pass before a deploy.");
 
-const config = readFileSync("deploy.config.ts", "utf8");
-const site = siteFromConfig(config);
 // cf's D1 calls sometimes want the account named and sometimes refuse it,
 // so a refusal is tried once the other way.
-const cfRead = (args, accountId) => {
+const cfRun = (args, accountId) => {
 	try {
 		return output("cf", args, accountId === site.accountId ? {} : { CLOUDFLARE_ACCOUNT_ID: accountId });
 	} catch {
@@ -68,7 +76,7 @@ const cfRead = (args, accountId) => {
 };
 step("every migration applied to every database (the code may need it)");
 for (const db of databasesFromConfig(config)) {
-	const text = cfRead(["d1", "migrations", "list", db.d1Id, "--dir", "migrations"], db.accountId);
+	const text = cfRun(["d1", "migrations", "list", db.d1Id, "--dir", "migrations"], db.accountId);
 	const unapplied = JSON.parse(text.slice(text.indexOf("["))).map((m) => m.Name);
 	if (unapplied.length) stop(`${db.name}'s database (${db.d1Id}) hasn't had ${unapplied.join(", ")}: apply it first (cf d1 migrations apply, --dry-run first).`);
 }
@@ -82,7 +90,7 @@ const quietMinutes = behindMaintenance ? MAINTENANCE_QUIET_MINUTES : QUIET_MINUT
 step(`nothing uploading or streaming on the live site (${site.name}), in any team: ${quietMinutes} minutes quiet`);
 // A read-only query of the live site's database.
 function query(sql) {
-	const text = cfRead(["d1", "query", site.d1Id, "--sql", sql], site.accountId);
+	const text = cfRun(["d1", "query", site.d1Id, "--sql", sql], site.accountId);
 	return JSON.parse(text.slice(text.indexOf("[")))[0].results;
 }
 const streams = query(OPEN_STREAMS_SQL);
@@ -110,6 +118,8 @@ if (process.argv.includes("--check-only")) {
 	console.log(`\nrelease: every check passed and the dry run worked; not pushed or deployed (--check-only).`);
 	process.exit(0);
 }
+step("the first admins (deploy.config.ts firstAdmins), only while the live site has never had one");
+cfRun(["d1", "query", site.d1Id, "--sql", firstAdminSql(firstAdmins, new Date().toISOString(), "npm run release")], site.accountId);
 step("push main to Cloudflare (Workers Builds deploys it)");
 const scriptId = workerTag(site.name); // looked up first: once main is pushed, Builds deploys whatever happens here
 const pushedAt = Date.now() - 120_000; // Cloudflare's clock may be a little behind this computer's

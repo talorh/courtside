@@ -17,8 +17,8 @@ flowchart LR
 - **Address:** https://staging-courtside.<subdomain>.workers.dev.
 - **Who can sign in:** whoever is on staging's teams' lists or its admins table: the site owner's email and four test
  addresses that land in the same inbox (`the admin's address with +watcher, +filmer, +coach and +manager, one a role), by the
- site's own email code (staging's code emails say `[Staging]`). An admin can also try any role with View as. Until
- 
+ site's own email code (staging's code emails say `[Staging]`). An admin can also try any role with View as. The
+ first admins are `deploy.config.ts` `firstAdmins`, made by the first `npm run staging`.
 - **Every page says so:** an orange "Staging: test data, not the live site." strip, and its emails' subjects start
  `[Staging]`.
 
@@ -26,7 +26,7 @@ flowchart LR
 
 | Piece | Staging | Notes |
 | --- | --- | --- |
-| Database | D1 `courtside-staging` (`eb468a8b-8716-4f91-a59d-01be025b8fc5`, Oceania) | Migrated by `npm run staging` before each deploy. Never a copy of the live data: test teams and people only |
+| Database | D1 `courtside-staging` (its id is `deploy.config.ts` `staging.d1Id`) | Migrated by `npm run staging` before each deploy. Never a copy of the live data: test teams and people only |
 | Bucket | R2 `courtside-staging` | Its own key (`courtside-r2-staging`, object read and write on this bucket only); CORS for the staging address; everything deleted after 7 days (`infra/staging/`) |
 | Sign-in | The site's own, on staging's database (`sessions`, `sign_in_codes`) | A code on staging doesn't sign anyone in to the live site, and the other way round |
 | Platform's Cloudflare figures | The account's, with the live site's read-only token (`CF_INSIGHTS_TOKEN`) | The same figures as the live site's Platform: they're the account's |
@@ -38,7 +38,7 @@ flowchart LR
 
 ```bash
 npm run staging -- --dry-run # npm run check, then dry runs of staging's migrations and the deploy
-npm run staging # the committed code on staging: check, staging's migrations, cf previews deploy --preview-name staging
+npm run staging # the committed code on staging: check, staging's migrations, the first admins (firstAdmins, while staging has none), cf previews deploy --preview-name staging
 ```
 
 It refuses uncommitted changes, so it's always clear what staging runs, and it deploys only the `staging` branch. A change is built on a `feature/<name>` or `fix/<name>` branch off

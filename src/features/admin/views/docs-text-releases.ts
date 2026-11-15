@@ -37,7 +37,7 @@ ${releaseDiagram()}
 is built on its own branch, ${code("feature/<name>")} or ${code("fix/<name>")}, off ${code("staging")}, its tests
 written first. When it's ready it's merged into ${code("staging")}, the staging environment's branch, and
 ${code("npm run staging")} puts that branch on the staging site: it checks the code, applies staging's migrations,
-deploys the preview and records the commit it deployed as ${code("refs/courtside/staging")}. ${code("main")} is production.
+makes ${code("firstAdmins")} (${code("deploy.config.ts")}) admins while staging has never had one, deploys the preview and records the commit it deployed as ${code("refs/courtside/staging")}. ${code("main")} is production.
 Nothing is committed on it directly: it's only ever fast-forwarded to ${code("staging")} for a release, so what goes
 live is exactly what was tried. A merged branch is deleted.</p>
 ${branchesDiagram()}

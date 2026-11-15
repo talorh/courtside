@@ -8,6 +8,10 @@ was wrong), the area in bold, then a plain sentence saying what changed for the 
 where ..."). Every deploy adds its lines at the top of today's date, and the deploy (`npm run release`, then Workers
 Builds) sends the top line, in plain words, as its message.
 
+## 16 Nov 2026
+
+- [Enhancement] **New install:** The first deploy makes the admins named in deploy.config.ts (firstAdmins) the site's first admins, and until the first team is onboarded every page opens the admin area, where Insights says how to get started.
+
 ## 15 Nov 2026
 
 - [Fix] **Insights:** Fixed an issue where test runs counted in the weekly charts: a video thrown away as a test, replaced, or deleted within a day of being made no longer counts, with its stream, views and clips, and "live streams open" counts only streams under way, not a Go live page just opened.

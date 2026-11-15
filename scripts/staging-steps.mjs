@@ -1,4 +1,5 @@
 import { profileArgs, readDeploy } from "./deploy-config.mjs";
+import { firstAdminSql } from "./first-admin.mjs";
 
 // npm run staging's workings (scripts/staging.mjs), as plain functions (tests/scripts/staging.test.ts): what it runs, and
 // the keys it gives staging.
@@ -14,18 +15,24 @@ export function parseArgs(argv) {
 	return { error: `Unknown ${rest.join(" ")}: npm run staging [-- --dry-run], or npm run staging -- setup [--dry-run].` };
 }
 
-/** Staging's database and the Worker's name, from deploy.config.ts (as text). */
+/** Staging's database, the Worker's name and the first admins' emails, from deploy.config.ts (as text). */
 export function stagingFromConfig(text) {
 	const d = readDeploy(text);
-	return { d1Id: d.staging.d1Id, worker: d.worker };
+	return { d1Id: d.staging.d1Id, worker: d.worker, firstAdmins: d.firstAdmins };
 }
 
-/** Deploying to staging: the checks, staging's migrations, then the preview. A dry run checks, then dry-runs the rest. */
-export function deployPlan({ d1Id, dryRun }) {
+/**
+ * Deploying to staging: the checks, staging's migrations, the first admins (`firstAdmins`, while staging has never had
+ * an admin, so a new install can sign in), then the preview. A dry run checks, then dry-runs the rest: cf's D1 query has
+ * no dry run, so it leaves the first admins out.
+ */
+export function deployPlan({ d1Id, dryRun, firstAdmins, now }) {
 	const dry = dryRun ? ["--dry-run"] : [];
+	const admins = () => ({ what: "the first admins, while staging has none", cmd: "npx", args: ["cf", "d1", "query", d1Id, "--sql", firstAdminSql(firstAdmins, now, "npm run staging"), ...profileArgs()] });
 	return [
 		{ what: "npm run check", cmd: "npm", args: ["run", "check"] },
 		{ what: "staging's migrations", cmd: "npx", args: ["cf", "d1", "migrations", "apply", d1Id, "--dir", "migrations", ...profileArgs(), ...dry] },
+		...(dryRun ? [] : [admins()]),
 		{ what: "the code on staging", cmd: "npx", args: ["cf", "previews", "deploy", "--preview-name", PREVIEW, ...profileArgs(), ...dry] },
 	];
 }

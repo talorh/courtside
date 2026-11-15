@@ -8,11 +8,11 @@ const now = new Date("2026-10-30T08:00:00Z"); // 7pm local, game night
 const minutesAgo = (m: number) => new Date(now.getTime() - m * 60_000).toISOString();
 
 describe("npm run release's checks", () => {
-	const DEPLOY = `export const DEPLOY = { accountId: "a1", zoneId: "z1", worker: "wolves", d1Name: "wolves", d1Id: "d1", bucket: "wolves-originals",
+	const DEPLOY = `export const DEPLOY = { accountId: "a1", zoneId: "z1", worker: "wolves", d1Name: "wolves", d1Id: "d1", bucket: "wolves-originals", firstAdmins: "jordan@wolves.example",
 		staging: { d1Name: "wolves-staging", d1Id: "d2", bucket: "wolves-staging" } };`;
 
 	it("reads the site the config deploys to (deploy.config.ts), and its secrets file", () => {
-		expect(siteFromConfig(DEPLOY)).toEqual({ name: "wolves", accountId: "a1", d1Id: "d1", bucket: "wolves-originals", secretsFile: ".secrets.production.json" });
+		expect(siteFromConfig(DEPLOY)).toEqual({ name: "wolves", accountId: "a1", d1Id: "d1", bucket: "wolves-originals", secretsFile: ".secrets.production.json", firstAdmins: "jordan@wolves.example" });
 		// The repository's own file is read the same way, placeholders and all, until the install fills it in.
 		expect(siteFromConfig(readFileSync("deploy.config.ts", "utf8")).secretsFile).toBe(".secrets.production.json");
 		expect(() => siteFromConfig("export const DEPLOY = {};")).toThrow(/couldn't read/);

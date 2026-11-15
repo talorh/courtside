@@ -48,6 +48,8 @@ async function whichTeam(url: URL, deps: AppDeps, viewer: Viewer, current: Team 
 	const own = viewer.memberships.filter((m) => !m.member.hidden).map((m) => m.team);
 	if (!own.length && !viewer.isAdmin) return htmlResponse(notOnTeamPage(viewer.email), 403);
 	const others = viewer.isAdmin ? (await listTeams(deps.db)).filter((t) => !own.some((o) => o.id === t.id)) : [];
+	// No team to pick (a new install, before its first team): an admin's place is the admin area.
+	if (!own.length && !others.length) return redirect("/admin", 302);
 	const next = sitePath(url.searchParams.get("next"));
 	// One team to choose: nothing to ask, so it opens, at the page they wanted.
 	const [only, ...more] = [...own, ...others];

@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 // @ts-expect-error: a plain JS script (scripts/), tested here on its own.
 import { deployPlan, parseArgs, previewSecrets, setupCalls, stagingFromConfig } from "../../scripts/staging-steps.mjs";
+// @ts-expect-error: a plain JS script (scripts/), tested here on its own.
+import { firstAdminSql } from "../../scripts/first-admin.mjs";
 
 const LIVE = { STREAM_KEY_ID: "k", STREAM_KEY_JWK: "j", STREAM_API_TOKEN: "t", CF_INSIGHTS_TOKEN: "i", R2_ACCESS_KEY_ID: "live-r2", R2_SECRET_ACCESS_KEY: "live-r2-secret", TURNSTILE_SECRET: "live-ts" };
 const STAGING = { R2_ACCESS_KEY_ID: "staging-r2", R2_SECRET_ACCESS_KEY: "staging-r2-secret", TURNSTILE_SECRET: "staging-ts" };
@@ -25,6 +27,16 @@ describe("npm run staging (docs/runbooks/staging.md)", () => {
 			`npx cf d1 migrations apply ${d1Id} --dir migrations${profile} --dry-run`,
 			`npx cf previews deploy --preview-name staging${profile} --dry-run`,
 		]);
+	});
+
+	it("makes deploy.config.ts firstAdmins staging's first admins after its migrations, while staging has none, and not in a dry run", () => {
+		const { firstAdmins } = stagingFromConfig(readFileSync("deploy.config.ts", "utf8"));
+		expect(firstAdmins).toBe("REPLACE_WITH_THE_ADMINS_EMAILS"); // the install fills it in
+		const admins = ["jordan@saints.example", "magic@saints.example"];
+		const plan = deployPlan({ d1Id: "s1", dryRun: false, firstAdmins: admins, now: "2026-11-16T00:00:00.000Z" });
+		const profile = process.env.CF_PROFILE ? ` --profile ${process.env.CF_PROFILE}` : "";
+		expect(plan.map((s: { what: string }) => s.what)).toEqual(["npm run check", "staging's migrations", "the first admins, while staging has none", "the code on staging"]);
+		expect([plan[2].cmd, ...plan[2].args].join(" ")).toBe(`npx cf d1 query s1 --sql ${firstAdminSql(admins, "2026-11-16T00:00:00.000Z", "npm run staging")}${profile}`);
 	});
 
 	it("gives staging the live site's Stream keys and its own R2 key, never the live bucket's", () => {

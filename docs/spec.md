@@ -522,7 +522,9 @@ Support's counts beside it (tickets waiting, and alerts that aren't ok). Anyone 
  three boards (teams and people; footage; watching and asking), each figure with its last 12 weeks, first views week by
  week, when families watch (a day-by-hour heatmap), the rest as small charts, mobile against desktop (the devices
  signed in now in each view, and the devices that opened the site in each, week by week), the
- teams side by side, then what stands out. Counts only, never anyone's email.
+ teams side by side, then what stands out. Counts only, never anyone's email. On a new install, before its first
+ team, **Get started** takes the numbers' place: onboard the first team, check Platform, read the Documentation's
+ Start here.
 - **Teams** (`/admin/teams`): **Onboard a team**, and for each team **Open** and a **More** menu: View as Watch only,
  Watch and film, coach or team manager, Edit, **End season and close team**, Reopen, and Delete tonight.
  Each running team's setup ("3 of 4" and what's still to add, as Manage team's checklist).
@@ -586,7 +588,8 @@ and record of the team, except what the download log names (kept its two years).
 ### Smaller pages
 
 - **Which team?**, for someone in several teams who hasn't picked one yet, or a site admin, who also gets Open Admin
- beneath every team, back to the admin area. A link to another of your teams' games or photos offers to switch.
+ beneath every team, back to the admin area. With no team to pick (a new install, before its first team), an admin
+ goes straight to the admin area. A link to another of your teams' games or photos offers to switch.
 - **Not on the list:** a friendly page for an email that got past sign-in but isn't on any team's list ("Ask your team
  manager to sub you in"), with Try again.
 - **On the Home Screen:** the site can be added to a phone's Home Screen as "Courtside" and opens full screen like

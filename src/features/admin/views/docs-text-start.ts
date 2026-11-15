@@ -18,7 +18,7 @@ end puts each one in plain English.</p>
 for staging and one for production, and a ${code("cf")} login bound to each.</li></ul>
 <h3>The admin area, page by page</h3>
 ${table(["Page", "What it's for", "When you look"], [
-		["Insights", "Is the site all right, in one answer, with every check as a light and what needs an admin (tickets waiting, removal requests, a team without a manager); then the whole site in numbers over 12 weeks, mobile against desktop, and the teams side by side. Counts only, never anyone's email.", "Whenever you open the admin area: it's the landing page"],
+		["Insights", "Is the site all right, in one answer, with every check as a light and what needs an admin (tickets waiting, removal requests, a team without a manager); then the whole site in numbers over 12 weeks, mobile against desktop, and the teams side by side. Counts only, never anyone's email. On a new install, before the first team, it says how to get started.", "Whenever you open the admin area: it's the landing page"],
 		["Teams", "Onboard a team; open any team as its team manager, or view it as any role; each running team's setup progress; end a season, reopen, or delete a team tonight.", "A new team, or a team manager asking for help"],
 		["Support", "Team managers' questions and the site's own monitoring tickets, with replies, private notes and status.", "Daily, and whenever an email says a ticket's waiting"],
 		["Platform", "The site's health, each thing once: every figure watched with its limit and alert, last night's backup and clean-up, Cloudflare's last 30 days.", "Weekly, and when an alert is raised"],

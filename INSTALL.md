@@ -109,7 +109,8 @@ The agent fills both from your answers:
 | Your domain: one of its own (recommended), or a subdomain of the club's domain (section 8) | `domain` | saints.example; or courtside.yourclub.org |
 | The Cloudflare zone it's in: the domain itself, or for a subdomain the club's domain | `zone` | saints.example; or yourclub.org |
 | Your logo files, or "draw one" | `public/` | logo.png and club-mark.webp |
-| Your email, for the first site admin, the account's alerts and the Back soon page's own list | `npm run admin`, Cloudflare notifications, `maintenance/cloudflare.config.ts` `ADMIN_EMAILS` | you@yourclub.org |
+| The site admins' email addresses: yours, and anyone else who'll help run the site (each signs in with their own; more can be added later on the Admins page) | `deploy.config.ts` `firstAdmins`, and the Back soon page's own list, `maintenance/cloudflare.config.ts` `ADMIN_EMAILS` | you@yourclub.org, helper@yourclub.org |
+| Your email, for the account's own alerts | Cloudflare notifications | you@yourclub.org |
 | The region nearest your club | `deploy.config.ts` `region` | aws:ap-southeast-2 |
 | A name for the Worker, if not `courtside` | `deploy.config.ts` `worker` | courtside |
 
@@ -121,8 +122,8 @@ a dry run first, then for real after your yes. Read-only commands need no yes.
 1. **The club** (`src/club.ts`): fills in your answers, then `npm run check` to be sure everything still passes with
    your names. If you have no logo, `npm run club -- placeholder`; otherwise your files go in `public/` at the sizes the
    runbook's Branding section lists. Then `npm run club -- all` for the court picture and the launch screen's copy, and
-   `npm run docs` so the Documentation carries your names. Your email goes in `ADMIN_EMAILS` in
-   `maintenance/cloudflare.config.ts` too (comma-separated for several): the people the Back soon page lets through to
+   `npm run docs` so the Documentation carries your names. The admins' emails go in `deploy.config.ts` `firstAdmins`
+   (comma-separated), and in `ADMIN_EMAILS` in `maintenance/cloudflare.config.ts` too: the people the Back soon page lets through to
    the real site while maintenance is on. It's the page's own list, kept apart from the site's admins table so it works
    when the database doesn't; with the example address left there, nobody gets through.
 2. **The domain** (§1): registers it through Cloudflare Registrar, or adds the existing zone, with DNSSEC on. Records
@@ -150,11 +151,14 @@ a dry run first, then for real after your yes. Read-only commands need no yes.
 12. **The joiner** (§7): `npm run join -- image` to build and push the ffmpeg container's image (podman), then
     `npm run join -- deploy`.
 13. **The first deploy** (`docs/runbooks/staging.md`, §4): commits your config on a branch, merges it into `staging`,
-    `npm run staging -- setup` and `npm run staging` put the site on staging, you sign in there and try it, then in
-    `courtside-prod` `git merge --ff-only staging` and `npm run release` put it live. `npm run release` pushes `main`
-    to Artifacts, where Workers Builds checks it and deploys it.
-14. **You** (`npm run admin`): `npm run admin -- add <your email>` makes you the first site admin. Sign in with the
-    code it emails you, and the admin area's Teams page onboards your first team.
+    `npm run staging -- setup` and `npm run staging` put the site on staging and make the admins
+    (`firstAdmins`) its first admins, you sign in there and try it, then in
+    `courtside-prod` `git merge --ff-only staging` and `npm run release` put it live and make them the live site's
+    first admins too. `npm run release` pushes `main` to Artifacts, where Workers Builds checks it and deploys it.
+14. **You**: sign in on the live site with the code it emails you (each admin signs in the same way). With no team yet, every page opens the admin area,
+    where Insights says how to get started and the Teams page onboards your first team. A deploy makes `firstAdmins`
+    admins only while the site has never had one, so an admin removed later stays removed; `npm run admin -- add
+    <email>` adds an admin when the admin area isn't to hand.
 15. **Cloudflare's own alerts** (§1): notifications for a spend past a threshold, a new Worker issue and an HTTP DDoS
     attack, emailed to you. These work even when the site doesn't.
 

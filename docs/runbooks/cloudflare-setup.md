@@ -146,7 +146,8 @@ Onboarding a new team needs nothing here: Stream, Images, D1 and R2 are shared b
 ## 4. Deploying
 
 Every deploy is `npm run release` from `main` in `courtside-prod` (`docs/development-standards.md` §11): it runs every
-check, the browser suite, the migration and quiet-site checks and `cf deploy --dry-run`, then pushes `main` to the
+check, the browser suite, the migration and quiet-site checks and `cf deploy --dry-run`, makes `firstAdmins` admins
+while the site has never had one (a new install), then pushes `main` to the
 Artifacts repository with a 10-minute token (`scripts/release-push.mjs`), where Workers Builds runs `npm ci && npm run
 check` and `npm run deploy:builds` (the newest `CHANGELOG.md` line as the message, the commit as the tag). Never plain
 `cf deploy`. Staging first, always (`docs/runbooks/staging.md`).

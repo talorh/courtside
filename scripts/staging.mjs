@@ -7,6 +7,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { cfToken, profileArgs } from "./deploy-config.mjs";
+import { firstAdminEmails } from "./first-admin.mjs";
 import { siteFromConfig, STAGING_REF } from "./release-checks.mjs";
 import { deployPlan, parseArgs, previewSecrets, setupCalls, stagingFromConfig } from "./staging-steps.mjs";
 
@@ -54,7 +55,14 @@ if (execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim())
 const branch = execFileSync("git", ["branch", "--show-current"], { encoding: "utf8" }).trim();
 if (branch !== "staging") fail(`Staging deploys the staging branch, not "${branch}": merge the change into staging first.`);
 const commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
-for (const step of deployPlan({ d1Id: stagingFromConfig(config).d1Id, dryRun: args.dryRun })) {
+const staging = stagingFromConfig(config);
+let firstAdmins;
+try {
+	firstAdmins = firstAdminEmails(staging);
+} catch (err) {
+	fail(err.message);
+}
+for (const step of deployPlan({ d1Id: staging.d1Id, dryRun: args.dryRun, firstAdmins, now: new Date().toISOString() })) {
 	say(step.what);
 	if (spawnSync(step.cmd, step.args, { stdio: "inherit", env }).status !== 0) fail(`${step.what} failed.`);
 }

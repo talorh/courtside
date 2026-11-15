@@ -30,7 +30,7 @@ export const JOINING_SQL = `SELECT v.id, v.game_id AS gameId, v.join_tried_at AS
 /** The account, database, Worker and secrets file the site deploys to (deploy.config.ts, as text). */
 export function siteFromConfig(text) {
 	const d = readDeploy(text);
-	return { name: d.worker, accountId: d.accountId, d1Id: d.d1Id, bucket: d.bucket, secretsFile: ".secrets.production.json" };
+	return { name: d.worker, accountId: d.accountId, d1Id: d.d1Id, bucket: d.bucket, secretsFile: ".secrets.production.json", firstAdmins: d.firstAdmins };
 }
 
 /** Every database a deploy must have migrated first: the live site's (staging's is migrated by npm run staging). */

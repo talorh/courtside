@@ -369,7 +369,9 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
  7. nothing uploading or streaming on the live site, in any team, for 15 minutes (D1's open streams and uploading
  videos, and R2's own list of each upload's parts);
  8. `CHANGELOG.md` has a newest line that isn't what the live site already runs;
- 9. `cf deploy --dry-run`.
+ 9. `cf deploy --dry-run`;
+ 10. on a new install, `deploy.config.ts` `firstAdmins` made the live site's first admins, only while it has never had
+ one (`scripts/first-admin.mjs`).
 
  Then it pushes the commit to `main` in the site's Cloudflare Artifacts repo (`courtside/courtside`), where Workers Builds
  runs `npm ci && npm run check` and deploys it (`npm run deploy:builds`) with that line as `--message` and the commit
