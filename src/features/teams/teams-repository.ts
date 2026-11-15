@@ -1,5 +1,5 @@
 // Teams. Site-wide by nature: a team is what other tables' team_id points at, so these queries are the
-// CROSS_TEAM exceptions in scripts/check-rules.mjs.
+// CROSS_TEAM exceptions in scripts/rules.mjs.
 import type { Team, TeamStatus } from "./team.ts";
 import type { SetupCounts } from "./team-setup.ts";
 import { SETUP_COUNTS, type SetupRow, toSetup } from "./team-setup-repository.ts";
@@ -66,7 +66,8 @@ export const setDeleteAfterWrite = (db: D1Database, id: string, deleteAfter: str
 export const markTeamDeleted = (db: D1Database, id: string, nowIso: string) => db
 	.prepare("UPDATE teams SET status = 'deleted', deleted_at = ? WHERE id = ? AND status = 'closed'").bind(nowIso, id);
 
-/** A team as the admin area's Teams page lists it. An admin's hidden way into a team is never counted or named. */
+/** A team as the admin area's Teams page lists it. An admin's hidden way into a team is never counted or named.
+ * `openSupport`: its support questions waiting for an answer (feature requests are their own queue). */
 export interface TeamSummary { team: Team; members: number; managers: string[]; lastSeenAt: string | null; openSupport: number; setup: SetupCounts }
 
 interface SummaryRow extends TeamRow, SetupRow { member_count: number; last_seen_at: string | null; open_support: number }
@@ -76,8 +77,8 @@ export async function listTeamSummaries(db: D1Database): Promise<TeamSummary[]> 
 	const [teams, managers] = await db.batch([
 		db.prepare(`SELECT ${TEAM_COLUMNS},
 			(SELECT COUNT(*) FROM members m WHERE m.team_id = t.id AND m.removed_at IS NULL AND m.hidden = 0) AS member_count,
-			(SELECT MAX(m.last_seen_at) FROM members m WHERE m.team_id = t.id AND m.hidden = 0) AS last_seen_at,
-			(SELECT COUNT(*) FROM support_requests s WHERE s.team_id = t.id AND s.status IN ('new', 'open')) AS open_support, ${SETUP_COUNTS("t.id")}
+			(SELECT MAX(m.last_seen_at) FROM members m WHERE m.team_id = t.id AND m.removed_at IS NULL AND m.hidden = 0) AS last_seen_at,
+			(SELECT COUNT(*) FROM support_requests s WHERE s.team_id = t.id AND s.kind = 'support' AND s.status IN ('new', 'open')) AS open_support, ${SETUP_COUNTS("t.id")}
 			FROM teams t WHERE status <> 'deleted' ORDER BY status = 'closed', season_start DESC, code`),
 		db.prepare(`SELECT m.team_id, CASE WHEN m.name <> '' THEN m.name ELSE m.email END AS who FROM members m JOIN teams t ON t.id = m.team_id
 			WHERE t.status <> 'deleted' AND m.role = 'manager' AND m.removed_at IS NULL AND m.hidden = 0 ORDER BY m.name = '', m.name COLLATE NOCASE, m.email`),

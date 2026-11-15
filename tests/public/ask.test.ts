@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 
 const g = globalThis as Record<string, unknown>;
 const real = { document: g.document, window: g.window, location: g.location, HTMLDetailsElement: g.HTMLDetailsElement }, realFetch = globalThis.fetch;
@@ -27,4 +27,36 @@ it("Ask sends the question with the page's team (X-Courtside-Team)", async () =>
 	await submit?.({ preventDefault() {} });
 	expect(new Headers(sent[0]?.headers).get("X-Courtside-Team")).toBe("g14.5-2026");
 	expect((elements["ask-a"] as { textContent: string }).textContent).toBe("Friday.");
+});
+
+it("Ask gives up on a stalled answer after a minute, says it couldn't reach the helper, and can be asked again", async () => {
+	let submit: ((e: { preventDefault(): void }) => Promise<void>) | undefined;
+	const button = { disabled: false };
+	const el = (o: object = {}) => ({ addEventListener: (_: string, f: typeof submit) => { submit = f; }, querySelector: () => button, focus() {}, ...o });
+	const elements: Record<string, object> = { ask: el(), "ask-q": el({ value: "When is the next game?" }), "ask-a": el({ hidden: true, textContent: "" }) };
+	Object.assign(globalThis, {
+		document: { documentElement: { dataset: {} }, getElementById: (id: string) => elements[id] ?? null },
+		window: { addEventListener() {} },
+		location: { hash: "" },
+		HTMLDetailsElement: class {},
+	});
+	const realTimeout = AbortSignal.timeout, asked: number[] = [], gaveUp = new AbortController();
+	AbortSignal.timeout = (ms: number) => { asked.push(ms); return gaveUp.signal; };
+	globalThis.fetch = ((_url: string, init: RequestInit) => new Promise((_resolve, reject) => {
+		init.signal?.addEventListener("abort", () => reject(new DOMException("The operation timed out.", "TimeoutError")));
+	})) as typeof fetch;
+	try {
+		vi.resetModules();
+		// @ts-expect-error: a browser script (plain JS), run here with a stand-in page.
+		await import("../../public/ask.js");
+		const asking = submit?.({ preventDefault() {} });
+		expect(button.disabled).toBe(true);
+		gaveUp.abort();
+		await asking;
+		expect(asked).toEqual([60_000]);
+		expect((elements["ask-a"] as { textContent: string }).textContent).toBe("Couldn't reach Virtual Team Manager. Check your connection and try again.");
+		expect(button.disabled).toBe(false);
+	} finally {
+		AbortSignal.timeout = realTimeout;
+	}
 });

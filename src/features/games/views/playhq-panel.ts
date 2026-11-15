@@ -32,7 +32,7 @@ ${COMPETITION_CHOICE}${NO_VIDEO_TICK}
 export function addSheetForm(): SafeHtml {
 	return html`<details class="panel"><summary class="btn">Add from a spreadsheet</summary>
 <form method="post" action="/fixture/sheet" enctype="multipart/form-data" class="stack addgame">
-<p class="small">One game per row: Date, Time, Competition, Round, Opponent, Venue and Video (Live, Record or No). Start from the
+<p class="small">One game per row: Date, Time, Competition, Phase (${CLUB.league}), Round, Opponent, Venue and Video (Live, Record or No). Start from the
 <a href="/fixture/sample.csv" download>sample spreadsheet</a>. In Excel, save it as <b>CSV</b> (File → Save As); in Google Sheets,
 File → Download → <b>CSV</b>. You'll see the games before they're added.</p>
 <label>Spreadsheet (CSV)<input name="file" type="file" accept=".csv,text/csv" required></label>

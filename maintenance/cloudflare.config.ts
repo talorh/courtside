@@ -23,7 +23,7 @@ export default defineConfig(() => ({
 		entrypoint,
 		workersDev: false,
 		previewUrls: false,
-		observability: { enabled: true, redactQueryString: true },
+		observability: { enabled: true, redactQueryString: true, issues: { enabled: true } },
 		triggers: process.env.MAINTENANCE === "on" ? [triggers.fetch({ pattern: `${domain}/*`, zone: DEPLOY.zoneId })] : [],
 		env: {
 			ADMIN_EMAILS: bindings.text(ADMIN_EMAILS),

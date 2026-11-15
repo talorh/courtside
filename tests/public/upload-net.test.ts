@@ -140,6 +140,12 @@ describe("answers that need the person, not a retry", () => {
 		expect([needsReload(err), needsReload(new HttpError("Video not found.", 404)), needsReload({ code: "site_updated" }), needsReload(null)]).toEqual([true, false, true, false]);
 	});
 
+	it("a page from in front of the site (a 524 from Cloudflare, not JSON) says the site didn't answer, not that an upload failed", async () => {
+		globalThis.fetch = (async () => new Response("<html>A timeout occurred</html>", { status: 524, headers: { "Content-Type": "text/html" } })) as typeof fetch;
+		const err = await api("/api/live/7/save", {}).catch((e: Error) => e);
+		expect(err).toMatchObject({ status: 524, code: null, message: "The site didn't answer (HTTP 524). Try again." });
+	});
+
 	it("says what the maintenance page says while it waits for the site to come back, and keeps trying", async () => {
 		vi.useFakeTimers();
 		const listeners = { addEventListener: () => {}, removeEventListener: () => {} };

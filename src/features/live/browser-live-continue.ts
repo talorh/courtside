@@ -8,7 +8,7 @@ import { getVideo } from "../videos/videos-repository.ts";
 import { LIVE_PART_SIZE } from "./browser-live-service.ts";
 import { logLive } from "./live-log.ts";
 import { getOpenLiveForGame } from "./live-repository.ts";
-import { insertSegment, listSegments, segmentKey } from "./recording-segments-repository.ts";
+import { insertSegment, nextSegmentNumber, segmentKey } from "./recording-segments-repository.ts";
 import { ASK_AGAIN_SECONDS, STILL_SENDING_SECONDS } from "./recording-save-service.ts";
 import { lastPartAt } from "./recording-segments-service.ts";
 
@@ -46,7 +46,7 @@ export async function continueBrowserLive(deps: TeamDeps, member: Member, gameId
 	const now = deps.now();
 	const waitLeft = Math.ceil(STILL_SENDING_SECONDS - (now.getTime() - Date.parse(last)) / 1000);
 	if (waitLeft > 0) return { status: "sending", retryIn: Math.min(ASK_AGAIN_SECONDS, waitLeft), waitLeft };
-	const n = (await listSegments(db, deps.team.id, video.id)).length + 2;
+	const n = await nextSegmentNumber(db, deps.team.id, video.id);
 	const r2Key = segmentKey(video.r2Key, n);
 	const r2UploadId = await deps.originals.createMultipart(r2Key, input.mimeType.split(";")[0]!);
 	await insertSegment(db, { teamId: deps.team.id, videoId: video.id, n, r2Key, r2UploadId, nowIso: now.toISOString() });

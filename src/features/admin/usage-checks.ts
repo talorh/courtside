@@ -72,13 +72,14 @@ const LATE_MS = { daily_job: 26 * HOUR_MS, sync_job: 15 * 60_000 };
 /**
  * The other job's heartbeat: a job that stops running altogether can't raise its own failure
  * alert, but each job's alert is saved every run, so one not saved for a while is a job that isn't running. The 5-minute
- * job watches the 3am job, and the 3am job the 5-minute job. Not on staging, whose jobs run only when asked. Once raised,
- * it's saved, so it's raised once; the job's next good run clears it.
+ * job watches the 3am job, and the 3am job the 5-minute job. Not on staging, whose jobs run only when asked. Once it's
+ * urgent it's left be, so it's raised once and keeps saying when the job last ran (saving it again would move that on);
+ * the job's next good run clears it.
  */
 export async function checkJobRan(deps: AppDeps, kind: keyof typeof LATE_MS): Promise<void> {
 	if (deps.config.staging) return;
 	const prev = await getAlert(deps.db, kind);
-	if (!prev || deps.now().getTime() - Date.parse(prev.checkedAt) <= LATE_MS[kind]) return;
+	if (!prev || prev.level === "urgent" || deps.now().getTime() - Date.parse(prev.checkedAt) <= LATE_MS[kind]) return;
 	await alert(deps, kind, "urgent", `It hasn't run since ${formatGameDate(localTime(new Date(prev.checkedAt)))}`, prev.failures);
 }
 

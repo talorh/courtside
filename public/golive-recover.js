@@ -1,6 +1,7 @@
 // Go live: this game already has a recording on its way (the card's data-recording), or its stream was stopped. What
 // closed pages kept on the phone (golive-kept.js: the parts storage never got, and the tail) is sent first, so nothing
 // recorded is lost.
+import { keepAwake } from "./awake.js";
 import { forgetNotes, keptOnPhone, minutesOf } from "./golive-kept.js";
 import { stateKey } from "./golive-rec.js";
 import { buttonRunner } from "./golive-run.js";
@@ -55,8 +56,9 @@ function bringOnScreen(panel, first) {
  * ended, is offered Carry on streaming (`carryOn`, golive.js: { mime, say, ready(answer, minutesBefore, sending) } starts
  * the camera for the red Carry on tap, `sending` what the old page kept going up meanwhile); every case gets Save what
  * was recorded (what this phone kept is sent first, then the site saves what reached it once the last of it has
- * arrived), and Delete it and start again unless the stream was stopped. What happens is said in
- * the panel, beside the buttons. Otherwise says why the game can't be streamed. True if the page should stop there.
+ * arrived), and Delete it and start again unless the stream was stopped (it asks first: Yes, delete it or Keep it, as
+ * there's no undo). What happens is said in the panel, beside the buttons. Otherwise says why the game can't be
+ * streamed. True if the page should stop there.
  */
 export function recordingInTheWay(card, { btn, say, carryOn }) {
 	const gameId = card.dataset.game, recording = card.dataset.recording;
@@ -87,7 +89,9 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 		btn("discard").hidden = ended;
 		// Mid-game, in a hurry: what happened and its buttons are on screen without scrolling for them.
 		bringOnScreen(panel, btn(canCarryOn ? "continue" : "save"));
-		const others = (busy) => { btn("save").disabled = btn("discard").disabled = btn("continue").disabled = busy; };
+		const others = (busy) => { btn("save").disabled = btn("discard").disabled = btn("discardyes").disabled = btn("continue").disabled = busy; };
+		const ask = panel.querySelector("[data-discardask]");
+		const asking = (on) => { ask.hidden = !on; btn("discard").hidden = on; };
 		btn("continue").onclick = () => run(btn("continue"), async () => {
 			others(true);
 			const answer = await askUntilReady(`/api/live/${gameId}/continue`, { videoId: Number(recording), mimeType: carryOn.mime }, btn("continue"), "Carrying on", "Getting ready to carry on streaming…", tell).finally(() => others(false));
@@ -100,6 +104,8 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 		});
 		btn("save").onclick = () => run(btn("save"), async () => {
 			others(true);
+			// Sending what this phone kept, then the site's wait, can take minutes: a locked phone would pause them.
+			const awake = keepAwake();
 			let status;
 			try {
 				// What this phone kept goes up first; then the site saves what reached it (waiting its two minutes after the
@@ -109,14 +115,18 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 				status = (await askUntilReady(`/api/live/${gameId}/save`, {}, btn("save"), "Saving", "Getting ready to save…", tell)).status;
 			} finally {
 				others(false);
+				awake.release();
 			}
 			forgetNotes(gameId);
-			btn("save").hidden = btn("discard").hidden = btn("continue").hidden = true;
+			ask.hidden = btn("save").hidden = btn("discard").hidden = btn("continue").hidden = true;
 			tell(status === "saved" ? "Saved. What was recorded will be in Watch games in about 20 to 25 minutes."
 				: "Nothing had reached the site yet, so there was nothing to save. Reload the page to go live again.");
 		});
-		btn("discard").onclick = () => run(btn("discard"), async () => {
-			await api(`/api/uploads/${recording}/abort`, {});
+		btn("discard").onclick = () => { asking(true); btn("discardno").focus(); };
+		btn("discardno").onclick = () => asking(false);
+		btn("discardyes").onclick = () => run(btn("discardyes"), async () => {
+			others(true);
+			await api(`/api/uploads/${recording}/abort`, {}).finally(() => others(false));
 			forgetNotes(gameId);
 			await (await kept)?.clear();
 			// Start afresh: the page sets up the camera controls for a game with nothing recorded yet.

@@ -59,6 +59,12 @@ describe("members service", () => {
 		await expect(removeMember(db, TEAM, 1, 1, new Date())).rejects.toMatchObject({ status: 409 });
 		await expect(removeMember(db, TEAM, 1, 99, new Date())).rejects.toMatchObject({ status: 404 });
 	});
+	it("a site admin's hidden membership can't remove the team's only team manager: it's refused, not a server error", async () => {
+		const db = createTestDb();
+		const admin = (await db.prepare("INSERT INTO members (team_id, email, role, hidden) VALUES (?, 'admin@x.com', 'manager', 1)").bind(TEAM).run()).meta.last_row_id;
+		await expect(removeMember(db, TEAM, admin, 1, new Date())).rejects.toMatchObject({ status: 409, message: "The team needs at least one team manager." });
+		expect(await findActiveMemberByEmail(db, TEAM, "sam@saints.example")).toMatchObject({ role: "manager" });
+	});
 	it("sums up who's using the site from Last seen: the last 7 days, 8 to 30 days ago, longer ago, or never", () => {
 		const m = (id: number, role: Role, lastSeenAt: string | null): Member => ({ id, teamId: TEAM, email: `${id}@x.com`, name: "", role, lastSeenAt, hideScores: false, hidden: false });
 		const activity = memberActivity([

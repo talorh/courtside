@@ -11,7 +11,7 @@ export const PLAY_ICON = raw('<svg class="stopicon" viewBox="0 0 10 10" aria-hid
  * controls; without JavaScript it says so. `recordingVideoId` is this game's recording still uploading: the phone that
  * made it (golive.js matches it to what it remembers) can carry on streaming or save it; any phone of the filmer's
  * (`mine`) can save it. `ended`: End game was tapped, so the game can't be streamed again; the recording can only be saved. `ask`: who to send
- * footage to ("Sam", or "your team manager").
+ * footage to (the team's ask name, or "your team manager").
  */
 export function webLiveCard(gameId: number, recordingVideoId: number | null, ended: boolean, mine: boolean, ask: string): SafeHtml {
 	return html`<section class="appcard weblive" aria-labelledby="web-title" data-game="${gameId}" data-recording="${recordingVideoId ?? ""}"${ended ? html` data-ended="1"` : ""}${mine ? html` data-mine="1"` : ""}>
@@ -28,6 +28,10 @@ start didn't finish. If nothing's filming it now, save what was recorded, or del
 <button class="btn livebtn bigpick" type="button" data-act="continue" hidden>Carry on streaming</button>
 <button class="btn" type="button" data-act="save">Save what was recorded</button>
 <button class="btn quiet" type="button" data-act="discard">Delete it and start again</button>
+<div class="confirmpanel" data-discardask role="alertdialog" aria-labelledby="discard-q" hidden><p id="discard-q"><b>Delete the recording?</b>
+What was recorded of this game is gone for good, and streaming starts again from nothing.</p>
+<button class="btn danger" type="button" data-act="discardyes">Yes, delete it</button>
+<button class="btn" type="button" data-act="discardno">Keep it</button></div>
 <p class="small" data-recover-msg role="status"></p></div>
 <ol class="steps"><li>Phone <b>sideways</b> on the tripod, with <b>Portrait Orientation Lock off</b> (Android:
 <b>Auto-rotate</b> on). Tap <b>Start camera</b>, then <b>Allow</b> the camera and the microphone.</li>

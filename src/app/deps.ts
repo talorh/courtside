@@ -94,7 +94,7 @@ export function buildDeps(
 			fetch,
 		}),
 		clipper: createClipper(stream),
-		live: withCachedStorage(createLiveClient(stream), storageCache, now),
+		live: withCachedStorage(createLiveClient({ ...stream, now }), storageCache, now),
 		playhq: createPlayhqClient({ fetch }),
 		ai: createAi(env.AI),
 		images: createHostedImages(env.IMAGES, { now, cache: imageUrlCache, site }),

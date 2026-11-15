@@ -84,7 +84,7 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
  (coaches only, the uploader only, the clip maker only) is checked in the handler or service (`requireCoach` in
  `notes-routes.ts`, uploader check in `upload-service.ts`).
 - The router supports GET and POST only, and the first match wins (`src/app/router.ts`). A fixed path that
- shares a shape with a `:id` path is registered before it (`/fixture/playhq`, `/fixture/import` before
+ shares a shape with a `:id` path is registered before it (`/fixture/link`, `/fixture/import` before
  `/fixture/:id`).
 - Anything that changes data is a POST. The only GETs that write are idempotent and commented at the route: `/roster`,
  `/roster/week/:week/message` and `/roster/export.xlsx` (fill or clear roster weeks), `/live` (open or reuse the game's
@@ -298,7 +298,9 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 - Non-GET requests must come from the same origin (`handle-request.ts` `assertSameOrigin`).
 - Outside pages are fetched over HTTPS only, redirects included (`fixture-link.ts` `fetchHttps`); uploads are
  checked against their declared size before anything is read or signed (`import-routes.ts`, `upload-service.ts`,
- and a photo's `Content-Length` in `photos-routes.ts`).
+ and a photo's `Content-Length` in `photos-routes.ts`). A form with no `X-Courtside-Team` is read once before its route,
+ for its `_team` (`app/team-guard.ts`), so any form over `MAX_FORM_BYTES` (2 MB) is refused there first (413), by its
+ `Content-Length` or, with none, once that much has been read; the routes' own smaller limits then give their words.
 - Photos leave the phone already redrawn (no EXIF, so no location: `public/photos.js`), and the Worker checks each
  is a whole JPEG and strips any metadata left (`photos/jpeg.ts`) before it's stored.
 - The R2 bucket's CORS allows only `https://saints.example` (`infra/r2-cors.json`).

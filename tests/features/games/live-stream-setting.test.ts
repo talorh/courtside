@@ -32,6 +32,9 @@ describe("live stream or not, per game", () => {
 		await deps.db.prepare("INSERT INTO members (team_id, email, name, role) VALUES (?, 'p@x.com', 'Pat', 'watcher')").bind(deps.team.id).run();
 		await recorded(deps, (await riverton).id);
 		expect(rowOf(await (await makeClient(deps, "p@x.com")("/fixture")).text(), "Riverton")).toContain('<span class="t src">Recorded</span>');
+		// And No video, for a game that won't be filmed.
+		await deps.db.prepare("UPDATE games SET no_video_at = '2026-10-15T00:00:00.000Z' WHERE team_id = ? AND id = ?").bind(deps.team.id, (await riverton).id).run();
+		expect(rowOf(await (await makeClient(deps, "p@x.com")("/fixture")).text(), "Riverton")).toContain('<span class="t src">No video</span>');
 	});
 
 	it("Go live offers only games set to Live stream, says when today's is set to be recorded, and the site won't stream one", async () => {

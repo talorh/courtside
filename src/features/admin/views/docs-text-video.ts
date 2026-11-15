@@ -46,7 +46,8 @@ is offered two buttons, at the top of the card and on screen without scrolling.<
 the phone that was filming is offered it. It first makes sure the closed page has really stopped, which can take up to
 two minutes, with a countdown.</li>
 <li><b>Save what was recorded</b> ends the game there, with whatever reached R2 (it waits, asking again every 20
-seconds, while a part arrived in the last two minutes or Stream still sees a phone). If nobody taps either, the
+seconds, while a part arrived in the last two minutes, the recording began less than two minutes ago (its first part
+may still be going up) or Stream still sees a phone; <b>Delete it and start again</b> is refused then too). If nobody taps either, the
 5-minute job saves it by itself: half an hour after End game with nothing more from the phone (it had only its last
 parts to send), or, where the page died mid-game with no End game, after 12 quiet hours, so a phone has the night to
 reach Wi-Fi or better signal. Each save's outcome is a ${code("live_save")} line in Workers Logs.</li>
@@ -74,7 +75,8 @@ ${code("video_joined")} line: how many parts, how big, how long it took.</li>
 file far smaller than its parts is refused rather than saved.</li>
 <li><b>A join that fails</b>, or is lost because the container restarted, is tried again every ten minutes. After six
 tries the site stops: the team manager gets <b>Keep the first part</b> on the game's page, the Log's Problems has a
-line, and the admins get the Video joiner alert as urgent. Keep the first part clears it.</li>
+line, and the admins get the Video joiner alert as urgent. Keep the first part, or deleting the video, clears it once
+no team's game is still waiting (the alert is one for the whole site).</li>
 <li><b>The picture isn't touched.</b> ffmpeg copies each part as it is into one transport stream (a cut-off last frame
 dropped, each part's own decoder settings carried along, one clock), then wraps that as the MP4. Nothing is encoded
 again, so the video is exactly what the phone recorded. (Parts that aren't H.264, which only a test browser records,
@@ -95,7 +97,8 @@ camera works until the app has streamed. Who chose it, went back or stopped it i
 and it's only as good as the signal was.</li>
 <li><b>Families watch</b> in the same player as a saved video, about half a minute behind the court (a camera stream
 is about a second behind). Home, Watch games and the Log's Right now show it the same way.</li>
-<li><b>Saving:</b> after End game, or by itself 20 minutes after the app stops. Stream finishes its recording 10
+<li><b>Saving:</b> after End game (the one on the app's card: whoever chose the app, a coach or a team manager; the
+camera's End game is refused for an app's stream), or by itself 20 minutes after the app stops. Stream finishes its recording 10
 minutes after the app stops sending, and the 5-minute job then makes it the game's video. A gap under 10 minutes stays
 one recording; after a longer one the longest part is the video and the others are clips. Under a minute is a test.</li></ul>`});
 

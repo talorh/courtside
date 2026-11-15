@@ -28,7 +28,7 @@ describe("router: malformed paths", () => {
 		router.get("/games/:id", "watcher", async () => new Response("ok"));
 		expect(router.match("GET", "/games/%E0%A4%A")).toBeNull();
 	});
-	it("no site route is hidden by an earlier one (e.g. /fixture/:id taking /fixture/playhq)", () => {
+	it("no site route is hidden by an earlier one (e.g. /fixture/:id taking /fixture/link)", () => {
 		const routes = (buildRouter() as unknown as { routes: Array<{ method: string; parts: string[] }> }).routes;
 		const hidden = routes.flatMap((a, i) => routes.slice(i + 1)
 			.filter((b) => a.method === b.method && a.parts.length === b.parts.length && a.parts.every((p, k) => p.startsWith(":") || p === b.parts[k]))

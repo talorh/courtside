@@ -28,10 +28,12 @@ export function sitePath(next: string | null | undefined): string {
 export const isLaunch = (req: Request, url: URL) => req.method === "GET" && url.pathname === "/"
 	&& (url.searchParams.has("app") || (req.headers.get("Sec-Fetch-Site") === "none" && req.headers.get("Sec-Fetch-Mode") === "navigate"));
 
-/** No current team: Which team? for someone in several, the admin area for an admin in none, else the not-on-a-team page. */
-export function noTeam(team: "choose" | "none", viewer: Viewer, req: Request, url: URL): Response {
+/** No current team: Which team? for someone in several, the admin area for an admin in none, else the not-on-a-team page.
+ * Only reads get here with "choose" (a write runs as the team it names, or is refused first), so an API read is told to
+ * choose and a page is sent to Which team?. */
+export function noTeam(team: "choose" | "none", viewer: Viewer, url: URL): Response {
 	if (team === "none") return viewer.isAdmin ? redirect("/admin", 302) : htmlResponse(notOnTeamPage(viewer.email), 403);
-	if (!isRead(req) || url.pathname.startsWith("/api/")) throw new HttpError(409, "choose_team", "Choose your team first: reload the page.");
+	if (url.pathname.startsWith("/api/")) throw new HttpError(409, "choose_team", "Choose your team first: reload the page.");
 	return redirect(`/teams?next=${encodeURIComponent(url.pathname + url.search)}`, 302);
 }
 
@@ -50,7 +52,7 @@ async function whichTeam(url: URL, deps: AppDeps, viewer: Viewer, current: Team 
 	// One team to choose: nothing to ask, so it opens, at the page they wanted.
 	const [only, ...more] = [...own, ...others];
 	if (only && !more.length) return withCookies(redirect(next, 302), await switchCookies(deps, viewer, only.id));
-	return htmlResponse(whichTeamPage({ current, own, others, next }));
+	return htmlResponse(whichTeamPage({ current, own, others, next, admin: viewer.isAdmin }));
 }
 
 const SwitchForm = z.object({ team: z.string().min(1).max(64), next: z.string().max(2000).optional() });

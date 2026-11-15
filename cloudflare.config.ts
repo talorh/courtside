@@ -38,9 +38,9 @@ export default defineConfig(({ mode, isPreview }) => {
 			// Static files come from ./public (Vite's public dir). The Worker runs first, for every request: it checks the
 			// sign-in, then serves the file through the binding (app/static-files.ts): a sign-in for everything, files included.
 			assets: { runWorkerFirst: true, notFoundHandling: "none" },
-			// Every 5 minutes: video sync. Daily at 3am in the club's time zone: backup and orphan sweep. Cron is UTC only, so
-			// one trigger fires for each UTC hour that is 3am there across the year (club.ts dailyJobUtcHours) and the job runs
-			// on the one that's 3am (jobs/daily.ts).
+			// Every 5 minutes: video sync, and the game check 8 hours before each live game. Daily at 3am in the club's time
+			// zone: backup and orphan sweep. Cron is UTC only, so one trigger fires for each UTC hour that is 3am there across
+			// the year (club.ts dailyJobUtcHours) and the job runs on the one that's 3am (jobs/daily.ts).
 			triggers: isPreview ? [] : [triggers.scheduled({ schedule: "*/5 * * * *" }), ...club.dailyJobUtcHours.map((h) => triggers.scheduled({ schedule: `0 ${h} * * *` }))],
 			// Issues: Cloudflare groups the Worker's failures and emails the account when a new one starts, the
 			// one alert that still works when the Worker itself is failing. Every deploy must keep it on, or it goes off.

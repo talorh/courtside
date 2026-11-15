@@ -59,7 +59,8 @@ describe("asking Go live to start again after a lost answer", () => {
 
 describe("saving what was recorded when the phone stopped", () => {
 	it("from any phone of the filmer's: R2's parts become the game video, and asking twice is fine", async () => {
-		const { deps, gameId, sam, video, reached, row } = await filmed();
+		const { deps, gameId, sam, video, reached, row, later } = await filmed();
+		later(15);
 		reached([1, 2, 3]);
 		expect(await statusOf(await save(sam, gameId))).toBe("saved");
 		expect(await video()).toMatchObject({ status: "processing", streamUid: "uid-1", r2UploadId: null });
@@ -69,7 +70,8 @@ describe("saving what was recorded when the phone stopped", () => {
 		expect(deps.originals.completed).toHaveLength(1);
 	});
 	it("keeps only the run of parts from the start: a video needs its beginning", async () => {
-		const { deps, gameId, sam, reached } = await filmed();
+		const { deps, gameId, sam, reached, later } = await filmed();
+		later(15);
 		reached([1, 2, 4, 5]);
 		await save(sam, gameId);
 		expect(deps.originals.completed[0]?.parts.map((p) => p.partNumber)).toEqual([1, 2]);
@@ -90,8 +92,17 @@ describe("saving what was recorded when the phone stopped", () => {
 			expect(deps.originals.aborted, how).toEqual([]);
 		}
 	});
+	it("a recording under two minutes old with nothing in R2 yet waits: its first part may still be going up on a weak signal", async () => {
+		const { deps, gameId, videoId, sam, later } = await filmed();
+		later(1);
+		expect(((await (await save(sam, gameId)).json()) as { data: object }).data).toEqual({ status: "sending", retryIn: 20, waitLeft: 60 });
+		expect((await sam(`/api/uploads/${videoId}/abort`, jsonBody({}))).status).toBe(409);
+		expect(await getVideo(deps.db, deps.team.id, videoId)).toMatchObject({ status: "uploading" });
+		expect(deps.originals.aborted).toEqual([]);
+	});
 	it("nothing reached the site: the recording goes and the game is free again", async () => {
-		const { deps, gameId, videoId, sam, reached, row } = await filmed();
+		const { deps, gameId, videoId, sam, reached, row, later } = await filmed();
+		later(3);
 		reached([2, 3]);
 		expect(await statusOf(await save(sam, gameId))).toBe("nothing");
 		expect(await getVideo(deps.db, deps.team.id, videoId)).toBeNull();
@@ -169,7 +180,8 @@ describe("saving what was recorded when the phone stopped", () => {
 		expect(await row()).toMatchObject({ status: "saved" });
 	});
 	it("Delete it and start again won't delete a recording a phone is still streaming", async () => {
-		const { deps, videoId, sam } = await filmed();
+		const { deps, videoId, sam, later } = await filmed();
+		later(3);
 		deps.live.connected.add("live-1");
 		expect((await sam(`/api/uploads/${videoId}/abort`, jsonBody({}))).status).toBe(409);
 		deps.live.connected.clear();

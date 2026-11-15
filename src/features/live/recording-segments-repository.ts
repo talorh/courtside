@@ -1,5 +1,5 @@
-// A Go live recording's later segments (docs/architecture.md, Live streaming): each its own R2 multipart
-// upload beside the recording, numbered from 2 (segment 1 is the video's own r2_key).
+// A Go live recording's later segments: each its own R2 multipart upload beside the recording, numbered from 2
+// (segment 1 is the video's own r2_key).
 import { assertChanged } from "../../shared/d1.ts";
 
 export interface Segment { id: number; videoId: number; n: number; r2Key: string; r2UploadId: string | null; createdAt: string; completedAt: string | null }
@@ -23,6 +23,11 @@ export async function insertSegment(db: D1Database, s: { teamId: string; videoId
 export async function listSegments(db: D1Database, teamId: string, videoId: number): Promise<Segment[]> {
 	const { results } = await db.prepare(`SELECT ${COLUMNS} FROM recording_segments WHERE team_id = ? AND video_id = ? ORDER BY n`).bind(teamId, videoId).all<Row>();
 	return results.map(toSegment);
+}
+
+/** The number for a new segment: past the highest there is, as an empty one before it may have been dropped. */
+export async function nextSegmentNumber(db: D1Database, teamId: string, videoId: number): Promise<number> {
+	return (await db.prepare("SELECT COALESCE(MAX(n), 1) + 1 AS n FROM recording_segments WHERE team_id = ? AND video_id = ?").bind(teamId, videoId).first<number>("n"))!;
 }
 
 /** The team's videos that still have segments (not yet joined). */

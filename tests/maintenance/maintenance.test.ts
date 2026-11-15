@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { handleMaintenance } from "../../maintenance/handler.ts";
 import { LOGO } from "../../maintenance/logo.ts";
@@ -98,5 +99,33 @@ describe("the maintenance Worker", () => {
 		const { res, calls } = run("/", notSignedIn, undefined, { headers: { "Cf-Access-Authenticated-User-Email": "sam@saints.example" } });
 		expect((await res).status).toBe(503);
 		expect(calls).toHaveLength(0);
+	});
+
+	// The site's own open paths, read from where the site lists them, so the two can't drift apart.
+	const siteSignIn = [...readFileSync("src/features/signin/signin-routes.ts", "utf8").matchAll(/case "(\/[^"]+)"/g)].map((m) => m[1]!);
+	const openFiles = /const OPEN_FILES = new Set\(\[([\s\S]*?)\]\)/.exec(readFileSync("src/app/static-files.ts", "utf8"))?.[1] ?? "";
+	const siteFiles = [...openFiles.matchAll(/"(\/[^"]+)"/g)].map((m) => m[1]!);
+
+	it("lets anyone reach the site's sign-in and its own files, so an admin who isn't signed in can sign in", async () => {
+		expect(siteSignIn).toEqual(expect.arrayContaining(["/signin", "/signin/code", "/signin/access", "/signout"]));
+		expect(siteFiles).toEqual(expect.arrayContaining(["/app.css", "/signin.js", "/logo.png"]));
+		for (const path of [...siteSignIn, ...siteFiles, "/fonts/inter.woff2", "/signin?next=%2Fadmin"]) {
+			const { res, calls, req } = run(path, notSignedIn, async () => page("<!doctype html><html><body><main>Sign in</main></body></html>"));
+			const r = await res;
+			expect(r.status, path).toBe(200);
+			expect(calls, path).toEqual([req]);
+			expect(await r.text(), path).not.toContain("Maintenance is on");
+		}
+		const post = run("/signin", notSignedIn, async () => new Response(null, { status: 303, headers: { Location: "/signin/code" } }), { method: "POST", body: "email=x" });
+		expect((await post.res).status).toBe(303);
+		expect(post.calls[0]?.method).toBe("POST");
+	});
+
+	it("still gives the page for everything past the sign-in, files included", async () => {
+		for (const path of ["/", "/games/12", "/admin", "/upload.js", "/signin/other", "/signinx", "/api/uploads"]) {
+			const { res, calls } = run(path, notSignedIn);
+			expect((await res).status, path).toBe(503);
+			expect(calls, path).toHaveLength(0);
+		}
 	});
 });

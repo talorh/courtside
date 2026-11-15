@@ -68,6 +68,6 @@ export function livePage(p: LivePageProps): SafeHtml {
 <div class="panel stack golive">${gamePicker(p)}${streamStep(p)}
 ${p.app ? html`<p class="small">More help: <a href="/help#ai-cameras">Filming with an AI tracking camera</a> in Help.</p>`
 		: html`<p class="small">More help: <a href="/help#live-game">Live streaming a game</a> in Help.</p>`}</div>`;
-	return layout({ title: "Go live", frame: p.frame, current: "live", scripts: ["/live.js", p.app ? "/golive-app.js" : "/golive.js"] }, html`<div class="uphero">
+	return layout({ title: "Go live", frame: p.frame, current: "live", scripts: ["/live.js", ...(p.app ? ["/copy.js", "/golive-app.js"] : ["/golive.js"])] }, html`<div class="uphero">
 <div><div class="eyebrow">At the game? Stream it live</div><h1>Go live</h1></div>${p.recorded.map((g) => recordedNote(g, teamCopy(p.frame.team).Ask))}${body}</div>`);
 }

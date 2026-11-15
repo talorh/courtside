@@ -27,7 +27,7 @@ async function added(t = team(), competition = "VJBL") {
 	const deps = createTestDeps();
 	deps.playhq.teams.set("8fab8b8c", t);
 	const client = makeClient(deps);
-	const res = await client("/fixture/playhq", form({ url: LINK, competition }));
+	const res = await client("/fixture/link", form({ url: LINK, competition }));
 	return { deps, client, res };
 }
 
@@ -62,7 +62,7 @@ describe("Add fixture", () => {
 		await addTeam(deps.db, G14_5);
 		await addMember(deps.db, G14_5.id, "jane@x.com", "manager", "Jane");
 		deps.playhq.teams.set("8fab8b8c", team());
-		await makeClient(deps, { email: "jane@x.com", team: G14_5.id })("/fixture/playhq", form({ url: LINK, competition: "VJBL" }));
+		await makeClient(deps, { email: "jane@x.com", team: G14_5.id })("/fixture/link", form({ url: LINK, competition: "VJBL" }));
 		const u14 = (await listGamesWithVideoStatus(deps.db, G14_5.id)).map((r) => r.game.startsAt).sort();
 		expect(u14).toEqual(["2026-10-30T18:40", "2026-11-06T19:40"]);
 	});
@@ -80,9 +80,9 @@ describe("Add fixture", () => {
 	});
 	it("turns away a link that isn't a team, a team PlayHQ doesn't have, and one already added", async () => {
 		const { client } = await added();
-		expect((await client("/fixture/playhq", form({ url: "https://www.playhq.com/x", competition: "VJBL" }))).status).toBe(400);
-		expect((await client("/fixture/playhq", form({ url: LINK.replace("8fab8b8c", "deadbeef"), competition: "Tournament" }))).status).toBe(400);
-		expect((await client("/fixture/playhq", form({ url: LINK, competition: "VJBL" }))).status).toBe(409);
+		expect((await client("/fixture/link", form({ url: "https://www.playhq.com/x", competition: "VJBL" }))).status).toBe(400);
+		expect((await client("/fixture/link", form({ url: LINK.replace("8fab8b8c", "deadbeef"), competition: "Tournament" }))).status).toBe(400);
+		expect((await client("/fixture/link", form({ url: LINK, competition: "VJBL" }))).status).toBe(409);
 	});
 	it("links a game already added by hand on that day instead of adding it twice; practice matches are left alone", async () => {
 		const deps = createTestDeps();
@@ -90,7 +90,7 @@ describe("Add fixture", () => {
 		await client("/fixture", form({ date: "2026-10-30", hour: "7", minute: "0", period: "pm", competition: "VJBL", roundLabel: "", opponent: "", venue: "", video: "live" }));
 		await client("/fixture", form({ date: "2026-10-23", hour: "6", minute: "40", period: "pm", competition: "Practice match", roundLabel: "", opponent: "", venue: "", video: "live" }));
 		deps.playhq.teams.set("8fab8b8c", team());
-		await client("/fixture/playhq", form({ url: LINK, competition: "VJBL" }));
+		await client("/fixture/link", form({ url: LINK, competition: "VJBL" }));
 		expect((await games(deps)).map((g) => [g.startsAt, g.competition, g.opponent])).toEqual([
 			["2026-10-23T18:40", "Practice match", "TBC"], ["2026-10-30T18:40", "VJBL", "Hillcrest 3"], ["2026-11-06T18:40", "VJBL", "TBC"],
 		]);
@@ -109,16 +109,16 @@ describe("Two games added by hand on one day (a tournament)", () => {
 		await add("2026-11-22", "9", "0", "Sunday by hand");
 		const t = team();
 		t.games = [
-			{ id: "t1", round: "Round 1", date: "2026-11-21", time: "12:00", opponent: "Knox U12 Boys 2", venue: "Knox" },
-			{ id: "t2", round: "Round 2", date: "2026-11-21", time: "14:30", opponent: "Eltham U12 Boys 1", venue: "Knox" },
-			{ id: "t3", round: "Semi Final", date: "2026-11-22", time: "10:00", opponent: "Casey U12 Boys 1", venue: "Knox" },
+			{ id: "t1", round: "Round 1", date: "2026-11-21", time: "12:00", opponent: "Hillcrest U12 Boys 2", venue: "Hillcrest" },
+			{ id: "t2", round: "Round 2", date: "2026-11-21", time: "14:30", opponent: "Riverton U12 Boys 1", venue: "Hillcrest" },
+			{ id: "t3", round: "Semi Final", date: "2026-11-22", time: "10:00", opponent: "Pine Valley U12 Boys 1", venue: "Hillcrest" },
 		];
 		deps.playhq.teams.set("8fab8b8c", t);
-		expect((await client("/fixture/playhq", form({ url: LINK, competition: "Tournament" }))).status).toBe(303);
+		expect((await client("/fixture/link", form({ url: LINK, competition: "Tournament" }))).status).toBe(303);
 		// In the order they were added by hand: each kept its own row, with the PlayHQ game at its time.
 		const rows = await deps.db.prepare("SELECT starts_at, opponent, playhq_game_id FROM games WHERE team_id = ? ORDER BY id").bind(deps.team.id).all();
 		expect(rows.results.map((r) => [r.starts_at, r.opponent, r.playhq_game_id])).toEqual([
-			["2026-11-21T14:30", "Eltham 1", "t2"], ["2026-11-21T12:00", "Knox 2", "t1"], ["2026-11-22T10:00", "Casey 1", "t3"],
+			["2026-11-21T14:30", "Riverton 1", "t2"], ["2026-11-21T12:00", "Hillcrest 2", "t1"], ["2026-11-22T10:00", "Pine Valley 1", "t3"],
 		]);
 	});
 });
@@ -171,7 +171,7 @@ describe("A whole season", () => {
 		deps.playhq.teams.set("8fab8b8c", season);
 		const { db, counter } = countingDb(deps.db);
 		const client = makeClient({ ...deps, db });
-		expect((await client("/fixture/playhq", form({ url: LINK, competition: "VJBL" }))).status).toBe(303);
+		expect((await client("/fixture/link", form({ url: LINK, competition: "VJBL" }))).status).toBe(303);
 		expect(await games(deps)).toHaveLength(30);
 		expect(counter.trips).toBeLessThan(15);
 		expect(counter.mostParams).toBeLessThanOrEqual(100);
@@ -231,7 +231,7 @@ describe("Checking PlayHQ again", () => {
 		await client(`/fixture/${first!.id}/delete`, form({ confirm: "yes" }));
 		const [fixture] = await listPlayhqFixtures(deps.db, deps.team.id);
 		await client(`/fixture/playhq/${fixture!.id}/remove`, form({ confirm: "yes" }));
-		await client("/fixture/playhq", form({ url: LINK, competition: "VJBL" }));
+		await client("/fixture/link", form({ url: LINK, competition: "VJBL" }));
 		expect((await games(deps)).map((g) => [g.id, g.roundLabel])).toEqual([[first!.id, "1"], [expect.any(Number), "2"]]);
 		// Deleted again: the regular checks leave it deleted.
 		await client(`/fixture/${first!.id}/delete`, form({ confirm: "yes" }));
@@ -341,6 +341,24 @@ describe("Checking PlayHQ again", () => {
 		await client(`/fixture/playhq/${fixture!.id}/check`, { method: "POST" });
 		expect(await (await client("/games")).text()).not.toContain("PlayHQ couldn't be read");
 	});
+	it("a check that finds no games listed (PlayHQ between phases) keeps checking by the games it already has", async () => {
+		const { deps } = await added(); // added 15 Oct; its last game is 6 Nov, so checked until 18 Dec
+		deps.playhq.teams.set("8fab8b8c", { ...team(), games: [] });
+		expect((await checkPlayhqFixturesDue(later(deps, 24 * 62))).playhqChecked).toBe(1); // 16 Dec
+		expect((await listPlayhqFixtures(deps.db, deps.team.id))[0]!.autoCheck).toBe(true);
+	});
+	it("a No video fixture marks a game added by hand that a later check takes over as No video", async () => {
+		const deps = createTestDeps();
+		deps.playhq.teams.set("8fab8b8c", team());
+		const client = makeClient(deps);
+		await client("/fixture/link", form({ url: LINK, competition: "VJBL", noVideo: "1" }));
+		await client("/fixture", form({ date: "2026-11-13", hour: "6", minute: "40", period: "pm", competition: "VJBL", roundLabel: "", opponent: "", venue: "", video: "live" }));
+		const t = team();
+		t.games.push({ id: "g3", round: "Round 3", date: "2026-11-13", time: "18:40", opponent: "Pine Valley U12 Boys 2", venue: "" });
+		deps.playhq.teams.set("8fab8b8c", t);
+		await checkPlayhqFixturesDue(later(deps, 9));
+		expect((await games(deps)).map((g) => [g.roundLabel, g.noVideo])).toEqual([["1", true], ["2", true], ["3", true]]);
+	});
 	it("Remove stops the checks and keeps the games", async () => {
 		const { deps, client } = await added();
 		const [fixture] = await listPlayhqFixtures(deps.db, deps.team.id);
@@ -353,7 +371,7 @@ describe("Checking PlayHQ again", () => {
 		const [old] = await listPlayhqFixtures(deps.db, deps.team.id);
 		await client(`/fixture/playhq/${old!.id}/remove`, form({ confirm: "yes" }));
 		deps.playhq.teams.set("aaaa1111", { name: "Tournament", games: [{ id: "t1", round: "Round 1", date: "2026-11-07", time: "09:00", opponent: "Lakeside", venue: "" }] });
-		await client("/fixture/playhq", form({ url: LINK.replace("8fab8b8c", "aaaa1111"), competition: "Tournament", noVideo: "1" }));
+		await client("/fixture/link", form({ url: LINK.replace("8fab8b8c", "aaaa1111"), competition: "Tournament", noVideo: "1" }));
 		const [next] = await listPlayhqFixtures(deps.db, deps.team.id);
 		expect(next!.id).toBe(old!.id);
 		expect((await games(deps)).map((g) => [g.opponent, g.playhqGone, g.noVideo])).toEqual([
@@ -365,10 +383,10 @@ describe("Checking PlayHQ again", () => {
 		deps.playhq.teams.set("8fab8b8c", team());
 		const client = makeClient(deps);
 		await deps.db.prepare("CREATE TRIGGER no_games BEFORE INSERT ON games BEGIN SELECT RAISE(ABORT, 'disk full'); END").run();
-		expect((await client("/fixture/playhq", form({ url: LINK, competition: "VJBL" }))).status).toBe(500);
+		expect((await client("/fixture/link", form({ url: LINK, competition: "VJBL" }))).status).toBe(500);
 		expect(await listPlayhqFixtures(deps.db, deps.team.id)).toEqual([]);
 		await deps.db.prepare("DROP TRIGGER no_games").run();
-		expect((await client("/fixture/playhq", form({ url: LINK, competition: "VJBL" }))).status).toBe(303);
+		expect((await client("/fixture/link", form({ url: LINK, competition: "VJBL" }))).status).toBe(303);
 	});
 	it("editing a PlayHQ game says the next check replaces hand changes", async () => {
 		const { deps, client } = await added();

@@ -122,7 +122,7 @@ describe("the admin area's Documentation", () => {
 			video: ["<h3>If the page closes mid-game</h3>", "<h3>How the parts become one video</h3>", "Carry on streaming", "Cloudflare Containers", "about ten minutes longer",
 				"golive-kept.js", "recording_segments", "Keep the first part", "tried again every ten minutes", "read back from R2", "video_joined"],
 			jobs: ["<th scope=\"row\">Joins</th>", "<th scope=\"row\">The video joiner</th>", "two small test files", "join given up on after six tries", "<h3>The game check</h3>", "150 minutes free for each game checked", "8 hours before each game's tip-off"],
-			admin: ["<th scope=\"row\">Video joiner</th>"],
+			admin: ["<th scope=\"row\">Video joiner</th>", "<th scope=\"row\">Game check</th>", "Platform&#39;s Run the game check now"],
 			monitoring: ["<th scope=\"row\">The video joiner</th>", "Not answering its nightly test", "The game check (each live game 8 hours before tip-off, and Platform&#39;s button)"],
 			costs: ["<th scope=\"row\">Containers (the video joiner)</th>", "25 GiB-hours"],
 			code: ["<th scope=\"row\"><code>join</code></th>", "Dockerfile"],
@@ -152,6 +152,17 @@ describe("the admin area's Documentation", () => {
 		const map = /<figure class="dg"><div class="dgscroll"><svg[^>]*aria-labelledby="dg-data-t[\s\S]*?<\/figure>/.exec(await page())?.[0] ?? "";
 		const shown = new Set([...map.matchAll(/>(\w+)<\/text>/g)].map((m) => m[1]));
 		expect([...tables].filter((t) => !shown.has(t))).toEqual([]);
+	});
+
+	it("lays The data's diagram out without overlaps: the site-wide box below every team card, all inside the figure", async () => {
+		const map = /<figure class="dg"><div class="dgscroll"><svg[^>]*aria-labelledby="dg-data-t[\s\S]*?<\/figure>/.exec(await page())?.[0] ?? "";
+		const height = Number(/viewBox="0 0 \d+ (\d+)"/.exec(map)?.[1]);
+		const rects = [...map.matchAll(/<rect x="\d+" y="(\d+)" width="(\d+)" height="(\d+)"/g)].map((m) => ({ y: Number(m[1]), w: Number(m[2]), h: Number(m[3]) }));
+		const site = rects.find((r) => r.w > 700)!;
+		const cards = rects.filter((r) => r.w === 148);
+		expect(cards).toHaveLength(5);
+		expect(Math.max(...cards.map((c) => c.y + c.h))).toBeLessThan(site.y);
+		expect(site.y + site.h).toBeLessThanOrEqual(height);
 	});
 
 	it("sets up a computer by hand, step by step, then hands over to an AI coding agent with its instructions to copy", async () => {

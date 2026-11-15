@@ -15,7 +15,8 @@ the opening spinner and security.txt answer without a session. Even the site's s
 <li><b>The current team</b> comes from a cookie, so every team shares the same addresses. Someone in one team just
 has it; someone in several picks with Switch team.</li>
 <li><b>Every write names its team.</b> Each form and page script says which team it was made for, so a page left open on
-one team can never save into another. A closed team is read-only.</li>
+one team can never save into another. A form is read for its team before anything else, so one over 2 MB, far more
+than any page sends, is refused first. A closed team is read-only.</li>
 <li><b>Errors</b> come back as a plain page (or a JSON answer for the API), are logged with their team, and every
 server error is counted by the hour for Platform's alert.</li></ul>`});
 

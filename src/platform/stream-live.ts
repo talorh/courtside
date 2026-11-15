@@ -35,9 +35,10 @@ interface InputResult {
 	status?: { current?: { state?: string; statusLastSeen?: string } } | null;
 }
 
-export function createLiveClient(config: { accountId: string; apiToken: string; fetch?: typeof fetch; site?: string | null; now?: () => Date }): LivePort {
+/** `now` is the site's clock (`deps.now`), so how long ago Stream last saw a stream is judged by the same time as everything else. */
+export function createLiveClient(config: { accountId: string; apiToken: string; fetch?: typeof fetch; site?: string | null; now: () => Date }): LivePort {
 	const doFetch = config.fetch ?? fetch;
-	const now = config.now ?? (() => new Date());
+	const { now } = config;
 	const base = `https://api.cloudflare.com/client/v4/accounts/${config.accountId}/stream`;
 
 	/** Null when Stream says there's no such input (404); any other failure throws. */

@@ -38,8 +38,10 @@ export async function teamCounts(db: D1Database, p: { since30: string; nowLocal:
 		(SELECT COUNT(DISTINCT s.game_id) FROM live_streams s WHERE s.team_id = t.id AND s.status = 'saved' AND s.source = 'app'
 			AND EXISTS (SELECT 1 FROM videos v WHERE v.team_id = s.team_id AND v.game_id = s.game_id AND v.deleted_at IS NULL AND v.status = 'ready')) AS app_streams,
 		(SELECT COUNT(*) FROM removal_requests r WHERE r.team_id = t.id AND r.status = 'open')
-			+ (SELECT COUNT(*) FROM clip_removal_requests r WHERE r.team_id = t.id AND r.status = 'open')
-			+ (SELECT COUNT(*) FROM photo_removal_requests r WHERE r.team_id = t.id AND r.status = 'open') AS open_requests,
+			+ (SELECT COUNT(*) FROM clip_removal_requests r WHERE r.team_id = t.id AND r.status = 'open' AND EXISTS (SELECT 1 FROM clips c
+				JOIN videos v ON v.team_id = c.team_id AND v.id = c.video_id WHERE c.team_id = r.team_id AND c.id = r.clip_id AND c.deleted_at IS NULL AND v.deleted_at IS NULL))
+			+ (SELECT COUNT(*) FROM photo_removal_requests r WHERE r.team_id = t.id AND r.status = 'open'
+				AND EXISTS (SELECT 1 FROM photos p WHERE p.team_id = r.team_id AND p.id = r.photo_id AND p.deleted_at IS NULL)) AS open_requests,
 		(SELECT COUNT(*) FROM support_requests q WHERE q.team_id = t.id AND q.status IN ('new', 'open')) AS open_support,
 		(SELECT COALESCE(SUM(a.n), 0) FROM ask_counts a WHERE a.team_id = t.id AND a.day >= ?3) AS questions_30
 		FROM teams t WHERE t.status <> 'deleted' ORDER BY t.status = 'closed', t.season_start DESC, t.code`)
@@ -49,6 +51,13 @@ export async function teamCounts(db: D1Database, p: { since30: string; nowLocal:
 		videoSeconds: r.video_seconds, clips: r.clips, photos: r.photos, watchers30: r.watchers_30, downloads30: r.downloads_30, streams: r.streams, appStreams: r.app_streams,
 		lastUpload: r.last_upload, openRequests: r.open_requests, openSupport: r.open_support, questions30: r.questions_30,
 	}));
+}
+
+/** The site's own tickets with no team waiting for an answer (access requests, bounced addresses, failed videos), leaving
+ * out the platform alerts' tickets (`alertKinds`), which show as Alerts. */
+export async function openSiteTickets(db: D1Database, alertKinds: string[]): Promise<number> {
+	return (await db.prepare(`SELECT COUNT(*) AS n FROM support_requests WHERE source = 'site' AND status IN ('new', 'open')
+		AND alert_kind NOT IN (${alertKinds.map(() => "?").join(", ")})`).bind(...alertKinds).first<number>("n")) ?? 0;
 }
 
 /** Everyone on a team (each email once) who opened the site since each instant, and how big the database is (bytes; D1
@@ -66,12 +75,20 @@ export async function signedInSince(db: D1Database, since7: string, since30: str
 export const SERIES = ["watchers", "uploads", "streams", "clips", "photos", "downloads"] as const;
 export type Series = (typeof SERIES)[number];
 
-// Each series counted by UTC hour (the page puts the hours into the club's weeks): what happened, not what's left now.
+// A test run: a video thrown away as a test or replaced, or deleted within a day of being made (Go live tried out).
+// A real game's video deleted later still happened, so it stays counted.
+const TEST_RUN = (v: string) => `${v}.deleted_at IS NOT NULL AND (${v}.deleted_reason IN ('live_test', 'replaced')
+	OR julianday(${v}.deleted_at) - julianday(${v}.created_at) < 1)`;
+const NOT_A_TEST = (videoId: string, teamId: string) => `NOT EXISTS (SELECT 1 FROM videos x WHERE x.team_id = ${teamId} AND x.id = ${videoId} AND ${TEST_RUN("x")})`;
+
+// Each series counted by UTC hour (the page puts the hours into the club's weeks): what happened, not what's left now,
+// test runs aside.
 const HOURLY: Record<Series, string> = {
-	watchers: "SELECT strftime('%Y-%m-%dT%H', opened_at) AS h, COUNT(*) AS n FROM video_views WHERE opened_at >= ?1 GROUP BY h",
-	uploads: "SELECT strftime('%Y-%m-%dT%H', created_at) AS h, COUNT(*) AS n FROM videos WHERE created_at >= ?1 AND status <> 'failed' GROUP BY h",
-	streams: "SELECT strftime('%Y-%m-%dT%H', created_at) AS h, COUNT(*) AS n FROM live_streams WHERE created_at >= ?1 AND status = 'saved' GROUP BY h",
-	clips: "SELECT strftime('%Y-%m-%dT%H', created_at) AS h, COUNT(*) AS n FROM clips WHERE created_at >= ?1 AND status <> 'failed' GROUP BY h",
+	watchers: `SELECT strftime('%Y-%m-%dT%H', w.opened_at) AS h, COUNT(*) AS n FROM video_views w WHERE w.opened_at >= ?1 AND ${NOT_A_TEST("w.video_id", "w.team_id")} GROUP BY h`,
+	uploads: `SELECT strftime('%Y-%m-%dT%H', v.created_at) AS h, COUNT(*) AS n FROM videos v WHERE v.created_at >= ?1 AND v.status <> 'failed' AND NOT (${TEST_RUN("v")}) GROUP BY h`,
+	streams: `SELECT strftime('%Y-%m-%dT%H', s.created_at) AS h, COUNT(*) AS n FROM live_streams s WHERE s.created_at >= ?1 AND s.status = 'saved'
+		AND (s.recording_video_id IS NULL OR ${NOT_A_TEST("s.recording_video_id", "s.team_id")}) GROUP BY h`,
+	clips: `SELECT strftime('%Y-%m-%dT%H', c.created_at) AS h, COUNT(*) AS n FROM clips c WHERE c.created_at >= ?1 AND c.status <> 'failed' AND ${NOT_A_TEST("c.video_id", "c.team_id")} GROUP BY h`,
 	photos: "SELECT strftime('%Y-%m-%dT%H', created_at) AS h, COUNT(*) AS n FROM photos WHERE created_at >= ?1 GROUP BY h",
 	downloads: `SELECT strftime('%Y-%m-%dT%H', created_at) AS h, COUNT(*) AS n FROM (SELECT created_at FROM downloads WHERE created_at >= ?1
 		UNION ALL SELECT created_at FROM media_downloads WHERE created_at >= ?1) GROUP BY h`,

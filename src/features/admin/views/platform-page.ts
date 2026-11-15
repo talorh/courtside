@@ -1,7 +1,6 @@
-// The admin area's Platform page (Insights and Platform overlapped, so everything about the site's
-// health is here and once): a row for each thing watched, its figure against its limit and how its alert stands; the
-// nightly backup and clean-up in the 3am job's row; Cloudflare's last 30 days. Security Center's findings are read
-// on the Cloudflare dashboard.
+// The admin area's Platform page, everything about the site's health in one place: a row for each thing watched, its
+// figure against its limit and how its alert stands; the nightly backup and clean-up in the 3am job's row; Cloudflare's
+// last 30 days. Security Center's findings are read on the Cloudflare dashboard.
 import type { AdminFrame } from "../../../app/admin-router.ts";
 import { EMAILS_A_MONTH } from "../email-count-repository.ts";
 import type { CloudflareFigures } from "../../../platform/cloudflare-insights.ts";
@@ -79,7 +78,7 @@ ${row("AI models (Workers AI)", html`The model behind Ask Virtual Team Manager, 
 ${row("The 3am job", html`The database backup, the clean-up of videos and photos nothing uses, and the sign-in's leftovers, every night.`, { kind: "daily_job", alerts: a, more: html`${backupLine(p.lastBackup, p.now)}${sweepLine(p.lastSweep, p.now)}` })}
 ${row("The 5-minute job", html`Uploads, live streams, processing, scores and emails, for every team.`, { kind: "sync_job", alerts: a })}
 ${row("The video joiner", html`Joins a live stream's parts into one video after its page closed mid-game: the courtside-join Worker and its container.`, { kind: "joiner", alerts: a })}
-${row("The game check", html`Each live game, 8 hours before tip-off, against what it'll need: Stream answering with minutes to spare, its Go live input, the video joiner and the 5-minute job, and no other alert up.`, { kind: "game_day", alerts: a })}
+${row("The game check", html`Each live game, 8 hours before tip-off, against what it'll need: Stream answering with minutes to spare, its Go live input, the video joiner and the 5-minute job, and no other alert up that would touch a game (budgets and AI models don't).`, { kind: "game_day", alerts: a })}
 </ul></section>`;
 }
 

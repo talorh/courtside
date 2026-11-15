@@ -1,4 +1,4 @@
-/** 'admin': deleted from its page, by a team manager or whoever added it (the column's CHECK predates the latter). */
+/** 'admin': deleted from its page, by a team manager or whoever added it. */
 export type PhotoDeleteReason = "admin" | "removal_request" | "retention";
 
 export interface Photo {

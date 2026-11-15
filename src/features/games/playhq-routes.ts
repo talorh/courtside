@@ -1,23 +1,16 @@
 import { logProblem } from "../admin/problem-log.ts";
 import { checkFinalScores } from "../scores/scores-service.ts";
 import { redirect } from "../../app/respond.ts";
-import { countGames, logGameChange } from "./game-log.ts";
 import type { Router } from "../../app/router.ts";
 import { notFound } from "../../app/errors.ts";
-import { idParam, parseForm } from "../../shared/validation.ts";
+import { idParam } from "../../shared/validation.ts";
 import { closeUnusedLive } from "../live/live-service.ts";
 import { fixtureGamesWithOpenLive, setPlayhqFixtureVideo } from "./playhq-video-repository.ts";
 import { getPlayhqFixture, removePlayhqFixture } from "./playhq-repository.ts";
-import { addPlayhqFixtureFromLink, checkPlayhqFixture, playhqFormSchema } from "./playhq-service.ts";
+import { checkPlayhqFixture } from "./playhq-service.ts";
 
-/** Add fixture (a PlayHQ team link), Check now and Remove, on the Fixture page. */
+/** A PlayHQ fixture's Check now, No video or Video, and Remove, on the Fixture page (Add fixture is /fixture/link). */
 export function registerPlayhqRoutes(router: Router): void {
-	router.post("/fixture/playhq", "manager", async ({ req, member, viewer, deps }) => {
-		const fixture = await getPlayhqFixture(deps.db, deps.team.id, await addPlayhqFixtureFromLink(deps, await parseForm(req, playhqFormSchema)));
-		if (fixture) await logGameChange(deps, { email: viewer.email, memberId: member.id }, "game_added", `${countGames(fixture.gameCount)} from PlayHQ`);
-		return redirect("/fixture?done=playhqadded");
-	});
-
 	router.post("/fixture/playhq/:id/check", "manager", async ({ params, deps, viewer }) => {
 		const fixture = await getPlayhqFixture(deps.db, deps.team.id, idParam(params.id, "PlayHQ fixture"));
 		if (!fixture) throw notFound("PlayHQ fixture");
@@ -27,11 +20,13 @@ export function registerPlayhqRoutes(router: Router): void {
 			await logProblem(deps, { kind: "site_problem", teamId: deps.team.id, who: viewer.email, what: `PlayHQ couldn't be read for ${fixture.name} (Check now)`, error: err });
 			return false;
 		});
-		// And any game that's over gets its final score now, rather than at the next 5-minute run.
-		await checkFinalScores(deps).catch(async (err: unknown) => {
-			console.warn(JSON.stringify({ event: "playhq_score_failed", teamId: deps.team.id, fixtureId: fixture.id, error: String(err) }));
+		// And any game that's over gets its final score now, rather than at the next 5-minute run. A game whose score
+		// couldn't be saved is collected, not thrown, so each one is logged here as the 5-minute job logs its own.
+		const { errors } = await checkFinalScores(deps).catch((err: unknown) => ({ errors: [err] }));
+		for (const err of errors) {
+			console.error(JSON.stringify({ event: "playhq_score_failed", teamId: deps.team.id, fixtureId: fixture.id, error: String(err) }));
 			await logProblem(deps, { kind: "site_problem", teamId: deps.team.id, who: viewer.email, what: "PlayHQ's final scores couldn't be read (Check now)", error: err });
-		});
+		}
 		return redirect(`/fixture?done=${ok ? "playhqchecked" : "playhqfailed"}`);
 	});
 

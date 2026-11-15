@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { getActiveMember } from "../../../src/features/members/members-repository.ts";
 import { addPhoto } from "../../../src/features/photos/photos-service.ts";
 import { form, makeClient } from "../../helpers/app.ts";
-import { createTestDeps } from "../../helpers/fakes.ts";
+import { B12_1, createTestDeps } from "../../helpers/fakes.ts";
 import { testJpeg } from "../../helpers/jpeg.ts";
 
 // Saturday 24 Oct 2026, 7pm in the club's time zone.
@@ -20,12 +20,12 @@ async function setup() {
 	};
 }
 
-/** The phone's post: the photo it made, and when the photo was taken. */
+/** The phone's post, as photos.js sends it (apiForm, with X-Courtside-Team): the photo it made, and when it was taken. */
 function upload(bytes: Uint8Array, takenAt = ""): RequestInit {
 	const body = new FormData();
 	body.set("photo", new File([bytes], "photo.jpg", { type: "image/jpeg" }));
 	body.set("takenAt", takenAt);
-	return { method: "POST", body };
+	return { method: "POST", body, headers: { "X-Courtside-Team": B12_1.id } };
 }
 
 describe("the Photos page", () => {
@@ -149,7 +149,7 @@ describe("adding photos", () => {
 		const big = await filmer("/api/photos", upload(new Uint8Array(10 * 1024 * 1024 + 1)));
 		expect(big.status).toBe(413);
 		expect(await big.json()).toEqual({ ok: false, error: { code: "too_big", message: "That photo is too big to add (10 MB at most)." } });
-		expect((await filmer("/api/photos", { ...upload(testJpeg()), headers: { "Content-Length": String(11 * 1024 * 1024) } })).status).toBe(413);
+		expect((await filmer("/api/photos", { ...upload(testJpeg()), headers: { "X-Courtside-Team": B12_1.id, "Content-Length": String(11 * 1024 * 1024) } })).status).toBe(413);
 		expect((await filmer("/api/photos", upload(new TextEncoder().encode("GIF89a")))).status).toBe(400);
 		expect(deps.images.stored.size).toBe(0);
 	});

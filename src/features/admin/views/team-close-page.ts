@@ -1,5 +1,5 @@
-// Ending a team's season (it closes: read-only), reopening it, and deleting a closed team tonight or not
-// ("End season": something very specific, not just Close). Each page says so when the team
+// Ending a team's season (it closes: read-only), reopening it, and deleting a closed team tonight or not. The button
+// says End season, what it does, rather than just Close. Each page says so when the team
 // isn't in a state it applies to (its season's over already, say).
 import type { AdminFrame } from "../../../app/admin-router.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";

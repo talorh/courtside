@@ -1,5 +1,5 @@
 // The site's admins (managed on the admin page). Site-wide, so a CROSS_TEAM
-// exception in scripts/check-rules.mjs. Read on every request, so removing an admin takes effect at once.
+// exception in scripts/rules.mjs. Read on every request, so removing an admin takes effect at once.
 
 /** The statement for "is this email an admin now", for batching with the memberships lookup (viewer.ts). */
 export const isAdminStatement = (db: D1Database, email: string) =>

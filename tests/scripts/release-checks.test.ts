@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 // @ts-expect-error: a plain JS script (scripts/), tested here on its own.
-import { buildFor, buildsDeployArgs, busyComputer, busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, rebuildHint, sameAsLive, siteFromConfig, skipsStaging, STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL } from "../../scripts/release-checks.mjs";
+import { buildFor, buildsDeployArgs, busyComputer, busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, rebuildHint, sameAsLive, SEGMENTS_SQL, siteFromConfig, skipsStaging, STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL, withLastParts } from "../../scripts/release-checks.mjs";
+import { createTestDb } from "../helpers/d1-sqlite.ts";
 
 const now = new Date("2026-10-30T08:00:00Z"); // 7pm local, game night
 const minutesAgo = (m: number) => new Date(now.getTime() - m * 60_000).toISOString();
@@ -70,6 +71,39 @@ describe("npm run release's checks", () => {
 		})).toEqual([]);
 	});
 
+	it("reads a carried-on recording's open later segments too, and not a finished or deleted video's", async () => {
+		const db = createTestDb();
+		const run = (sql: string) => db.prepare(sql).run();
+		for (const id of [7, 8, 9]) await run(`INSERT INTO games (id, team_id, starts_at, competition, opponent) VALUES (${id}, 'b12.1-2026', '2026-10-30T18:40', 'Practice match', 'TBC')`);
+		for (const [id, status, deleted] of [[40, "uploading", null], [41, "processing", null], [42, "uploading", "2026-10-30T07:00:00Z"]] as const) {
+			await run(`INSERT INTO videos (id, team_id, game_id, status, r2_key, r2_upload_id, original_name, original_bytes, delete_after, created_at, deleted_at)
+				VALUES (${id}, 'b12.1-2026', ${id - 33}, '${status}', 'k${id}', 'up${id}', 'n', 0, 'd', '${minutesAgo(60)}', ${deleted ? `'${deleted}'` : "NULL"})`);
+			await run(`INSERT INTO recording_segments (team_id, video_id, n, r2_key, r2_upload_id, created_at) VALUES ('b12.1-2026', ${id}, 2, 'k${id}.2', 'up${id}.2', 'now')`);
+		}
+		await run("INSERT INTO recording_segments (team_id, video_id, n, r2_key, r2_upload_id, created_at) VALUES ('b12.1-2026', 40, 3, 'k40.3', NULL, 'now')");
+		expect((await db.prepare(SEGMENTS_SQL).all()).results).toEqual([{ id: 40, gameId: 7, createdAt: minutesAgo(60), r2Key: "k40.2", r2UploadId: "up40.2" }]);
+		expect(SEGMENTS_SQL).not.toContain("?");
+	});
+
+	it("takes a recording's newest part from any of its segments, so a carried-on stream's later parts count", async () => {
+		const parts: Record<string, Array<{ uploaded: string }> | null> = {
+			"k25/up25": [{ uploaded: minutesAgo(50) }], "k25.2/up25.2": [{ uploaded: minutesAgo(2) }, { uploaded: minutesAgo(9) }],
+			"k26/up26": null, "k27.2/up27.2": [{ uploaded: minutesAgo(4) }],
+		};
+		const listParts = async (key: string, id: string) => parts[`${key}/${id}`] ?? null;
+		const uploads = await withLastParts(
+			[{ id: 25, gameId: 12, createdAt: minutesAgo(70), r2Key: "k25", r2UploadId: "up25" }, { id: 26, gameId: 3, createdAt: minutesAgo(30), r2Key: "k26", r2UploadId: "up26" }],
+			[{ id: 25, gameId: 12, createdAt: minutesAgo(70), r2Key: "k25.2", r2UploadId: "up25.2" }, { id: 27, gameId: 4, createdAt: minutesAgo(80), r2Key: "k27.2", r2UploadId: "up27.2" }],
+			listParts,
+		);
+		expect(uploads).toEqual([
+			{ id: 25, gameId: 12, createdAt: minutesAgo(70), lastPartAt: minutesAgo(2) },
+			{ id: 26, gameId: 3, createdAt: minutesAgo(30), lastPartAt: null },
+			{ id: 27, gameId: 4, createdAt: minutesAgo(80), lastPartAt: minutesAgo(4) },
+		]);
+		expect(busyOnSite({ streams: [], uploads, now })).toEqual(["video 25 (game 12) sent a part 2 min ago", "video 27 (game 4) sent a part 4 min ago"]);
+	});
+
 	it("needs a changelog line of the deploy's own", () => {
 		expect(sameAsLive("Roster: one-off duties kept", "Roster: one-off duties kept")).toBe(true);
 		expect(sameAsLive("Go live: says when it's starting", "Roster: one-off duties kept")).toBe(false);
@@ -100,7 +134,8 @@ describe("staging first, then live (everything is tried on staging before it goe
 
 	it("counts the changelog, the scripts and the config as the site's (the changelog shows on the site; Builds runs a script)", () => {
 		for (const path of ["CHANGELOG.md", "scripts/deploy-from-builds.mjs", "package-lock.json", "vite.config.ts", "src/index.ts"]) expect(skipsStaging(path), path).toBe(false);
-		for (const path of ["docs/runbooks/staging.md", "tests/e2e/help.e2e.mjs", "AGENTS.md", "todo.md"]) expect(skipsStaging(path), path).toBe(true);
+		for (const path of ["docs/runbooks/staging.md", "tests/e2e/help.e2e.mjs", "AGENTS.md", "todo.md", "README.md", "INSTALL.md"]) expect(skipsStaging(path), path).toBe(true);
+		expect(skipsStaging("public/AGENTS.md")).toBe(false);
 	});
 	it("lists a file moved out of the site under its old name too, so moving src/ into docs/ still needs staging", () => {
 		expect(stagingDiffArgs("abc", "def")).toEqual(["diff", "--name-only", "--no-renames", "abc", "def"]);

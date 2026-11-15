@@ -39,6 +39,8 @@ describe("choosing an external app for a game", () => {
 		expect(html).toContain('data-copy="app-server"');
 		expect(html).toContain(`data-app-game="${gameId}"`);
 		expect(html).toContain('<script type="module" src="/golive-app.js"></script>');
+		// The Copy buttons are the site's own (public/copy.js), as on every other page with one.
+		expect(html).toContain('<script type="module" src="/copy.js"></script>');
 		expect(html).not.toContain('src="/golive.js"');
 		expect(html).not.toContain('class="appcard weblive"');
 		expect(html).toContain("Waiting for the external app");
@@ -107,6 +109,16 @@ describe("choosing an external app for a game", () => {
 		expect(start.status).toBe(409);
 		expect(((await start.json()) as { error: { message: string } }).error.message).toContain("set to stream from an external app");
 		expect(await app.deps.db.prepare("SELECT COUNT(*) AS n FROM videos").first<number>("n")).toBe(0);
+	});
+	it("an app game isn't ended by Go live's camera End game, from any filmer: only its own card's End game ends it", async () => {
+		const { deps, gameId, choose, row } = await appGame();
+		await choose();
+		for (const who of ["sam@x.com", "alex@x.com"]) {
+			const end = await makeClient(deps, who)(`/api/live/${gameId}/end`, jsonBody({}));
+			expect(end.status, who).toBe(409);
+			expect(((await end.json()) as { error: { message: string } }).error.message).toContain("external app");
+		}
+		expect(await row()).toMatchObject({ source: "app", status: "open", end_requested_at: null });
 	});
 	it("goes back to the phone's camera until the app has streamed, and not while it's sending", async () => {
 		const { deps, gameId, sam, choose, row } = await appGame();

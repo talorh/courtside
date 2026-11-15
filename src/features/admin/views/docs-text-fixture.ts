@@ -103,8 +103,9 @@ once. The list travels in the form itself, so nothing is stored in between, and 
 one batch, skipping any that turned up in the fixture meanwhile.</p>
 <h3>Final scores</h3>
 ${scoresDiagram()}
-<p>During a game's hour it says In progress. For a game from a PlayHQ fixture, the 5-minute job then asks PlayHQ for
-its result (${code("discoverGame")}), and enters the score only when PlayHQ's status is FINAL with both scores in, and
+<p>During a game's hour it says In progress, unless its final score is in sooner. For a game from a PlayHQ fixture,
+the 5-minute job asks PlayHQ for its result (${code("discoverGame")}) from half an hour after tip-off: every run until 3
+hours after tip-off, then about hourly. It enters the score only when PlayHQ's status is FINAL with both scores in, and
 never over one a team manager typed. It stops 3 days after tip-off. A failed ask is logged and tried again later, on the
 same back-off; it never fails the run. A team manager can enter or fix any game's score once it has started, and any member can
 hide scores everywhere for themselves.</p>

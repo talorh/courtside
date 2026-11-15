@@ -1,6 +1,6 @@
-// View as (an admin sees what another role sees, to check things and troubleshoot): an admin
-// tries a team as Watch only, Watch and film or a coach. A browser-session cookie names the team and the role, so it ends
-// with the session and only ever counts for the team it names. What's done meanwhile is recorded as the admin's own.
+// View as (an admin sees what another role sees, to check things and troubleshoot): an admin tries a team as Watch
+// only, Watch and film, a coach or a team manager. A browser-session cookie names the team and the role, so it ends with
+// the session and only ever counts for the team it names. What's done meanwhile is recorded as the admin's own.
 import { z } from "zod";
 import { clearedCookie, VIEW_AS_COOKIE, viewAsCookie, withCookies } from "../../app/current-team.ts";
 import type { AppDeps } from "../../app/deps.ts";
@@ -25,7 +25,7 @@ export function viewingAs(viewer: Viewer, team: Team, cookie: string | null | un
 	return at > 0 && cookie.slice(0, at) === team.id && isRole(role) && VIEWABLE.includes(role) ? role : null;
 }
 
-const Start = z.object({ team: z.string().max(64).optional(), role: z.string().max(20), next: z.string().max(2000).optional() });
+const Start = z.object({ team: z.string().max(64).optional(), role: z.string().max(20) });
 const Stop = z.object({ next: z.string().max(2000).optional() });
 
 /** POST /view-as (from the Teams page, with the team, or a team's own page) and POST /view-as/stop; null for any other

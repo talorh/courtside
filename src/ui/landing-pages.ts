@@ -59,8 +59,9 @@ export function notOnTeamPage(email: string): SafeHtml {
 <p class="small"><a href="/signout" data-signout>Sign out</a> (to sign in with another email)</p>`);
 }
 
-/** own: the teams the person is in (current, then past seasons); others: every other team, for an admin. */
-export interface WhichTeamProps { current: Team | null; own: Team[]; others: Team[]; next: string }
+/** own: the teams the person is in (current, then past seasons); others: every other team, for an admin, who also gets a
+ * way to the admin area beneath them. */
+export interface WhichTeamProps { current: Team | null; own: Team[]; others: Team[]; next: string; admin: boolean }
 
 export function whichTeamPage(p: WhichTeamProps): SafeHtml {
 	const shown = [...p.own, ...p.others];
@@ -73,6 +74,7 @@ export function whichTeamPage(p: WhichTeamProps): SafeHtml {
 	return entryPage({ title: "Which team?" }, "Which team?", html`
 <p>Pick a team.${p.own.length > 1 ? html` You can switch any time: tap <b>Switch team</b> at the top of any page.` : ""}</p>
 ${group("Your teams", p.own.filter((t) => t.status === "active"))}${group("Past seasons", p.own.filter((t) => t.status !== "active"))}${group("All teams (site admin)", p.others)}
+${p.admin ? html`<p><a class="btn" href="/admin">Open Admin</a></p>` : ""}
 ${p.current ? html`<p><a href="/">Back to ${teamLabel(p.current)}</a></p>` : ""}
 <p class="small"><a href="/signout" data-signout>Sign out</a></p>`);
 }

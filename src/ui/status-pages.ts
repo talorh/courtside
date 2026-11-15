@@ -2,9 +2,8 @@ import { CLUB } from "../club.ts";
 import { html, type SafeHtml } from "../shared/html.ts";
 import { layout } from "./layout.ts";
 
-/** The entry card, in the look of the Access page the sign-in replaced: on a
- * A page in the club's deep colour, a white card with the logo and "Courtside" small at the top, the heading, the body, and a grey
- * footer band when there's one. */
+/** The entry card: on a page in the club's deep colour, a white card with the logo and the site's name small at the top,
+ * the heading, the body, and a grey footer band when there's one. */
 export function card(title: string, body: SafeHtml, footer?: string | SafeHtml): SafeHtml {
 	return html`<section class="signin"><div class="card"><div class="pad"><div class="brandrow"><img src="/logo.png" alt="" width="40" height="40"><span>${CLUB.siteName}</span></div>
 <h1>${title}</h1>${body}</div>${footer ? html`<div class="foot">${footer}</div>` : ""}</div></section>`;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getActiveMember } from "../../src/features/members/members-repository.ts";
 import { addPhoto } from "../../src/features/photos/photos-service.ts";
+import { requestStreamCopy } from "../../src/features/videos/upload-finish.ts";
 import { getActiveVideoForGame, getVideo } from "../../src/features/videos/videos-repository.ts";
 import { runSync } from "../../src/jobs/sync-videos.ts";
 import { FetchBudgetSpent } from "../../src/platform/fetch-budget.ts";
@@ -38,6 +39,20 @@ describe("runSync", () => {
 		expect(summary).toMatchObject({ copiesRequested: 1, failed: 1 });
 		expect((await getVideo(deps.db, deps.team.id, bad))?.status).toBe("failed");
 		expect((await getVideo(deps.db, deps.team.id, queued))?.streamUid).toBe("uid-1");
+	});
+
+	it("leaves a copy the finished upload is still asking for, and a copy asked for twice keeps the first, deleting the other", async () => {
+		const deps = createTestDeps();
+		const id = await seedVideo(deps, { gameId: await seedGame(deps), status: "processing", r2Key: "originals/q.mov" });
+		await deps.db.prepare("UPDATE videos SET processing_at = '2026-10-14T23:59:00.000Z' WHERE id = ?").bind(id).run();
+		expect(await runSync(deps)).toMatchObject({ copiesRequested: 0 });
+		expect(deps.stream.uploads).toHaveLength(0);
+		await deps.db.prepare("UPDATE videos SET processing_at = '2026-10-14T23:57:00.000Z' WHERE id = ?").bind(id).run();
+		expect(await runSync(deps)).toMatchObject({ copiesRequested: 1 });
+		const stale = { ...(await getVideo(deps.db, deps.team.id, id))!, streamUid: null };
+		await requestStreamCopy(deps, stale);
+		expect(await getVideo(deps.db, deps.team.id, id)).toMatchObject({ streamUid: "uid-1" });
+		expect(deps.stream.deleted).toEqual(["uid-2"]);
 	});
 
 	it("deletes expired videos and abandoned uploads, and purges old download logs", async () => {

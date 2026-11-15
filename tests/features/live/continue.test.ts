@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listSegments } from "../../../src/features/live/recording-segments-repository.ts";
+import { deleteSegmentRow, listSegments } from "../../../src/features/live/recording-segments-repository.ts";
 import { jsonBody, makeClient } from "../../helpers/app.ts";
 import { createTestDeps } from "../../helpers/fakes.ts";
 import { seedGame } from "../../helpers/seed.ts";
@@ -39,7 +39,8 @@ describe("Carry on streaming after the page closed", () => {
 		const log = await deps.db.prepare("SELECT detail, device FROM admin_log WHERE action = 'live_continued'").first<{ detail: string; device: string }>();
 		expect(log).toMatchObject({ detail: expect.stringContaining("carried on after the page closed; about 12 minutes not recorded"), device: "iPhone, Safari" });
 		expect((await deps.db.prepare("SELECT COUNT(*) AS n FROM live_streams WHERE status = 'open'").first<{ n: number }>())!.n).toBe(1);
-		// A second carry on makes segment 3.
+		// A second carry on makes segment 3, once segment 2 is old enough that its phone can't still be sending it.
+		later(3);
 		expect((await data<{ segment: number }>(await carryOn())).segment).toBe(3);
 	});
 	it("waits while a part arrived in the last two minutes (a tab still alive), and refuses another container, another person, an ended stream and a wrong recording", async () => {
@@ -56,6 +57,30 @@ describe("Carry on streaming after the page closed", () => {
 		const ended = await carryOn();
 		expect(ended.status).toBe(409);
 		expect(await ended.text()).toContain("ended");
+	});
+	it("a segment begun in the last two minutes counts as sending, though nothing has reached it yet: Save waits rather than drop it", async () => {
+		const { deps, gameId, start, reached, carryOn, later } = await closedMidGame();
+		later(20);
+		reached([1, 2], 12);
+		expect((await carryOn()).status).toBe(201);
+		later(1);
+		const coach = makeClient(deps, "coach@x.com");
+		expect(await data<object>(await coach(`/api/live/${gameId}/save`, jsonBody({})))).toEqual({ status: "sending", retryIn: 20, waitLeft: 60 });
+		expect(await listSegments(deps.db, deps.team.id, start.videoId)).toMatchObject([{ n: 2, r2UploadId: "up-2" }]);
+		expect(deps.originals.aborted).toEqual([]);
+	});
+	it("numbers a new segment past the highest there is, when an empty one before it was dropped", async () => {
+		const { deps, start, reached, carryOn, later } = await closedMidGame();
+		later(20);
+		reached([1, 2], 12);
+		expect((await data<{ segment: number }>(await carryOn())).segment).toBe(2);
+		later(3);
+		expect((await data<{ segment: number }>(await carryOn())).segment).toBe(3);
+		await deleteSegmentRow(deps.db, deps.team.id, start.videoId, 2);
+		later(3);
+		const next = await carryOn();
+		expect(next.status).toBe(201);
+		expect((await data<{ segment: number }>(next)).segment).toBe(4);
 	});
 	it("while Stream still says the phone is connected it waits too", async () => {
 		const { deps, reached, carryOn, later } = await closedMidGame();

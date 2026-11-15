@@ -86,6 +86,18 @@ describe("the admin Costs page", () => {
 		expect(await (await client("/admin/costs?season=2031")).text()).toContain('<a class="chip" href="/admin/costs" aria-current="true">2027/28</a>');
 	});
 
+	it("links to the next season once a team is onboarded for it, and a team's page goes back to its own season", async () => {
+		const deps = at(createTestDeps());
+		await addTeam(deps.db, { ...G14_5, id: "g14.5-2027", seasonStart: 2027 });
+		const client = makeClient(deps);
+		const now = await (await client("/admin/costs")).text();
+		expect(now).toContain('<nav class="chips" aria-label="Season"><a class="chip" href="/admin/costs?season=2027">2027/28</a><a class="chip" href="/admin/costs" aria-current="true">2026/27</a></nav>');
+		const next = await (await client("/admin/costs?season=2027")).text();
+		expect(next).toContain('<a class="chip" href="/admin/costs?season=2027&amp;cur=usd">$USD</a>');
+		const team = await (await client("/admin/costs/g14.5-2027?cur=usd")).text();
+		expect(team).toMatch(/<a [^>]*href="\/admin\/costs\?season=2027&amp;cur=usd"[^>]*>[^<]*Costs/);
+	});
+
 	it("shows Cloudflare's own US dollars when asked, and each team's link keeps to them", async () => {
 		const deps = createTestDeps();
 		const page = await (await makeClient(at(deps))("/admin/costs?cur=usd")).text();

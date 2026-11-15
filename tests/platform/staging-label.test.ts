@@ -17,7 +17,7 @@ describe("staging's things in the account's shared Stream and Images", () => {
 			const stream = { accountId: "a", apiToken: "t", fetch, site };
 			await createStreamClient(stream).uploadFromUrl("https://r2.test/x", { meta: { videoId: "1", gameId: "2", teamId: "t1" } });
 			await createClipper(stream).clip({ sourceUid: "s", startSeconds: 0, endSeconds: 5, name: "n", teamId: "t1" });
-			await createLiveClient(stream).createInput("Game", "t1");
+			await createLiveClient({ ...stream, now: () => new Date(CREATED) }).createInput("Game", "t1");
 			const label = site ? { site } : {};
 			expect(sent(calls, 0).meta, String(site)).toEqual({ videoId: "1", gameId: "2", teamId: "t1", ...label });
 			// A clip's call, then the label put on the clip itself (Stream's clip call keeps only the name).
@@ -33,7 +33,7 @@ describe("staging's things in the account's shared Stream and Images", () => {
 		const stream = { accountId: "a", apiToken: "t", fetch };
 		const want = [{ uid: "a", created: CREATED, site: "staging" }, { uid: "b", created: CREATED, site: null }, { uid: "c", created: CREATED, site: null }];
 		expect(await createStreamClient(stream).listVideos()).toEqual(want.map((v) => ({ ...v, liveInput: null })));
-		expect(await createLiveClient(stream).listInputs()).toEqual(want);
+		expect(await createLiveClient({ ...stream, now: () => new Date(CREATED) }).listInputs()).toEqual(want);
 	});
 
 	it("puts the team, and staging's label on staging, on a video Stream made by itself (a live recording)", async () => {

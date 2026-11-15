@@ -1,5 +1,5 @@
 // A person's memberships across teams: a member row in each team they're in, with that team's role. Spans
-// teams by design (who is this email, everywhere), so a CROSS_TEAM exception in scripts/check-rules.mjs.
+// teams by design (who is this email, everywhere), so a CROSS_TEAM exception in scripts/rules.mjs.
 import { type Member, toMember, type MemberRow } from "../features/members/members-repository.ts";
 import type { Team } from "../features/teams/team.ts";
 import { toTeam, type TeamRow } from "../features/teams/teams-repository.ts";

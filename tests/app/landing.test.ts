@@ -33,6 +33,7 @@ describe("Which team?", () => {
 		expect(page).toMatch(/aria-current="true"><b>Saints G14\.5<\/b><span class="small">Saints U14 Girls 14\.5 \(you&#39;re here\)/);
 		expect(page).toContain('<a href="/">Back to Saints G14.5</a>');
 		expect(page).not.toContain("All teams");
+		expect(page).not.toContain('href="/admin"');
 		expect(page).toContain("tap <b>Switch team</b> at the top of any page");
 	});
 
@@ -53,6 +54,8 @@ describe("Which team?", () => {
 		expect(page.indexOf("All teams (site admin)")).toBeGreaterThan(page.indexOf("Saints B12.1"));
 		expect(page.slice(page.indexOf("All teams"))).toContain("Saints G14.5");
 		expect(page.match(/value="b12.1-2026"/g)).toHaveLength(1);
+		// Beneath every team, a way back to the admin area.
+		expect(page.indexOf('<a class="btn" href="/admin">Open Admin</a>')).toBeGreaterThan(page.indexOf("Saints G14.5"));
 		// In one team, the team's name at the top is their Home, so the page doesn't say it switches.
 		expect(page).not.toContain("Switch team");
 	});

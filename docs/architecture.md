@@ -97,14 +97,16 @@ flowchart TD
  their current team, and the counts beside Support and Platform.
 7. **The site's own pages**: Which team? (`/teams`) and switching (`POST /teams/switch`, back to a page on this site
  with `next`), and View as (`POST /view-as` and `/view-as/stop`, admins only). Which team? opens the team straight
- away when there's only one to choose.
+ away when there's only one to choose, and gives an admin Open Admin beneath every team.
 8. **No team?** Someone in several teams goes to Which team?, an admin in none to the admin area, and anyone else gets
  the "not on a team's list" page (403).
 9. **A write must say its team** (`src/app/team-guard.ts`). Every post form carries `_team` (`layout` adds it to
  every form written `method="post"`) and every page script call sends `X-Courtside-Team` (`upload-net.js`, `ask.js`).
  A form for a team other than the current one is refused (409, "reload"). A page script's write runs as its page's
  team when the person can open it, so an upload or a live stream survives switching team in another window. A write
- that names no team (a page from before multi-team) asks for a reload.
+ that names no team (a page from before multi-team) asks for a reload. A form's `_team` is read from a copy of the
+ body, so a form over 2 MB (`MAX_FORM_BYTES`, well above the biggest a page sends) is refused (413) first: by its
+ `Content-Length`, or, sent in chunks with none, once that much has been read.
 10. **The membership** (`src/app/team-context.ts`): the person's own in that team, or for an admin a hidden team
  manager one, made on their first visit (logged as `team_opened`) and shown as Site admin. An admin viewing the team
  as another role (the `viewas` cookie, naming the team and the role, for the browser session) gets that role, still

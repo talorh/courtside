@@ -24,11 +24,11 @@ export function weekEditor(w: RosterWeek, held: Slot[], families: RosterFamily[]
 	const videoSwitch = w.video
 		? postButton(`/roster/week/${w.week}/no-video`, "No video this week", "btn quiet")
 		: w.games.some((g) => g.game.noVideo) ? postButton(`/roster/week/${w.week}/video`, "Video this week", "btn quiet") : "";
-	// Only for a team with an extra duty: a week with none is Scorers only (video switched off too), or back to all duties.
-	const extraSwitch = !duties.lollies ? "" : w.extra || w.video
-		? postButton(`/roster/week/${w.week}/scorers-only`, "Scorers only this week", "btn quiet")
-		: postButton(`/roster/week/${w.week}/all-duties`, "All duties this week", "btn quiet");
-	const extraNote = duties.lollies ? html` <b>Scorers only this week</b> drops ${dutyLabel("lollies", duties)} as well, for a tournament with nothing to bring and no filming (a tournament weekend starts that way; <b>All duties this week</b> brings them back).` : "";
+	// Only for a team with an extra duty: All duties while the week has none (a tournament weekend starts that way, its
+	// video still on), and Scorers only (video switched off too) while it has either; a tournament weekend shows both.
+	const extraSwitch = !duties.lollies ? "" : html`${w.extra || w.video ? postButton(`/roster/week/${w.week}/scorers-only`, "Scorers only this week", "btn quiet") : ""}${
+		!w.extra ? postButton(`/roster/week/${w.week}/all-duties`, "All duties this week", "btn quiet") : ""}`;
+	const extraNote = duties.lollies ? html` <b>Scorers only this week</b> drops ${dutyLabel("lollies", duties)} as well, for a tournament with nothing to bring and no filming (a tournament weekend starts without them; <b>All duties this week</b> brings them back).` : "";
 	// One message a game: a weekend with several games has a link for each.
 	const messages = w.games.length > 1
 		? w.games.map(({ game }) => html`<a class="btn quiet" href="/roster/week/${w.week}/message?game=${game.id}">WhatsApp message, ${gameWhen(w, game.id)}</a>`)

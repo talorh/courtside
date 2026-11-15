@@ -1,5 +1,10 @@
 // The Documentation AI assistant (admin area, Documentation): sends the question, shows the answer as plain text, and
 // links each section it was answered from (a link opens that section, as the contents do: docs.js).
+import { timeoutSignal } from "./upload-net.js";
+
+// Its longer answer, read from the whole documentation, takes seconds; a link that stalls gives up well after that, so
+// the button can be tapped again.
+const ASK_TIMEOUT_MS = 90_000;
 const form = document.getElementById("docs-ai");
 const box = document.getElementById("docs-ai-q");
 const out = document.getElementById("docs-ai-a");
@@ -31,6 +36,7 @@ form?.addEventListener("submit", async (e) => {
 	try {
 		const res = await fetch("/admin/docs/ask", {
 			method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }), redirect: "manual",
+			signal: timeoutSignal(ASK_TIMEOUT_MS),
 		});
 		// An expired sign-in answers with a redirect to the sign-in page.
 		if (res.type === "opaqueredirect") return show("You've been signed out. Reload the page and sign in, then ask again.");

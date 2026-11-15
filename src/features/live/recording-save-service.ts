@@ -21,7 +21,7 @@ export const ENDED_QUIET_MINUTES = 30;
 /**
  * A recording whose phone stopped part way (page closed, flat battery) becomes the game video from R2's own list of
  * the parts that reached it, so nothing depends on that phone coming back. If nothing reached R2, the recording is
- * deleted and the game is free to stream or upload again. "sending": a part arrived within `quietSeconds`.
+ * deleted and the game is free to stream or upload again. "sending": a part arrived within `quietSeconds` (lastPartAt).
  */
 async function saveRecordedSoFar(deps: TeamDeps, stream: LiveStream, video: Video, quietSeconds: number): Promise<"saved" | "nothing" | "sending"> {
 	if ((await listSegments(deps.db, deps.team.id, video.id)).length) return saveSegments(deps, stream, video, quietSeconds);
@@ -32,9 +32,9 @@ async function saveRecordedSoFar(deps: TeamDeps, stream: LiveStream, video: Vide
 		await finishUpload(deps, video, [], video.uploadedBy);
 		return "saved";
 	}
-	const stored = listed ?? [];
-	if (stored.some((p) => Date.parse(p.uploaded) > deps.now().getTime() - quietSeconds * 1000)) return "sending";
-	const parts = leadingRun(stored);
+	// A recording newer than `quietSeconds` counts as sending too: its first part may still be going up.
+	if (Date.parse(await lastPartAt(deps, video)) > deps.now().getTime() - quietSeconds * 1000) return "sending";
+	const parts = leadingRun(listed ?? []);
 	if (parts.length === 0) {
 		await deleteVideo(deps, video, "upload_cancelled");
 		await finishLive(deps.db, deps.team.id, stream.id, "cancelled", deps.now().toISOString(), "Nothing from the phone reached the site, so there was nothing to save.");
@@ -59,9 +59,9 @@ async function saveSegments(deps: TeamDeps, stream: LiveStream, video: Video, qu
 // How soon the page asks again while the last of a recording is still arriving (STILL_SENDING_SECONDS).
 export const ASK_AGAIN_SECONDS = 20;
 
-/** `sending`: a part arrived in the last 2 minutes; `streaming`: Stream still has a phone connected (it says so for up to
- * 2 minutes after one has gone). Both ask the page to wait `retryIn` seconds and ask again. */
-/** `waitLeft`: while parts are still arriving, the seconds until the last of them is two minutes old (the page counts it down). */
+/** `sending`: a part arrived in the last 2 minutes (or the recording is newer than that); `streaming`: Stream still has
+ * a phone connected (it says so for up to 2 minutes after one has gone). Both ask the page to wait `retryIn` seconds and
+ * ask again. `waitLeft`: while sending, the seconds until the last part is two minutes old (the page counts it down). */
 export type SaveAnswer = { status: "saved" | "nothing" } | { status: "sending" | "streaming"; retryIn: number; waitLeft?: number };
 
 /** Go live's "Save what was recorded": the filmer, from any phone, or a coach or team manager. Asking twice is fine. */

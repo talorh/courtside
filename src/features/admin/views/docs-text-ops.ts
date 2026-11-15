@@ -53,8 +53,8 @@ ${table(["Watched", "Warns", "Urgent"], [
 		["The 5-minute job", "", "Six failed runs in a row, or not run for 15 minutes (the 3am job watches it)"],
 		["A team's costs (Costs)", "Its season estimated over its budget", "Over its budget so far"],
 		["An AI model (Workers AI)", "A planned retirement date", "Two weeks before it, or gone from the catalog"],
-		["The video joiner", "Not answering its nightly test, or the test join failed", "A game's parts couldn't be joined after six tries (Keep the first part clears it)"],
-		["The game check (each live game 8 hours before tip-off, and Platform's button)", "A game's Go live input gone from Stream, the joiner not answering, another alert at a warning", "Stream not answering or short of minutes for the coming games, the 5-minute job stopped, another alert at urgent"],
+		["The video joiner", "Not answering its nightly test, or the test join failed", "A game's parts couldn't be joined after six tries (Keep the first part, or deleting the video, clears it once no team's game is still waiting)"],
+		["The game check (each live game 8 hours before tip-off, and Platform's button)", "A game's Go live input gone from Stream, the joiner not answering, another alert at a warning (not budgets or AI models)", "Stream not answering or short of minutes for the coming games, the 5-minute job stopped, another alert at urgent"],
 	])}
 <p>A team manager's question is a ticket too: answered on the site, emailed both ways, with private notes only admins
 see. Tickets are New, Open, Waiting (on the team manager) or Resolved. A ticket's emails are saved before they're
@@ -68,7 +68,7 @@ export const recovery = (): DocSection => ({ id: "recovery", title: "When someth
 Anything that deletes or restores data needs the owner's go-ahead first.</p>
 ${recoveryDiagram()}
 ${table(["Problem", "What to do"], [
-		["A fix will take a while", "Switch the maintenance page on: everyone but admins sees Back soon, and admins see the real site to check it"],
+		["A fix will take a while", "Switch the maintenance page on: everyone but admins sees Back soon, and admins see the real site to check it (the sign-in still opens, so an admin can sign in)"],
 		["A bad deploy", "Roll the Worker back to its previous version in the Cloudflare dashboard (its secrets and bindings stay)"],
 		["A bad change to the data", "D1's Time Travel puts the database back to any minute in the last 30 days"],
 		["The database itself is gone", "Restore the newest nightly backup from R2 into a new database, with the restore script"],

@@ -57,6 +57,11 @@ describe("fixture from a spreadsheet", () => {
 		expect(read).toEqual([{ startsAt: "2026-11-02T09:00", competition: "Tournament", roundLabel: "", opponent: "TBC", venue: "", noVideo: false, liveStream: true, phase: null }]);
 		expect(readFixtureCsv("Lakeside,31/10/2026\n", "VJBL").problems[0]).toMatch(/first row needs the column names/);
 	});
+	it("names a problem row by its row in the sheet, blank rows (above the header too) counted", () => {
+		const { games: read, problems } = readFixtureCsv("\nDate,Time,Opponent\n31/10/2026,6:40pm,Lakeside\n,,\n\n32/10/2026,6:40pm,Riverton\n", "VJBL");
+		expect(read.map((g) => g.opponent)).toEqual(["Lakeside"]);
+		expect(problems).toEqual(['Row 6: the date "32/10/2026" isn\'t one we can read (use 31/10/2026).']);
+	});
 	it("offers the sample to coaches, then shows the games to check, leaves out ones already there, and adds the ticked ones", async () => {
 		const deps = createTestDeps();
 		const client = makeClient(deps);
@@ -65,6 +70,7 @@ describe("fixture from a spreadsheet", () => {
 		expect(await sample.text()).toBe(SAMPLE_CSV);
 		expect((await makeClient(deps, "stranger@x.com")("/fixture/sample.csv")).status).toBe(403);
 		expect(await (await client("/fixture")).text()).toContain('<a href="/fixture/sample.csv" download>sample spreadsheet</a>');
+		expect(await (await client("/fixture")).text()).toContain("One game per row: Date, Time, Competition, Phase (VJBL), Round, Opponent, Venue and Video");
 		await client("/fixture", form({ date: "2026-10-31", hour: "6", minute: "40", period: "pm", competition: "VJBL", opponent: "Lakeside Rockets", video: "live" }));
 		// Same day, same opponent, different time (6:30 by hand vs 6:40 in the sheet): still the same game.
 		await client("/fixture", form({ date: "2026-11-14", hour: "10", minute: "0", period: "am", competition: "Practice match", opponent: "riverton wolves", video: "live" }));
@@ -95,7 +101,8 @@ describe("fixture from a spreadsheet", () => {
 		expect(await res.text()).toContain("Save it as CSV first");
 	});
 	it("turns away a huge file before reading it", async () => {
-		const res = await makeClient(createTestDeps())("/fixture/sheet", { ...sheet(SAMPLE_CSV), headers: { "Content-Length": "5000000" } });
+		// Over the spreadsheet's own limit, under the most any form may send (app/team-guard.ts), so this route says why.
+		const res = await makeClient(createTestDeps())("/fixture/sheet", { ...sheet(SAMPLE_CSV), headers: { "Content-Length": "1000000" } });
 		expect(res.status).toBe(400);
 		expect(await res.text()).toContain("too big for a fixture");
 	});

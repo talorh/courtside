@@ -14,7 +14,7 @@ The Roster says which family does which game-day duty. Every member sees it; the
 
 - **A family on a duty every week** (a parent who'd rather film every game than score) gets no other duty, and isn't counted when the rest are shared out.
 - **Saving the duties** changes them from this week on; earlier weeks keep what was done, and it still counts. The weeks from next week on are shared out again, and this week stays as families already know it.
-- **A week's own settings:** **No video this week** marks that week's games No video (a tournament that doesn't allow filming). **Scorers only this week** drops the extra duty as well and marks its games No video, so the week has two scorers a game and nothing else. A weekend whose games are all a tournament's starts as scorers only until **All duties this week**.
+- **A week's own settings:** **No video this week** marks that week's games No video (a tournament that doesn't allow filming). **Scorers only this week** drops the extra duty as well and marks its games No video, so the week has two scorers a game and nothing else. A weekend whose games are all a tournament's starts without the extra duty (its video as its games say) until **All duties this week**, so it has both buttons.
 
 ### How a week is filled
 

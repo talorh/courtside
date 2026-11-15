@@ -634,12 +634,18 @@ export const scenarios = [
 		},
 	},
 	{
-		name: "the filmer's recording from another phone can be deleted here to start again",
+		name: "the filmer's recording from another phone can be deleted here to start again, once Yes, delete it says so",
 		phones: ["android"],
 		async run(t) {
 			await t.openGoLive({ recordingVideoId: VIDEO_ID, mine: true });
 			await t.until(() => t.visible("[data-recover-other]"), "the page to say the recording isn't on this phone");
 			await t.tap('[data-act="discard"]');
+			await t.until(() => t.visible("[data-discardask]"), "the page to ask first");
+			t.check(t.harness.calls(`POST /api/uploads/${VIDEO_ID}/abort`).length === 0, "one tap deletes nothing");
+			await t.tap('[data-act="discardno"]');
+			t.check(!(await t.visible("[data-discardask]")) && await t.visible('[data-act="discard"]'), "Keep it closes the question");
+			await t.tap('[data-act="discard"]');
+			await t.tap('[data-act="discardyes"]');
 			await t.until(() => t.harness.calls(`POST /api/uploads/${VIDEO_ID}/abort`).length === 1, "the recording deleted");
 		},
 	},

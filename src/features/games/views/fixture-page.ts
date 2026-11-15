@@ -2,7 +2,6 @@ import { html, type SafeHtml } from "../../../shared/html.ts";
 import { formatGameDate } from "../../../shared/time.ts";
 import { notice, pageHead } from "../../../ui/components.ts";
 import { layout, type PageFrame } from "../../../ui/layout.ts";
-import type { Member } from "../../members/members-repository.ts";
 import { gamePhase, gameTitle } from "../game-format.ts";
 import type { Game, GameWithVideo } from "../games-repository.ts";
 import type { PlayhqFixture } from "../playhq-repository.ts";
@@ -44,9 +43,9 @@ interface FixturePageProps {
 	scores: Map<number, Score>;
 }
 
-/** Live stream or Recorded, for a game still to come or being played (one with a video, or No video, doesn't need it). */
-const planTag = (game: Game, nowLocal: string): SafeHtml | "" => !game.noVideo && gamePhase(game.startsAt, nowLocal) !== "complete"
-	? html` <span class="t src">${game.liveStream ? "Live stream" : "Recorded"}</span>` : "";
+/** No video for a game that won't be filmed; else Live stream or Recorded, for a game still to come or being played. */
+const planTag = (game: Game, nowLocal: string): SafeHtml | "" => game.noVideo ? html` <span class="t src">No video</span>`
+	: gamePhase(game.startsAt, nowLocal) !== "complete" ? html` <span class="t src">${game.liveStream ? "Live stream" : "Recorded"}</span>` : "";
 
 function status({ game, videoStatus }: GameWithVideo, nowLocal: string, live: "streaming" | "saving" | undefined, scored: boolean): SafeHtml {
 	if (videoStatus === "ready") return html`<span class="role c">Has video</span>`;
@@ -63,13 +62,13 @@ function status({ game, videoStatus }: GameWithVideo, nowLocal: string, live: "s
 }
 
 /** Deleting asks first: a game alone comes off the Fixture; a game with its video takes the video and clips with it. */
-function deleteAction(row: GameWithVideo, member: Member): SafeHtml | "" {
+function deleteAction(row: GameWithVideo): SafeHtml {
 	const question = `Delete ${gameTitle(row.game)} (${formatGameDate(row.game.startsAt)})?`;
 	if (row.videoStatus === null) return confirmButton({ action: `/fixture/${row.game.id}/delete`, label: "Delete", question, consequence: "It comes off the Fixture." });
-	return member.role === "manager" ? confirmButton({
+	return confirmButton({
 		action: `/fixture/${row.game.id}/delete-all`, label: "Delete game and video", question,
 		consequence: "The game, its video and its clips are deleted. The files are kept for 24 hours in case it was a mistake, then they're gone for good.",
-	}) : "";
+	});
 }
 
 export function fixturePage(p: FixturePageProps): SafeHtml {
@@ -97,7 +96,7 @@ ${p.editing.fromPlayhq ? html`<p class="small">This game comes from PlayHQ, and 
 <div class="row-actions"><button class="btn primary">Save game</button></div></form></details>${addFixtureForm(fixtureTeamName(p.frame.team.code))}${addSheetForm()}</div>`;
 	const rows = p.games.map((row) => html`<tr><td class="f-date">${formatGameDate(row.game.startsAt)}</td><td class="f-game"><a href="/games/${row.game.id}">${gameTitle(row.game)}</a> ${scoreTag(p.scores.get(row.game.id), p.frame.member.hideScores)}</td>
 <td class="f-type">${competitionTags(row.game)}</td><td class="f-venue">${row.game.venue}${row.game.playhqGone ? html`<span class="gone">Not on PlayHQ any more</span>` : ""}</td><td class="f-status">${status(row, p.nowLocal, p.live.get(row.game.id), p.scores.has(row.game.id))}</td>
-<td class="f-acts row-actions"><a class="btn quiet" href="/fixture?edit=${row.game.id}">Edit</a>${deleteAction(row, p.frame.member)}</td></tr>`);
+<td class="f-acts row-actions"><a class="btn quiet" href="/fixture?edit=${row.game.id}">Edit</a>${deleteAction(row)}</td></tr>`);
 	return layout({ title: "Fixture", frame: p.frame, current: "fixture" }, html`${pageHead(null, "Fixture")}
 ${notice(p.message)}
 <p class="small">Whoever films picks from this list. Add fixture brings in a team's games from a link (PlayHQ, or any public fixture page), Add from a spreadsheet from a CSV, and Add game is for one game, like a practice match. A game that won't be filmed (or wasn't, or whose video was lost): Edit it and set Video to No video.</p>

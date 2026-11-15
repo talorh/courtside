@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { TeamDeps } from "../../app/deps.ts";
-import { conflict, forbidden, notFound } from "../../app/errors.ts";
-import { hasRole } from "../../auth/permissions.ts";
+import { conflict } from "../../app/errors.ts";
 import { localDate } from "../../shared/time.ts";
 import { record } from "../activity/activity-service.ts";
 import { requireGame } from "../games/games-service.ts";
@@ -9,13 +8,10 @@ import type { Member } from "../members/members-repository.ts";
 import { insertUploadVideoWrite } from "../videos/video-writes-repository.ts";
 import { getActiveVideoForGame, getVideo, type Video } from "../videos/videos-repository.ts";
 import { deleteVideo } from "../videos/video-removal-service.ts";
-import {
-	cancelLiveWithRecording, cancelSavedLive, finishLive, getLiveByRecording, getOpenLiveForGame, linkRecordingWrite, type LiveStream,
-} from "./live-repository.ts";
-import { endLive, openLive, switchOff } from "./live-service.ts";
+import { cancelLiveWithRecording, finishLive, getOpenLiveForGame, linkRecordingWrite, type LiveStream } from "./live-repository.ts";
+import { openLive, switchOff } from "./live-service.ts";
 import { footageDue } from "../teams/team-code.ts";
-import { cancelUnrecorded, recordedReason, streamSeconds } from "./live-test-rule.ts";
-import { CAUSE_WORDS, logLive, type StopCause, testWords } from "./live-log.ts";
+import { logLive } from "./live-log.ts";
 import { teamCopy } from "../teams/team-copy.ts";
 
 // 8 MB parts (R2 wants them equal, 5 MB or more): about 25 seconds, so a dropped signal or a closed page costs little.
@@ -93,10 +89,8 @@ export async function closeBrowserLive(deps: TeamDeps, video: Pick<Video, "id" |
 	await logLive(deps, open.startedBy, "live_saved", video.gameId);
 }
 
-/**
- * Cron, for a browser stream: note when it's live (LIVE NOW, activity). Saving is the upload's job; this only
- * tidies up when the recording is gone (deleted to start again, or removed) or finished without closing it.
- */
+/** Cron, for a browser stream: saving is the upload's job, so this only tidies up when the recording is gone (deleted
+ * to start again, or removed) or finished without closing it. */
 export async function advanceBrowserLive(deps: TeamDeps, stream: LiveStream, connected: boolean): Promise<void> {
 	const { db } = deps;
 	const nowIso = deps.now().toISOString();
@@ -106,50 +100,4 @@ export async function advanceBrowserLive(deps: TeamDeps, stream: LiveStream, con
 	if (video && video.status !== "failed") return closeBrowserLive(deps, video);
 	const gone = "The recording from the phone was deleted before it was saved.";
 	if (await cancelLiveWithRecording(db, deps.team.id, stream.id, stream.recordingVideoId!, nowIso, gone)) await switchOff(deps, stream);
-}
-
-/**
- * End game. Under a minute since Go live, or recorded (live-test-rule.ts), it was a test (say, at home): the
- * recording is thrown away before it's uploaded or processed, and the game is free to stream again (the page says why).
- * Nothing recorded at all (Go live opened, the camera never started) is the same, with nothing to throw away.
- * Otherwise the stream ends for good and the recording, still uploading, becomes the game video. All go in the Log.
- */
-export async function stopBrowserLive(deps: TeamDeps, member: Member, gameId: number, page: { recordedSeconds?: number; cause?: StopCause } = {}): Promise<{ status: "ended" } | { status: "test"; seconds: number }> {
-	const { db } = deps;
-	const open = await getOpenLiveForGame(db, deps.team.id, gameId);
-	if (!open) throw notFound("Live stream");
-	if (!open.endRequestedAt && !open.recordingVideoId && await cancelUnrecorded(deps, open)) {
-		await logLive(deps, member.email, "live_test", gameId, "nothing recorded, then End game was tapped");
-		return { status: "test", seconds: 0 };
-	}
-	const video = !open.endRequestedAt && open.recordingVideoId ? await getVideo(db, deps.team.id, open.recordingVideoId) : null;
-	// End game is final, so only the phone streaming (its recording's uploader), a coach or a team manager can.
-	if (video && video.uploadedBy !== member.id && !hasRole(member.role, "coach")) {
-		throw forbidden("Only the parent streaming this game, a coach or a team manager can end it.");
-	}
-	const { seconds, recorded } = video ? await streamSeconds(deps, video, page.recordedSeconds) : { seconds: Infinity, recorded: false };
-	if (video?.status !== "uploading" || seconds >= MIN_RECORDING_SECONDS) {
-		await endLive(deps, gameId);
-		if (!open.endRequestedAt) await logLive(deps, member.email, "live_ended", gameId, page.cause ? CAUSE_WORDS[page.cause] : "");
-		return { status: "ended" };
-	}
-	await deleteVideo(deps, video, "live_test");
-	await finishLive(db, deps.team.id, open.id, "cancelled", deps.now().toISOString(), (recorded ? recordedReason : testReason)(seconds));
-	await switchOff(deps, open);
-	await logLive(deps, member.email, "live_test", gameId, testWords(seconds, recorded, page.cause));
-	return { status: "test", seconds: Math.round(seconds) };
-}
-
-/**
- * Processing finished: a recording under a minute that wasn't caught at End game (say, a pause made it look
- * longer, or End game didn't reach the server) is dropped the same way. True if it was dropped.
- */
-export async function dropShortTest(deps: TeamDeps, video: Video, durationSeconds: number): Promise<boolean> {
-	if (durationSeconds >= MIN_RECORDING_SECONDS) return false;
-	const live = await getLiveByRecording(deps.db, deps.team.id, video.id);
-	if (!live) return false;
-	await deleteVideo(deps, video, "live_test");
-	await cancelSavedLive(deps.db, deps.team.id, live.id, deps.now().toISOString(), testReason(durationSeconds));
-	await logLive(deps, null, "live_test", video.gameId, `${Math.round(durationSeconds)} seconds, found once it was processed`);
-	return true;
 }

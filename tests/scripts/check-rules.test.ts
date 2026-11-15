@@ -1,6 +1,7 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 // @ts-expect-error: a Node script (plain JS), tested here on its own.
-import { COMMENT_DIRS, commentProblems, isCodeFile, LOC_ROOTS, scriptProblems, sourceProblems } from "../../scripts/rules.mjs";
+import { COMMENT_DIRS, COMMENT_FILES, commentProblems, isCodeFile, LOC_ROOTS, scriptProblems, sourceProblems } from "../../scripts/rules.mjs";
 
 describe("the rules npm run check enforces", () => {
 	it("covers the video joiner's folder too: its plain Node .mjs files keep to the line caps and the comment rules", () => {
@@ -8,6 +9,10 @@ describe("the rules npm run check enforces", () => {
 		expect(COMMENT_DIRS).toContain("join");
 		expect(["pipeline.mjs", "index.ts", "watch.js"].map(isCodeFile)).toEqual([true, true, true]);
 		expect(["worker.d.ts", "test-a.mp4", "Dockerfile"].map(isCodeFile)).toEqual([false, false, false]);
+	});
+	it("reads the config files at the repo's root for the comment rules too, and they keep to them", () => {
+		expect(COMMENT_FILES).toEqual(["cloudflare.config.ts", "vite.config.ts", "vitest.config.ts"]);
+		for (const file of COMMENT_FILES) expect(commentProblems(file, readFileSync(file, "utf8")), file).toEqual([]);
 	});
 	it("keeps the ones it had: no barrels, no import * as, SQL in repositories with its team", () => {
 		expect(sourceProblems("src/a.ts", 'export { x } from "./b.ts";\n')).toEqual(["src/a.ts: re-exports from another file (no barrel files)"]);

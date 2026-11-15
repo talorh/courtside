@@ -629,8 +629,9 @@ fieldset.players label{padding:6px 10px;font-size:14px}
 .viewswitch{display:none;background:none;border:0;cursor:pointer;color:rgba(255,255,255,.92);padding:4px 10px;border-radius:6px;font-weight:600;font-size:12.5px;line-height:1.5}
 .viewswitch:hover{background:rgba(255,255,255,.16)}
 .appnav{margin-left:0;flex-basis:100%}
-/* Pull down to refresh, in the Home Screen app (pull-refresh.js): a pill below the top of the screen. */
-.pullhint{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:30;padding:8px 16px;border-radius:999px;background:#fff;color:var(--club-ink);font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}
+/* Pull down to refresh, in the Home Screen app (pull-refresh.js): a white pill below the top of the screen, in the
+   club's deep colour, which takes white text in both themes (the dark theme's --club-ink is too light on white). */
+.pullhint{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:30;padding:8px 16px;border-radius:999px;background:#fff;color:var(--bar);font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,0,0,.25);pointer-events:none}
 .pullhint.ready{background:var(--club);color:#fff}
 /* Help's mock screenshots (faq-mock.ts): small phone screens drawn in HTML, light or dark with the page. What to tap is
    ringed in green; iPhone buttons are iOS blue. */

@@ -13,6 +13,7 @@ import type { TeamSummary } from "../../teams/teams-repository.ts";
 import { adminLayout } from "./admin-layout.ts";
 import { setupProgress } from "../../teams/team-setup.ts";
 import { dueDay } from "./team-close-page.ts";
+import { queueHref } from "./support-page.ts";
 
 /** What a change just did (`?done=`): fixed words only, never anything from the address itself. */
 export const TEAMS_MESSAGES: Record<string, string> = {
@@ -70,7 +71,7 @@ function teamRow(s: TeamSummary, now: Date): SafeHtml {
 	return html`<tr${open ? "" : html` class="past"`}><td class="t-team"><b>${teamLabel(t)}</b><span class="sub">${t.name}</span></td>
 <td class="t-season">${seasonLabel(t.seasonStart)}</td><td class="t-status">${status}</td>
 <td class="t-members">${s.members}</td><td class="t-managers">${s.managers.join(", ") || "None"}</td>
-<td class="t-setup">${setupCell(s)}</td><td class="t-seen">${lastUsed(s.lastSeenAt, now)}</td><td class="t-support">${s.openSupport ? html`<a href="/admin/support">${s.openSupport} open</a>` : "None"}</td>
+<td class="t-setup">${setupCell(s)}</td><td class="t-seen">${lastUsed(s.lastSeenAt, now)}</td><td class="t-support">${s.openSupport ? html`<a href="${queueHref("support", "attention", { team: t.id, owner: "", q: "" })}">${s.openSupport} open</a>` : "None"}</td>
 <td class="t-acts">${actions(t, now)}</td></tr>`;
 }
 

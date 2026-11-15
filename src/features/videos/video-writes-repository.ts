@@ -31,8 +31,9 @@ async function update(db: D1Database, sql: string, params: unknown[]): Promise<v
 export const markUploaded = (db: D1Database, teamId: string, id: number, nowIso: string) =>
 	update(db, "UPDATE videos SET status = 'processing', processing_at = ?, r2_upload_id = NULL WHERE team_id = ? AND id = ? AND status = 'uploading' AND deleted_at IS NULL", [nowIso, teamId, id]);
 
-export const setStreamUid = (db: D1Database, teamId: string, id: number, uid: string) =>
-	update(db, "UPDATE videos SET stream_uid = ? WHERE team_id = ? AND id = ? AND stream_uid IS NULL", [uid, teamId, id]);
+/** False if the video already has a copy (asked for twice at once) or is gone. */
+export const setStreamUid = async (db: D1Database, teamId: string, id: number, uid: string): Promise<boolean> =>
+	(await db.prepare("UPDATE videos SET stream_uid = ? WHERE team_id = ? AND id = ? AND stream_uid IS NULL").bind(uid, teamId, id).run()).meta.changes > 0;
 
 /** Stream no longer has this copy: back to processing with none, so the cron job makes a new one from the original. */
 export const dropStreamCopy = (db: D1Database, teamId: string, id: number, uid: string) =>

@@ -2,7 +2,7 @@
 // `npm run check`.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { COMMENT_DIRS, commentProblems, scriptProblems, sourceProblems } from "./rules.mjs";
+import { COMMENT_DIRS, COMMENT_FILES, commentProblems, scriptProblems, sourceProblems } from "./rules.mjs";
 
 const walk = (dir, wanted, files = []) => {
 	for (const name of readdirSync(dir)) {
@@ -15,9 +15,9 @@ const walk = (dir, wanted, files = []) => {
 };
 const sources = walk("src", (name) => name.endsWith(".ts") && !name.endsWith(".d.ts"));
 const scripts = walk("public", (name) => name.endsWith(".js"));
-// Every file of code, tests, scripts and migrations (the video joiner's too), for its comments.
-const code = COMMENT_DIRS.flatMap((dir) =>
-	walk(dir, (name) => /\.(ts|js|mjs|css|sql)$/.test(name) && !name.endsWith(".d.ts") && name !== "stream-sdk.js"));
+// Every file of code, tests, scripts and migrations (the video joiner's too), and the root's configs, for its comments.
+const code = [...COMMENT_DIRS.flatMap((dir) =>
+	walk(dir, (name) => /\.(ts|js|mjs|css|sql)$/.test(name) && !name.endsWith(".d.ts") && name !== "stream-sdk.js")), ...COMMENT_FILES];
 const problems = [
 	...sources.flatMap((path) => sourceProblems(path, readFileSync(path, "utf8"))),
 	...scripts.flatMap((path) => scriptProblems(path, readFileSync(path, "utf8"))),

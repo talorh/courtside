@@ -68,10 +68,9 @@ for side in (0, 1):
 # The logo decal: cut it out of its white background, then place it on centre court.
 logo = Image.open(sys.argv[1]).convert("RGBA")
 mask = Image.new("L", logo.size, 0)
-from PIL import ImageDraw as D2
 work = logo.convert("RGB").copy()
 for corner in [(0, 0), (logo.width-1, 0), (0, logo.height-1), (logo.width-1, logo.height-1)]:
-    D2.floodfill(work, corner, (255, 0, 255), thresh=60)
+    ImageDraw.floodfill(work, corner, (255, 0, 255), thresh=60)
 wp = work.load(); mp = mask.load()
 for yy in range(logo.height):
     for xx in range(logo.width):

@@ -19,7 +19,7 @@ import { listRoutes, maintenanceRoutes } from "./maintenance-steps.mjs";
 import {
 	busyComputer,
 	busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, QUIET_MINUTES, rebuildHint, sameAsLive, siteFromConfig,
-	STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL, JOINING_SQL,
+	SEGMENTS_SQL, STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL, JOINING_SQL, withLastParts,
 } from "./release-checks.mjs";
 import { pushMain, waitForBuild, workerTag } from "./release-push.mjs";
 
@@ -89,7 +89,7 @@ const streams = query(OPEN_STREAMS_SQL);
 const uploading = query(UPLOADING_SQL);
 const secrets = JSON.parse(readFileSync(site.secretsFile, "utf8"));
 const r2 = createPresigner({ accountId: site.accountId, bucket: site.bucket, accessKeyId: secrets.R2_ACCESS_KEY_ID, secretAccessKey: secrets.R2_SECRET_ACCESS_KEY });
-const uploads = await Promise.all(uploading.map(async (u) => ({ ...u, lastPartAt: ((await r2.listParts(u.r2Key, u.r2UploadId)) ?? []).map((p) => p.uploaded).sort().at(-1) ?? null })));
+const uploads = await withLastParts(uploading, query(SEGMENTS_SQL), (key, uploadId) => r2.listParts(key, uploadId));
 const joins = query(JOINING_SQL);
 const busy = busyOnSite({ streams, uploads, joins, now: new Date(), quietMinutes });
 if (busy.length) stop(`The site is busy: ${busy.join("; ")}. Wait until it has been quiet for ${quietMinutes} minutes.`);

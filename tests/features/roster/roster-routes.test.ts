@@ -237,7 +237,7 @@ describe("roster", () => {
 		const page = await (await makeClient(deps, "p@x.com")("/roster")).text();
 		expect(page).toMatch(/<a href="\/roster" class="big grey" aria-current="page"><svg[^>]*>[\s\S]*?<\/svg>Roster<\/a>/);
 		expect(page).toMatch(/Your family \(Smith\) (is on|has no upcoming)/);
-		expect(page).toContain("two families keep score, one brings the lollies and one films the game, unless filming isn't allowed. A tournament weekend starts as scorers only. Can't make it? Swap with another family, then let Sam know.");
+		expect(page).toContain("two families keep score, one brings the lollies and one films the game, unless filming isn't allowed. A tournament weekend starts without lollies. Can't make it? Swap with another family, then let Sam know.");
 		// Everyone gets the fairness dashboard; only the team manager gets the families panel, just above it.
 		expect(page).toContain('<h2 id="fm-h">Roster fairness</h2>');
 		expect(page).toContain("<b>Fair:</b> every family has as close as possible to an equal share of duties.");
@@ -320,7 +320,11 @@ describe("roster", () => {
 	it("Scorers only this week (a tournament with no lollies and no video) drops the extra duty and the video duty; All duties this week undoes it", async () => {
 		const { deps, manager } = await generated();
 		const weekend = async () => { const page = await (await manager("/roster")).text(); return page.slice(page.indexOf('id="w2026-10-26"'), page.indexOf("</ol>", page.indexOf('id="w2026-10-26"'))); };
-		expect(await weekend()).toContain(">Scorers only this week<");
+		const switches = async () => { const w = await weekend(); return ["scorers-only", "all-duties"].filter((b) => w.includes(`action="/roster/week/2026-10-26/${b}"`)); };
+		// A tournament weekend starts without lollies, its video still on: either way is a tap.
+		expect(await switches()).toEqual(["scorers-only", "all-duties"]);
+		expect(await (await manager("/roster")).text()).toContain("A tournament weekend starts without lollies.");
+		expect(await weekend()).toContain("(a tournament weekend starts without them;");
 		// A tournament weekend starts without lollies; its games still have video until the fixture or the team manager says No video.
 		expect((await slotsOf(deps)).filter((s) => s.week === "2026-10-26").map((s) => s.duty).sort()).toEqual(["scoring", "scoring", "scoring", "scoring", "video", "video"]);
 		expect((await manager("/roster/week/2026-10-26/scorers-only", form({}))).headers.get("Location")).toBe("/roster?done=scorersonly#w2026-10-26");
@@ -333,7 +337,7 @@ describe("roster", () => {
 		expect(page).toContain("Scorers only this week: just the two scorers, and its games are marked No video.");
 		expect(page).toContain('<span class="duty-name">Lollies</span><span class="duty-fams"><span class="duty-fam empty">No lollies</span></span>');
 		expect(page).toContain('<span class="duty-name">Video</span><span class="duty-fams"><span class="duty-fam empty">No video</span></span>');
-		expect(await weekend()).toContain(">All duties this week<");
+		expect(await switches()).toEqual(["all-duties"]);
 		// The match day message and the spreadsheet say so too.
 		expect(await (await manager("/roster/week/2026-10-26/message")).text()).not.toContain("Lollies:");
 		const rows = sheetRows(new Uint8Array(await (await manager("/roster/export.xlsx")).arrayBuffer()));
@@ -344,6 +348,7 @@ describe("roster", () => {
 		expect(all.map((s) => s.duty).sort()).toEqual(["lollies", "lollies", "scoring", "scoring", "scoring", "scoring", "video", "video"]);
 		for (const g of new Set(all.map((s) => s.g))) expect(new Set(all.filter((s) => s.g === g).map((s) => s.f)).size).toBe(4);
 		expect((await weekend()).match(/<span class="duty-name">Lollies<\/span>/g)).toHaveLength(2);
+		expect(await switches()).toEqual(["scorers-only"]);
 		const rows2 = sheetRows(new Uint8Array(await (await manager("/roster/export.xlsx")).arrayBuffer()));
 		expect(String(rows2.find((r) => String(r[1]).includes("Pine Valley"))![4]).split("\n").map((l) => l.split(": ")[0])).toEqual(["Sat 31 Oct, 9:00am", "Sun 1 Nov, 1:00pm"]);
 		expect((await listGamesWithVideoStatus(deps.db, deps.team.id)).map((r) => r.game).every((g) => !g.noVideo)).toBe(true);

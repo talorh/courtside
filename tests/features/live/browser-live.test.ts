@@ -169,23 +169,26 @@ describe("Go live from the browser", () => {
 	});
 
 	it("Delete it and start again: the recording goes, and a new one can start straight away", async () => {
-		const { gameId, client, start, row } = await filming();
-		await client(`/api/uploads/${start.videoId}/abort`, jsonBody({}));
+		const { gameId, client, start, row, later } = await filming();
+		later(3 * 60);
+		expect((await client(`/api/uploads/${start.videoId}/abort`, jsonBody({}))).status).toBe(200);
 		const again = await client(`/api/live/${gameId}/browser`, jsonBody({ mimeType: "video/webm" }));
 		expect(again.status).toBe(201);
 		expect((await row())?.recording_video_id).toBe((await json(again)).data.videoId);
 		// Left deleted and never restarted, the cron closes it.
 		const other = await filming();
+		other.later(3 * 60);
 		await other.client(`/api/uploads/${other.start.videoId}/abort`, jsonBody({}));
 		await runSync(other.deps);
 		expect(await other.row()).toMatchObject({ status: "cancelled" });
 	});
 
 	it("after it was live and its recording was deleted to start again, Go live is ready to start afresh", async () => {
-		const { deps, gameId, client, start } = await filming();
+		const { deps, gameId, client, start, later } = await filming();
 		deps.live.connected.add("live-1");
 		await runSync(deps);
 		deps.live.connected.delete("live-1");
+		later(3 * 60);
 		await client(`/api/uploads/${start.videoId}/abort`, jsonBody({}));
 		const page = await (await client("/live", ANDROID)).text();
 		expect(page).toContain(`data-game="${gameId}" data-recording=""`);

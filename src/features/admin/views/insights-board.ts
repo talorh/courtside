@@ -1,4 +1,4 @@
-// The top of Insights (a landing page, more graphical): what needs an admin, then the whole site on
+// The top of Insights: what needs an admin, then the whole site on
 // one scoreboard, the club's arena board (admin.css), each number with its last 12 weeks where it has them.
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { ICON_CHECK } from "../../../ui/icons.ts";

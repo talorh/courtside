@@ -44,7 +44,7 @@ async function answer(res, signedOut) {
 	// An expired sign-in answers with a redirect to the sign-in page.
 	if (res.type === "opaqueredirect") throw new HttpError(signedOut, 401);
 	const json = await res.json().catch(() => null);
-	if (!res.ok || !json?.ok) throw new HttpError(json?.error?.message ?? `Upload failed (HTTP ${res.status})`, res.status, json?.error?.code ?? null);
+	if (!res.ok || !json?.ok) throw new HttpError(json?.error?.message ?? `The site didn't answer (HTTP ${res.status}). Try again.`, res.status, json?.error?.code ?? null);
 	return json.data;
 }
 

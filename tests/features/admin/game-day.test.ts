@@ -10,7 +10,7 @@ async function gameDay(at = "10:00"): Promise<TestDeps & { clock: (time: string)
 	let now = local(at);
 	const deps = createTestDeps(now);
 	(deps as { now: () => Date }).now = () => now;
-	await seedGame(deps, { startsAt: "2026-11-13T18:40", competition: "Practice match", opponent: "Camberwell U12 Boys 2" });
+	await seedGame(deps, { startsAt: "2026-11-13T18:40", competition: "Practice match", opponent: "Hillcrest U12 Boys 2" });
 	await setAlert(deps, "sync_job", "ok", "The last run was fine");
 	return Object.assign(deps, { clock: (time: string) => { now = local(time); } });
 }
@@ -34,7 +34,7 @@ describe("the game check: each live game, 8 hours before tip-off", () => {
 		deps.clock("10:40");
 		await openInput(deps);
 		await sync(deps);
-		expect(await alert(deps)).toMatchObject({ level: "ok", detail: "1 live game in the next 8 hours: Saints U12 Boys 12.1 Fri 13 Nov 2026, 6:40pm v Camberwell U12 Boys 2. Stream answered with 1,035 minutes free, the Go live input is there, the joiner joined its test files in 12 seconds and the 5-minute job ran just now" });
+		expect(await alert(deps)).toMatchObject({ level: "ok", detail: "1 live game in the next 8 hours: Saints U12 Boys 12.1 Fri 13 Nov 2026, 6:40pm v Hillcrest U12 Boys 2. Stream answered with 1,035 minutes free, the Go live input is there, the joiner joined its test files in 12 seconds and the 5-minute job ran just now" });
 		const first = (await alert(deps))!.checked_at;
 		deps.clock("12:00");
 		await sync(deps);
@@ -44,12 +44,12 @@ describe("the game check: each live game, 8 hours before tip-off", () => {
 
 	it("checks the evening's second game when it's 8 hours away too", async () => {
 		const deps = await gameDay("10:45");
-		await seedGame(deps, { startsAt: "2026-11-13T19:40", competition: "Practice match", opponent: "Eltham 5" });
+		await seedGame(deps, { startsAt: "2026-11-13T19:40", competition: "Practice match", opponent: "Riverton 5" });
 		await sync(deps);
 		expect((await alert(deps))!.detail).toMatch(/^1 live game in the next 8 hours/);
 		deps.clock("11:40");
 		await sync(deps);
-		expect((await alert(deps))!.detail).toMatch(/^2 live games in the next 8 hours: .*v Camberwell U12 Boys 2; .*v Eltham 5\./);
+		expect((await alert(deps))!.detail).toMatch(/^2 live games in the next 8 hours: .*v Hillcrest U12 Boys 2; .*v Riverton 5\./);
 	});
 
 	it("checks again every hour while something's wrong, and the ticket clears by itself once it's fine", async () => {
@@ -70,6 +70,55 @@ describe("the game check: each live game, 8 hours before tip-off", () => {
 		deps.clock("19:00");
 		await sync(deps);
 		expect((await alert(deps))!.level).toBe("ok");
+	});
+
+	it("checks a game 8 hours before tip-off even after Platform's button checked the week", async () => {
+		const deps = await gameDay("09:00");
+		await checkGames(deps);
+		expect((await alert(deps))!.detail).toMatch(/^1 live game in the next 7 days/);
+		expect(await deps.db.prepare("SELECT ready_checked_at FROM games WHERE id = 1").first()).toEqual({ ready_checked_at: null });
+		deps.clock("10:40");
+		await sync(deps);
+		expect((await alert(deps))!.detail).toMatch(/^1 live game in the next 8 hours/);
+	});
+
+	it("checks a game again when it's moved later than the check that looked at it", async () => {
+		const deps = await gameDay("10:40");
+		await sync(deps);
+		await deps.db.prepare("UPDATE games SET starts_at = '2026-11-13T19:40' WHERE id = 1").run();
+		deps.clock("11:00");
+		await sync(deps);
+		expect((await alert(deps))!.detail).toBe("No live games in the next 8 hours");
+		deps.clock("11:40");
+		await sync(deps);
+		expect((await alert(deps))!.detail).toMatch(/^1 live game in the next 8 hours: .*7:40pm/);
+		const second = (await alert(deps))!.checked_at;
+		deps.clock("12:00");
+		await sync(deps);
+		expect((await alert(deps))!.checked_at).toBe(second);
+	});
+
+	it("clears a warning once its game is over, writing the no-games words once", async () => {
+		const deps = await gameDay("10:45");
+		deps.joiner.down = true;
+		await sync(deps);
+		expect((await alert(deps))!.level).toBe("warn");
+		deps.clock("19:00");
+		await sync(deps);
+		expect(await alert(deps)).toMatchObject({ level: "ok", detail: "No live games in the next 8 hours" });
+		expect(await deps.db.prepare("SELECT status FROM support_requests WHERE id = 1").first<{ status: string }>()).toEqual({ status: "resolved" });
+		expect(await deps.db.prepare("SELECT body FROM support_messages ORDER BY id DESC LIMIT 1").first()).toEqual({ body: "Cleared: No live games in the next 8 hours. Resolved by itself." });
+		const cleared = (await alert(deps))!.checked_at;
+		deps.clock("19:30");
+		await sync(deps);
+		expect((await alert(deps))!.checked_at).toBe(cleared);
+	});
+
+	it("doesn't count long-lived alerts that don't touch a game (budgets, AI models) as already up", () => {
+		const alerts = (["budget", "ai_models"] as const).map((kind) => ({ kind, level: "warn" as const, detail: "", since: null, failures: 0, checkedAt: "", ticketId: null }));
+		const verdict = gameDayReadiness({ games: [], storage: { usedMinutes: 65, limitMinutes: 1100 }, joiner: { ok: true, bytes: 1, seconds: 3 }, syncCheckedAt: null, alerts, now: local("11:00"), within: "8 hours", staging: true });
+		expect(verdict.level).toBe("ok");
+		expect(verdict.detail).not.toContain("alerts already up");
 	});
 
 	it("is urgent when Stream doesn't answer, or has too few minutes for the games, or the 5-minute job has stopped", async () => {
@@ -102,7 +151,7 @@ describe("the game check: each live game, 8 hours before tip-off", () => {
 	it("a game set to No video or recorded and uploaded isn't a live game to check", async () => {
 		const deps = await gameDay("11:00");
 		await deps.db.prepare("UPDATE games SET no_video_at = '2026-11-01T00:00:00.000Z'").run();
-		await seedGame(deps, { startsAt: "2026-11-13T19:00", opponent: "Eltham 5" });
+		await seedGame(deps, { startsAt: "2026-11-13T19:00", opponent: "Riverton 5" });
 		await deps.db.prepare("UPDATE games SET live_stream = 0 WHERE id = 2").run();
 		await sync(deps);
 		expect(await alert(deps)).toBeNull();

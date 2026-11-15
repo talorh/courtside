@@ -60,19 +60,23 @@ function competitionOf(raw: string, fallback: Competition): Competition | null {
 
 /** The games in a fixture CSV, and a plain-English problem for each row that couldn't be read. */
 export function readFixtureCsv(text: string, fallback: Competition): { games: ImportedGame[]; problems: string[] } {
-	const [header, ...rows] = csvRows(text);
+	const all = csvRows(text, { blanks: true });
+	// The header is the first row with anything in it; problem rows are numbered as the sheet numbers them, blank ones counted.
+	const first = Math.max(0, all.findIndex((r) => r.some((c) => c.trim() !== "")));
+	const [header, ...rows] = all.slice(first);
 	const keys = (header ?? []).map((h) => COLUMNS[h.trim().toLowerCase()]);
 	if (!keys.includes("date") || !keys.includes("time")) {
 		return { games: [], problems: ["The first row needs the column names, with at least Date and Time. Download the sample to see the layout."] };
 	}
 	const games: ImportedGame[] = [], problems: string[] = [];
 	rows.forEach((cells, i) => {
+		if (cells.every((c) => c.trim() === "")) return;
 		const r: Row = { date: "", time: "", competition: "", round: "", phase: "", opponent: "", venue: "", video: "" };
 		keys.forEach((k, j) => { if (k) r[k] = (cells[j] ?? "").trim(); });
 		const date = parseDate(r.date), time = parseTime(r.time), competition = competitionOf(r.competition, fallback);
 		const why = !date ? `the date "${r.date}" isn't one we can read (use 31/10/2026)` : !time ? `the time "${r.time}" isn't one we can read (use 6:40pm)`
 			: !competition ? `the competition "${r.competition}" should be ${CLUB.league}, Tournament or Practice match` : null;
-		if (why || !date || !time || !competition) { problems.push(`Row ${i + 2}: ${why}.`); return; }
+		if (why || !date || !time || !competition) { problems.push(`Row ${first + i + 2}: ${why}.`); return; }
 		games.push({
 			startsAt: `${date}T${time}`, competition, roundLabel: r.round.slice(0, 40), opponent: (r.opponent || "TBC").slice(0, 80),
 			venue: r.venue.slice(0, 120), noVideo: /^(no|n|false|0|no video|not filmed)$/i.test(r.video),

@@ -585,8 +585,8 @@ and record of the team, except what the download log names (kept its two years).
 
 ### Smaller pages
 
-- **Which team?**, for someone in several teams who hasn't picked one yet, or a site admin. A link to another of your
- teams' games or photos offers to switch.
+- **Which team?**, for someone in several teams who hasn't picked one yet, or a site admin, who also gets Open Admin
+ beneath every team, back to the admin area. A link to another of your teams' games or photos offers to switch.
 - **Not on the list:** a friendly page for an email that got past sign-in but isn't on any team's list ("Ask your team
  manager to sub you in"), with Try again.
 - **On the Home Screen:** the site can be added to a phone's Home Screen as "Courtside" and opens full screen like

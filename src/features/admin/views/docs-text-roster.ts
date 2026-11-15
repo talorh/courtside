@@ -21,8 +21,8 @@ isn't counted when the rest are shared out.</li>
 The weeks from next week on are shared out again, and this week stays as families already know it.</li>
 <li><b>A week's own settings:</b> <b>No video this week</b> marks that week's games No video (a tournament that doesn't
 allow filming). <b>Scorers only this week</b> drops the extra duty as well and marks its games No video, so the week
-has two scorers a game and nothing else. A weekend whose games are all a tournament's starts as scorers only until
-<b>All duties this week</b>.</li></ul>
+has two scorers a game and nothing else. A weekend whose games are all a tournament's starts without the extra duty
+(its video as its games say) until <b>All duties this week</b>, so it has both buttons.</li></ul>
 <h3>How a week is filled</h3>
 ${rosterFillDiagram()}
 <ul class="docs-points">

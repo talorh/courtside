@@ -19,4 +19,4 @@ Most of an admin's work is done from Insights, Teams and Support. Everything her
 | Delete a team tonight | Teams, More, Delete tonight: type the team's code. | From 3am the 5-minute job deletes it, a slice a run: media first, then the rows. Only its download log stays, two years. |
 | Add or remove an admin | Admins: add their email, or remove it. | They sign in like everyone else; the admin area appears for them at once. |
 | Try the jobs on staging | Platform on the staging site: Run the 5-minute job now. | The same code against staging's test data; the 3am job never runs by itself there. |
-| Put up the maintenance page | From a computer with the code: `npm run maintenance -- on` (and `-- off`), with the owner's go-ahead. | Everyone but admins sees Back soon; admins see the real site to check it. |
+| Put up the maintenance page | From a computer with the code: `npm run maintenance -- on` (and `-- off`), with the owner's go-ahead. | Everyone but admins sees Back soon; admins see the real site to check it. The sign-in still opens for anyone, so an admin can sign in. |

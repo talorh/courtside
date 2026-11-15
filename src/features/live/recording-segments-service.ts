@@ -28,10 +28,12 @@ export function leadingRun(parts: StoredPart[]): StoredPart[] {
 	return run;
 }
 
-/** When the newest part of any still-open segment reached R2 (the recording's start if none has). */
+/** When the newest part of any still-open segment reached R2, or the newest segment began if that's later (its first
+ * part may still be going up). */
 export async function lastPartAt(deps: TeamDeps, video: Video): Promise<string> {
-	let latest = video.createdAt;
-	for (const s of await allSegments(deps, video)) {
+	const later = await listSegments(deps.db, deps.team.id, video.id);
+	let latest = later.reduce((at, s) => (s.createdAt > at ? s.createdAt : at), video.createdAt);
+	for (const s of [{ r2Key: video.r2Key!, r2UploadId: video.r2UploadId }, ...later]) {
 		if (!s.r2UploadId) continue;
 		for (const p of (await deps.presigner.listParts(s.r2Key, s.r2UploadId)) ?? []) if (p.uploaded > latest) latest = p.uploaded;
 	}

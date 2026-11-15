@@ -5,6 +5,7 @@ import { getVideo } from "../../../src/features/videos/videos-repository.ts";
 import { form, makeClient } from "../../helpers/app.ts";
 import { createTestDeps } from "../../helpers/fakes.ts";
 import { seedGame, seedVideo } from "../../helpers/seed.ts";
+import { addTeam } from "../../helpers/two-teams.ts";
 
 async function failedJoin() {
 	const deps = createTestDeps();
@@ -47,6 +48,17 @@ describe("Keep the first part", () => {
 		expect(await deps.db.prepare("SELECT level FROM platform_alerts WHERE kind = 'joiner'").first("level")).toBe("urgent");
 		await deleteVideo(deps, (await getVideo(deps.db, deps.team.id, videoId))!, "admin");
 		expect(await deps.db.prepare("SELECT level, detail FROM platform_alerts WHERE kind = 'joiner'").first()).toMatchObject({ level: "ok", detail: expect.stringContaining("deleted") });
+	});
+	it("the alert stays up while another team's game still waits on the joiner, and clears once that's dealt with too", async () => {
+		const { deps, videoId } = await failedJoin();
+		const other = { ...deps, team: await addTeam(deps.db) };
+		const theirs = await seedVideo(other, { gameId: await seedGame(other, { startsAt: "2026-10-14T18:40" }), status: "processing", r2Key: "originals/g14.5-2026/att/live.mp4" });
+		await deps.db.prepare("UPDATE videos SET join_failed_at = '2026-10-15T00:00:00.000Z' WHERE id = ?").bind(theirs).run();
+		const level = () => deps.db.prepare("SELECT level FROM platform_alerts WHERE kind = 'joiner'").first("level");
+		expect((await makeClient(deps)(`/videos/${videoId}/keep-first`, form({ confirm: "yes" }))).status).toBe(303);
+		expect(await level()).toBe("urgent");
+		await deleteVideo(other, (await getVideo(deps.db, other.team.id, theirs))!, "admin");
+		expect(await level()).toBe("ok");
 	});
 	it("refuses while the join hasn't given up", async () => {
 		const { deps, videoId } = await failedJoin();

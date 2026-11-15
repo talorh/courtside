@@ -24,12 +24,13 @@ const BudgetForm = z.object({
 	cur: z.string().max(3).default(""),
 });
 
-/** One season at a time: this one, or any a team was onboarded for (?season=2025, its starting year); its teams in the
- * currency asked for. */
+/** One season at a time: this one (`thisSeason`, the plain address's), or any a team was onboarded for (?season=2025,
+ * its starting year); its teams in the currency asked for. */
 function seasonCosts(c: Costs, url: URL, now: Date) {
-	const cur = currencyOf(url), seasons = [...new Set([seasonOf(now).start, ...c.costs.map((x) => x.team.seasonStart)])].sort((a, b) => b - a);
-	const picked = Number(url.searchParams.get("season")), season = seasons.includes(picked) ? picked : seasonOf(now).start;
-	return { cur, seasons, season, costs: inCurrency(c.costs, cur, c.rate.localPerUsd).filter((x) => x.team.seasonStart === season) };
+	const cur = currencyOf(url), thisSeason = seasonOf(now).start;
+	const seasons = [...new Set([thisSeason, ...c.costs.map((x) => x.team.seasonStart)])].sort((a, b) => b - a);
+	const picked = Number(url.searchParams.get("season")), season = seasons.includes(picked) ? picked : thisSeason;
+	return { cur, seasons, season, thisSeason, costs: inCurrency(c.costs, cur, c.rate.localPerUsd).filter((x) => x.team.seasonStart === season) };
 }
 
 export function costsRoutes(router: AdminRouter): void {
@@ -48,7 +49,7 @@ export function costsRoutes(router: AdminRouter): void {
 		const mine = inCurrency(c.costs, cur, c.rate.localPerUsd).find((x) => x.team.id === params.id);
 		if (!mine) throw notFound("Team");
 		await checkBudgets(deps, inLocal(c));
-		return htmlResponse(costTeamPage({ frame, costs: mine, viewing: c.viewing, cur, rate: c.rate, now: deps.now(), billed: c.bill.rows.length > 0, message: doneMessage(COST_MESSAGES, url) }));
+		return htmlResponse(costTeamPage({ frame, costs: mine, viewing: c.viewing, cur, rate: c.rate, now: deps.now(), thisSeason: seasonOf(deps.now()).start, billed: c.bill.rows.length > 0, message: doneMessage(COST_MESSAGES, url) }));
 	});
 	router.post("/admin/costs/:id/budget", async ({ req, deps, params, viewer }) => {
 		const team = (await costTeams(deps.db)).find((t) => t.id === params.id);

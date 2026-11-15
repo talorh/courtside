@@ -4,16 +4,18 @@ import { CLUB } from "../../../club.ts";
 import { html } from "../../../shared/html.ts";
 import { code, type DocSection, table } from "./docs-blocks.ts";
 import { adminDataDiagram, costFlowDiagram } from "./docs-diagrams-admin.ts";
+import { HOURS_AHEAD } from "../game-day-checks.ts";
 
 export const admin = (): DocSection => ({ id: "admin", title: "The admin area and its figures", body: html`
-<p>The admin area is for site admins only; anyone else gets "Page not found" there. Its pages read every team at
+<p>The admin area is for site admins only; anyone else gets "Page not found" there. An admin gets back to it from any
+team with Admin in the menu, or from Which team? (Open Admin, beneath every team). Its pages read every team at
 once, so each of their queries is a listed exception to the rule that every query names its team (${code("CROSS_TEAM")}
 in ${code("scripts/rules.mjs")}), and they show counts and figures, never a family's email. Each page works its figures out as it opens, from five sources.</p>
 ${adminDataDiagram()}
 ${table(["Page", "What it shows", "Where its figures come from"], [
-		["Insights", "Is the site all right (the Alerts section), what needs an admin, then the whole site in numbers over 12 weeks, when families watch, mobile against desktop, and the teams side by side", "The database only, so it opens quickly: one query for every team's counts, and hourly counts put into the club's weeks in code. Mobile and desktop come from the devices counted each week (view_weeks)"],
+		["Insights", "Is the site all right (the Alerts section), what needs an admin, then the whole site in numbers over 12 weeks, when families watch, mobile against desktop, and the teams side by side", "The database only, so it opens quickly: one query for every team's counts, and hourly counts put into the club's weeks in code, test runs left out (a video thrown away as a test or replaced, or deleted within a day of being made, with its stream, views and clips). A live stream counts as open once it's under way, not when a Go live page is only opened. Mobile and desktop come from the devices counted each week (view_weeks)"],
 		["Insights' Alerts", "Every check as a light, worst first, then what's going on now", "Each alert's saved level (platform_alerts), plus checks made as it opens: the nightly backup and clean-up, Stream answering, videos processing over 4 hours since their processing began, uploads failed in a week, the Worker's errors in a day (Cloudflare's analytics) and sign-ins refused"],
-		["Teams", "Every team that isn't deleted, its season, status, people, setup checklist and open tickets, with Open, View as, Edit, End season, Reopen and Delete tonight", "The teams, their members and the checklist's own rules (team-setup.ts)"],
+		["Teams", "Every team that isn't deleted, its season, status, people, setup checklist and open support questions (each linking to that team's in Support), with Open, View as, Edit, End season, Reopen and Delete tonight", "The teams, their members and the checklist's own rules (team-setup.ts)"],
 		["Support", "The ticket desk: support questions and feature requests as two queues, each with its figures, views (what needs an answer, yours, waiting or a feature request's stage, resolved), and filters by team, owner and words", "support_requests and support_messages; the site's own tickets come from its alerts"],
 		["Platform", "A row for each thing watched with its figure, limit and alert, the 3am job's backup and sweep, and Cloudflare's last 30 days", "The database, each alert's level, the month's emails, the hour's server errors, Stream's API (3 seconds) and Cloudflare's analytics (4 seconds); the page opens without either if they're slow"],
 		["Costs", "What each team costs this month, its season so far and estimated, against its budget, in the club's currency or US$", "Below"],
@@ -69,6 +71,7 @@ ${table(["Alert", "Set by", "From"], [
 		["Team budgets", "Costs, Insights and the 3am job", "Costs' figures, as above"],
 		["AI models", "Platform as it opens, and the 3am job", "Cloudflare's Workers AI catalog, read through the AI binding (no token)"],
 		["Video joiner", "The 3am job (a warning), and the 5-minute job when a game's join gives up (urgent)", "The joiner's own answer to its nightly test join; a game's six failed tries"],
+		["Game check", `The 5-minute job, for each live game ${HOURS_AHEAD} hours before tip-off; Platform's Run the game check now`, "Stream, each game's Go live input, the joiner and the other alerts"],
 	])}
 <p>Each level is saved in ${code("platform_alerts")} with its ticket. A level only drops once its figure is past the
 clearing point, so one sitting on a threshold doesn't flap, and a check never fails its job.</p>`});

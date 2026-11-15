@@ -26,6 +26,8 @@ const CROSS_TEAM = new Set([
 	"src/features/admin/docs-ask-repository.ts",
 	// The Costs page's figures, and Health's: what every team stores and does, for site admins.
 	"src/features/admin/costs-repository.ts", "src/features/admin/costs-bill-repository.ts", "src/features/admin/health-repository.ts",
+	// Whether any team's game still waits after its join gave up: the joiner's alert is the site's one.
+	"src/features/live/join-waiting-repository.ts",
 ]);
 
 const lineOf = (text, index) => text.slice(0, index).split("\n").length;
@@ -95,15 +97,17 @@ const HISTORY = [
 ];
 const COMMENT = /(?:^|\s)(?:\/\/|\/\*+|\*|--)\s(.*)$|\b(?:it|describe)\("([^"]*)"/;
 
-/** Comments (and test names) that say who asked for something or when, in any file of code, tests or migrations. */
 /** The folders whose source files keep to the line caps (check-loc.mjs): the site, its page scripts, the Back soon page
  * and the video joiner. Tests, docs, migrations and scripts aren't counted. */
 export const LOC_ROOTS = ["src", "public", "maintenance", "join"];
 /** Every folder of code, tests, scripts and migrations, for the comment rules (check-rules.mjs). */
 export const COMMENT_DIRS = ["src", "public", "scripts", "tests", "migrations", "maintenance", "join"];
+/** The config files at the repo's root, for the comment rules too. */
+export const COMMENT_FILES = ["cloudflare.config.ts", "vite.config.ts", "vitest.config.ts"];
 /** A file the line caps apply to: TypeScript or JavaScript (the joiner's plain Node .mjs too), not a declaration file. */
 export const isCodeFile = (name) => /\.(ts|js|mjs)$/.test(name) && !name.endsWith(".d.ts");
 
+/** Comments (and test names) that say who asked for something or when, in any file of code, tests or migrations. */
 export function commentProblems(path, text) {
 	return text.split("\n").flatMap((line, i) => {
 		const m = COMMENT.exec(line);

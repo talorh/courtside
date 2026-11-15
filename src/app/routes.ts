@@ -42,7 +42,7 @@ export function buildRouter(): Router {
 	registerFavouriteRoutes(router);
 	registerPhotoPickRoutes(router);
 	registerPhotoRoutes(router);
-	// Before the fixture routes: /fixture/playhq, /fixture/link and so on would otherwise be taken for a game id.
+	// Before the fixture routes: /fixture/link, /fixture/import and so on would otherwise be taken for a game id.
 	registerPlayhqRoutes(router);
 	registerImportRoutes(router);
 	registerFixtureRoutes(router);

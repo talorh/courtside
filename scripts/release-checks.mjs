@@ -16,6 +16,11 @@ export const MAINTENANCE_QUIET_MINUTES = 2;
 export const OPEN_STREAMS_SQL = "SELECT game_id AS gameId, last_live_at AS lastLiveAt, created_at AS createdAt FROM live_streams WHERE status = 'open' AND end_requested_at IS NULL";
 export const UPLOADING_SQL = `SELECT id, game_id AS gameId, r2_key AS r2Key, r2_upload_id AS r2UploadId, created_at AS createdAt FROM videos
 	WHERE status = 'uploading' AND deleted_at IS NULL AND r2_upload_id IS NOT NULL`;
+// A carried-on recording's later segments, each its own R2 upload (segment 1 is the video's own, above): after Carry on
+// streaming, the phone's parts go to the newest one.
+export const SEGMENTS_SQL = `SELECT v.id, v.game_id AS gameId, v.created_at AS createdAt, s.r2_key AS r2Key, s.r2_upload_id AS r2UploadId
+	FROM recording_segments s JOIN videos v ON v.id = s.video_id AND v.team_id = s.team_id
+	WHERE v.status = 'uploading' AND v.deleted_at IS NULL AND s.r2_upload_id IS NOT NULL`;
 // A carried-on recording whose parts are being joined (the 5-minute job and the joiner): a deploy mid-join would be
 // tried again, but it's left to finish.
 export const JOINING_SQL = `SELECT v.id, v.game_id AS gameId, v.join_tried_at AS triedAt FROM videos v
@@ -32,6 +37,21 @@ export function siteFromConfig(text) {
 export function databasesFromConfig(text) {
 	const d = readDeploy(text);
 	return [{ name: d.worker, accountId: d.accountId, d1Id: d.d1Id }];
+}
+
+/**
+ * Each uploading video once, with when its newest part reached R2 across all its uploads (as lastPartAt in
+ * recording-segments-service.ts). `uploads`: UPLOADING_SQL's rows; `segments`: SEGMENTS_SQL's; `listParts(key, uploadId)`:
+ * R2's parts ({ uploaded }), or null for an upload R2 no longer has.
+ */
+export async function withLastParts(uploads, segments, listParts) {
+	const videos = new Map();
+	for (const u of [...uploads, ...segments]) {
+		const v = videos.get(u.id) ?? { id: u.id, gameId: u.gameId, createdAt: u.createdAt, lastPartAt: null };
+		for (const p of (await listParts(u.r2Key, u.r2UploadId)) ?? []) if (!v.lastPartAt || p.uploaded > v.lastPartAt) v.lastPartAt = p.uploaded;
+		videos.set(u.id, v);
+	}
+	return [...videos.values()];
 }
 
 const ago = (iso, now) => `${Math.round((now.getTime() - Date.parse(iso)) / 60_000)} min ago`;

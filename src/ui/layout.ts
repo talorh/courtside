@@ -23,8 +23,8 @@ const NAV: Array<{ key: NavKey; href: string; label: string; role: Role; icon?: 
 	{ key: "live", href: "/live", label: "Go live", role: "filmer", icon: ICON_LIVE, className: "big live", adds: true, film: true },
 	{ key: "roster", href: "/roster", label: "Roster", role: "watcher", icon: ICON_ROSTER, className: "big grey" },
 	{ key: "fixture", href: "/fixture", label: "Fixture", role: "watcher", icon: ICON_CALENDAR, className: "big grey" },
-	// Photos took Help's grey button, so the top bar is no taller than it was; Help is the oval that
-	// says Help at the top right (easier to spot than the round ? it was for a day).
+	// Photos is a grey button beside Roster and Fixture, which keeps the top bar short; Help is the oval that says Help
+	// at the top right, easy to spot.
 	{ key: "photos", href: "/photos", label: "Photos", role: "watcher", icon: ICON_PHOTO, className: "big grey" },
 	{ key: "help", href: "/help", label: "Help", role: "watcher", icon: ICON_HELP, className: "round" },
 	// The team manager's links carry icons for the desktop view's sidebar (desktop.css); the phone's strip hides them.
@@ -64,13 +64,13 @@ export interface LayoutOptions {
 
 /** The team's name at the top opens Which team? when there's another team of theirs to go to: for someone in two or more
  * teams, and for an admin visiting one they aren't in (the way back), with Switch team under it to say so, which
- * makes switching obvious there. Else it's Home, as it was: an admin opens any other team from Admin, Teams, so
+ * makes switching obvious there. Else it's Home: an admin opens any other team from Admin, Teams, so
  * someone in only one team is never asked which. */
 const switchesTeam = (frame: PageFrame) => frame.member.hidden || frame.viewer.memberships.filter((m) => !m.member.hidden).length > 1;
 
 // Every post form says which team its page was for, so a write made after switching team in another window is refused
 // rather than saved to the wrong team. Added here, in one place, so a new form can't leave it out;
-// scripts/check-rules.mjs makes sure every post form is spelled method="post", as this looks for.
+// scripts/rules.mjs makes sure every post form is spelled method="post", as this looks for.
 const POST_FORM = /<form\b[^>]*\bmethod="post"[^>]*>/g;
 const withTeamField = (body: SafeHtml, teamId: string): SafeHtml => {
 	const field = html`<input type="hidden" name="_team" value="${teamId}">`.__html;

@@ -1,5 +1,5 @@
 // Which team owns a game, video, clip or photo, by its site-wide id: for a link to another of the
-// viewer's teams (src/app/other-team.ts). Spans teams by design, so a CROSS_TEAM exception in scripts/check-rules.mjs.
+// viewer's teams (src/app/other-team.ts). Spans teams by design, so a CROSS_TEAM exception in scripts/rules.mjs.
 
 export type Owned = "games" | "videos" | "clips" | "photos";
 

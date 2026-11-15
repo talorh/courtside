@@ -8,6 +8,21 @@ was wrong), the area in bold, then a plain sentence saying what changed for the 
 where ..."). Every deploy adds its lines at the top of today's date, and the deploy (`npm run release`, then Workers
 Builds) sends the top line, in plain words, as its message.
 
+## 15 Nov 2026
+
+- [Fix] **Insights:** Fixed an issue where test runs counted in the weekly charts: a video thrown away as a test, replaced, or deleted within a day of being made no longer counts, with its stream, views and clips, and "live streams open" counts only streams under way, not a Go live page just opened.
+- [Fix] **Platform:** Fixed an issue where Run the game check now stopped that week's games getting their check 8 hours before tip-off; a game moved later is checked again, and the check's alert clears once its game is over.
+- [Fix] **Go live:** Delete it and start again now asks first, Save what was recorded keeps the screen on, and a recording that has only just started is never deleted or saved away from another phone while its first part is still going up.
+- [Fix] **Go live:** Fixed an issue where one team dealing with its stuck video closed the admins' joiner ticket while another team's game was still stuck, and where Carry on streaming could fail for good after a save.
+- [Fix] **Fixture:** Fixed an issue where a PlayHQ fixture stopped checking itself if PlayHQ listed no games for a while between phases; a No video fixture now marks a game it takes over as No video, the Fixture says No video to everyone, and a spreadsheet's problem rows count blank rows.
+- [Fix] **Roster:** A tournament weekend now shows All duties this week as Help says, alongside Scorers only.
+- [Fix] **Costs:** Fixed an issue where next season's costs couldn't be opened once a team was onboarded for it.
+- [Fix] **Closed teams:** Fixed an issue where a team closed tonight said its videos stayed a day longer than they do; removing a team's last team manager says why instead of failing.
+- [Fix] **Maintenance:** An admin can now sign in while maintenance is on, and the release waits for a carried-on recording still uploading.
+- [Fix] **Pull to refresh:** Fixed an issue where the pull-to-refresh hint was hard to read in the dark theme.
+- [Enhancement] **Behind the scenes:** Insights counts the site's own tickets and only removal requests a team manager can see, sign out and Ask give up on a stalled signal, clearer error words, the Documentation brought up to date, and tidier comments and dead code.
+- [Enhancement] **Which team?:** A site admin now has Open Admin beneath every team, so switching teams on a phone can go straight back to the admin area.
+
 ## 14 Nov 2026
 
 - [Fix] **Support:** Fixed an issue where an access request's ticket said it would resolve itself and didn't show who asked: it now shows their name, team and email, with Copy email, and says to write to them from your own email.

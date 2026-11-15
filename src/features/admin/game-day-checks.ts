@@ -1,9 +1,10 @@
 // The game check: are the coming games good to go. The 5-minute job checks each live game once as it comes within 8
-// hours of tip-off (and every hour after while the alert isn't ok); Platform's button checks the week's. The site is
-// asked what they'll need: Stream answering with minutes to spare, each game's Go live input still there, the video
-// joiner joining its test files, the 5-minute job running, and no other alert up. One alert, game_day: ok says what
-// was found, warn or urgent raises a ticket for the admins (alerts-service.ts), and a fine check later clears it.
-// Never throws.
+// hours of tip-off (again if it's moved later, and every hour after while the alert isn't ok); Platform's button checks
+// the week's without counting as any game's 8-hour check. The site is asked what they'll need: Stream answering with
+// minutes to spare, each game's Go live input still there, the video joiner joining its test files, the 5-minute job
+// running, and no other alert up that would touch a game. One alert, game_day: ok says what was found, warn or urgent
+// raises a ticket for the admins (alerts-service.ts), and a fine check, or no live game left in the next 8 hours,
+// clears it. Never throws.
 import type { AppDeps } from "../../app/deps.ts";
 import type { JoinResult } from "../../platform/joiner.ts";
 import { addDays, formatGameDate, localTime } from "../../shared/time.ts";
@@ -21,6 +22,9 @@ const SYNC_LATE_MS = 15 * 60_000;
 export const HOURS_AHEAD = 8;
 const RECHECK_MS = 60 * 60_000;
 const HOUR_MS = 3_600_000;
+/** Long-lived alerts that don't stop a game being filmed or streamed. */
+const NOT_A_GAME: ReadonlyArray<string> = ["game_day", "budget", "ai_models"];
+const NO_GAMES = `No live games in the next ${HOURS_AHEAD} hours`;
 
 export interface GameToCheck { team: string; startsAt: string; opponent: string; input: "there" | "gone" | null }
 type JoinerAnswer = JoinResult | { ok: false; down: string } | null;
@@ -59,7 +63,7 @@ export function gameDayReadiness(p: GameDayInputs): { level: AlertLevel; detail:
 	else if (!p.syncCheckedAt) raise("urgent", "the 5-minute job has never run");
 	else if (p.now.getTime() - Date.parse(p.syncCheckedAt) > SYNC_LATE_MS) raise("urgent", `the 5-minute job hasn't run since ${formatGameDate(localTime(new Date(p.syncCheckedAt)))}`);
 	else fine.push(`the 5-minute job ran ${minutesAgo(p.syncCheckedAt, p.now)}`);
-	const up = p.alerts.filter((a) => a.level !== "ok" && a.kind !== "game_day");
+	const up = p.alerts.filter((a) => a.level !== "ok" && !NOT_A_GAME.includes(a.kind));
 	if (up.length) raise(up.some((a) => a.level === "urgent") ? "urgent" : "warn", `alerts already up: ${up.map((a) => `${KINDS.find((k) => k.kind === a.kind)?.label ?? a.kind} (${a.level})`).join(", ")}`);
 	const detail = wrong.length ? `${games} Not ready: ${wrong.join("; ")}. Otherwise ${list(fine)}` : `${games} ${list(fine)}`;
 	return { level, detail: detail.slice(0, 900) };
@@ -70,8 +74,9 @@ function minutesAgo(iso: string, now: Date): string {
 	return minutes < 1 ? "just now" : `${plural(minutes, "minute")} ago`;
 }
 
-/** Judges `rows` and records the game_day alert: `within` says the window, as the detail does ("8 hours"). */
-async function judge(deps: AppDeps, rows: LiveGame[], within: string): Promise<void> {
+/** Judges `rows` and records the game_day alert: `within` says the window, as the detail does ("8 hours"). `stamp`:
+ * this is the games' 8-hour check. */
+async function judge(deps: AppDeps, rows: LiveGame[], within: string, stamp: boolean): Promise<void> {
 	const now = deps.now();
 	const [storage, joiner, sync, alerts, inputs] = await Promise.all([
 		deps.live.storage().catch(() => null),
@@ -84,30 +89,38 @@ async function judge(deps: AppDeps, rows: LiveGame[], within: string): Promise<v
 	const verdict = gameDayReadiness({ games, storage, joiner, syncCheckedAt: sync?.checkedAt ?? null, alerts, now, within, staging: deps.config.staging });
 	console.log(JSON.stringify({ event: "game_day_check", teamId: null, level: verdict.level, games: games.length, within }));
 	await setAlert(deps, "game_day", verdict.level, verdict.detail);
-	await markReadyChecked(deps.db, rows, now.toISOString());
+	if (stamp) await markReadyChecked(deps.db, rows, now.toISOString());
 }
 
 /** Platform's button: every live game in the next 7 days, now. A failure is logged as a problem, never thrown. */
 export async function checkGames(deps: AppDeps): Promise<void> {
 	try {
 		const now = deps.now();
-		await judge(deps, await liveGamesBetween(deps.db, localTime(now), localTime(addDays(now, 7))), "7 days");
+		await judge(deps, await liveGamesBetween(deps.db, localTime(now), localTime(addDays(now, 7))), "7 days", false);
 	} catch (err) {
 		await alertFailed(deps, "game_day", err);
 	}
 }
 
-/** The 5-minute job's: the live games in the next 8 hours, once any of them hasn't been checked, and again every hour
- * while the alert isn't ok. A failure is logged as a problem, never thrown. */
+/** The 5-minute job's: the live games in the next 8 hours, once any of them hasn't had its 8-hour check, and again
+ * every hour while the alert isn't ok. With none, a game check alert left over is set to ok, once. A failure is logged
+ * as a problem, never thrown. */
 export async function checkComingGames(deps: AppDeps): Promise<void> {
 	try {
 		const now = deps.now();
 		const rows = await liveGamesBetween(deps.db, localTime(now), localTime(new Date(now.getTime() + HOURS_AHEAD * HOUR_MS)));
-		if (!rows.length) return;
 		const was = await getAlert(deps.db, "game_day");
+		if (!rows.length) {
+			if (was && (was.level !== "ok" || was.detail !== NO_GAMES)) await setAlert(deps, "game_day", "ok", NO_GAMES);
+			return;
+		}
 		const again = was !== null && was.level !== "ok" && now.getTime() - Date.parse(was.checkedAt) >= RECHECK_MS;
-		if (rows.some((g) => g.readyCheckedAt === null) || again) await judge(deps, rows, `${HOURS_AHEAD} hours`);
+		if (rows.some((g) => due(g)) || again) await judge(deps, rows, `${HOURS_AHEAD} hours`, true);
 	} catch (err) {
 		await alertFailed(deps, "game_day", err);
 	}
 }
+
+/** A game is due its 8-hour check until a check has looked at it within 8 hours of its tip-off: one from before that
+ * (it's since been moved later) doesn't count. Compared in the club's wall time, as starts_at is. */
+const due = (g: LiveGame) => g.readyCheckedAt === null || localTime(new Date(Date.parse(g.readyCheckedAt) + HOURS_AHEAD * HOUR_MS)) < g.startsAt;

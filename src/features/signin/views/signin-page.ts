@@ -1,7 +1,6 @@
 import { CLUB } from "../../../club.ts";
-// The sign-in page, in the look of the Access page it replaced (the same,
-// without the Cloudflare Access banner): the green page, the white card with the logo, "Log in to the site
-// Site", Email, Send login code, and the grey footer. Two steps on the one address: the email, then the code it was sent.
+// The sign-in page: the page in the club's deep colour, the white card with the logo, "Log in to" the site's name, Email,
+// Send login code, and the grey footer. Two steps on the one address: the email, then the code it was sent.
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { TURNSTILE_ACTION } from "../../../platform/turnstile.ts";
 import { entryPage } from "../../../ui/status-pages.ts";

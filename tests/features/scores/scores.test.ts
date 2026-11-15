@@ -18,7 +18,7 @@ const final = (home: number, away: number, status = "FINAL"): PlayhqResult => ({
 async function playhqGame(o: { noVideo?: boolean } = {}) {
 	const deps = createTestDeps();
 	deps.playhq.teams.set("8fab8b8c", { name: "Saints U12 Boys 1", games: [{ id: "g1", round: "Round 1", date: "2026-10-30", time: "18:40", opponent: "Hillcrest U12 Boys 3", venue: "Saints Stadium, Court 1" }] });
-	await makeClient(deps)("/fixture/playhq", form({ url: LINK, competition: "VJBL", ...(o.noVideo ? { noVideo: "1" } : {}) }));
+	await makeClient(deps)("/fixture/link", form({ url: LINK, competition: "VJBL", ...(o.noVideo ? { noVideo: "1" } : {}) }));
 	const [{ game }] = await listGamesWithVideoStatus(deps.db, deps.team.id);
 	return { deps, gameId: game!.id };
 }
@@ -118,6 +118,17 @@ describe("scores", () => {
 		const fixtureId = (await deps.db.prepare("SELECT id FROM playhq_fixtures").first<{ id: number }>())!.id;
 		await makeClient(deps)(`/fixture/playhq/${fixtureId}/check`, form({}));
 		expect(await scoreOf(deps, gameId)).toEqual({ ours: 39, opponent: 55, source: "playhq" });
+	});
+	it("PlayHQ: a final score Check now couldn't save is a problem in the Log, and the check itself still counts", async () => {
+		const { deps } = await playhqGame();
+		deps.playhq.results.set("g1", final(39, 55));
+		at(deps, "2026-10-30T08:20:00Z");
+		await deps.db.prepare("CREATE TRIGGER no_scores BEFORE INSERT ON game_scores BEGIN SELECT RAISE(ABORT, 'disk full'); END").run();
+		const fixtureId = (await deps.db.prepare("SELECT id FROM playhq_fixtures").first<{ id: number }>())!.id;
+		const res = await makeClient(deps)(`/fixture/playhq/${fixtureId}/check`, form({}));
+		expect(res.headers.get("Location")).toBe("/fixture?done=playhqchecked");
+		const problems = await deps.db.prepare("SELECT what, detail FROM problems WHERE team_id = ? AND kind = 'site_problem'").bind(deps.team.id).all();
+		expect(problems.results).toEqual([{ what: "PlayHQ's final scores couldn't be read (Check now)", detail: expect.stringContaining("disk full") }]);
 	});
 
 	it("PlayHQ: a game from a fixture set to No video still gets its final score (nothing's filmed, the result still counts)", async () => {

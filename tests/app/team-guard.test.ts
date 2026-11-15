@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Router } from "../../src/app/router.ts";
-import { writeTeam } from "../../src/app/team-guard.ts";
+import { MAX_FORM_BYTES, writeTeam } from "../../src/app/team-guard.ts";
 import { handleRequest } from "../../src/app/handle-request.ts";
 import { buildAdminRouter } from "../../src/features/admin/admin-routes.ts";
 import { ORIGIN, MANAGER } from "../helpers/app.ts";
@@ -48,6 +48,28 @@ describe("what a write says its team is", () => {
 		expect(await writeTeam(new Request(`${ORIGIN}/api/x`, { method: "POST", body: "{}", headers: { "Content-Type": "application/json" } }))).toBeNull();
 		const broken = new Request(`${ORIGIN}/notes`, { method: "POST", headers: { "Content-Type": "multipart/form-data; boundary=x" }, body: "not a form" });
 		await expect(writeTeam(broken)).rejects.toMatchObject({ status: 400 });
+	});
+	it("refuses a form too big for any page's form (413) by its Content-Length, before reading any of it", async () => {
+		let pulls = 0;
+		const body = new ReadableStream({ pull(c) { if (++pulls > 48) c.close(); else c.enqueue(new Uint8Array(65_536)); } });
+		const req = new Request(`${ORIGIN}/notes`, { method: "POST", headers: { "Content-Type": "multipart/form-data; boundary=x", "Content-Length": String(MAX_FORM_BYTES + 1) }, body, duplex: "half" } as RequestInit);
+		await expect(writeTeam(req)).rejects.toMatchObject({ status: 413, code: "too_big" });
+		expect(pulls).toBeLessThanOrEqual(1);
+	});
+	it("with no Content-Length, reads a form only up to the most any page sends, then refuses it (413)", async () => {
+		let sent = 0;
+		const body = new ReadableStream({ pull(c) { if (sent >= 6_000_000) return c.close(); sent += 65_536; c.enqueue(new Uint8Array(65_536)); } });
+		const req = new Request(`${ORIGIN}/notes`, { method: "POST", headers: { "Content-Type": "multipart/form-data; boundary=x" }, body, duplex: "half" } as RequestInit);
+		await expect(writeTeam(req)).rejects.toMatchObject({ status: 413, code: "too_big" });
+		expect(sent).toBeLessThan(MAX_FORM_BYTES + 4 * 65_536);
+	});
+	it("still reads the biggest form a page sends: a spreadsheet at its own limit, with no Content-Length too", async () => {
+		const form = () => { const f = new FormData(); f.set("_team", B12); f.set("file", new File(["x".repeat(320_000)], "games.csv")); return f; };
+		expect(await writeTeam(new Request(`${ORIGIN}/fixture/sheet`, { method: "POST", body: form() }))).toEqual({ teamId: B12, from: "form" });
+		const sized = new Request(`${ORIGIN}/fixture/sheet`, { method: "POST", body: form() });
+		const streamed = new Request(`${ORIGIN}/fixture/sheet`, { method: "POST", headers: { "Content-Type": sized.headers.get("Content-Type")! }, body: sized.body, duplex: "half" } as RequestInit);
+		expect(await writeTeam(streamed)).toEqual({ teamId: B12, from: "form" });
+		expect(((await streamed.formData()).get("file") as File).size).toBe(320_000);
 	});
 });
 
@@ -98,6 +120,13 @@ describe("the guard on every write", () => {
 		const deps = await twoTeams();
 		const res = await post(deps, "/api/save", { email: MANAGER, body: "x", headers: { "X-Courtside-Team": G14_5.id } });
 		expect(await res.json()).toEqual({ team: G14_5.id, got: "x" });
+	});
+
+	it("answers a form too big for any page with the error page (413), and the handler never runs", async () => {
+		const deps = await twoTeams();
+		const res = await post(deps, "/notes", { body: "x", headers: { "Content-Type": "multipart/form-data; boundary=x", "Content-Length": String(MAX_FORM_BYTES + 1) } });
+		expect(res.status).toBe(413);
+		expect(await res.text()).toContain("too big to send. Choose a smaller file.");
 	});
 
 	it("still refuses a cross-site post before reading anything", async () => {

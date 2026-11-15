@@ -126,7 +126,7 @@ export async function unlinkedGamesOn(db: D1Database, teamId: string, competitio
 }
 
 /** Adds the game, or (with `gameId`) brings it up to date with PlayHQ and links it. Already added: left alone.
- * `noVideoAt`: a new game from a No video fixture comes in marked No video. */
+ * `noVideoAt`: a game a No video fixture adds or takes over is marked No video, unless it has a video already. */
 export function playhqGameWrite(db: D1Database, teamId: string, fixtureId: number, playhqGameId: string, input: GameInput, gameId: number | null, noVideoAt: string | null = null) {
 	const values = [input.startsAt, input.competition, input.roundLabel, input.opponent, input.venue, phaseFor(input), playhqGameId, fixtureId];
 	if (gameId === null) {
@@ -134,7 +134,8 @@ export function playhqGameWrite(db: D1Database, teamId: string, fixtureId: numbe
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(teamId, ...values, noVideoAt);
 	}
 	return db.prepare(`UPDATE games SET starts_at = ?, competition = ?, round_label = ?, opponent = ?, venue = ?, phase = ?, playhq_game_id = ?,
-		playhq_fixture_id = ?, playhq_gone_at = NULL WHERE team_id = ? AND id = ? AND deleted_at IS NULL`).bind(...values, teamId, gameId);
+		playhq_fixture_id = ?, playhq_gone_at = NULL, no_video_at = COALESCE(no_video_at, CASE WHEN EXISTS (SELECT 1 FROM videos v WHERE v.team_id = games.team_id
+		AND v.game_id = games.id AND v.deleted_at IS NULL AND v.status <> 'failed') THEN NULL ELSE ? END) WHERE team_id = ? AND id = ? AND deleted_at IS NULL`).bind(...values, noVideoAt, teamId, gameId);
 }
 
 /** Marks the fixture's games PlayHQ no longer lists (never deletes them). */

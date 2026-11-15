@@ -159,7 +159,10 @@ describe("the Teams page", () => {
 	});
 
 	it("lists current teams, then closed ones, each with its numbers and a way to open it; deleted teams aren't there", async () => {
-		const page = await (await makeClient(await teams())("/admin/teams")).text();
+		const deps = await teams();
+		// A feature request is in the other queue: Support's count is the support questions its link lists.
+		await deps.db.prepare("INSERT INTO support_requests (team_id, member_id, kind, topic, message, contact, status, created_at) VALUES (?, (SELECT id FROM members WHERE team_id = ? AND role = 'manager' LIMIT 1), 'feature', 'other', 'Idea', 'x', 'new', '2026-10-14T00:00:00.000Z')").bind(G14_5.id, G14_5.id).run();
+		const page = await (await makeClient(deps)("/admin/teams")).text();
 		const table = page.slice(page.indexOf("<table"));
 		const order = ["Saints B12.1", "Saints G14.5", "Past seasons", "Saints B14.2"].map((s) => table.indexOf(`>${s}<`));
 		expect(order.every((at, i) => at > 0 && (i === 0 || at > order[i - 1]!))).toBe(true);
@@ -167,10 +170,19 @@ describe("the Teams page", () => {
 		expect(page).not.toContain("B10.1");
 		const row = (label: string) => page.slice(page.indexOf(`<b>${label}</b>`), page.indexOf("</tr>", page.indexOf(`<b>${label}</b>`)));
 		expect(row("Saints B12.1")).toMatch(/2026\/27.*Active.*3.*Sam Rivers.*Today.*None/s);
-		expect(row("Saints G14.5")).toMatch(/2026\/27.*Active.*2.*Jane Citizen.*Yesterday.*<a href="\/admin\/support">1 open<\/a>/s);
+		expect(row("Saints G14.5")).toMatch(/2026\/27.*Active.*2.*Jane Citizen.*Yesterday.*<a href="\/admin\/support\?team=g14\.5-2026">1 open<\/a>/s);
 		expect(row("Saints B14.2")).toMatch(/2026\/27.*Season over.*1.*Sam Example.*Thu 1 Oct 2026.*None/s);
 		expect(row("Saints G14.5")).toContain(`<form method="post" action="/teams/switch" class="inline"><input type="hidden" name="team" value="${G14_5.id}"><input type="hidden" name="next" value="/"><button class="btn primary" aria-label="Open Saints G14.5">Open</button></form>`);
 		expect(page).toContain('<a class="btn primary" href="/admin/teams/new">');
+	});
+
+	it("a team's Last seen is its listed people's, not someone since removed", async () => {
+		const deps = await teams();
+		await deps.db.prepare("INSERT INTO members (team_id, email, role, last_seen_at, removed_at) VALUES ('b14.2-2026', 'gone@x.com', 'watcher', '2026-10-14T00:00:00.000Z', '2026-10-14T01:00:00.000Z')").run();
+		const page = await (await makeClient(deps)("/admin/teams")).text();
+		const row = page.slice(page.indexOf("<b>Saints B14.2</b>"), page.indexOf("</tr>", page.indexOf("<b>Saints B14.2</b>")));
+		expect(row).toContain("Thu 1 Oct 2026");
+		expect(row).not.toContain("Yesterday");
 	});
 });
 

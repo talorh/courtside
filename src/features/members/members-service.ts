@@ -52,13 +52,16 @@ async function listedMember(db: D1Database, teamId: string, memberId: number): P
 	return member;
 }
 
+/** Refuses to take away a member who is the team's last listed team manager (the SQL guards the same rule against a race). */
+async function keepsAManager(db: D1Database, teamId: string, member: Member): Promise<void> {
+	if (member.role === "manager" && (await countActiveManagers(db, teamId)) <= 1) throw conflict("The team needs at least one team manager.");
+}
+
 /** Saves a member's name and role, and returns the person as they were before. The team must always keep at least one
  * team manager. */
 export async function updateMember(db: D1Database, teamId: string, memberId: number, details: { name: string; role: Role }): Promise<Member> {
 	const member = await listedMember(db, teamId, memberId);
-	if (member.role === "manager" && details.role !== "manager" && (await countActiveManagers(db, teamId)) <= 1) {
-		throw conflict("The team needs at least one team manager.");
-	}
+	if (details.role !== "manager") await keepsAManager(db, teamId, member);
 	await updateMemberDetails(db, teamId, memberId, { name: details.name.trim(), role: details.role });
 	return member;
 }
@@ -82,10 +85,12 @@ export function memberActivity(members: Member[], now: Date): MemberActivity {
 	return activity;
 }
 
-/** Team managers can't remove themselves, so the acting one always remains. */
+/** Team managers can't remove themselves. A site admin acts through a hidden membership, which isn't a team manager the
+ * team keeps, so removing the team's last one is refused too. */
 export async function removeMember(db: D1Database, teamId: string, actorId: number, memberId: number, now: Date): Promise<Member> {
 	if (actorId === memberId) throw conflict("You can't remove yourself.");
 	const member = await listedMember(db, teamId, memberId);
+	await keepsAManager(db, teamId, member);
 	await markMemberRemoved(db, teamId, memberId, now.toISOString());
 	return member;
 }

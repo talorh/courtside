@@ -1,7 +1,7 @@
 import { CLUB } from "../../../club.ts";
-// The admin area's frame (a landing page, Insights first, more modern): on a computer a sidebar in the club's deep colour, a
-// sidebar, on a phone one row at the top with the sections in a row that scrolls sideways (admin.css, admin.js). Insights
-// shows alerts that aren't ok and Support tickets waiting; light or dark and sign out stay at hand (no team name).
+// The admin area's frame, Insights first: on a computer a sidebar in the club's deep colour, on a phone one row at the
+// top with the sections in a row that scrolls sideways (admin.css, admin.js). Insights shows alerts that aren't ok and
+// Support tickets waiting; light or dark and sign out stay at hand (no team name).
 import type { AdminFrame } from "../../../app/admin-router.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { ICON_BOOK, ICON_CHART, ICON_CLOCK, ICON_COINS, ICON_DOOR, ICON_INBOX, ICON_LIST, ICON_PEOPLE, ICON_SERVER, ICON_SHIELD } from "../../../ui/icons.ts";

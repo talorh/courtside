@@ -10,7 +10,7 @@ First, the top of Insights says what's wrong. Then one of these, each spelt out 
 
 | Problem | What to do |
 | --- | --- |
-| A fix will take a while | Switch the maintenance page on: everyone but admins sees Back soon, and admins see the real site to check it |
+| A fix will take a while | Switch the maintenance page on: everyone but admins sees Back soon, and admins see the real site to check it (the sign-in still opens, so an admin can sign in) |
 | A bad deploy | Roll the Worker back to its previous version in the Cloudflare dashboard (its secrets and bindings stay) |
 | A bad change to the data | D1's Time Travel puts the database back to any minute in the last 30 days |
 | The database itself is gone | Restore the newest nightly backup from R2 into a new database, with the restore script |

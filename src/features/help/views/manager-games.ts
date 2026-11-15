@@ -58,7 +58,7 @@ turn.</p>` : ""}
 ${shot("roster-duties", "The Roster's Team duties panel: An extra duty ticked with its name Lollies and who does it, Video ticked with who films, and Save duties", 358, 626)}`)}
 ${faqItem("g-swap", "Swapping a week by hand", html`<p>Tap <b>Change</b> on the week, pick the families and tap <b>Save week</b>. A change
 made by hand stays put when the roster is generated again. A family can only do one duty a game.</p>
-${h.duties.lollies ? html`<p class="small">A tournament weekend starts with fewer duties. For all of them, tap <b>Change</b> on it, then
+${h.duties.lollies ? html`<p class="small">A tournament weekend starts without ${h.duties.lolliesLabel.toLowerCase()}. For all the duties, tap <b>Change</b> on it, then
 <b>All duties this week</b>.</p>` : ""}
 ${shot("roster-change", "A week on the Roster with Change open: a family picker for Video, Scoring 1, Scoring 2 and Lollies, each showing Roster's pick, then Save week", 343, 952)}`)}
 ${faqItem("g-away", "A family away for a while", html`<p>A child away or injured for a few weeks? Under <b>Families on the roster</b>, tap

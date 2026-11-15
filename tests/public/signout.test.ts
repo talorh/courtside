@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const realTimeout = AbortSignal.timeout;
 afterEach(() => {
+	AbortSignal.timeout = realTimeout;
 	vi.unstubAllGlobals();
 	vi.resetModules();
 });
@@ -19,7 +21,7 @@ async function open() {
 		return e;
 	};
 	const door = element();
-	const fetch = vi.fn(async () => new Response("{\"ok\":true}", { status: 200 }));
+	const fetch = vi.fn(async (_url: string, _init?: RequestInit): Promise<Response> => new Response("{\"ok\":true}", { status: 200 }));
 	const assign = vi.fn();
 	vi.stubGlobal("fetch", fetch);
 	vi.stubGlobal("location", { assign });
@@ -40,7 +42,7 @@ describe("signing out (the door at the top right)", () => {
 		expect(page.texts()).toContain("Sign out?");
 		expect(page.fetch).not.toHaveBeenCalled();
 		await page.buttonNamed("Sign out").onclick!();
-		expect(page.fetch).toHaveBeenCalledWith("/signout", { method: "POST", headers: { Accept: "application/json" }, cache: "no-store" });
+		expect(page.fetch).toHaveBeenCalledWith("/signout", { method: "POST", headers: { Accept: "application/json" }, cache: "no-store", signal: expect.any(AbortSignal) });
 		expect(page.texts()).toContain("Signed out");
 		const again = page.buttonNamed("Sign in again");
 		expect(again.disabled).toBeFalsy();
@@ -57,5 +59,23 @@ describe("signing out (the door at the top right)", () => {
 		page.fetch.mockResolvedValueOnce(new Response("", { status: 503 }));
 		await page.buttonNamed("Sign out").onclick!();
 		expect(page.texts()).not.toContain("Signed out");
+	});
+	it("gives up after 15 seconds on a stalled signal, so the question can be closed or tried again", async () => {
+		const asked: number[] = [];
+		const gaveUp = new AbortController();
+		AbortSignal.timeout = (ms: number) => { asked.push(ms); return gaveUp.signal; };
+		const page = await open();
+		page.fetch.mockImplementationOnce((_url: string, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+			init?.signal?.addEventListener("abort", () => reject(new DOMException("The operation timed out.", "TimeoutError")));
+		}));
+		page.door.on.click!({ preventDefault: () => {} });
+		const tapped = page.buttonNamed("Sign out").onclick!();
+		expect(page.buttonNamed("Signing out…").disabled).toBe(true);
+		gaveUp.abort();
+		await tapped;
+		expect(asked).toEqual([15_000]);
+		expect(page.texts()).toContain("Couldn't reach the site. Check your connection, then try again.");
+		expect(page.buttonNamed("Sign out").disabled).toBe(false);
+		expect(page.buttonNamed("Cancel").disabled).toBe(false);
 	});
 });

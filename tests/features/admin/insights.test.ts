@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { makeClient } from "../../helpers/app.ts";
 import { B12_1, createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 import { addMember, addTeam, G14_5 } from "../../helpers/two-teams.ts";
+import { hourlyActivity } from "../../../src/features/admin/insights-repository.ts";
+import { healthCounts } from "../../../src/features/admin/health-repository.ts";
 
 // Today in the tests: Thu 15 Oct 2026, 11am in the club's time zone (00:00 UTC), so this week starts Mon 12 Oct.
 const run = (deps: TestDeps, sql: string, ...args: unknown[]) => deps.db.prepare(sql).bind(...args).run();
@@ -28,7 +30,7 @@ async function site() {
 	await run(deps, "INSERT INTO downloads (team_id, video_id, member_id, kind, created_at) VALUES (?, ?, ?, 'hd', '2026-10-12T00:00:00.000Z')", b, video, sam);
 	// A photo downloaded too: a download is a download, whatever it is.
 	await run(deps, "INSERT INTO media_downloads (team_id, member_id, kind, item_id, name, created_at) VALUES (?, ?, 'photo', 1, 'p.jpg', '2026-10-12T01:00:00.000Z')", b, sam);
-	await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, created_at) VALUES (?, ?, 'Henry scores', 10, 20, 'ready', '2026-10-12T02:00:00.000Z')", b, video);
+	await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, created_at) VALUES (?, ?, 'Jordan scores', 10, 20, 'ready', '2026-10-12T02:00:00.000Z')", b, video);
 	for (const [id, deleted] of [["img-1", null], ["img-2", "2026-10-13T00:00:00.000Z"]] as const) {
 		await run(deps, `INSERT INTO photos (team_id, image_id, taken_at, width, height, bytes, uploaded_by, delete_after, created_at, deleted_at)
 			VALUES (?, ?, '2026-10-10T18:00:00', 800, 600, 1000, ?, '2027-12-31T13:00:00.000Z', '2026-10-13T00:00:00.000Z', ?)`, b, id, sam, deleted);
@@ -71,6 +73,18 @@ describe("Insights, the admin area's landing page (graphical, what needs attenti
 		expect(html).toMatch(/<section class="healthbanner urgent" role="alert">[^]*?<h2>1 urgent, \d+ warnings<\/h2>/);
 		expect(html.indexOf('<section class="healthbanner')).toBeLessThan(html.indexOf('<ul class="attention"'));
 		expect(html.indexOf('<ul class="attention"')).toBeLessThan(html.indexOf('<section class="scoreboard"'));
+	});
+
+	it("lists the site's own tickets with no team (an access request, a bounced address, a failed video), not the alerts' tickets", async () => {
+		const deps = createTestDeps();
+		const ticket = (kind: string, status = "new") => run(deps, "INSERT INTO support_requests (source, alert_kind, title, topic, message, status, created_at, updated_at) VALUES ('site', ?, 'T', 'platform', 'M', ?, '2026-10-14T00:00:00.000Z', '2026-10-14T00:00:00.000Z')", kind, status);
+		await ticket("access:new@x.com");
+		await ticket("video_failed:3");
+		await ticket("bounced:old@x.com", "resolved");
+		await ticket("images");
+		const html = await page(deps);
+		const items = [...html.matchAll(/<li class="att (\w+)"><p>(.*?)<\/p><a class="btn" href="([^"]+)">([^<]+)<\/a><\/li>/g)].map((m) => m.slice(1).join(" | "));
+		expect(items).toEqual(["warn | 2 tickets from the site are waiting in Support (access requests, bounced addresses, videos that couldn&#39;t be processed). | /admin/support | Open Support"]);
 	});
 
 	it("needs no list when nothing needs an admin: the banner says what the checks found", async () => {
@@ -186,6 +200,20 @@ describe("Insights, the admin area's landing page (graphical, what needs attenti
 		expect(b12.match(/<svg class="meter"/g)).toHaveLength(2);
 	});
 
+	it("counts only the removal requests a team manager can see: none for a clip, its video or a photo that's gone", async () => {
+		const deps = await site();
+		const b = B12_1.id;
+		const gone = (await run(deps, `INSERT INTO videos (team_id, game_id, status, stream_uid, duration_seconds, delete_after, created_at, deleted_at)
+			VALUES (?, 1, 'ready', 'v2', 60, '2027-12-31T13:00:00.000Z', '2026-10-11T01:00:00.000Z', '2026-10-12T00:00:00.000Z')`, b)).meta.last_row_id;
+		const clip = (await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, created_at) VALUES (?, ?, 'Gone with its video', 1, 5, 'ready', '2026-10-11T02:00:00.000Z')", b, gone)).meta.last_row_id;
+		const deletedClip = (await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, created_at, deleted_at) VALUES (?, 1, 'Deleted', 1, 5, 'ready', '2026-10-11T02:00:00.000Z', '2026-10-12T00:00:00.000Z')", b)).meta.last_row_id;
+		for (const id of [clip, deletedClip]) await run(deps, "INSERT INTO clip_removal_requests (team_id, clip_id, member_id, created_at) VALUES (?, ?, 1, '2026-10-14T00:00:00.000Z')", b, id);
+		await run(deps, "INSERT INTO photo_removal_requests (team_id, photo_id, member_id, created_at) VALUES (?, 2, 1, '2026-10-14T00:00:00.000Z')", b);
+		const html = await page(deps);
+		expect(html).toContain("Saints B12.1: 1 removal request waiting for the team manager.");
+		expect(rowText(html, "Saints B12.1")).toMatch(/ 1$/);
+	});
+
 	it("says what stands out", async () => {
 		const html = await page(await site());
 		for (const line of [
@@ -204,6 +232,39 @@ describe("Insights, the admin area's landing page (graphical, what needs attenti
 		const html = await page(deps);
 		expect(html).toContain("<li>1 of 1 video came from a live stream; the rest were recorded and uploaded.</li>");
 		expect(html).toContain("<b>1</b><span>live stream saved</span>");
+	});
+
+	it("leaves test runs out of the weeks: a video deleted within a day of being made, or thrown away as a test or replaced", async () => {
+		const deps = await site();
+		const game = (await run(deps, "INSERT INTO games (team_id, starts_at, competition, round_label, opponent) VALUES (?, '2026-10-12T18:40', 'Practice match', '', 'Test')", B12_1.id)).meta.last_row_id;
+		const add = async (uid: string, created: string, deleted: string | null, reason: string | null) => {
+			const id = (await run(deps, `INSERT INTO videos (team_id, game_id, status, stream_uid, duration_seconds, delete_after, created_at, deleted_at, deleted_reason)
+				VALUES (?, ?, 'ready', ?, 120, '2027-12-31T13:00:00.000Z', ?, ?, ?)`, B12_1.id, game, uid, created, deleted, reason)).meta.last_row_id;
+			await run(deps, "INSERT INTO live_streams (team_id, game_id, live_input_uid, status, created_at, recording_video_id) VALUES (?, ?, ?, 'saved', ?, ?)", B12_1.id, game, `in-${uid}`, created, id);
+			await run(deps, "INSERT INTO video_views (team_id, video_id, member_id, opened_at) VALUES (?, ?, 1, ?)", B12_1.id, id, created);
+			await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, created_at) VALUES (?, ?, 'Try', 1, 5, 'ready', ?)", B12_1.id, id, created);
+		};
+		// Three test runs, and a real game's video a team manager deleted a week later: that one still happened.
+		await add("t1", "2026-10-13T02:00:00.000Z", "2026-10-13T02:20:00.000Z", "admin");
+		await add("t2", "2026-10-13T03:00:00.000Z", "2026-10-13T03:01:00.000Z", "live_test");
+		await add("t3", "2026-10-13T04:00:00.000Z", "2026-10-20T04:00:00.000Z", "replaced");
+		await add("real", "2026-10-13T05:00:00.000Z", "2026-10-20T05:00:00.000Z", "admin");
+		const weeks = await hourlyActivity(deps.db, "2026-10-12T13:00:00.000Z");
+		const hour = (s: keyof typeof weeks, h: string) => weeks[s].find((r) => r.h === h)?.n ?? 0;
+		for (const s of ["uploads", "streams", "watchers", "clips"] as const) {
+			expect([s, hour(s, "2026-10-13T02"), hour(s, "2026-10-13T03"), hour(s, "2026-10-13T04"), hour(s, "2026-10-13T05")]).toEqual([s, 0, 0, 0, 1]);
+		}
+	});
+
+	it("counts a live stream as open only once it's under way, not a Go live page opened and left", async () => {
+		const deps = await site();
+		const game = (await run(deps, "INSERT INTO games (team_id, starts_at, competition, round_label, opponent) VALUES (?, '2026-10-15T18:40', 'VJBL', '12', 'Riverton')", B12_1.id)).meta.last_row_id;
+		await run(deps, "INSERT INTO live_streams (team_id, game_id, live_input_uid, status, created_at) VALUES (?, ?, 'in-opened', 'open', '2026-10-14T23:00:00.000Z')", B12_1.id, game);
+		const counts = await healthCounts(deps.db, { stuckBefore: "2026-10-14T00:00:00.000Z", failedSince: "2026-10-08T00:00:00.000Z" });
+		expect(counts.liveNow).toBe(0);
+		const video = (await run(deps, `INSERT INTO videos (team_id, game_id, status, delete_after, created_at) VALUES (?, ?, 'uploading', '2027-12-31T13:00:00.000Z', '2026-10-14T23:30:00.000Z')`, B12_1.id, game)).meta.last_row_id;
+		await run(deps, "UPDATE live_streams SET recording_video_id = ? WHERE live_input_uid = 'in-opened'", video);
+		expect((await healthCounts(deps.db, { stuckBefore: "2026-10-14T00:00:00.000Z", failedSince: "2026-10-08T00:00:00.000Z" })).liveNow).toBe(1);
 	});
 
 	it("never shows anyone's email", async () => {

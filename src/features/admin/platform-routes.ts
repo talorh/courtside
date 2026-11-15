@@ -105,6 +105,8 @@ export function platformRoutes(router: AdminRouter): void {
 			});
 			detail = `sent to ${sent} admin${sent === 1 ? "" : "s"}`;
 		} catch (err) {
+			console.error(JSON.stringify({ event: "test_email_failed", teamId: null, error: String(err) }));
+			await logProblem(deps, { kind: "email_failed", teamId: null, who: viewer.email, what: "The test email from Platform didn't send", error: err });
 			detail = `didn't go: ${err instanceof Error ? err.message : String(err)}`;
 		}
 		await adminLogStatement(deps.db, { device: deps.device, adminEmail: viewer.email, teamId: null, action: "test_email", detail, at: deps.now().toISOString() }).run();
@@ -116,6 +118,6 @@ export function platformRoutes(router: AdminRouter): void {
 		const days = parseChangelog(changelog);
 		return htmlResponse(changelogPage({ frame, days, weeks: weeksOfChanges(days, localDate(deps.now())), only }));
 	});
-	// Its old address, from the team managers' links: an admin's bookmark still works.
+	// An old address: redirected, so a bookmark still works.
 	router.get("/changelog", async () => redirect("/admin/changelog", 302));
 }

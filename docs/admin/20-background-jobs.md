@@ -17,7 +17,7 @@ Two scheduled jobs keep things moving, one every five minutes and one at 3am loc
 | Step | What it does | A run |
 | --- | --- | --- |
 | Live streams | For each open stream: notes when the game is live (LIVE NOW and the activity feed), saves a recording whose phone stopped long ago from whatever reached R2, saves an external app's stream from Stream's recording once it's over (the longest part as the game's video, others as clips), and closes a live input that was set up but never used a day after Go live was last opened for it. | Every open stream |
-| Stream copies | A video uploaded to R2 that Stream hasn't been asked to copy yet is asked for again. | 12 videos |
+| Stream copies | A video uploaded to R2 that Stream hasn't been asked to copy yet is asked for again, once it's two minutes past its upload finishing (the upload asks first). Should two asks cross anyway, the first copy is kept and the other deleted from Stream. | 12 videos |
 | Joins | A live stream that was stopped and carried on has its parts joined into one video first, by the video joiner (Cloudflare Containers). A run looks in R2 for the joined file: there, it becomes the video, the parts are deleted and Stream is asked for its copy. Not there, the joiner is asked how it's going, and asked to begin again if ten minutes have passed since the last try. No run waits for a join. After six tries the team manager is handed Keep the first part and the admins the Video joiner alert. | Every game waiting |
 | Processing to ready | Asks Stream how each processing video is going: ready stores the duration and asks for the HD MP4; a Stream error marks it failed and raises a ticket; a copy Stream has lost is requested again from the original. A stream under a minute is thrown away as a test. | 12 videos |
 | HD downloads | For ready videos without a confirmed HD MP4: ready means note the time (Notifications shows it); none means ask Stream again. Stream saying it can't make one is noted on the video (one Problems line, one more request), and the job stops asking about it. | 5 videos |
@@ -63,7 +63,7 @@ Cron triggers are UTC only, so two fire, 16:00 and 17:00 UTC, and the job runs o
 
 ### The game check
 
-Each run of the 5-minute job looks at every running team's live games in the next 8 hours (not No video, not recorded and uploaded). Once one of them hasn't been checked yet, so 8 hours before each game's tip-off, the site asks itself whether they're good to go; two games on one evening get a check each. The answer is the game check alert: ok says what was found; a problem raises a ticket for the admins saying what to do, and the check runs again every hour until tip-off, so the first fine check resolves it. Platform's **Run the game check now** checks the week's live games at once. Each game remembers when it was last checked (`games.ready_checked_at`).
+Each run of the 5-minute job looks at every running team's live games in the next 8 hours (not No video, not recorded and uploaded). Once one of them hasn't had its check yet, so 8 hours before each game's tip-off, the site asks itself whether they're good to go; two games on one evening get a check each, and a game moved later is checked again. The answer is the game check alert: ok says what was found; a problem raises a ticket for the admins saying what to do, and the check runs again every hour until tip-off, so the first fine check resolves it. With no live game left in the next 8 hours, an alert still up is set to ok, saying so. Platform's **Run the game check now** checks the week's live games at once, without counting as any game's 8-hour check. Each game remembers when its 8-hour check was (`games.ready_checked_at`).
 
 | Checked | Warns | Urgent |
 | --- | --- | --- |
@@ -71,4 +71,4 @@ Each run of the 5-minute job looks at every running team's live games in the nex
 | Each game's Go live input | Set up but gone from Stream (Go live sets up a new one) |  |
 | The video joiner | Not answering, or its test join failed |  |
 | The 5-minute job |  | No run for 15 minutes (staging has none, and isn't asked) |
-| The other alerts | Any up at a warning | Any up at urgent |
+| The other alerts (not Team budgets or AI models, which don't touch a game) | Any up at a warning | Any up at urgent |

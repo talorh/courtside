@@ -1,7 +1,7 @@
 import type { TeamDeps } from "../../app/deps.ts";
 import { runEach } from "../../shared/run-each.ts";
 import { record } from "../activity/activity-service.ts";
-import { dropShortTest } from "../live/browser-live-service.ts";
+import { dropShortTest } from "../live/browser-live-stop.ts";
 import { ticketFailedVideo } from "./failed-video-ticket.ts";
 import { requestStreamCopy } from "./upload-finish.ts";
 import { dropStreamCopy, markFailed, markHdFailed, markHdReady, markReady } from "./video-writes-repository.ts";
@@ -15,11 +15,16 @@ const BATCH = 12;
 // HD checks are 1 to 3 calls each and can wait a run; keep them small so a busy run stays under the limit.
 const HD_BATCH = 5;
 
+// An upload that has just finished asks for its own copy (upload-finish.ts): the job leaves it that long, so the two
+// don't both ask.
+const OWN_ASK_MS = 2 * 60_000;
+
 /** Stream copies, and joins: a carried-on recording's segments are joined first (live/join-service.ts), not copied as
  * the first alone. Which videos have segments is asked only when there's something uncopied, so a quiet team costs
  * no extra trip. */
 export async function retryStreamCopies(deps: TeamDeps) {
-	const uncopied = (await listVideosByStatus(deps.db, deps.team.id, "processing")).filter((v) => !v.streamUid);
+	const asking = (v: Video) => v.processingAt !== null && deps.now().getTime() - Date.parse(v.processingAt) < OWN_ASK_MS;
+	const uncopied = (await listVideosByStatus(deps.db, deps.team.id, "processing")).filter((v) => !v.streamUid && !asking(v));
 	const joining = uncopied.length ? await videosWithSegments(deps.db, deps.team.id) : new Set<number>();
 	const pending = uncopied.filter((v) => !joining.has(v.id)).slice(0, BATCH);
 	const result = await runEach(pending, (video) => requestStreamCopy(deps, video));

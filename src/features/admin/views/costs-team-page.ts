@@ -16,6 +16,7 @@ import { monthBars } from "../costs-summary.ts";
 import type { Viewing } from "../costs-viewing.ts";
 import { adminLayout } from "./admin-layout.ts";
 import { budgetUse, burnUp, kindBars } from "./costs-burnup.ts";
+import { costsHref } from "./costs-page.ts";
 import { monthsChart } from "./costs-charts.ts";
 import { againstBudget, budgetBadge, currencySwitch, perPlayer, readLine, teamChangeWords, thousands, times } from "./costs-words.ts";
 import { ACTUAL, ESTIMATED, NOT_BILLED, tiles } from "./costs-widgets.ts";
@@ -53,7 +54,7 @@ ${tile(money(cur)(c.estimate / BASELINE.games), "A game", `The season's estimate
 }
 
 /** `billed`: Cloudflare's bill has been read, so what's spent is actual. */
-export function costTeamPage(p: { frame: AdminFrame; costs: TeamCosts; viewing: Viewing; now: Date; cur: Currency; rate: Rate; message: string | null; billed: boolean }): SafeHtml {
+export function costTeamPage(p: { frame: AdminFrame; costs: TeamCosts; viewing: Viewing; now: Date; thisSeason: number; cur: Currency; rate: Rate; message: string | null; billed: boolean }): SafeHtml {
 	const c = p.costs, b = c.team.budget, d = money(p.cur), thisMonth = monthOf(p.now.toISOString());
 	const bars = monthBars([c], seasonMonths(c.team.seasonStart), thisMonth);
 	let spent = 0;
@@ -67,7 +68,7 @@ export function costTeamPage(p: { frame: AdminFrame; costs: TeamCosts; viewing: 
 		{ value: d(c.estimate), label: "The season, estimated", pill: ESTIMATED, note: `${d(c.soFar)} ${p.billed ? "actual" : "spent"} and ${d(c.estimate - c.soFar)} estimated` },
 		{ value: d(b), label: c.team.budgetDefault ? "Budget (the default)" : "Budget", pill: ESTIMATED, note: againstBudget(c.estimate, b, p.cur) },
 	]);
-	return adminLayout({ title: teamLabel(c.team, { season: true }), current: "costs", frame: p.frame, back: { href: `/admin/costs${p.cur === "usd" ? "?cur=usd" : ""}`, label: "Costs" }, head: currencySwitch(p.cur, `/admin/costs/${c.team.id}`, p.rate), lede: c.team.status === "active" ? "What this team costs on Cloudflare." : "Its season is over: it's no longer sharing the site's costs." },
+	return adminLayout({ title: teamLabel(c.team, { season: true }), current: "costs", frame: p.frame, back: { href: costsHref(c.team.seasonStart, p.thisSeason, p.cur), label: "Costs" }, head: currencySwitch(p.cur, `/admin/costs/${c.team.id}`, p.rate), lede: c.team.status === "active" ? "What this team costs on Cloudflare." : "Its season is over: it's no longer sharing the site's costs." },
 		html`${notice(p.message)}${board}<div class="costdash"><div class="cd-main">${monthsChart("Month by month", bars, thisMonth, b / 12, p.cur)}</div>
 <div class="cd-side">${kindBars(bars, p.cur, thisMonth)}${unitCosts(c, p.cur)}</div>
 <div class="cd-half">${burnUp("The season against its budget", bars, b, p.cur)}</div><div class="cd-half">${budgetPanel(c, p.cur, p.cur === "local" ? b : b * p.rate.localPerUsd)}</div></div>

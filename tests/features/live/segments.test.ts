@@ -130,7 +130,8 @@ describe("uploading into a segment", () => {
 		expect(await getVideo(deps.db, deps.team.id, video.id)).toMatchObject({ status: "processing", streamUid: null });
 	});
 	it("deleting the recording aborts every segment's upload", async () => {
-		const { deps, sam, video, key2 } = await segmented();
+		const { deps, sam, video, key2, later } = await segmented();
+		later(3);
 		expect((await sam(`/api/uploads/${video.id}/abort`, jsonBody({}))).status).toBe(200);
 		expect(deps.originals.aborted).toEqual(expect.arrayContaining([video.r2Key, key2]));
 		expect(await listSegments(deps.db, deps.team.id, video.id)).toEqual([]);

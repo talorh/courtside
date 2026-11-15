@@ -1,6 +1,9 @@
 // Ask Virtual Team Manager (Help page): sends the question, shows the answer as plain text.
 import { helperName } from "./team.js";
-import { teamHeaders } from "./upload-net.js";
+import { teamHeaders, timeoutSignal } from "./upload-net.js";
+
+// The site's AI answer takes seconds; a link that stalls gives up well after that, so the button can be tapped again.
+const ASK_TIMEOUT_MS = 60_000;
 
 const form = document.getElementById("ask");
 const box = document.getElementById("ask-q");
@@ -25,6 +28,7 @@ form?.addEventListener("submit", async (e) => {
 	try {
 		const res = await fetch("/api/ask", {
 			method: "POST", headers: { "Content-Type": "application/json", ...teamHeaders() }, body: JSON.stringify({ question }), redirect: "manual",
+			signal: timeoutSignal(ASK_TIMEOUT_MS),
 		});
 		// An expired sign-in answers with a redirect to the sign-in page.
 		if (res.type === "opaqueredirect") { out.textContent = "You've been signed out. Reload the page and sign in, then ask again."; return; }

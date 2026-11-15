@@ -68,13 +68,15 @@ async function bringUpToDate(deps: TeamDeps, fixture: PlayhqFixture, team: Playh
 	const revived = revive ? [...linked.values()].filter((l) => l.deleted).map((l) => reviveGameWrite(db, deps.team.id, l.id)) : [];
 	const writes = [...revived, ...team.games.filter((g) => revive || !linked.get(g.id)?.deleted).map((g) => {
 		const gameId = linked.get(g.id)?.id ?? adopted.get(g.id) ?? null;
-		return playhqGameWrite(db, deps.team.id, fixture.id, g.id, toPlayhqGameInput(fixture.competition, g, usualTipOff(deps.team.code)), gameId, fixture.noVideo ? now.toISOString() : null);
+		// No video for a game it adds or takes over; one it already has keeps whatever a team manager set on it.
+		const noVideoAt = fixture.noVideo && !linked.has(g.id) ? now.toISOString() : null;
+		return playhqGameWrite(db, deps.team.id, fixture.id, g.id, toPlayhqGameInput(fixture.competition, g, usualTipOff(deps.team.code)), gameId, noVideoAt);
 	})];
 	// An empty fixture (not out yet, or PlayHQ mid-change) marks nothing.
 	if (ids.length) writes.push(goneFromPlayhqWrite(db, deps.team.id, fixture.id, ids, now.toISOString()));
-	// When checks stop (playhq-checks.ts), from the games PlayHQ lists now.
+	// When checks stop (playhq-checks.ts), from the games PlayHQ lists now, or the ones here when it lists none (between phases).
 	const days = team.games.map((g) => g.date).sort();
-	const autoCheck = stillChecked({ ...fixture, firstGame: days[0] ?? null, lastGame: days.at(-1) ?? null }, localDate(now));
+	const autoCheck = stillChecked({ ...fixture, firstGame: days[0] ?? fixture.firstGame, lastGame: days.at(-1) ?? fixture.lastGame }, localDate(now));
 	writes.push(playhqCheckWrite(db, deps.team.id, fixture.id, { checkedAt: now.toISOString(), gameCount: ids.length, autoCheck, lastError: null }));
 	await db.batch(writes);
 }
@@ -117,7 +119,7 @@ export async function addPlayhqFixtureFromLink(deps: TeamDeps, form: z.infer<typ
 		await removePlayhqFixture(deps.db, deps.team.id, id);
 		throw err;
 	}
-	// Games it took over (added by hand, or brought back) are marked too; new ones already were.
+	// Games it brought back (deleted here earlier) are marked too; new ones and ones it took over already were.
 	if (fixture.noVideo) await setPlayhqFixtureVideo(deps.db, deps.team.id, id, true, deps.now().toISOString());
 	return id;
 }

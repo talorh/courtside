@@ -3,10 +3,12 @@
 // again: a page that went away would leave the Home Screen app stuck (no address bar). Without JavaScript the link is
 // a plain page with the one button.
 
-/** Asks the site to end this device's session (it clears the cookie). False if the site couldn't be reached. */
+/** Asks the site to end this device's session (it clears the cookie). False if the site couldn't be reached, or took
+ * longer than 15 seconds: a stalled signal mustn't leave the question stuck on screen. (Not upload-net.js's timeoutSignal:
+ * this script loads on the sign-in pages too, where that file isn't open.) */
 export async function endSignIn(fetcher = fetch) {
 	try {
-		const res = await fetcher("/signout", { method: "POST", headers: { Accept: "application/json" }, cache: "no-store" });
+		const res = await fetcher("/signout", { method: "POST", headers: { Accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout?.(15_000) });
 		return res.ok;
 	} catch (err) {
 		console.warn(`sign out: ${err}`);

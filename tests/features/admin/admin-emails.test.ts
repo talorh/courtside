@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { form, makeClient, MANAGER } from "../../helpers/app.ts";
 import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 
 const JANE = "jane@example.com";
+afterEach(() => vi.restoreAllMocks());
 const log = async (deps: TestDeps) => (await deps.db.prepare("SELECT action, detail FROM admin_log ORDER BY id").all()).results;
 
 describe("a test email from Platform", () => {
@@ -20,9 +21,12 @@ describe("a test email from Platform", () => {
 	it("says why when it didn't go, with the binding's code", async () => {
 		const deps = createTestDeps();
 		deps.email.failNext = "E_SENDER_NOT_VERIFIED";
+		const errors = vi.spyOn(console, "error").mockImplementation(() => {});
 		await makeClient(deps)("/admin/test-email", form({}));
 		expect((await log(deps))[0]).toMatchObject({ action: "test_email", detail: "didn't go: Email failed (E_SENDER_NOT_VERIFIED): the binding refused it" });
 		expect(await (await makeClient(deps)("/admin/platform")).text()).toContain("didn&#39;t go: Email failed (E_SENDER_NOT_VERIFIED)");
+		expect(errors.mock.calls.map((c) => JSON.parse(String(c[0])).event)).toContain("test_email_failed");
+		expect(await deps.db.prepare("SELECT kind, what FROM problems").all().then((r) => r.results)).toEqual([{ kind: "email_failed", what: "The test email from Platform didn't send" }]);
 	});
 });
 

@@ -2,7 +2,7 @@
 // slice a run, after every team's own steps, so a big team's deletion never holds up a game night: media first (photos'
 // images, Stream copies, R2 originals), then the rows, child-first, in one batch, and the team becomes a tombstone until nothing of it is left. Every
 // step is safe to repeat: what's done stays done, and Images or Stream saying something's gone counts as deleted. Live
-// inputs are the nightly sweep's, as ever (never deleted by hand).
+// inputs are the nightly sweep's (never deleted by hand).
 import { type AppDeps, type TeamDeps, withTeam } from "../app/deps.ts";
 import { adminLogStatement } from "../features/admin/admin-log-repository.ts";
 import { deletePhoto } from "../features/photos/photos-service.ts";

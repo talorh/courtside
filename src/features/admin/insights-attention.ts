@@ -1,6 +1,6 @@
 // What needs an admin besides the checks, first on Insights (a landing page): support requests waiting for an answer,
-// families' removal requests waiting in any team (child safety), and a running team with no team manager. Worst first;
-// each says where it's dealt with.
+// the site's own tickets with no team (an alert's ticket shows as its alert instead), families' removal requests waiting
+// in any team (child safety), and a running team with no team manager. Worst first; each says where it's dealt with.
 import { teamLabel } from "../teams/team-code.ts";
 import type { TeamCounts } from "./insights-repository.ts";
 import { plural } from "./insights-service.ts";
@@ -9,10 +9,12 @@ export interface Attention { level: "urgent" | "warn" | "info"; text: string; hr
 
 const RANK: Record<Attention["level"], number> = { urgent: 2, warn: 1, info: 0 };
 
-export function needsAttention(p: { teams: TeamCounts[] }): Attention[] {
+export function needsAttention(p: { teams: TeamCounts[]; siteTickets: number }): Attention[] {
 	const items: Attention[] = [];
 	const support = p.teams.reduce((n, t) => n + t.openSupport, 0);
 	if (support) items.push({ level: "warn", text: `${support} support ${support === 1 ? "request is" : "requests are"} waiting for an answer.`, href: "/admin/support", action: "Open Support" });
+	const site = p.siteTickets;
+	if (site) items.push({ level: "warn", text: `${site} ${site === 1 ? "ticket from the site is" : "tickets from the site are"} waiting in Support (access requests, bounced addresses, videos that couldn't be processed).`, href: "/admin/support", action: "Open Support" });
 	for (const t of p.teams) {
 		if (t.openRequests) {
 			items.push({ level: "warn", text: `${teamLabel(t.team)}: ${plural(t.openRequests, "removal request")} waiting for the team manager.`, href: `/admin/log?team=${t.team.code}-${t.team.seasonStart}`, action: "See the Log" });

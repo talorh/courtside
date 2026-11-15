@@ -1,6 +1,5 @@
-// The site's own sign-in (in place of Cloudflare Access, which costs US$7 a person a
-// month past 50). A code by email for an address on a team's list (or an admin's), then a 30-day session for that
-// device. Limits keep the sign-in page from being hammered, and the whole site from burning its emails.
+// The site's own sign-in (Cloudflare Access would cost US$7 a person a month past 50). A code by email for an address
+// on a team's list (or an admin's), then a 30-day session for that device. Limits keep the sign-in page from being hammered, and the whole site from burning its emails.
 import type { AppDeps } from "../app/deps.ts";
 import { isEmail } from "../features/members/members-service.ts";
 import { randomToken, sameText, sha256Hex, sixDigitCode } from "./crypto.ts";
@@ -19,7 +18,7 @@ export type CodeRequest = "sent" | "unknown" | "limited";
 /** "limited": this IP address's wrong codes this hour; "held": this address's wrong codes today. */
 export type CodeCheck = { token: string; expiresAt: string } | "wrong" | "expired" | "limited" | "held";
 
-/** "t…@gmail.com": enough to tell addresses apart in the logs, not enough to be one. Something that isn't an address
+/** "s…@saints.example": enough to tell addresses apart in the logs, not enough to be one. Something that isn't an address
  * keeps only its first letter, so nothing typed into the email field is logged as it was. */
 export const maskEmail = (email: string) => (email.includes("@") ? email.replace(/^(.).*?(@.*)$/, "$1…$2") : `${email.slice(0, 1)}…`);
 const log = (event: string, email: string, detail: Record<string, unknown>) => console.log(JSON.stringify({ event, teamId: null, email: maskEmail(email), ...detail }));

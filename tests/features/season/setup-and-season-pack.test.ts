@@ -78,6 +78,8 @@ describe("the end-of-season pack", () => {
 		expect(page.indexOf('id="season-pack"')).toBeGreaterThan(page.indexOf('id="addperson"'));
 		// Folded until it's opened.
 		expect(page).toContain('<details class="panel seasonpack" id="season-pack"><summary><h2>End of season: keep it all</h2>');
+		// The date is the last day kept, so the summary says what to download by it, not before it.
+		expect(pack).toContain('<span class="small">Everything to download by <b>Fri 31 Dec 2027</b></span>');
 		expect(pack).toContain("This season's videos, clips and photos are deleted after <b>Fri 31 Dec 2027</b>.");
 		expect(pack).toContain(`<a href="/videos/${video}/download/hd">`);
 		expect(pack).toMatch(new RegExp(`<summary>#\\d+ [^<]+ <span class="small">1 clip</span></summary><ul class="packlist"><li><a href="/clips/${steal}/download">Steal</a>`));

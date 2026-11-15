@@ -10,6 +10,9 @@ Nothing is public: everyone but admins gets the maintenance page, and admins are
 - **Everyone but admins:** the club maintenance page (503, `Retry-After`, `noindex`, no scripts, nothing loaded from
  the site): "Time out! We're upgrading the site. We'll be back soon.". It checks again by itself every minute, and its Try
  again button works in the Home Screen app, which has no reload button.
+- **The sign-in** (its pages, `/signin`, `/signin/code`, Request access and `/signout`, and their own few files, the
+ site's open paths: `SIGN_IN` in `maintenance/handler.ts`, kept to the site's lists by its tests): goes through to the
+ site for anyone, so an admin who isn't signed in can sign in. Anyone else who signs in gets the maintenance page next.
 - **API calls** (upload, photos, Go live): a JSON 503 with the same line, which those pages show instead of an error.
 - **Admins** (signed in to the site, which the Worker asks at `/signin/whoami` with the request's cookies, and on the
  Worker's own list in `maintenance/cloudflare.config.ts`): the real site, with a yellow "Maintenance is on" strip at
@@ -44,7 +47,7 @@ Site (`cf auth activate <profile> <folder>`; from a folder that isn't, a deploy 
  nothing is uploading or streaming.
 - **An emergency:** the site is broken and a fix will take a while. Switch on with a realistic time, fix, release with
  `--maintenance`, check as an admin, switch off. It works even when the site's Worker is broken: it only calls it for
- admins.
+ admins and the sign-in.
 - **From a phone, with no computer:** the dashboard, Workers & Pages, `courtside-maintenance`, Settings, Domains & Routes:
  add the route `saints.example/*` (zone saints.example) to switch on, delete it to switch off.
 

@@ -26,10 +26,13 @@ describe("each job watching the other", () => {
 		await checkJobRan(deps, "daily_job");
 		expect(await getAlert(deps.db, "daily_job")).toMatchObject({ level: "urgent", detail: "It hasn't run since Fri 16 Oct 2026, 3:00am" });
 		expect(await tickets(deps)).toEqual([{ alert_kind: "daily_job", title: "The 3am job failed", status: "new" }]);
-		// Raised once: the next runs leave it be.
+		// Raised once: the next runs leave it be, still saying when the job last ran.
 		later(5);
 		await checkJobRan(deps, "daily_job");
 		expect(await tickets(deps)).toHaveLength(1);
+		later(27 * 60);
+		await checkJobRan(deps, "daily_job");
+		expect(await getAlert(deps.db, "daily_job")).toMatchObject({ level: "urgent", detail: "It hasn't run since Fri 16 Oct 2026, 3:00am" });
 		await recordDailyRun(deps, []);
 		expect((await getAlert(deps.db, "daily_job"))?.level).toBe("ok");
 		expect((await tickets(deps))[0]).toMatchObject({ status: "resolved" });

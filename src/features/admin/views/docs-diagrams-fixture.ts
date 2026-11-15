@@ -61,12 +61,12 @@ ${d.arrow([[635, 72], [635, 100], [125, 100], [125, 126]])}${d.arrow([[380, 100]
 export function scoresDiagram(): SafeHtml {
 	const d = draw("scores");
 	const steps: Array<[string, string, "step" | "job" | "stop"]> = [
-		["Tip-off", "In progress", "step"], ["An hour on", "the game's over", "step"], ["Every run", "for the next 2 hours", "job"],
+		["Tip-off", "In progress", "step"], ["Half an hour on", "PlayHQ first asked", "step"], ["Every run", "until 3 hours on", "job"],
 		["About hourly", "until 3 days after", "job"], ["Stops", "never asked again", "stop"],
 	];
 	return figure("scores", {
 		w: 760, h: 250, min: 640, title: "A PlayHQ game's final score",
-		desc: "During the game's hour it says In progress; once it's over the 5-minute job asks PlayHQ every run for two hours, then about hourly until three days after tip-off, then stops; a FINAL result with both scores is entered, never over a score a team manager typed.",
+		desc: "From half an hour after tip-off the 5-minute job asks PlayHQ every run until three hours after tip-off, then about hourly until three days after it, then stops; the game says In progress during its hour unless the score is in sooner; a FINAL result with both scores is entered, never over a score a team manager typed.",
 		caption: "Results usually go into PlayHQ at the final buzzer, so most scores arrive within minutes. A team manager can enter or fix any score once the game has started.",
 	}, html`${steps.map(([title, sub, kind], i) => d.box({ x: 10 + i * 150, y: 40, w: 140, title, sub, kind }))}
 ${[0, 1, 2, 3].map((i) => d.arrow([[150 + i * 150, 68], [158 + i * 150, 68]]))}

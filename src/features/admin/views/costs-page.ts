@@ -26,6 +26,11 @@ import { teamMonths } from "./costs-team-months.ts";
 import { costTiles, teamMonth } from "./costs-tiles.ts";
 import { teamSeasons, tiles, usedThisMonth } from "./costs-widgets.ts";
 
+/** The Costs page for season `s` in `cur`: the plain address for this season, which it shows by default. */
+export function costsHref(s: number, thisSeason: number, cur: Currency): string {
+	const path = `/admin/costs${s === thisSeason ? "" : `?season=${s}`}`;
+	return cur === "usd" ? `${path}${path.includes("?") ? "&" : "?"}cur=usd` : path;
+}
 const sum = (costs: TeamCosts[], f: (c: TeamCosts) => number) => costs.reduce((s, c) => s + f(c), 0);
 
 function teamRow(c: TeamCosts, thisMonth: string, cur: Currency): SafeHtml {
@@ -37,8 +42,9 @@ function teamRow(c: TeamCosts, thisMonth: string, cur: Currency): SafeHtml {
 <td class="c-use">${use}</td><td class="c-game">${c.team.players ? html`${perPlayer(c.estimate, c.team.players, cur)} a season<span class="sub">${perPlayer(c.estimate / 12, c.team.players, cur)} a month</span>` : "No squad yet"}</td><td class="c-state">${budgetBadge(c)}</td></tr>`;
 }
 
-/** The season's teams (`costs`), among the seasons any team was onboarded for (`seasons`, newest first). */
-export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: Viewing; minutesBought: number | null; now: Date; season: number; seasons: number[]; cur: Currency; rate: Rate; bill: Bill }): SafeHtml {
+/** The season's teams (`costs`), among the seasons any team was onboarded for (`seasons`, newest first). `thisSeason`:
+ * the one plain /admin/costs shows. */
+export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: Viewing; minutesBought: number | null; now: Date; season: number; seasons: number[]; thisSeason: number; cur: Currency; rate: Rate; bill: Bill }): SafeHtml {
 	const months = seasonMonths(p.season), nowMonth = monthOf(p.now.toISOString());
 	// A past season's months are all spent: its last month stands where this month does, and every team's budget counts.
 	const past = nowMonth > months[11]!, thisMonth = past ? months[11]! : nowMonth;
@@ -47,14 +53,13 @@ export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: V
 	const budgeted = past ? p.costs : p.costs.filter((c) => c.team.status === "active");
 	const budget = budgeted.length ? sum(budgeted, (c) => c.team.budget) : null;
 	const board = costTiles({ costs: p.costs, budgeted, bars, thisMonth, past, cur: p.cur, minutesBought: p.minutesBought, billed: p.bill.rows.length > 0 });
-	const seasonHref = (s: number) => `/admin/costs${s === p.seasons[0] ? "" : `?season=${s}`}`;
 	const report = `/admin/costs/report.xlsx?season=${p.season}${p.cur === "usd" ? "&cur=usd" : ""}`;
-	const seasons = html`<div class="costbar"><nav class="chips" aria-label="Season">${p.seasons.map((s) => html`<a class="chip" href="${seasonHref(s)}${p.cur === "usd" ? `${seasonHref(s).includes("?") ? "&" : "?"}cur=usd` : ""}"${s === p.season ? html` aria-current="true"` : ""}>${seasonLabel(s)}</a>`)}</nav>
+	const seasons = html`<div class="costbar"><nav class="chips" aria-label="Season">${p.seasons.map((s) => html`<a class="chip" href="${costsHref(s, p.thisSeason, p.cur)}"${s === p.season ? html` aria-current="true"` : ""}>${seasonLabel(s)}</a>`)}</nav>
 <a class="btn" href="${report}" download>Download for Excel</a></div>`;
 	const teams = p.costs.length ? html`<section class="panel stack"><h2>Each team</h2><div class="tablewrap cards"><table class="costs"><thead><tr><th>Team</th><th>This month</th><th>Its months</th><th>Season, estimated</th><th>Budget used</th><th>A player</th><th>Against budget</th></tr></thead>
 <tbody>${p.costs.map((c) => teamRow(c, thisMonth, p.cur))}</tbody></table></div><p class="small">Its months: spent months solid, this month darkest, estimated months light. Budget used: the bar is spent so far, the tick where the season's estimate lands. A player: the season's estimate over the players in its squad, and a twelfth of that a month.</p></section>`
 		: html`<div class="panel empty"><b>No teams this season.</b><p>A team's costs show here once it's onboarded.</p></div>`;
-	return adminLayout({ title: "Costs", current: "costs", frame: p.frame, head: currencySwitch(p.cur, seasonHref(p.season), p.rate), lede: "What the teams cost on Cloudflare, a season at a time: month by month, against their budgets, a player a season and a month, and where it goes. Open a team for its own." },
+	return adminLayout({ title: "Costs", current: "costs", frame: p.frame, head: currencySwitch(p.cur, costsHref(p.season, p.thisSeason, "local"), p.rate), lede: "What the teams cost on Cloudflare, a season at a time: month by month, against their budgets, a player a season and a month, and where it goes. Open a team for its own." },
 		html`${seasons}${tiles(board)}<div class="costdash"><div class="cd-main">${monthsChart("Every team, month by month", bars, thisMonth, null, p.cur)}</div>
 <div class="cd-side">${kindBars(bars, p.cur, thisMonth)}${usedThisMonth(p.costs, thisMonth, past ? `Used in ${shortMonth(thisMonth)}` : "Used this month")}</div>
 <div class="cd-full">${billWidget(p.bill, { cur: p.cur, localPerUsd: p.rate.localPerUsd, bought: p.minutesBought })}</div>

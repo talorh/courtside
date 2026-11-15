@@ -77,7 +77,7 @@ describe("fixture routes", () => {
 		expect(page).not.toMatch(/<form|Add game|Edit game|No video<\/button>|Delete/);
 		expect(page).not.toContain('href="/manage"');
 		for (const path of ["/fixture", `/fixture/${gameId}`, `/fixture/${gameId}/delete`, "/fixture/link", "/fixture/import",
-			"/fixture/playhq", "/roster/families", "/roster/generate", "/members"]) {
+			"/roster/families", "/roster/generate", "/members"]) {
 			expect((await coach(path, form(game))).status, path).toBe(403);
 		}
 		for (const path of ["/manage", "/members", "/fixture/sample.csv", "/roster/week/2026-10-19/message"]) expect((await coach(path)).status, path).toBe(403);

@@ -8,6 +8,7 @@ import { needsReload } from "./upload-net.js";
 import { reportProblem } from "./problems.js";
 import { cancelOnServer, upload } from "./upload-run.js";
 import { forget, gb, keyFor } from "./upload-state.js";
+import { tapAgain } from "./tap-again.js";
 
 const $ = (id) => document.getElementById(id);
 const hint = (text) => { $("hint").textContent = text; };
@@ -20,7 +21,7 @@ function main() {
 	const form = $("upload");
 	if (!form) return;
 	const fileInput = $("file"), gameSelect = $("game"), pickText = $("pick-text"), cancel = $("cancel");
-	let busy = false, controller = null, armed = false, awake = null;
+	let busy = false, controller = null, awake = null;
 	// If the phone won't keep the screen on, the upload still runs, but say how to stop it locking.
 	// iPhone only grants it straight after a tap, so it's asked for on the tap that opens the video picker.
 	const awakeNote = (held) => { $("awake").hidden = held; };
@@ -33,16 +34,8 @@ function main() {
 	fileInput.addEventListener("cancel", () => { if (!busy) { sleepOk(); $("progress").hidden = false; hint("No video chosen. Tap the button to pick one."); } });
 
 	// Two taps: the first asks, the second cancels (there's no undo).
-	cancel.addEventListener("click", () => {
-		if (!busy) return;
-		if (!armed) {
-			armed = true;
-			cancel.textContent = "Tap again to cancel the upload";
-			setTimeout(() => { armed = false; cancel.textContent = "Cancel upload"; }, 8000);
-			return;
-		}
-		controller?.abort();
-	});
+	const sureToCancel = tapAgain(cancel, "Tap again to cancel the upload");
+	cancel.addEventListener("click", () => { if (busy && sureToCancel.sure()) controller?.abort(); });
 
 	// Choosing a file and dropping one (on a computer) both start here.
 	async function start(files) {
@@ -95,9 +88,8 @@ function main() {
 			pickText.textContent = "Choose the video";
 		} finally {
 			busy = false;
-			armed = false;
+			sureToCancel.reset();
 			cancel.hidden = true;
-			cancel.textContent = "Cancel upload";
 			fileInput.value = "";
 			window.removeEventListener("beforeunload", warn);
 			sleepOk();

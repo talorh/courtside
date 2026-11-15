@@ -71,7 +71,7 @@ async function respond(req: Request, url: URL, deps: AppDeps, authenticate: Auth
 	const viewer = await loadViewer(deps.db, email, deps.now());
 	const cookies = readTeamCookies(req);
 	const { team, setCookies } = await currentTeam(deps.db, viewer, cookies);
-	// The admin area: site admins only; anyone else is told there's no such page. /changelog moved there.
+	// The admin area: site admins only; anyone else is told there's no such page. /changelog is an old link to its Changelog.
 	if (url.pathname === "/admin" || url.pathname.startsWith("/admin/") || url.pathname === "/changelog") {
 		if (!viewer.isAdmin) throw notFound("Page");
 		found.setCookies = setCookies;
@@ -83,11 +83,11 @@ async function respond(req: Request, url: URL, deps: AppDeps, authenticate: Auth
 	if (site) return site;
 	found.setCookies = setCookies;
 	// Someone on no team's list is told so, whatever they sent.
-	if (team === "none" && !viewer.isAdmin) return noTeam(team, viewer, req, url);
+	if (team === "none" && !viewer.isAdmin) return noTeam(team, viewer, url);
 	// Every write says which team its page was for, and runs as that team or is refused before anything happens.
 	const isWrite = req.method !== "GET" && req.method !== "HEAD";
 	const requestTeam = isWrite ? await teamForWrite(deps.db, viewer, team, await writeTeam(req)) : team;
-	if (typeof requestTeam === "string") return noTeam(requestTeam, viewer, req, url);
+	if (typeof requestTeam === "string") return noTeam(requestTeam, viewer, url);
 	found.teamId = requestTeam.id;
 	return teamPage(req, url, deps, viewer, requestTeam, router, cookies.viewAs ?? null);
 }

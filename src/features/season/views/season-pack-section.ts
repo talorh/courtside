@@ -43,7 +43,7 @@ export function seasonPackSection(p: SeasonPack): SafeHtml {
 <p class="small">Stream makes a game's HD copy the first time someone asks for it. This asks for every game's at once, so they're all ready to download in about 15 minutes.</p>
 <details class="packgroup"><summary>Every game's video <span class="small">${plural(p.games.length, "game")}</span></summary><ul class="packlist">${p.games.map((g) => html`<li><a href="/videos/${g.videoId}/download/hd">${gameTitle(g.game)}</a><span class="small">${when(g.game.startsAt)}${g.durationSeconds ? `, ${formatDuration(g.durationSeconds)}` : ""}</span></li>`)}</ul></details>`
 		: html`<p class="small">No game videos yet.</p>`;
-	return html`<details class="panel seasonpack" id="season-pack"${p.open ? html` open` : ""}><summary><h2>End of season: keep it all</h2><span class="small">Everything to download before <b>${formatDay(p.keptUntil)}</b></span></summary>
+	return html`<details class="panel seasonpack" id="season-pack"${p.open ? html` open` : ""}><summary><h2>End of season: keep it all</h2><span class="small">Everything to download by <b>${formatDay(p.keptUntil)}</b></span></summary>
 <div class="stack"><p>This season's videos, clips and photos are deleted after <b>${formatDay(p.keptUntil)}</b>. Download what the team wants to keep before then: families can download any game, clip or photo themselves too.</p>
 <h3>Games</h3>${games}
 <h3>Each player's highlights</h3>${highlights(p)}

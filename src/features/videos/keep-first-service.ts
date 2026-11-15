@@ -2,7 +2,7 @@
 // live/join-service.ts). Segment 1 becomes the game video; the later segments go. Nobody outside the team is needed.
 import type { TeamDeps } from "../../app/deps.ts";
 import { conflict } from "../../app/errors.ts";
-import { setAlert } from "../admin/alerts-service.ts";
+import { joinDealtWith } from "../live/join-alert.ts";
 import { logLive } from "../live/live-log.ts";
 import { listSegments, replaceSegmentsWith } from "../live/recording-segments-repository.ts";
 import { requestStreamCopy } from "./upload-finish.ts";
@@ -17,6 +17,6 @@ export async function keepFirstPart(deps: TeamDeps, video: Video, who: string): 
 	}
 	await replaceSegmentsWith(deps.db, deps.team.id, video.id, video.r2Key);
 	await logLive(deps, who, "first_part_kept", video.gameId, `the first of ${segments.length + 1} parts kept as the game video; the rest deleted`);
-	await setAlert(deps, "joiner", "ok", "The game waiting on it was dealt with: its first part was kept");
+	await joinDealtWith(deps, "The game waiting on it was dealt with: its first part was kept");
 	await requestStreamCopy(deps, { ...video, status: "processing", r2UploadId: null, joinFailedAt: null });
 }
