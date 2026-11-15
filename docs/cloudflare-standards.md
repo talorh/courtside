@@ -92,7 +92,7 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
 - Zone-level rules that replace a phase entrypoint must be merged with the existing entrypoint first (an update
  replaces every rule in that phase).
 - HTTPS only: the zone's Always Use HTTPS setting and a redirect rule both send HTTP to HTTPS, and HSTS with preload
- comes from the zone and the Worker. The minimum TLS version stays at the zone default, 1.0.
+ comes from the zone and the Worker. The minimum TLS version is 1.2 (`min-tls.json`), which every phone and browser in use speaks.
 
 ## D1
 

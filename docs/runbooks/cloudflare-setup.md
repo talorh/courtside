@@ -64,7 +64,7 @@ the site's own hostname alone (`http.host eq "<domain>"`), so the same files do 
 | Custom WAF rules | `waf-custom-rules.json`: only GET, HEAD and POST; a managed challenge on page loads for anyone without the site's session cookie, apart from WhatsApp's link previews (a shared link shows the site's name) |
 | Rate limiting | `rate-limit-rules.json`: 60 POST or `/api/` requests in 10 s from one address, then blocked 10 s |
 | Bots | `bot-management.json`: AI bots blocked, JavaScript detections off, Bot Fight Mode off (it can challenge the upload script) |
-| HTTPS | `redirect-rules.json`: HTTP to HTTPS 301, and the zone's Always Use HTTPS setting on as well; HSTS with preload from the zone (`security-header.json`) and from the Worker |
+| HTTPS | `redirect-rules.json`: HTTP to HTTPS 301, and the zone's Always Use HTTPS setting on as well; HSTS with preload from the zone (`security-header.json`) and from the Worker; minimum TLS 1.2 (`min-tls.json`) |
 | Browser Cache TTL | 0 (Respect Existing Headers), so a deploy's new scripts aren't held for hours by phones; on a subdomain, `cache-rules.json` (browsers keep the site's own headers) in place of the zone's setting |
 | Web Analytics, email obfuscation | Off: every page is behind the sign-in, and their scripts would be blocked by the CSP |
 | Mail | Root SPF `v=spf1 include:_spf.mx.cloudflare.net ~all` (Email Routing only), DMARC `p=reject; sp=reject` with reports to DMARC Management (`dns-spf.json`, `dns-dmarc.json`), Email Sending's own records on `cf-bounce` |
@@ -120,6 +120,7 @@ cf rulesets entrypoint update http_request_dynamic_redirect -z $z --body "$(sed 
 cf rulesets entrypoint update http_request_cache_settings -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/cache-rules.json)" --dry-run   # a subdomain only
 cf bot-management update -z $z --body "$(cat $d/bot-management.json)" --dry-run   # send enable_js too: a bare update turns it on
 cf zones settings edit security_header -z $z --body "$(cat $d/security-header.json)" --dry-run
+cf zones settings edit min_tls_version -z $z --body "$(cat $d/min-tls.json)" --dry-run
 cf zones settings edit browser_cache_ttl -z $z --body '{"value":0}' --dry-run
 cf r2 buckets lifecycle update <worker>-originals --rules @infra/r2-lifecycle.json --dry-run
 cf r2 buckets cors update <worker>-originals --rules "$(sed "s/<domain>/$DOMAIN/g" infra/r2-cors.json)" --dry-run
