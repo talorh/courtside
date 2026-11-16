@@ -52,7 +52,8 @@ RTMP), it works. The site gives you the two details to paste into the app.
 it carries on where it left off.
 
 The phone also keeps its own recording while it streams, so a patchy signal at the stadium doesn't cost you any of
-the game.
+the game. If the phone drops out, locks or the page closes mid-game, carry on from the same phone. Cloudflare
+Containers and Durable Objects join the pieces back into one video afterwards.
 
 <br>
 
