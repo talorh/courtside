@@ -12,6 +12,9 @@
 <p align="center">
   <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-2F6FDB"></a>
   <img alt="Runs on Cloudflare" src="https://img.shields.io/badge/runs%20on-Cloudflare-14274E">
+  <img alt="1,999 unit tests passing" src="https://img.shields.io/badge/unit%20tests-1%2C999%20passing-2F6FDB">
+  <img alt="217 browser tests passing" src="https://img.shields.io/badge/browser%20tests-217%20passing-2F6FDB">
+  <img alt="Node 26" src="https://img.shields.io/badge/node-26-14274E">
 </p>
 
 <p align="center">
@@ -199,6 +202,10 @@ Good places to start:
 - [What it does](docs/spec.md), page by page
 - [Why it's built this way](docs/admin/30-technology-decisions.md)
 - [AGENTS.md](AGENTS.md), the rules every change follows
+
+Every change has to pass all 1,999 unit tests and 217 browser tests before it ships. The unit tests include two teams
+going through every page to prove neither can see the other's. The browser tests run Go live on Android, iPhone and
+Firefox.
 
 Changes are tried on a test copy of the site first, then on real phones, before going live. Nothing goes live on a
 game day unless it fixes something.
