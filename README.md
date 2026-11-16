@@ -178,7 +178,25 @@ and email, then sets things up one step at a time, checking with you before each
 
 You can be up and running in a couple of hours, or about four and a half beers.
 
-What it costs depends on how much your teams film and watch. The admin area shows you exactly where the money goes.
+What it costs depends on how many teams you have, how many games they film and how much families watch. As an
+example, at Cloudflare's list prices, for 4 teams each filming one 45-minute game a week, with families watching about
+3,000 minutes a month:
+
+| | Start of the season | End of the season |
+| --- | --- | --- |
+| Workers Paid (the site, its database, email and AI) | $5 | $5 |
+| Stream storage, $5 per 1,000 minutes kept | $5 | about $30 (5,500 minutes) |
+| Stream minutes watched, $1 per 1,000 | about $3 | about $3 |
+| Images for photos | about $5 | about $5 |
+| Your domain | about $1 | about $1 |
+| **A month, in US dollars** | **about $19** | **about $44** |
+
+Storage grows through the season as games are kept, and drops back once a season's footage is deleted. See Cloudflare's
+[Stream pricing](https://developers.cloudflare.com/stream/pricing/) and
+[Images pricing](https://developers.cloudflare.com/images/pricing/).
+
+The admin area's Costs page shows what you're really spending, checked against Cloudflare's own bill, broken down by
+team and by player, with a budget for each team.
 
 <br>
 
