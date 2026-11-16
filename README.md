@@ -85,12 +85,9 @@ the game.
 
 <br>
 
-## Safe for kids
+## Child safety
 
-- Only people a team manager adds can sign in, with a code sent to their email.
-- Nothing is public. Every video, photo and page needs a sign-in.
-- Each team sees only its own games.
-- The video goes straight into your club's own account, not anyone else's.
+Courtside makes best efforts to meet [Basketball Victoria's child safe practices](https://www.basketballvictoria.com.au/resources/child-safe-standards).
 
 <br>
 
