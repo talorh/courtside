@@ -32,7 +32,7 @@ Two scheduled jobs keep things moving, one every five minutes and one at 3am loc
 
 | Check, every run | Warns | Urgent | Clears |
 | --- | --- | --- | --- |
-| Stream's minutes left (at most hourly) | Under 400 minutes | Under 100 | 450 or more |
+| Stream's minutes left (at most hourly) | Under 300 minutes a running team | Under 150 a team | 50 above the warning |
 | Server errors this hour and last |  | 10 or more | Under 3 |
 | Emails waiting (a ticket's or an alert's) |  | One waiting over an hour | None waiting |
 | The month's emails, of the 3,000 included | 2,400 | 2,850 | Under 2,300 |
@@ -72,4 +72,4 @@ Each run of the 5-minute job looks at every running team's live games in the nex
 | Each game's Go live input | Set up but gone from Stream (Go live sets up a new one) |  |
 | The video joiner | Not answering, or its test join failed |  |
 | The 5-minute job |  | No run for 15 minutes (staging has none, and isn't asked) |
-| The other alerts (not Team budgets, AI models or the 3am job's own alert, which don't touch a game) | Any up at a warning | Any up at urgent |
+| The other alerts (not Team budgets, AI models, the 3am job's own alert or video storage, whose minutes for the games it checks itself) | Any up at a warning | Any up at urgent |

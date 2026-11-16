@@ -12,6 +12,8 @@ import { setAlert } from "./alerts-service.ts";
 import { serverErrorsLately } from "./server-errors-repository.ts";
 import { countUnsentBefore } from "./support-desk-repository.ts";
 import { EMAILS_A_MONTH, emailsSentIn, monthKey } from "./email-count-repository.ts";
+import { MINUTES_A_GAME } from "./game-day-checks.ts";
+import { countRunningTeams } from "../teams/teams-repository.ts";
 
 const HOUR_MS = 3_600_000;
 // The 5-minute job failing this many runs in a row (half an hour) is urgent.
@@ -30,9 +32,13 @@ async function alert(deps: AppDeps, kind: AlertKind, level: AlertLevel, detail: 
 	await setAlert(deps, kind, level, detail, failures).catch((err: unknown) => alertFailed(deps, kind, err));
 }
 
-/** Under 400 minutes left warns (about 3 weeks' notice with a few teams filming: buying more is the admin's), under 100 is
- * urgent, 450 or more clears. Stream not answering leaves it as it was; a run with no outside calls left leaves it to
- * the next. */
+// A game night's room (the urgent level) and about three weeks of an hour's game: the warning's notice to buy more.
+const WARN_MINUTES_A_TEAM = 300;
+
+/** Scaled by the running teams (one at least), as each films about a game a week: under 300 minutes a team left warns
+ * (two to three weeks before urgent; buying more is the admin's), under 150 a team is urgent (one game night won't fit,
+ * the game check's own figure), and 50 above the warning clears. Stream not answering leaves it as it was; a run with no
+ * outside calls left leaves it to the next. */
 export async function checkStreamStorage(deps: AppDeps): Promise<void> {
 	const prev = await getAlert(deps.db, "stream_storage");
 	if (prev && deps.now().getTime() - Date.parse(prev.checkedAt) < HOUR_MS) return;
@@ -46,9 +52,12 @@ export async function checkStreamStorage(deps: AppDeps): Promise<void> {
 		await logProblem(deps, { kind: "site_problem", teamId: null, what: "Stream's storage couldn't be checked for its alert", error: err });
 		return;
 	}
-	// As minutes used: urgent under 100 left, warn under 400, clear at 450 or more.
-	const level = banded(-left, prev?.level ?? "ok", { urgent: -99, warn: -399, clear: -449 });
-	await alert(deps, "stream_storage", level, left === 0 ? "No minutes left" : `${thousands(left)} minutes left`);
+	const teams = Math.max(1, await countRunningTeams(deps.db));
+	const [warn, urgent] = [teams * WARN_MINUTES_A_TEAM, teams * MINUTES_A_GAME];
+	// As minutes used, so higher is worse.
+	const level = banded(-left, prev?.level ?? "ok", { urgent: -(urgent - 1), warn: -(warn - 1), clear: -(warn + 49) });
+	const detail = `${left === 0 ? "No minutes left" : `${thousands(left)} minutes left`} for ${teams} ${teams === 1 ? "team" : "teams"}`;
+	await alert(deps, "stream_storage", level, detail);
 }
 
 /** Images' 100,000 (from the 3am clean-up's own list): 80,000 warns, 95,000 is urgent, under 78,000 clears. */

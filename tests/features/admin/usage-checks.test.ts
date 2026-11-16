@@ -18,22 +18,35 @@ const level = async (deps: TestDeps, kind: string) => deps.db.prepare("SELECT le
 const quiet = () => vi.spyOn(console, "error").mockImplementation(() => {});
 
 describe("Stream storage, from the 5-minute job at most hourly", () => {
-	it("warns under 400 minutes left (about 3 weeks' notice at a few teams), is urgent under 100, and clears only at 450 or more", async () => {
-		const { deps, later } = clocked();
+	const levelsFor = async (deps: TestDeps, later: (minutes: number) => void, lefts: number[]) => {
 		const levels: unknown[] = [];
-		for (const left of [401, 399, 100, 99, 0, 440, 449, 450, 430]) {
-			deps.live.usage = { usedMinutes: 1100 - left, limitMinutes: 1100 };
+		for (const left of lefts) {
+			deps.live.usage = { usedMinutes: 2000 - left, limitMinutes: 2000 };
 			await checkStreamStorage(deps);
 			levels.push(await level(deps, "stream_storage"));
 			later(61);
 		}
-		expect(levels).toEqual(["ok", "warn", "warn", "urgent", "urgent", "warn", "warn", "ok", "ok"]);
+		return levels;
+	};
+
+	it("scales with the running teams: warns under 300 minutes a team, is urgent under 150 a team, clears 50 above the warning", async () => {
+		const { deps, later } = clocked();
+		for (const code of ["g14.5", "b14.7", "b16.2"]) await addTeam(deps.db, { ...G14_5, id: `${code}-2026`, code });
+		await addTeam(deps.db, { ...G14_5, id: "b10.1-2026", code: "b10.1", status: "closed", closedAt: "2026-10-01T00:00:00.000Z" });
+		expect(await levelsFor(deps, later, [1201, 1199, 600, 599, 0, 1240, 1249, 1250, 1220])).toEqual(["ok", "warn", "warn", "urgent", "urgent", "warn", "warn", "ok", "ok"]);
+		expect((await getAlert(deps.db, "stream_storage"))?.detail).toBe("1,220 minutes left for 4 teams");
+	});
+
+	it("with one team: under 300 warns, under 150 is urgent, 350 clears", async () => {
+		const { deps, later } = clocked();
+		expect(await levelsFor(deps, later, [301, 299, 149, 349, 350])).toEqual(["ok", "warn", "urgent", "warn", "ok"]);
+		expect((await getAlert(deps.db, "stream_storage"))?.detail).toBe("350 minutes left for 1 team");
 	});
 
 	it("asks Stream at most once an hour, and leaves the alert as it was when Stream doesn't answer", async () => {
 		const { deps, later } = clocked();
 		const storage = vi.spyOn(deps.live, "storage");
-		deps.live.usage = { usedMinutes: 1000, limitMinutes: 1100 };
+		deps.live.usage = { usedMinutes: 900, limitMinutes: 1100 };
 		await checkStreamStorage(deps);
 		later(30);
 		await checkStreamStorage(deps);

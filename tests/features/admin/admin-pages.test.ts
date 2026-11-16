@@ -76,6 +76,7 @@ describe("the Platform page", () => {
 		expect(page).toContain("<b>2</b> of 100,000");
 		expect(page).toContain("<b>3</b> people on teams");
 		expect(page).toContain("Each address gets 10 codes an hour and 20 a day, and 15 wrong codes a day; the site sends 200 an hour at most.");
+		expect(page).toContain("no other alert up that would touch a game (budgets, AI models and video storage don't: it checks the games' minutes itself)");
 	});
 
 	it("has a row for each thing watched with how its alert stands, since when and its ticket; one not checked yet says when it will be", async () => {

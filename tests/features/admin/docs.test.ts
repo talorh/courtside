@@ -195,7 +195,7 @@ describe("the admin area's Documentation", () => {
 		const html = await page();
 		expect(html).toContain("<h3>The 5-minute job</h3>");
 		expect(html).toContain("<h3>The 3am job</h3>");
-		for (const words of ["the quiet teams take turns, 12 a run", "Processing to ready", "Final scores", "one budget of 200 calls", "Under 400 minutes",
+		for (const words of ["the quiet teams take turns, 12 a run", "Processing to ready", "Final scores", "one budget of 200 calls", "Under 300 minutes a running team",
 			"Six failed runs in a row", "No run for 26 hours", "backups/d1/courtside-&lt;date&gt;.sql", "no key table (teams, members, games, players) emptied",
 			"At most 20 deletes a night", "80,000 warns, 95,000 is urgent", "4 GB of the 10 it can hold warns"]) {
 			expect(html, words).toContain(words);

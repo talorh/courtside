@@ -24,8 +24,8 @@ const SYNC_LATE_MS = 15 * 60_000;
 export const HOURS_AHEAD = 8;
 const RECHECK_MS = 60 * 60_000;
 const HOUR_MS = 3_600_000;
-/** Alerts that don't stop a game being filmed or streamed: long-lived ones, and the 3am job's night (backup, clean-up). */
-const NOT_A_GAME: ReadonlyArray<string> = ["game_day", "budget", "ai_models", "daily_job"];
+/** Alerts that don't stop a game: long-lived ones, the 3am job's night, and storage (these games' minutes are checked here). */
+const NOT_A_GAME: ReadonlyArray<string> = ["game_day", "budget", "ai_models", "daily_job", "stream_storage"];
 const NO_GAMES = `No live games in the next ${HOURS_AHEAD} hours`;
 /** How far ahead Platform's button looks. */
 const WEEK = "7 days", WEEK_MS = 7 * 24 * HOUR_MS;

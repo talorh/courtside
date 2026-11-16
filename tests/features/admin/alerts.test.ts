@@ -45,9 +45,9 @@ The ticket: https://saints.example/admin/support/1` }]);
 		await setAlert(deps, "stream_storage", "warn", "150 minutes left");
 		await setAlert(deps, "stream_storage", "urgent", "No minutes left");
 		await setAlert(deps, "stream_storage", "warn", "180 minutes left");
-		expect(subjects(deps)).toEqual(["Courtside: Video storage is running low (#1)", "Courtside: Video storage is full, now urgent (#1)"]);
+		expect(subjects(deps)).toEqual(["Courtside: Video storage is running low (#1)", "Courtside: Video storage is too low for a game night, now urgent (#1)"]);
 		expect(await events(deps)).toEqual([
-			{ kind: "event", body: "Worse: video storage is full: No minutes left.", email_to: "admins" },
+			{ kind: "event", body: "Worse: video storage is too low for a game night: No minutes left.", email_to: "admins" },
 			{ kind: "event", body: "Better, but still on: 180 minutes left.", email_to: null },
 		]);
 		expect(await tickets(deps)).toHaveLength(1);
@@ -99,8 +99,8 @@ The ticket: https://saints.example/admin/support/1` }]);
 		at("2026-10-15T03:00:00.000Z");
 		await setAlert(deps, "stream_storage", "urgent", "No minutes left");
 		expect(await deps.db.prepare("SELECT title, updated_at FROM support_requests WHERE id = 1").first())
-			.toEqual({ title: "Video storage is full", updated_at: "2026-10-15T03:00:00.000Z" });
-		expect(subjects(deps)).toEqual(["Courtside: Video storage is running low (#1)", "Courtside: Video storage is full, now urgent (#1)"]);
+			.toEqual({ title: "Video storage is too low for a game night", updated_at: "2026-10-15T03:00:00.000Z" });
+		expect(subjects(deps)).toEqual(["Courtside: Video storage is running low (#1)", "Courtside: Video storage is too low for a game night, now urgent (#1)"]);
 	});
 
 	it("never sends the first email of a ticket that's resolved before it could go, and doesn't count it as waiting", async () => {

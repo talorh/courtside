@@ -15,7 +15,7 @@ const RANK: Record<AlertLevel, number> = { ok: 0, warn: 1, urgent: 2 };
 
 /** Each kind in words: what it's about, how it stands at each level, and what to do. */
 const WORDS: Record<AlertKind, { thing: string; is: Record<"warn" | "urgent", string>; todo: string }> = {
-	stream_storage: { thing: "video storage", is: { warn: "is running low", urgent: "is full" },
+	stream_storage: { thing: "video storage", is: { warn: "is running low", urgent: "is too low for a game night" },
 		todo: "buy more Stream storage in the Cloudflare dashboard (Stream, US$5 a month per 1,000 minutes). When it's full, uploads and live streams stop." },
 	images: { thing: "photos", is: { warn: "are near Images' 100,000", urgent: "are nearly at Images' 100,000" }, todo: "delete old photos, or move up the Images plan." },
 	daily_job: { thing: "the 3am job", is: { warn: "failed", urgent: "failed" }, todo: "look at Platform and the Worker's logs (the backup, the clean-up, deleting teams). If it hasn't run at all, check the Worker's Cron Triggers in the Cloudflare dashboard (Workers, courtside, Settings)." },

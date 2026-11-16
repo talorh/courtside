@@ -12,7 +12,7 @@ The admin area's **Log** starts with what's happening right now in every team, t
 
 | Watched | Warns | Urgent |
 | --- | --- | --- |
-| Stream's minutes left | Under 400 | Under 100 |
+| Stream's minutes left | Under 300 a running team | Under 150 a team |
 | Photos in Images (of 100,000) | 80,000 | 95,000 |
 | The database's size (of 10 GB) | 4 GB | 9 GB |
 | Server errors |  | 10 or more in an hour |
@@ -23,6 +23,6 @@ The admin area's **Log** starts with what's happening right now in every team, t
 | A team's costs (Costs) | Its season estimated over its budget | Over its budget so far |
 | An AI model (Workers AI) | A planned retirement date | Two weeks before it, or gone from the catalog |
 | The video joiner | Not answering its nightly test, or the test join failed | A game's parts couldn't be joined after six tries (Keep the first part, or deleting the video, clears it once no team's game is still waiting) |
-| The game check (each live game 8 hours before tip-off, and Platform's button) | A game's Go live input gone from Stream, the joiner not answering, another alert at a warning (not budgets, AI models or the 3am job's own alert) | Stream not answering or short of minutes for the coming games, the 5-minute job stopped, another alert at urgent |
+| The game check (each live game 8 hours before tip-off, and Platform's button) | A game's Go live input gone from Stream, the joiner not answering, another alert at a warning (not budgets, AI models, the 3am job's own alert or video storage, whose minutes it checks itself) | Stream not answering or short of minutes for the coming games, the 5-minute job stopped, another alert at urgent |
 
 A team manager's question is a ticket too: answered on the site, emailed both ways, with private notes only admins see. Tickets are New, Open, Waiting (on the team manager) or Resolved. A ticket's emails are saved before they're sent, and the 5-minute job sends any that didn't go. Platform shows every one of these figures, with Cloudflare's own for the last 30 days. Insights' Alerts section puts them all in one answer: all green, or each problem first, with the backup, Stream, stuck or failed videos, the Worker's errors and refused sign-ins checked as it opens. What each team costs, and the Team budgets alert, are in Costs and billing.

@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 16 Nov 2026
 
+- [Enhancement] **Platform:** The video storage alert now scales with the number of running teams: it warns under 300 minutes left a team and is urgent under 150 a team, so it gives the same notice with four teams as with one; urgent now says it's too low for a game night.
 - [Enhancement] **Teams:** A team's season now shows as 2026/27 on its Edit page too, and a team closes by itself once its season's videos and photos are due, at the end of 31 December of the year its season ends; Teams says when, and End season still closes one earlier.
 - [Enhancement] **Fixture:** A finals game now has a subtle gold border wherever it's listed: on Watch games, Home and the Fixture.
 - [Feature] **Watch games:** The first time you open a game the club won, once its video is ready, a win pop-up with confetti in the club's colours shows for about a second. It never says the score, and never shows to anyone who hides scores.

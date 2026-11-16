@@ -105,3 +105,8 @@ export async function listTeamsIn(db: D1Database, statuses: TeamStatus[]): Promi
 		.all<TeamRow>();
 	return results.map(toTeam);
 }
+
+/** How many teams are running (not closed or deleted). */
+export async function countRunningTeams(db: D1Database): Promise<number> {
+	return (await db.prepare("SELECT COUNT(*) AS n FROM teams WHERE status = 'active'").first<number>("n")) ?? 0;
+}

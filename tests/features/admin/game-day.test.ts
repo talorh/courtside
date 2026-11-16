@@ -164,8 +164,8 @@ describe("the game check: each live game, 8 hours before tip-off", () => {
 		expect((await alert(deps))!.checked_at).toBe(cleared);
 	});
 
-	it("doesn't count alerts that don't touch a game (budgets, AI models, the 3am job's night) as already up", () => {
-		const alerts = (["budget", "ai_models", "daily_job"] as const).map((kind) => ({ kind, level: "urgent" as const, detail: "", since: null, failures: 0, checkedAt: "", ticketId: null }));
+	it("doesn't count alerts that don't touch a game (budgets, AI models, the 3am job's night, storage, which it checks itself) as already up", () => {
+		const alerts = (["budget", "ai_models", "daily_job", "stream_storage"] as const).map((kind) => ({ kind, level: "urgent" as const, detail: "", since: null, failures: 0, checkedAt: "", ticketId: null }));
 		const verdict = gameDayReadiness({ games: [], storage: { usedMinutes: 65, limitMinutes: 1100 }, joiner: { ok: true, bytes: 1, seconds: 3 }, syncCheckedAt: null, alerts, now: local("11:00"), within: "8 hours", staging: true });
 		expect(verdict.level).toBe("ok");
 		expect(verdict.detail).not.toContain("alerts already up");

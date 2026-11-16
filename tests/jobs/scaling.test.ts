@@ -26,6 +26,13 @@ async function site(more: number, o: { now?: Date; live?: number } = {}) {
 	return deps;
 }
 
+/** Stream minutes enough for every team, as a site this size would have bought: the storage alert scales with the
+ * teams, and one raised would be a ticket's trips in the run. */
+function roomy(deps: TestDeps) {
+	deps.live.usage = { usedMinutes: 65, limitMinutes: 100_000 };
+	return deps;
+}
+
 /** A team's game night: a live stream whose phone is sending its recording, and another game's upload being processed. */
 async function gameNight(deps: TestDeps, teamId: string, filmer: number, i: number) {
 	const run = (sql: string, ...v: unknown[]) => deps.db.prepare(sql).bind(...v).run();
@@ -53,12 +60,12 @@ async function trips(deps: TestDeps, job: (d: TestDeps) => Promise<unknown>) {
 
 describe("scaling: each job runs in one invocation, inside D1's 1,000 queries, however many teams", () => {
 	it("runs every team every five minutes while there are a turn's worth or fewer, at about 18 trips a team", async () => {
-		const one = await trips(await site(0), runSync), twelve = await trips(await site(QUIET_TEAMS_A_RUN - 1), runSync);
+		const one = await trips(roomy(await site(0)), runSync), twelve = await trips(roomy(await site(QUIET_TEAMS_A_RUN - 1)), runSync);
 		expect((twelve - one) / (QUIET_TEAMS_A_RUN - 1)).toBeLessThanOrEqual(18);
 	}, 120_000);
 
 	it("past that takes turns: 120 quiet teams cost a run what 12 do, and 120 with 20 on a game night still fit", async () => {
-		const twelve = await trips(await site(QUIET_TEAMS_A_RUN - 1), runSync), quiet = await trips(await site(119), runSync), busy = await trips(await site(119, { live: 20 }), runSync);
+		const twelve = await trips(roomy(await site(QUIET_TEAMS_A_RUN - 1)), runSync), quiet = await trips(roomy(await site(119)), runSync), busy = await trips(roomy(await site(119, { live: 20 })), runSync);
 		expect(quiet).toBeLessThanOrEqual(twelve + 20);
 		expect(busy).toBeLessThan(D1_QUERIES_A_RUN);
 	}, 300_000);

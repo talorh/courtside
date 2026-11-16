@@ -804,7 +804,7 @@ to buy or something to fix, and no spam.
 
 | What's watched | Checked | Warns | Urgent | Clears |
 | --- | --- | --- | --- | --- |
-| Stream's minutes left | 5-minute job, at most hourly | under 400 | under 100 | 450 or more |
+| Stream's minutes left | 5-minute job, at most hourly | under 300 a running team (two to three weeks before urgent) | under 150 a team (one game night won't fit, as the game check) | 50 above the warning |
 | Photos in Images (of 100,000) | 3am job, from the sweep's list | 80,000 | 95,000 | under 78,000 |
 | The database's size (of D1's 10 GB) | 3am job, D1's own answer | 4 GB | 9 GB | under 3.8 GB |
 | Server errors (this hour and last) | every 5-minute run | | 10 or more | under 3 |
@@ -815,7 +815,7 @@ to buy or something to fix, and no spam.
 | AI models (Workers AI) | the 3am job, and whenever Platform opens | a model with a planned retirement date | two weeks before it, or a model gone from the catalog | every model current |
 | Team budgets (Costs) | the 3am job, and whenever Costs or Insights opens | a running team's season estimated over its budget | a running team's costs so far over it | every running team within its budget |
 | The video joiner | the 3am job, joining its own test files | it doesn't answer, or can't join them | a game's video couldn't be joined after 6 tries | a good night's join; after an urgent one, only once every such game is dealt with (Keep the first part, or its video deleted) |
-| The game check | the 5-minute job, for each live game 8 hours before tip-off, then hourly while it isn't ok; Platform's button for the week's | a Go live input gone, the joiner not ready, or another alert's warning that touches a game | Stream not answering or short of minutes (150 a game), the 5-minute job stopped, or another urgent alert that touches a game | a fine check, or no live game left in the next 8 hours |
+| The game check | the 5-minute job, for each live game 8 hours before tip-off, then hourly while it isn't ok; Platform's button for the week's | a Go live input gone, the joiner not ready, or another alert's warning that touches a game (not video storage's: it checks the games' minutes itself) | Stream not answering or short of minutes (150 a game), the 5-minute job stopped, or another urgent alert that touches a game | a fine check, or no live game left in the next 8 hours |
 
 Each level is saved, and Platform and Insights' Alerts section show it with its ticket. A level only drops once its figure is past the clearing
 point, so one sitting on a line doesn't flap.
