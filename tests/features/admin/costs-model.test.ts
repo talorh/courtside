@@ -72,7 +72,7 @@ describe("a team's season", () => {
 		const dec = month(a!, "2026-12");
 		expect(dec.use.stored).toBeCloseTo(3 * 61.5, 6);
 		expect(dec.viewing).toBeCloseTo((3 * 60 * 18) / 1000, 6);
-		expect(a!.perGame.own).toEqual({ length: false, watched: false });
+		expect(a!.perGame.from).toEqual({ length: "baseline", watched: "baseline" });
 		expect(a!.estimate).toBeGreaterThan(a!.soFar + 10 * fixedAMonth());
 	});
 
@@ -80,7 +80,7 @@ describe("a team's season", () => {
 		const items = [video("a", 40), video("a", 50), video("a", 60)];
 		const [a] = cost({ teams: [team("a")], items, views: [watched("a", "2026-10", 900)] });
 		expect(a!.games).toBe(3);
-		expect(a!.perGame).toMatchObject({ minutes: 50, watched: 300, own: { length: true, watched: true } });
+		expect(a!.perGame).toMatchObject({ minutes: 50, watched: 300, from: { length: "own", watched: "own" } });
 		expect(month(a!, "2026-12").use.watched).toBeCloseTo(2.7 * 300, 6);
 	});
 
@@ -91,10 +91,33 @@ describe("a team's season", () => {
 		expect(month(a!, "2026-10").use.stored).toBe(55);
 	});
 
-	it("keeps to the baseline with fewer than three games: one short test isn't a season", () => {
+	it("keeps to the baseline with fewer than three games while no team has figures of its own: one short test isn't a season", () => {
 		const [a] = cost({ teams: [team("a")], items: [video("a", 3)], views: [watched("a", "2026-10", 5)] });
 		expect(a!.games).toBe(1);
-		expect(a!.perGame).toMatchObject({ minutes: 60, gb: 5, own: { length: false, watched: false } });
+		expect(a!.perGame).toMatchObject({ minutes: 60, gb: 5, from: { length: "baseline", watched: "baseline" } });
+	});
+
+	it("takes the other teams' figures, game for game, until it has three games of its own", () => {
+		const gb = 1024 ** 3;
+		const items = [video("a", 40, undefined, 2 * gb), video("a", 50), video("a", 60), ...Array.from({ length: 6 }, () => video("b", 20, undefined, 5 * gb)), video("c", 3)];
+		const views = [watched("a", "2026-10", 900), watched("b", "2026-10", 600), watched("c", "2026-10", 5)];
+		const [, , c, d] = cost({ teams: [team("a"), team("b"), team("c"), team("d")], items, views });
+		// a: 3 games of 50 minutes, 300 watched each, a 2 GB original; b: 6 of 20, 100 each, 5 GB originals.
+		for (const t of [c!, d!]) {
+			expect(t.perGame.from).toEqual({ length: "teams", watched: "teams" });
+			expect(t.perGame.minutes).toBeCloseTo((3 * 50 + 6 * 20) / 9, 6);
+			expect(t.perGame.watched).toBeCloseTo((3 * 300 + 6 * 100) / 9, 6);
+			expect(t.perGame.gb).toBeCloseTo((2 + 6 * 5) / 7, 6);
+		}
+		expect(c!.games).toBe(1);
+		expect(month(d!, "2026-12").use.watched).toBeCloseTo(3 * ((3 * 300 + 6 * 100) / 9), 6);
+	});
+
+	it("averages the other teams' clips clip for clip", () => {
+		const clip = (teamId: string, minutes: number): StoredItem => ({ teamId, kind: "clip", minutes, bytes: 0, createdAt: "2026-10-10T00:00:00.000Z", deletedAt: null });
+		const items = [...[1, 2, 3].map(() => video("a", 40)), clip("a", 2), ...[1, 2, 3].map(() => video("b", 40)), clip("b", 0.5), clip("b", 0.5), clip("b", 0.5)];
+		const [, , c] = cost({ teams: [team("a"), team("b"), team("c")], items });
+		expect(c!.perGame.clipMinutes).toBeCloseTo((2 + 3 * 0.5) / 4, 6);
 	});
 
 	it("estimates no more games for a closed team, and nothing shared once it's closed", () => {

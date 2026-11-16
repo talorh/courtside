@@ -8,7 +8,7 @@ import { createTestDeps } from "../../helpers/fakes.ts";
 const costs = (code: string, o: { budget: number | null; soFar: number; estimate: number; status?: "active" | "closed"; seasonStart?: number }): TeamCosts => ({
 	team: { id: `${code}-${o.seasonStart ?? 2026}`, code, seasonStart: o.seasonStart ?? 2026, status: o.status ?? "active", createdAt: "2026-10-01T00:00:00.000Z", closedAt: null, budget: o.budget ?? 200, budgetDefault: o.budget === null, players: 10 },
 	months: [], thisMonth: null, soFar: o.soFar, estimate: o.estimate, games: 0,
-	perGame: { minutes: 60, clipMinutes: 0.5, watched: 0, gb: 5, own: { length: false, watched: false } },
+	perGame: { minutes: 60, clipMinutes: 0.5, watched: 0, gb: 5, from: { length: "baseline", watched: "baseline" } },
 });
 
 describe("a team's budget", () => {

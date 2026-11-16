@@ -8,7 +8,7 @@ import { html, type SafeHtml } from "../../../shared/html.ts";
 import { notice } from "../../../ui/components.ts";
 import { teamLabel } from "../../teams/team-code.ts";
 import { type Currency, money } from "../costs-currency.ts";
-import type { TeamCosts } from "../costs-estimate.ts";
+import type { FigureFrom, PerGame, TeamCosts } from "../costs-estimate.ts";
 import type { MonthCost } from "../costs-model.ts";
 import { BASELINE, DEFAULT_BUDGET_LOCAL, monthName, monthOf, seasonMonths } from "../costs-prices.ts";
 import type { Rate } from "../costs-rate.ts";
@@ -53,6 +53,15 @@ ${tile(money(cur)(c.estimate / BASELINE.games), "A game", `The season's estimate
 </div></section>`;
 }
 
+const FROM: Record<Exclude<FigureFrom, "baseline">, string> = { own: "its own so far", teams: "the other teams' average so far" };
+
+/** What each game left is estimated from, in words. */
+export function basisWords(g: PerGame): string {
+	const length = g.from.length === "baseline" ? "the baseline" : FROM[g.from.length];
+	const watched = g.from.watched === "baseline" ? `the baseline: ${BASELINE.families} families each watching it ${times(BASELINE.viewsPerFamily)}` : FROM[g.from.watched];
+	return `Each game left: ${thousands(g.minutes)} minutes of video (${length}), ${BASELINE.clipsAGame} clips, ${thousands(g.watched)} minutes watched (${watched}) and a ${g.gb.toFixed(1)} GB original.`;
+}
+
 /** `billed`: Cloudflare's bill has been read, so what's spent is actual. */
 export function costTeamPage(p: { frame: AdminFrame; costs: TeamCosts; viewing: Viewing; now: Date; thisSeason: number; cur: Currency; rate: Rate; message: string | null; billed: boolean }): SafeHtml {
 	const c = p.costs, b = c.team.budget, d = money(p.cur), thisMonth = monthOf(p.now.toISOString());
@@ -60,8 +69,7 @@ export function costTeamPage(p: { frame: AdminFrame; costs: TeamCosts; viewing: 
 	let spent = 0;
 	// The budget to date: a twelfth a month of its season (none before it, all of it after).
 	const rows = c.months.map((m) => { spent += m.total; return monthRow(m, spent, (b * season.filter((s) => s <= m.month).length) / 12, p.cur); });
-	const g = c.perGame;
-	const basis = `Each game left: ${thousands(g.minutes)} minutes of video (${g.own.length ? "its own so far" : "the baseline"}), ${BASELINE.clipsAGame} clips, ${thousands(g.watched)} minutes watched (${g.own.watched ? "its own so far" : `the baseline: ${BASELINE.families} families each watching it ${times(BASELINE.viewsPerFamily)}`}) and a ${g.gb.toFixed(1)} GB original.`;
+	const basis = basisWords(c.perGame);
 	const status = p.billed ? ACTUAL : NOT_BILLED;
 	const board = tiles([
 		{ value: d(c.thisMonth?.total ?? 0), label: "This month", pill: status, note: teamChangeWords(c, bars, thisMonth, p.cur) },

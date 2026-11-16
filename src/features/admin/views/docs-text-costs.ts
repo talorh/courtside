@@ -61,8 +61,9 @@ video or a team deleted later changes nothing in a month already spent. A month 
 that failed; the next night tries again.</li>
 <li><b>Dollars</b> are Cloudflare's US dollars, or ${CLUB.currency.name} at the European Central Bank's rate for the day, read a
 few times a day and kept if the rate can't be read.</li>
-<li><b>The estimate</b> for a season uses the team's own figures once it has three games; before that, 30 games of an
-hour, three clips a game and nine families each watching twice.</li>
+<li><b>The estimate</b> for a season uses the team's own figures once it has three games; before that, the other teams'
+figures averaged game for game, and only while no team has any, 30 games of an hour, three clips a game and nine
+families each watching twice.</li>
 <li><b>The budget</b> is $200 a season until one is set on the team's Costs page. Over budget so far is urgent, and
 estimated to go over is a warning: the Team budgets alert, checked each night. A team onboarded for next season is
 left out of it until its season's first month (until then its estimate has it carrying a whole season's fixed costs

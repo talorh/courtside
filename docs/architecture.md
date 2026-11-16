@@ -929,7 +929,8 @@ section and keeps one More menu open at a time.
  with a deleted team's id, has nothing in it). Minutes watched come from Cloudflare's analytics
  by video (`minutesByVideo`), each put to its team and saved by month in `cost_views` (read again when over an hour
  old; kept when a team is deleted). The estimate: 30 games a season spread over the months left, each 60 minutes of
- video, three clips and 9 families each watching it twice, until the team has three games still on the site
+ video, three clips and 9 families each watching it twice, until the team has three games still on the site; till then
+ the other teams' own figures, averaged game for game, stand in, and the baseline only while no team has any
  (`costs-estimate.ts`).
  - **Budgets**: every team's season budget is $200 until one's set on its Costs page
  (the club's currency; logged; empty goes back to the default). Over budget so far is the `budget` alert's urgent,

@@ -3,7 +3,8 @@
 // left (30 a season, less those with a video) are spread evenly over its months left, each adding its video and three
 // clips to what it stores, its minutes watched and its original in R2. The team's own figures stand in for the baseline
 // once it has three games with a video (one short test isn't a season): its videos' and clips' length, its originals'
-// size, and minutes watched a game. Cloudflare's bill, when there is one, puts the months it has billed right
+// size, and minutes watched a game. Until then it takes the other teams' own figures, averaged game for game, and the
+// baseline only while no team has any. Cloudflare's bill, when there is one, puts the months it has billed right
 // (costs-reconcile.ts), and the plan's free watching it shows comes off the months to come.
 import type { BilledMonth } from "./costs-bill-summary.ts";
 import { BASELINE, keptMonths, monthOf, monthSpan, seasonMonths } from "./costs-prices.ts";
@@ -12,29 +13,57 @@ import { reconcile } from "./costs-reconcile.ts";
 import type { CostTeam, SavedViews, StoredItem } from "./costs-repository.ts";
 import { type SavedMonths, savedFor } from "./costs-saved.ts";
 
+/** Where a game's figure comes from: the team's own games, the other teams' average, or the baseline. */
+export type FigureFrom = "own" | "teams" | "baseline";
+export interface PerGame { minutes: number; clipMinutes: number; watched: number; gb: number; from: { length: FigureFrom; watched: FigureFrom } }
+
 export interface TeamCosts {
 	team: CostTeam; months: MonthCost[]; thisMonth: MonthCost | null; soFar: number; estimate: number;
 	/** Games with a video this season, and what a game left is estimated at. */
-	games: number; perGame: { minutes: number; clipMinutes: number; watched: number; gb: number; own: { length: boolean; watched: boolean } };
+	games: number; perGame: PerGame;
 }
 
 const avg = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null);
-/** Games with a video before a team's own figures replace the baseline. */
+/** Games with a video before a team's own figures are used. */
 const OWN_AFTER = 3;
 const GB = 1024 ** 3;
 
-function perGame(t: CostTeam, items: StoredItem[], views: SavedViews[], season: string[], thisMonth: string) {
+/** A team's own figures a game (null: not enough games yet, or none of that kind), and how many games each is over. */
+interface Own { games: number; length: number | null; clip: number | null; clips: number; watched: number | null; gb: number | null; withBytes: number }
+
+function ownFigures(t: CostTeam, items: StoredItem[], views: SavedViews[], season: string[], thisMonth: string): Own {
 	const own = items.filter((i) => i.teamId === t.id && season.includes(monthOf(i.createdAt)));
 	// Its games: videos still on the site (a test, or one deleted, isn't a game; it still counted while it was stored).
 	const videos = own.filter((i) => i.kind === "video" && i.deletedAt === null);
 	const enough = videos.length >= OWN_AFTER;
-	const length = enough ? avg(videos.map((v) => v.minutes)) : null, clip = enough ? avg(own.filter((i) => i.kind === "clip" && i.deletedAt === null).map((c) => c.minutes)) : null;
 	const watchedSoFar = views.filter((v) => v.teamId === t.id && season.includes(v.month) && v.month <= thisMonth).reduce((s, v) => s + v.minutes, 0);
-	const minutes = length ?? BASELINE.gameMinutes;
-	const ownWatched = enough && watchedSoFar > 0;
-	const watched = ownWatched ? watchedSoFar / videos.length : minutes * BASELINE.families * BASELINE.viewsPerFamily;
-	const gb = (enough ? avg(videos.filter((v) => v.bytes).map((v) => v.bytes / GB)) : null) ?? BASELINE.originalGb;
-	return { games: videos.length, perGame: { minutes, clipMinutes: clip ?? BASELINE.clipMinutes, watched, gb, own: { length: length !== null, watched: ownWatched } } };
+	const sized = enough ? videos.filter((v) => v.bytes).map((v) => v.bytes / GB) : [];
+	const clips = enough ? own.filter((i) => i.kind === "clip" && i.deletedAt === null).map((c) => c.minutes) : [];
+	return {
+		games: videos.length, length: enough ? avg(videos.map((v) => v.minutes)) : null, clip: avg(clips), clips: clips.length,
+		watched: enough && watchedSoFar > 0 ? watchedSoFar / videos.length : null, gb: avg(sized), withBytes: sized.length,
+	};
+}
+
+/** The teams' own figures averaged game for game (clips clip for clip, sizes over the videos with one); null where none
+ * has it. */
+function teamsAverage(all: Own[]) {
+	const mean = (pick: (o: Own) => number | null, weight: (o: Own) => number) => {
+		const has = all.filter((o) => pick(o) !== null && weight(o) > 0), n = has.reduce((s, o) => s + weight(o), 0);
+		return n ? has.reduce((s, o) => s + pick(o)! * weight(o), 0) / n : null;
+	};
+	return { length: mean((o) => o.length, (o) => o.games), clip: mean((o) => o.clip, (o) => o.clips), watched: mean((o) => o.watched, (o) => o.games), gb: mean((o) => o.gb, (o) => o.withBytes) };
+}
+
+/** A game left: the team's own figure, else the other teams' average, else the baseline. */
+function perGame(own: Own, teams: ReturnType<typeof teamsAverage>): PerGame {
+	const from = (mine: number | null, theirs: number | null): FigureFrom => (mine !== null ? "own" : theirs !== null ? "teams" : "baseline");
+	const minutes = own.length ?? teams.length ?? BASELINE.gameMinutes;
+	const watched = own.watched ?? teams.watched ?? minutes * BASELINE.families * BASELINE.viewsPerFamily;
+	return {
+		minutes, clipMinutes: own.clip ?? teams.clip ?? BASELINE.clipMinutes, watched, gb: own.gb ?? teams.gb ?? BASELINE.originalGb,
+		from: { length: from(own.length, teams.length), watched: from(own.watched, teams.watched) },
+	};
 }
 
 /** Cloudflare's bill by calendar month, and the minutes of watching a month it shows the plan includes. */
@@ -66,7 +95,9 @@ export function teamCosts(p: CostsInput): TeamCosts[] {
 	const past = [...new Set([...months, ...p.teams.flatMap((t) => keptMonths(t.seasonStart))])].filter((m) => m <= thisMonth).sort();
 	const freeMinutes = p.bill?.freeMinutes ?? 0;
 	const actual = spentMonths(p, past, thisMonth);
-	const basis = new Map(p.teams.map((t) => [t.id, perGame(t, p.items, p.views, seasonMonths(t.seasonStart), thisMonth)]));
+	const owns = new Map(p.teams.map((t) => [t.id, ownFigures(t, p.items, p.views, seasonMonths(t.seasonStart), thisMonth)]));
+	const teams = teamsAverage([...owns.values()]);
+	const basis = new Map([...owns].map(([id, own]) => [id, { games: own.games, perGame: perGame(own, teams) }]));
 	// Each running team's games left, a month, over its months left; and what it stores this month, to build on.
 	const ahead = new Map(p.teams.map((t) => {
 		const left = seasonMonths(t.seasonStart).filter((m) => m > thisMonth);

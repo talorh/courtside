@@ -29,7 +29,7 @@ Platform's last 30 days, the Worker's errors on Insights' Alerts and the minutes
 
 ![A team's month of costs](diagrams/18-2.svg)
 
-*Cloudflare's list prices are in the code (costs-prices.ts). The estimate for the rest of a season uses the team's own figures once it has three games with a video. Cloudflare's bill is the true figure.*
+*Cloudflare's list prices are in the code (costs-prices.ts). The estimate for the rest of a season uses the team's own figures once it has three games with a video, the other teams' until then. Cloudflare's bill is the true figure.*
 
 - **Storage** is worked out from the database: each team's videos' and clips' minutes, against the 1,000 the bundle includes, priced at the further 1,000-minute blocks the account buys, and shared by the minutes each team stores. A clip counts until it or its video goes.
 - **Uploads** are each team's originals in R2 (kept 30 days each), from their sizes on the database's rows, past the free 10 GB, by each team's share.
@@ -38,7 +38,7 @@ Platform's last 30 days, the Worker's errors on Insights' Alerts and the minutes
 - **Cloudflare's bill** (its billable usage, day by day) is read with the same read-only token, which has Billing Read for it, every night at 3am and when Costs opens and the copy is 20 hours old (in a new billing period's first three days the period before too, as its last days come in late), and saved in `billed_usage`, kept 400 days. The days it covers are actual: its charges for watching and R2 take the place of the figures above, and its other charges join the fixed costs. Its records name each product's free allowance, which Costs shows used.
 - **Prices** are Cloudflare's list prices, kept in the code (`costs-prices.ts`), in US dollars, by UTC month as Cloudflare bills.
 - **Australian dollars** are at the European Central Bank's rate for the day, from Frankfurter (no key), saved in `exchange_rates` and read again after six hours. When Frankfurter doesn't answer, the last saved rate is used and it's asked again 15 minutes later, not on every page; before any rate's been read, a set $1.42.
-- **The estimate** spreads a running team's games left (30 a season, less those with a video) over its months left, each adding an hour of video, three clips, nine families each watching twice and an original in R2. Once the team has three games with a video, its own figures stand in.
+- **The estimate** spreads a running team's games left (30 a season, less those with a video) over its months left, each adding a game's video, three clips, its minutes watched and an original in R2. Once the team has three games with a video, its own figures are used; until then, the other teams' figures, averaged game for game; and only while no team has any, the baseline: an hour of video and nine families each watching twice.
 - **Budgets** are set in Australian dollars on each team's own Costs page ($200 a season until one is), saved on the team and logged. The Team budgets alert is urgent for a team over budget so far and warns for one estimated to go over; it's checked whenever Costs or Insights opens and every night at 3am.
 
 ### What sets each alert

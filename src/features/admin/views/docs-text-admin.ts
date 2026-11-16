@@ -56,8 +56,9 @@ month as Cloudflare bills.</li>
 ${code("exchange_rates")} and read again after six hours. When Frankfurter doesn't answer, the last saved rate is used
 and it's asked again 15 minutes later, not on every page; before any rate's been read, a set $1.42.</li>
 <li><b>The estimate</b> spreads a running team's games left (30 a season, less those with a video) over its months
-left, each adding an hour of video, three clips, nine families each watching twice and an original in R2. Once the team
-has three games with a video, its own figures stand in.</li>
+left, each adding a game's video, three clips, its minutes watched and an original in R2. Once the team has three games
+with a video, its own figures are used; until then, the other teams' figures, averaged game for game; and only while no
+team has any, the baseline: an hour of video and nine families each watching twice.</li>
 <li><b>Budgets</b> are set in ${CLUB.currency.name} on each team's own Costs page ($200 a season until one is), saved on
 the team and logged. The Team budgets alert is urgent for a team over budget so far and warns for one estimated to go
 over; it's checked whenever Costs or Insights opens and every night at 3am.</li></ul>
