@@ -8,6 +8,10 @@ was wrong), the area in bold, then a plain sentence saying what changed for the 
 where ..."). Every deploy adds its lines at the top of today's date, and the deploy (`npm run release`, then Workers
 Builds) sends the top line, in plain words, as its message.
 
+## 17 Nov 2026
+
+- [Fix] **Costs:** Fixed an issue where the months to come counted only the Stream storage their minutes needed, not the storage bought: they now count at least what's bought, since Cloudflare bills it until it's lowered.
+
 ## 16 Nov 2026
 
 - [Fix] **Home:** On a computer, the banner over the court is tinted with the club's own colour, where it had a fixed green.

@@ -931,7 +931,8 @@ section and keeps one More menu open at a time.
  old; kept when a team is deleted). The estimate: 30 games a season spread over the months left, each 60 minutes of
  video, three clips and 9 families each watching it twice, until the team has three games still on the site; till then
  the other teams' own figures, averaged game for game, stand in, and the baseline only while no team has any
- (`costs-estimate.ts`).
+ (`costs-estimate.ts`). Each month to come counts at least the Stream storage bought now (billed until it's lowered),
+ more once the minutes stored need it.
  - **Budgets**: every team's season budget is $200 until one's set on its Costs page
  (the club's currency; logged; empty goes back to the default). Over budget so far is the `budget` alert's urgent,
  estimated to go over its warning (one alert for every team, the worst first; checked when Costs or Alerts opens

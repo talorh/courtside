@@ -44,6 +44,17 @@ describe("a team's month", () => {
 		expect(month(a!, "2026-10").storage).toBe(0);
 	});
 
+	it("keeps charging the storage bought in the months to come, and more once the minutes need it", () => {
+		// Bought stays bought (and billed) until it's lowered, however few minutes are stored.
+		const [a] = cost({ teams: [team("a")], items: [video("a", 100)], bought: 3000 });
+		expect(month(a!, "2026-12").storage).toBeCloseTo(10, 6);
+		expect(month(a!, "2027-09").storage).toBeCloseTo(10, 6);
+		// 1,000 bought, and the season's games fill past it: another block once they do.
+		const [b] = cost({ teams: [team("a")], items: [video("a", 100)], bought: 1000 });
+		expect(month(b!, "2026-12").storage).toBe(0);
+		expect(month(b!, "2027-09").storage).toBeCloseTo(5, 6);
+	});
+
 	it("charges minutes watched at US$1 a thousand, and splits minutes no team has between the running teams", () => {
 		const views = [watched("a", "2026-10", 3000), watched("", "2026-10", 1000)];
 		const [a, b] = cost({ teams: [team("a"), team("b")], views });

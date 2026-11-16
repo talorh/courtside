@@ -114,7 +114,10 @@ export function teamCosts(p: CostsInput): TeamCosts[] {
 		}
 		// A month to come is a whole month for every team running now.
 		const running = new Map(p.teams.filter((t) => t.status === "active" && uses.has(t.id) && runningShare(thisMonth, t) > 0).map((t) => [t.id, 1] as const));
-		return allocate(month, { uses, running, unmatched: 0, minutesBought: null, estimate: true, freeMinutes });
+		// Storage bought is billed until it's lowered: at least that much, more once the minutes need it.
+		const needed = [...uses.values()].reduce((s, u) => s + u.stored, 0);
+		const minutesBought = p.minutesBoughtNow === null ? null : Math.max(p.minutesBoughtNow, needed);
+		return allocate(month, { uses, running, unmatched: 0, minutesBought, estimate: true, freeMinutes });
 	});
 	return p.teams.map((t) => {
 		const season = seasonMonths(t.seasonStart);

@@ -42,7 +42,9 @@ what Cloudflare charged for watching and for R2 stands in place of the site's ow
 as before (by minutes watched, by GB of originals), and anything else it charged is shared like the fees. The plan's
 fees and the storage bought aren't in that bill: they're charged at their price, so they count as actual too. The days
 the bill hasn't reached yet (it runs about a day behind) and the months to come are estimated, and the estimate leaves
-out as many minutes of watching a billing period as the bill shows were free. A month on the chart says which it is.
+out as many minutes of watching a billing period as the bill shows were free.
+Each month to come counts at least the Stream storage bought now (it's billed until it's lowered), and another
+block once the minutes stored need it. A month on the chart says which it is.
 When the bill can't be read, the 3am job raises its ticket and Costs shows the copy last read.</p>
 <h3>How Costs works it out</h3>
 <p>In short below; where each figure comes from, and how it's kept, is in The admin area and its figures.</p>
