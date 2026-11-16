@@ -5,225 +5,180 @@
 <h1 align="center">Courtside</h1>
 
 <p align="center">
-  Private game video and team management for a basketball club's junior teams.
+  A private website for your basketball club's junior teams.<br>
+  Stream the game, watch it back, and keep the team organised in one place.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-2F6FDB"></a>
-  <img alt="Runs on Cloudflare Workers" src="https://img.shields.io/badge/runs%20on-Cloudflare%20Workers-14274E">
-  <img alt="Node 26" src="https://img.shields.io/badge/node-26-14274E">
+  <img alt="Runs on Cloudflare" src="https://img.shields.io/badge/runs%20on-Cloudflare-14274E">
 </p>
 
 <p align="center">
   <a href="INSTALL.md"><b>Set it up for your club</b></a> &nbsp;|&nbsp;
-  <a href="docs/admin/README.md"><b>Documentation</b></a> &nbsp;|&nbsp;
-  <a href="docs/spec.md">What it does</a> &nbsp;|&nbsp;
-  <a href="docs/architecture.md">How it works</a>
+  <a href="docs/admin/README.md"><b>Documentation</b></a>
 </p>
 
 <br>
 
-![An empty court in the club's colours, the picture a game shows before its video is ready](public/court.webp)
+![An empty basketball court in the club's colours](public/court.webp)
 
 <br>
 
-A parent streams the game live from a phone's browser, with nothing to install. Families sign in with a code sent to
-their email and watch live, about a second behind the court, or later. They can download the game, cut highlight
-clips and share photos.
+## Why it exists
 
-Team managers run the fixture, the squad, the people and the game-day roster in the same place. A site admin looks
-after the whole club from an admin area with costs, alerts and a log.
+Junior basketball families want to see the game. Grandparents can't always get there, parents miss games for work,
+and kids love watching themselves play.
 
-The club's names, colours and words live in one file, so any club can run it in its own Cloudflare account.
+Posting kids' games on social media isn't the answer. Courtside gives each team its own private place for game video
+and photos, seen only by the families on that team.
 
-<br>
-
-## Filming
-
-You need one of these.
-
-- **A phone on a tripod.** Any phone, on an inexpensive phone tripod at the side of the court. Open the Go live page
-  and tap Go live. The phone records the game as it streams, so a dropped signal doesn't lose any of it.
-- **An AI tracking camera.** Any camera whose app can stream to an RTMPS (secure RTMP) address. The Go live page gives
-  the Server and Stream key to paste into the app.
-
-No camera on the day? Film on any phone and upload the video afterwards. Uploads carry on where they stopped over a
-weak signal.
+It started as one parent filming their son's team, and grew into something any club can run.
 
 <br>
 
-## What it does
+## How filming works
+
+Pick whichever suits you.
+
+**A phone on a tripod.** Any phone on a cheap phone tripod at the side of the court. Open the website, tap Go
+live, and families are watching about a second later. Nothing to install.
+
+**An AI camera that follows the ball.** If your camera's app can stream to an RTMPS address (some apps just call it
+RTMP), it works. The site gives you the two details to paste into the app.
+
+**Upload it later.** Filmed on a phone without streaming? Upload the video when you get home. If the signal drops,
+it carries on where it left off.
+
+The phone also keeps its own recording while it streams, so a patchy signal at the stadium doesn't cost you any of
+the game.
+
+<br>
+
+## What everyone gets
 
 **Families**
 
-- Watch live or afterwards, in the browser or full screen on a TV.
-- Download the game in HD.
-- Cut highlight clips, tag the players and star favourites.
-- See and add the team's photos.
-- Ask for a video, clip or photo to be taken down.
+- Watch live, or catch up later on a phone, computer or TV
+- Download the full game
+- Cut highlight clips of their child and tag who's in them
+- Share team photos
 
-**Whoever films**
+**The person filming**
 
-- Go live in one tap. Pause at the break and families see a Game break card.
-- A locked phone or closed page doesn't end the game. Carry on streaming picks it up and the parts are joined into
-  one video.
+- One tap to go live
+- Pause at half time
+- If the phone locks or the page closes, carry on and it's still one video at the end
 
 **Coaches and team managers**
 
-- The fixture by hand, from a PlayHQ link, from a spreadsheet, or from any fixture page read by AI. Final scores fill
-  themselves in.
-- The squad, the people and their roles, and a game-day roster with duties and a ready-made WhatsApp message.
-- Private coaching notes on each game, and a Help page that answers questions.
+- The season's fixture, added by hand, from PlayHQ, or from a spreadsheet
+- The squad, the families, and a game-day roster with a WhatsApp message ready to send
+- Private notes on each game
 
-**Site admins**
+**The club's admins**
 
-- Insights, Teams, Support, Platform limits, Costs checked against Cloudflare's own bill, one Log and a Changelog.
-- Alerts that only raise a ticket when something needs doing.
-- A check 8 hours before each live game that everything it needs is ready.
-- Documentation with an AI assistant that answers from it.
+- One place to look after every team
+- A clear picture of what the site costs each month
+- A heads-up only when something actually needs fixing
 
 <br>
 
-## Private by design
+## Safe for kids
 
-Every page and file sits behind the sign-in. Footage goes straight from the phone to the club's own Cloudflare
-account and reaches only the people on the team's list. Children's game video gets a private home instead of social
-media.
-
-The example club, the Saints, and a squad named after the 1992 Dream Team stand in for real people throughout the
-code, tests and docs.
+- Only people a team manager adds can sign in, with a code sent to their email.
+- Nothing is public. Every video, photo and page needs a sign-in.
+- Each team sees only its own games.
+- The video goes straight into your club's own account, not anyone else's.
 
 <br>
 
-## What it isn't
+## What it doesn't do
 
-- **Stats or game analysis.** Download the game in HD and put it into [Superstat](https://superstat.com.au).
-- **Live scores.** PlayHQ and My Hoops have them. The site takes the final score once it's entered.
-- **A chat.** The team's WhatsApp group stays the team chat.
+- **Stats.** Download the game and use something like [Superstat](https://superstat.com.au) for that.
+- **Live scores.** PlayHQ and My Hoops already do this well.
+- **Chat.** Your team's WhatsApp group is still the place for that.
 
 <br>
 
-## What it looks like
+## Have a look
 
 <table>
 <tr>
-<td><img src="docs/screenshots/mobile-home.png" alt="Home on a phone: the court, Upload a game video, Go live, Watch games" width="190"></td>
-<td><img src="docs/screenshots/mobile-games.png" alt="Watch games on a phone: each game with its score and when it was played" width="190"></td>
-<td><img src="docs/screenshots/mobile-game.png" alt="A game's page on a phone, before its video is ready" width="190"></td>
-<td><img src="docs/screenshots/mobile-fixture.png" alt="The fixture on a phone, with Add game, Add fixture and Add from a spreadsheet" width="190"></td>
+<td><img src="docs/screenshots/mobile-home.png" alt="The team's home page on a phone" width="190"></td>
+<td><img src="docs/screenshots/mobile-games.png" alt="The list of games on a phone" width="190"></td>
+<td><img src="docs/screenshots/mobile-game.png" alt="One game's page on a phone" width="190"></td>
+<td><img src="docs/screenshots/mobile-fixture.png" alt="The fixture on a phone" width="190"></td>
 <td><img src="docs/screenshots/mobile-golive.png" alt="The Go live page on a phone" width="190"></td>
 </tr>
 </table>
 
-<img src="docs/screenshots/desktop-home.png" alt="Home on a computer: the sidebar, the court, the squad as singlets" width="100%">
+<img src="docs/screenshots/desktop-home.png" alt="The team's home page on a computer" width="100%">
 
 <table>
 <tr>
-<td width="50%"><img src="docs/screenshots/admin-insights.png" alt="The admin area's Insights page: is the site all right, with each check"></td>
-<td width="50%"><img src="docs/screenshots/admin-costs.png" alt="The admin area's Costs page: this month, the season, a player a season, against the budget"></td>
+<td width="50%"><img src="docs/screenshots/admin-insights.png" alt="The admin area's overview"></td>
+<td width="50%"><img src="docs/screenshots/admin-costs.png" alt="The admin area's costs page"></td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/admin-docs.png" alt="The admin area's Documentation page with its AI assistant"></td>
-<td><img src="docs/screenshots/admin-log.png" alt="The admin area's Log"></td>
+<td><img src="docs/screenshots/admin-docs.png" alt="The admin area's documentation"></td>
+<td><img src="docs/screenshots/admin-log.png" alt="The admin area's activity log"></td>
 </tr>
 </table>
 
-<sub>The example Saints club from the local seed (<code>npm run dev:seed</code>).</sub>
+<sub>Everyone in these screenshots is made up. The example club is the Saints, and its squad is named after the 1992
+Dream Team.</sub>
 
 <br>
 
-## How it's built
+## Setting it up for your club
 
-One Cloudflare Worker, rendered on the server, with no other servers and no third-party services.
+You'll need a Cloudflare account and a web address for the site. It runs entirely in your club's own account, so
+you own everything.
 
-| Piece | Cloudflare product |
-| --- | --- |
-| Data | D1 |
-| Uploads | R2 |
-| Live video and playback | Stream |
-| Joining a game streamed in parts | Containers, running ffmpeg |
-| Photos | Images |
-| AI helpers | Workers AI |
-| Sign-in codes and alerts | Email Sending |
-| Code and deploys | Artifacts and Workers Builds |
+[INSTALL.md](INSTALL.md) walks you through it with an AI coding assistant. It asks for your club's name, colours, logo
+and email, then sets things up one step at a time, checking with you before each one. Most clubs can be up and running
+in an afternoon.
 
-Why each was chosen, and what was turned down, is in [Technology decisions](docs/admin/30-technology-decisions.md).
-
-![How the site fits together: phones and computers reach one Worker through Cloudflare's edge protection, and the Worker uses D1, Workers AI, Email Sending, R2, Stream, Images and the container joiner](docs/admin/diagrams/02-1.svg)
+What it costs depends on how much your teams film and watch. The admin area shows you exactly where the money goes.
 
 <br>
 
-## Getting started
+## For developers
 
-**For a club**, [INSTALL.md](INSTALL.md) is written for an AI coding agent to follow with you. It asks for your
-club's name, colours, logo, domain and email, and does each step with a dry run and your yes first.
-
-**For a developer**:
+Courtside is one Cloudflare Worker with no other servers. It uses Cloudflare's own storage, video, images, AI and
+email services.
 
 ```bash
 npm install
 cp .dev.vars.example .dev.vars        # stand-in secrets
 npm run dev:db && npm run dev:seed    # a local database with the example club
-npm run dev                           # http://localhost:5173, signed in
-npm run check                         # types, unit tests, line limits and rules
-npm run e2e                           # the browser suite on Android, iPhone and Firefox, in podman
+npm run dev                           # http://localhost:5173, already signed in
+npm run check                         # types, unit tests and code rules
+npm run e2e                           # browser tests on Android, iPhone and Firefox
 ```
 
-[Setting up a computer](docs/admin/24-setting-up-a-computer.md) has the long form, and [AGENTS.md](AGENTS.md) the
-rules every change follows.
+Good places to start:
 
-<br>
+- [How it works](docs/architecture.md), with diagrams
+- [What it does](docs/spec.md), page by page
+- [Why it's built this way](docs/admin/30-technology-decisions.md)
+- [AGENTS.md](AGENTS.md), the rules every change follows
 
-## Documentation
-
-| Read | For |
-| --- | --- |
-| [The Documentation](docs/admin/README.md) | Everything, in order, as the admin area shows it |
-| [Technology decisions](docs/admin/30-technology-decisions.md) | What it's built on and why |
-| [docs/spec.md](docs/spec.md) | What the site does, page by page |
-| [docs/architecture.md](docs/architecture.md) | How it works, with diagrams and the data model |
-| [docs/runbooks/](docs/runbooks/) | Cloudflare setup, staging and the maintenance page |
-| [docs/child-safety.md](docs/child-safety.md) | The site against the Child Safe Standards used in Australian junior sport |
-| [AGENTS.md](AGENTS.md), [docs/agent-setup.md](docs/agent-setup.md) | Working on it with an AI coding agent |
-
-<br>
-
-## How a change ships
-
-1. Built on a branch off `staging`, with tests first.
-2. Merged into `staging`, deployed with `npm run staging` and tried on real phones.
-3. `main` is fast-forwarded and `npm run release` runs every check again. It refuses while anyone is uploading or
-   streaming, then Workers Builds deploys it.
-
-No releases on game days unless they fix something broken.
-
-<br>
-
-## What's where
-
-| Folder | What |
-| --- | --- |
-| `src/club.ts`, `deploy.config.ts` | The club, and where it runs |
-| `src/` | The Worker |
-| `public/` | Page scripts, styles, fonts and the club's images |
-| `migrations/` | The D1 schema |
-| `infra/` | What `cf` provisions: R2 rules, Images variants, the zone's protections |
-| `join/` | The video joiner |
-| `maintenance/` | The Back soon page |
-| `tests/` | Unit tests, `tests/e2e/` the browser suite, `tests/isolation/` two teams through every route |
-| `scripts/` | Release, staging, docs and club commands |
+Changes are tried on a test copy of the site first, then on real phones, before going live. Nothing goes live on a
+game day unless it fixes something.
 
 <br>
 
 ## Contributing
 
-Courtside is in use every Friday night, and each change goes through those games before it lands here.
+Courtside is used every Friday night, so every change gets a real test.
 
-Bug reports, wording fixes and pull requests are welcome. For anything bigger than a fix, open an issue first.
-[AGENTS.md](AGENTS.md) has the rules, and `npm run check` has to pass.
+Bug reports, ideas and pull requests are all welcome. For anything bigger than a small fix, open an issue first so we
+can talk it through.
 
 <br>
 
 ## Licence
 
-[Apache 2.0](LICENSE).
+Free to use and change under [Apache 2.0](LICENSE).
