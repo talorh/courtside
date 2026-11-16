@@ -194,8 +194,8 @@ and send video straight to storage on short-lived signed links.
 
 ## For developers
 
-Courtside is one Cloudflare Worker with no other servers. It uses Cloudflare's own storage, video, images, AI and
-email services.
+Courtside runs entirely on Cloudflare's developer platform, with no servers of its own to look after. One Worker
+serves the site, and Cloudflare's own database, storage, video, images, AI and email do the rest.
 
 ```bash
 npm install
