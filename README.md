@@ -85,9 +85,25 @@ the game.
 
 <br>
 
-## Child safety
+## Privacy
 
 Courtside makes best efforts to meet [Basketball Victoria's child safe practices](https://www.basketballvictoria.com.au/resources/child-safe-standards).
+
+Every page, video and photo needs a sign-in, and Cloudflare guards the site before anyone gets that far.
+
+- **No passwords.** People sign in with a code sent to their email, and only addresses a team manager has added can
+  get one. Cloudflare Turnstile checks it's a person asking, not a script.
+- **Each team sees only its own.** Families on one team can't see another team's games or photos.
+- **Links that expire.** Videos and photos play only through signed links that run out, so a copied link soon stops
+  working.
+- **Protection at the front door.** DDoS protection, Cloudflare's managed firewall rules, rate limiting, and a "verify
+  you're human" check for anyone not signed in.
+- **Hidden from search and AI.** AI crawlers are blocked and no page is shown in search results.
+- **Encrypted all the way.** HTTPS only, with HSTS.
+- **Your club's own account.** The video and data live in the club's Cloudflare account, not someone else's.
+
+More in [Privacy and child safety](docs/admin/16-privacy-and-child-safety.md) and
+[Cloudflare setup](docs/admin/03-cloudflare-setup.md).
 
 <br>
 
