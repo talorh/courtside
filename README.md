@@ -169,8 +169,9 @@ You'll need a Cloudflare account and a web address for the site. It runs entirel
 you own everything.
 
 [INSTALL.md](INSTALL.md) walks you through it with an AI coding assistant. It asks for your club's name, colours, logo
-and email, then sets things up one step at a time, checking with you before each one. Most clubs can be up and running
-in an afternoon.
+and email, then sets things up one step at a time, checking with you before each one.
+
+You can be up and running in a couple of hours, or about four and a half beers.
 
 What it costs depends on how much your teams film and watch. The admin area shows you exactly where the money goes.
 
