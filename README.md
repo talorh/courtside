@@ -73,15 +73,44 @@ the game.
 
 **Coaches and team managers**
 
-- The season's fixture, added by hand, from PlayHQ, or from a spreadsheet
-- The squad, the families, and a game-day roster with a WhatsApp message ready to send
+- The season's fixture from a PlayHQ link, a spreadsheet, or typed in. Final scores fill themselves in.
+- Any other fixture page works too. Paste the link and Workers AI reads the games off it.
+- A game-day roster that shares out scoring and the other duties fairly between families, follows the fixture as it
+  changes, and writes the WhatsApp message for you
+- The squad, the families and who can do what
 - Private notes on each game
 
-**The club's admins**
+**Everyone**
 
-- One place to look after every team
-- A clear picture of what the site costs each month
-- A heads-up only when something actually needs fixing
+- A Help page with a chat assistant, named after your team manager, that answers questions about using the site.
+  It runs on Workers AI and only answers from the Help page.
+
+<br>
+
+## The admin area
+
+One admin area runs every team in the club.
+
+<img src="docs/screenshots/admin-insights.png" alt="The admin area's Insights page: whether the site is all right, each check as a light, and the club's figures" width="100%">
+
+- **Teams.** Start a team for the season and add its team manager. Each team closes by itself once its season and the
+  time its footage is kept are over, or sooner if you choose.
+- **Costs.** What each team costs on Cloudflare month by month, checked against Cloudflare's own bill, with a budget
+  for each team.
+- **Alerts.** Video storage, the database, emails, the nightly backup and the background jobs are all watched. You
+  only get an email when something needs doing.
+- **Game check.** Eight hours before each live game it checks everything that game needs is ready.
+- **Platform and the Log.** Usage against Cloudflare's limits, traffic and errors from Cloudflare's analytics, and one
+  log of everything that happened, by team, person or device.
+- **Support.** Requests from families and access requests land in one place.
+- **Documentation.** The whole site explained, with an AI assistant that answers from it.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/admin-costs.png" alt="The admin area's Costs page: this month, the season, a player a season, against the budget"></td>
+<td width="50%"><img src="docs/screenshots/admin-log.png" alt="The admin area's Log"></td>
+</tr>
+</table>
 
 <br>
 
@@ -128,17 +157,6 @@ More in [Privacy and child safety](docs/admin/16-privacy-and-child-safety.md) an
 </table>
 
 <img src="docs/screenshots/desktop-home.png" alt="The team's home page on a computer" width="100%">
-
-<table>
-<tr>
-<td width="50%"><img src="docs/screenshots/admin-insights.png" alt="The admin area's overview"></td>
-<td width="50%"><img src="docs/screenshots/admin-costs.png" alt="The admin area's costs page"></td>
-</tr>
-<tr>
-<td><img src="docs/screenshots/admin-docs.png" alt="The admin area's documentation"></td>
-<td><img src="docs/screenshots/admin-log.png" alt="The admin area's activity log"></td>
-</tr>
-</table>
 
 <sub>Everyone in these screenshots is made up. The example club is the Saints, and its squad is named after the 1992
 Dream Team.</sub>
