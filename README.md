@@ -24,7 +24,20 @@
 
 <br>
 
-![An empty basketball court in the club's colours](public/court.webp)
+<img src="docs/screenshots/desktop-home.png" alt="A team's home page on a computer: upload, go live, watch games, the roster, the fixture and photos" width="100%">
+
+<table>
+<tr>
+<td><img src="docs/screenshots/mobile-home.png" alt="The team's home page on a phone" width="190"></td>
+<td><img src="docs/screenshots/mobile-games.png" alt="The list of games on a phone" width="190"></td>
+<td><img src="docs/screenshots/mobile-game.png" alt="One game's page on a phone" width="190"></td>
+<td><img src="docs/screenshots/mobile-fixture.png" alt="The fixture on a phone" width="190"></td>
+<td><img src="docs/screenshots/mobile-golive.png" alt="The Go live page on a phone" width="190"></td>
+</tr>
+</table>
+
+<sub>Everyone in these screenshots is made up. The example club is the Saints, and its squad is named after the 1992
+Dream Team.</sub>
 
 <br>
 
@@ -149,25 +162,6 @@ More in [Privacy and child safety](docs/admin/16-privacy-and-child-safety.md) an
 
 <br>
 
-## Have a look
-
-<table>
-<tr>
-<td><img src="docs/screenshots/mobile-home.png" alt="The team's home page on a phone" width="190"></td>
-<td><img src="docs/screenshots/mobile-games.png" alt="The list of games on a phone" width="190"></td>
-<td><img src="docs/screenshots/mobile-game.png" alt="One game's page on a phone" width="190"></td>
-<td><img src="docs/screenshots/mobile-fixture.png" alt="The fixture on a phone" width="190"></td>
-<td><img src="docs/screenshots/mobile-golive.png" alt="The Go live page on a phone" width="190"></td>
-</tr>
-</table>
-
-<img src="docs/screenshots/desktop-home.png" alt="The team's home page on a computer" width="100%">
-
-<sub>Everyone in these screenshots is made up. The example club is the Saints, and its squad is named after the 1992
-Dream Team.</sub>
-
-<br>
-
 ## Setting it up for your club
 
 You'll need a Cloudflare account and a web address for the site. It runs entirely in your club's own account, so
@@ -186,6 +180,15 @@ covers the database and storage too), [Stream](https://developers.cloudflare.com
 
 The admin area's Costs page shows what you're really spending, checked against Cloudflare's own bill, broken down by
 team and by player, with a budget for each team.
+
+<br>
+
+## How it fits together
+
+Everything runs in your club's own Cloudflare account. Phones talk to one Worker, behind Cloudflare's edge protection,
+and send video straight to storage on short-lived signed links.
+
+![How the site fits together: phones and computers reach one Worker through Cloudflare's edge protection. The Worker uses D1, Workers AI, Email Sending, R2, Stream and Images, and hands a game's parts to the joiner, a container with ffmpeg run by a Durable Object](docs/admin/diagrams/02-1.svg)
 
 <br>
 
