@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 16 Nov 2026
 
+- [Enhancement] **Branding:** The example club's logo is new: a ball on fire ripping through the hoop and swinging a burning net, in a ring of the club's colours, on the Home Screen icon, the launch screen, the Full time and win cards and the court.
 - [Fix] **Insights:** Fixed an issue where the video storage alert stayed up for up to an hour after more Stream minutes were bought: opening Insights or Platform, or Check again, now checks Stream there and then.
 - [Enhancement] **Costs:** A new team's season is now estimated from the other teams' own games (their length, minutes watched and file sizes, averaged game for game) until it has three of its own, instead of a fixed guess that overstated watching several times over; the team's Costs page says which it uses.
 - [Enhancement] **Platform:** The video storage alert now scales with the number of running teams: it warns under 300 minutes left a team and is urgent under 150 a team, so it gives the same notice with four teams as with one; urgent now says it's too low for a game night.

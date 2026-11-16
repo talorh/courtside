@@ -250,6 +250,7 @@ it). The images are files in `public/`, replaced with the club's own at these si
 | `court.webp` | 1600 × 900 | The empty player and Home: made by `npm run club -- court` from `logo.png` and the colours |
 | `technical-difficulties.jpg` | 360 × 354 | A thumbnail that couldn't load |
 
-`npm run club -- placeholder` draws a stand-in set in the club's colours for a club with no logo yet;
+`npm run club -- placeholder` draws a stand-in set for a club with no logo yet: a ball on fire swinging the net, in a ring
+of the club's colours (it needs ImageMagick with librsvg, as `magick -list format` shows beside SVG);
 `npm run club -- all` makes the court and copies the mark into `src/ui/club-mark-inline.ts` and `maintenance/logo.ts`
 (both generated; a test holds them to the files). Commit the lot.

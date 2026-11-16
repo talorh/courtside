@@ -1,5 +1,5 @@
 // npm run club -- placeholder | court | mark | all   The club's generated images (INSTALL.md, Branding):
-//   placeholder  draws the stand-in logo set in the club's colours (public/logo.png, the icons, club-mark.webp), for a
+//   placeholder  draws the stand-in logo set, a ball on fire in the club's ring (public/logo.png, the icons, club-mark.webp), for a
 //                club with no logo yet; a club's own files replace them (same names and sizes)
 //   court        public/court.webp, the empty player's picture: a court in the club's colours with its logo and name
 //   mark         src/ui/club-mark-inline.ts (the launch screen's copy of club-mark.webp) and maintenance/logo.ts
