@@ -134,6 +134,16 @@ describe("Go live from the browser", () => {
 		expect(ended).toMatch(/<div class="player"><div class="live-over" role="status"><svg class="court"[^]*?<\/svg><span class="over-title">Full time<\/span><img src="\/club-mark.webp" alt=""><b>The live stream has ended<\/b><span class="over-note">It's being saved and will be ready to watch here in about 20 to 25 minutes.<\/span><\/div><\/div>/);
 	});
 
+	it("End game with minutes still on the filming phone: the Full time card says the video waits for that phone", async () => {
+		const { deps, gameId, client, later } = await filming();
+		deps.live.connected.add("live-1");
+		later(40 * 60);
+		await client(`/api/live/${gameId}/end`, jsonBody({ recordedSeconds: 2400, cause: "tapped", keptMinutes: 6 }));
+		const ended = await (await client(`/games/${gameId}`)).text();
+		expect(ended).toContain("Some of the game is still on the filming phone, so it'll be ready to watch here about 20 to 25 minutes after that phone has sent it.");
+		expect(ended).not.toContain("will be ready to watch here in about 20 to 25 minutes.");
+	});
+
 	it("the cron notes it's live", async () => {
 		const { deps, row } = await filming();
 		deps.live.connected.add("live-1");

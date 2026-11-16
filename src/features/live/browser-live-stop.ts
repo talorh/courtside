@@ -20,7 +20,7 @@ import { listSegments } from "./recording-segments-repository.ts";
  * Nothing recorded at all (Go live opened, the camera never started) is the same, with nothing to throw away.
  * Otherwise the stream ends for good and the recording, still uploading, becomes the game video. All go in the Log.
  */
-export async function stopBrowserLive(deps: TeamDeps, member: Member, gameId: number, page: { recordedSeconds?: number; cause?: StopCause } = {}): Promise<{ status: "ended" } | { status: "test"; seconds: number }> {
+export async function stopBrowserLive(deps: TeamDeps, member: Member, gameId: number, page: { recordedSeconds?: number; cause?: StopCause; keptMinutes?: number } = {}): Promise<{ status: "ended" } | { status: "test"; seconds: number }> {
 	const { db } = deps;
 	const open = await getOpenLiveForGame(db, deps.team.id, gameId);
 	if (!open) throw notFound("Live stream");
@@ -39,8 +39,8 @@ export async function stopBrowserLive(deps: TeamDeps, member: Member, gameId: nu
 	const carriedOn = video ? (await listSegments(db, deps.team.id, video.id)).length > 0 : false;
 	const { seconds, recorded } = video && !carriedOn ? await streamSeconds(deps, video, page.recordedSeconds) : { seconds: Infinity, recorded: false };
 	if (video?.status !== "uploading" || seconds >= MIN_RECORDING_SECONDS) {
-		await endLive(deps, gameId);
-		if (!open.endRequestedAt) await logLive(deps, member.email, "live_ended", gameId, page.cause ? CAUSE_WORDS[page.cause] : "");
+		await endLive(deps, gameId, page.keptMinutes ?? null);
+		if (!open.endRequestedAt) await logLive(deps, member.email, "live_ended", gameId, endWords(page));
 		return { status: "ended" };
 	}
 	await deleteVideo(deps, video, "live_test");
@@ -48,6 +48,12 @@ export async function stopBrowserLive(deps: TeamDeps, member: Member, gameId: nu
 	await switchOff(deps, open);
 	await logLive(deps, member.email, "live_test", gameId, testWords(seconds, recorded, page.cause));
 	return { status: "test", seconds: Math.round(seconds) };
+}
+
+/** The Log's End game line: how it ended, and the minutes still on the phone when there were some (it waits for them). */
+function endWords(page: { cause?: StopCause; keptMinutes?: number }): string {
+	const kept = page.keptMinutes ? `with about ${page.keptMinutes} ${page.keptMinutes === 1 ? "minute" : "minutes"} of the game still on the phone` : "";
+	return [page.cause ? CAUSE_WORDS[page.cause] : "", kept].filter(Boolean).join(", ");
 }
 
 /**

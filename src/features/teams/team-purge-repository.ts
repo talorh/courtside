@@ -70,6 +70,7 @@ export async function deleteLeftovers(db: D1Database, teamId: string): Promise<b
 		db.prepare(`UPDATE admin_log SET team_code = (SELECT code FROM teams WHERE id = ?1), team_season = (SELECT season_start FROM teams WHERE id = ?1),
 			team_id = NULL WHERE team_id = ?1 AND ${NOTHING_LEFT}`).bind(teamId),
 		db.prepare(`DELETE FROM cost_views WHERE team_id = ?1 AND ${NOTHING_LEFT}`).bind(teamId),
+		db.prepare(`DELETE FROM cost_months WHERE team_id = ?1 AND ${NOTHING_LEFT}`).bind(teamId),
 		db.prepare(`DELETE FROM teams WHERE id = ?1 AND ${NOTHING_LEFT}`).bind(teamId),
 	]);
 	return (results.at(-1)?.meta.changes ?? 0) > 0;

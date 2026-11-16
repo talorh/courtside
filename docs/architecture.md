@@ -169,8 +169,12 @@ flowchart TD
  same Turnstile check. It opens one of the support desk's own tickets (`source` 'site', `alert_kind`
  `access:<email>`, topic members, title "Access request: <name>, <team>", `contact` the address), emailed to the
  admins as every ticket is. The unique index on open site tickets makes it one open request an address; an address on
- a list is told to sign in; ten an hour for the whole site, then a 429. Nothing is emailed to the address typed: an
- admin adds it to the team's list and resolves the ticket. Logged as `access_requested`.
+ a list is told to sign in; ten an hour for the whole site, then a 429. Every try is a row in `sign_in_events` of its
+ own kind, `access` (the address as the sign-in stores it, masked if it isn't one; the admin Log shows them), and past
+ 10 tries in 15 minutes from one IP address the form answers the same 429, whatever the address, before any list is
+ looked at, so it can't be used to find out who is on a list faster than the sign-in allows. No sign-in limit or
+ Platform figure counts these rows. Nothing is emailed to the address typed: an admin adds it to the team's list and
+ resolves the ticket. Logged as `access_requested` (and `access_refused` over the limit).
 - **An address that bounces** (`features/signin/bounced-service.ts`): Email Sending puts an address whose emails
  bounce, or that marks one as spam, on its suppression list (a soft bounce for a day), and the binding refuses it
  with `E_RECIPIENT_SUPPRESSED` (`platform/email.ts` keeps the code on its `EmailFailed`). A code to it then says the
@@ -344,8 +348,10 @@ sequenceDiagram
  again every 20 seconds, saying so beside the button, until it's saved; every
  answer is a `live_save` log line. If nothing reached R2, the recording is deleted and the game is free. The
  5-minute job does the same by itself: half an hour after End game with no part since (the phone had only its last
- parts to send, so its page has gone), or, with no End game, once a recording is 12 hours old and has been quiet that
- long (the night for the phone to reach Wi-Fi or better signal and send the rest).
+ parts to send, so its page has gone), or 12 quiet hours after an End game that said minutes of the game were still
+ only on the phone (End game's `keptMinutes`, `live_streams.end_kept_minutes`: on a weak signal the parent may lock the
+ phone and go home, and reopening Go live there sends them), or, with no End game, once a recording is 12 hours old
+ and has been quiet that long (the night for the phone to reach Wi-Fi or better signal and send the rest).
 - **Carrying on after the page closed** (`browser-live-continue.ts`, `recording-segments-*.ts`, `join-service.ts`,
  `public/golive-recover.js`, `golive-stream.js`; design: the design notes): the same
  phone, reopening Go live while the stream is open and not ended, is offered **Carry on streaming** (the panel sits
@@ -424,7 +430,7 @@ sequenceDiagram
  call to Stream. Not on `/`, `/games` (their Live now cards), `/live` or the live game's own page. A failed read
  leaves the bar off (`live_bar_failed`).
 - **The 5-minute job** (`live-sync.ts`, its first step): connected, once the recording has started and until Stop, logs
- `live_started` once and bumps `last_live_at`; a recording quiet for half an hour after End game, or 12 hours without one, is saved; one that was deleted closes its
+ `live_started` once and bumps `last_live_at`; a recording quiet for half an hour after End game, or 12 hours without one or after one that left minutes on the phone, is saved; one that was deleted closes its
  row; an input nobody used closes after a day.
 
 ### From an external app (RTMPS)
@@ -476,8 +482,9 @@ too; everyone sees and downloads them. They aren't linked to games.
  a page left part way says how many weren't sent the next time Photos opens (`photo-unsent.js`, localStorage): when it was taken, from its EXIF DateTimeOriginal
  (`photo-date.js`, reading only the start of the file); then an `<img>` from the file's `blob:` address (so the phone
  turns it upright) drawn on a canvas at most 2560 px along its longer side and saved as a JPEG (quality 0.88), which
- leaves off all the camera's metadata, its location included. `POST /api/photos` sends the JPEG and `takenAt` as a
- form (`apiForm`). Only trouble reaching the site is tried again (`isNetworkTrouble`); a refusal skips that photo and
+ leaves off all the camera's metadata, its location included. `POST /api/photos` sends the JPEG, `takenAt` and `key`
+ (a UUID made on the phone for that photo, `newId`, the same each time it's sent) as a form (`apiForm`). Only trouble
+ reaching the site is tried again (`isNetworkTrouble`); a refusal skips that photo and
  lists it, and being signed out or not allowed stops the rest. The screen stays on and the page busy until they've
  all gone.
 2. **In the Worker** (`photos-service.ts`, `addPhoto`): the body must be 10 MB or less (Images' limit), and is checked
@@ -485,13 +492,21 @@ too; everyone sees and downloads them. They aren't linked to games.
  colour profile, and comments). `taken_at` is the phone's date if it's a real one and not still to come, otherwise
  now. The photo goes with its team's season, whenever it was taken (`footageDue`), and once the team's photos are
  gone no more are taken. Then its row, reserved out of sight (`reservePhoto`: a `pending-` image id and `deleted_at`
- set) so the photo has its number; then `images.upload` (private, `requireSignedURLs`, metadata `{ teamId }`, the
+ set, and the phone's key in `upload_key`, one a key in each team) so the photo has its number. A key the team has
+ already is that photo sent again after its answer was lost: its id is the answer, and nothing more is added or sent
+ to Images. A key whose row is still waiting (an earlier try that stopped) has that row dropped for this one; should
+ the earlier try still finish, its row has gone, so its image is deleted, and the photo is added once. A post with no
+ key (a page opened before keys) is added as it comes. Then `images.upload` (private, `requireSignedURLs`, metadata `{ teamId }`, the
  member as creator, named as it downloads: `saints-b12-1-<date>-photo-<id>.jpg`); then the row is filled in and shows.
  If Images refuses, the reserved row goes; if the row has gone meanwhile, the image is deleted again
  (`photo_cleanup_failed` is logged if that fails too, and the nightly sweep gets it). A row left reserved (the Worker
  stopped part way) is a deleted row to the pages, and the tombstone clean-up takes it.
 3. **On the pages:** `/photos` lists them newest first by `taken_at` (then the newest added), 60 a page, under each
- day. Each thumbnail's link is signed by the binding (the `thumb` variant, 512 px square), and a photo's page shows
+ day, read a page at a time (`photos-paging-repository.ts`): the count and the page in one batch, a page past the end
+ being the last, worked out in the query from that count, so a delete meanwhile can't leave it empty. A photo's page
+ reads it, its newer and older neighbours (the next `(taken_at, id)` either way, so photos taken in the same second
+ keep their order) and how many come before it (for All photos' page) in one batch, from the partial index
+ `photos_team_shown`; a zip reads its chosen photos by id. Each thumbnail's link is signed by the binding (the `thumb` variant, 512 px square), and a photo's page shows
  `large` (1600 px). Links last 6 hours, and the same one is given for an hour per Worker instance (`imageUrlCache`),
  so a phone keeps them cached. If Images can't sign them, the page still opens and says so (`photo_links_failed`).
  `/photos/:id/download` streams the stored JPEG through the Worker as an attachment. **Select photos**
@@ -643,7 +658,9 @@ days), codes older than a day and sign-in events older than a month (31 days) ar
 
 **The nightly checks**: photos against Images' 100,000 (from the sweep's own list), the database's size, and each
 running team's costs against its season's budget (`budget-checks.ts`, reading Cloudflare's minutes watched and the day's
-exchange rate as Costs does). The server error counts older than two days are forgotten, and how the night went
+exchange rate as Costs does; a team onboarded for next season from its season's first month). Then Costs' months over
+a week ago are saved in `cost_months` (`costs-saved.ts`), as Costs shows them, unless Cloudflare's minutes watched or
+bill couldn't be read. The server error counts older than two days are forgotten, and how the night went
 is recorded (the 3am job's own alert).
 
 **Restoring.** Time Travel (built into D1: restore to any minute in the last 30 days on Workers Paid) is for "undo a
@@ -893,8 +910,13 @@ section and keeps one More menu open at a time.
  $1.42 before any's been read (`costs-rate.ts`).
  - **Who pays what**: a team's own Stream storage bought past the bundle's 1,000 minutes (by the minutes each team
  stores), minutes watched (US$1 a thousand) and R2 past its free 10 GB (by each team's share of the originals, each
- kept 30 days; a clip is stored until it or its video goes). Workers Paid, the Images and Stream bundle, the domain and minutes watched no team has are shared
- between the teams running that month, by the days each ran in it. Minutes watched come from Cloudflare's analytics
+ kept 30 days; a clip is stored until it or its video goes), in any month: last season's footage, kept to the end
+ of December (`keptMonths`), is its team's, and so is an upload before a team's season; such a month shows on the
+ team's page and its season's. Workers Paid, the Images and Stream bundle, the domain and minutes watched no team has are shared
+ between the teams running that month in their own season, by the days each ran in it, so every month's teams add
+ up to the month's costs. A month over a week is saved by the 3am job in `cost_months` and read from there after
+ (`costs-saved.ts`): a video or team deleted later changes nothing in it (a team onboarded after a saved month, even
+ with a deleted team's id, has nothing in it). Minutes watched come from Cloudflare's analytics
  by video (`minutesByVideo`), each put to its team and saved by month in `cost_views` (read again when over an hour
  old; kept when a team is deleted). The estimate: 30 games a season spread over the months left, each 60 minutes of
  video, three clips and 9 families each watching it twice, until the team has three games still on the site
@@ -902,7 +924,8 @@ section and keeps one More menu open at a time.
  - **Budgets**: every team's season budget is $200 until one's set on its Costs page
  (the club's currency; logged; empty goes back to the default). Over budget so far is the `budget` alert's urgent,
  estimated to go over its warning (one alert for every team, the worst first; checked when Costs or Alerts opens
- and by the 3am job). Cloudflare's bill is the true figure.
+ and by the 3am job; a team onboarded for next season is left out until its season's first month, as till then its
+ estimate carries a whole season's fixed costs alone). Cloudflare's bill is the true figure.
 - **Admins**: add (the email typed twice) and remove (it asks first; never yourself, never the last admin, checked in
  the same statement; a removed admin's hidden memberships go in the same batch).
 - **Changelog** (from `CHANGELOG.md`; `changelog-weeks.ts` counts each day's changes into the 53 weeks ending this week, and `views/changelog-heatmap.ts` draws them as Insights' heatmap does) and **Log** (`log-routes.ts`). First its **Right now** (`views/log-now.ts`, from
@@ -995,7 +1018,7 @@ erDiagram
 | game_lines | team_id, kind (upcoming, away, rivals_upcoming, playing, rivals_playing, played, rivals_played, won, won_by_one, lost, drew; one row each), lines (one a row, up to 20), updated_at | A team's own lines for a group its team manager changed on Manage team, Game lines; a group with no row uses the club's (`games/game-lines-club.ts`). Saving the club's lines, or an empty box, deletes the row. Deleted with the team |
 | playhq_fixtures | team_id, competition (the league or Tournament), playhq_team_id, url, name, auto_check, game_count, checked_at, last_error, no_video | Hard delete on Remove (its games stay) |
 | recording_segments | team_id, video_id, n (2 up), r2_key, r2_upload_id (NULL once complete), created_at, completed_at: a carried-on recording's later segments; videos also carry join_tries, join_tried_at, join_failed_at |
-| live_streams | team_id, game_id, live_input_uid, started_by, status (open/saved/cancelled), source (camera/app), last_live_at, end_requested_at, recording_video_id, cancel_reason, created_at, finished_at | One open per game (unique index); a test's row is reopened for the next Go live, with its input; closed rows are kept. started_by is whoever's phone is streaming (set when it starts; until then whoever opened Go live for the game) |
+| live_streams | team_id, game_id, live_input_uid, started_by, status (open/saved/cancelled), source (camera/app), last_live_at, end_requested_at, end_kept_minutes (minutes still only on the phone at End game, as its page said), recording_video_id, cancel_reason, created_at, finished_at | One open per game (unique index); a test's row is reopened for the next Go live, with its input; closed rows are kept. started_by is whoever's phone is streaming (set when it starts; until then whoever opened Go live for the game) |
 | videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after, hd_ready_at, hd_failed_at, processing_at | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
 | downloads | team_id, video_id, member_id, kind (hd/original), created_at | Audit log, hard-deleted after 2 years |
 | media_downloads | team_id, member_id, kind (photo/clip), item_id (no foreign key: the log outlives the photo or clip), name (the file it came as), created_at | The download log's other half: every photo (each in a zip too) and clip downloaded, with who took it; kept two years, and its people with it when the team is deleted, as `downloads` keeps its own |
@@ -1010,7 +1033,7 @@ erDiagram
 | clip_removal_requests | team_id, clip_id, member_id, reason, status (open/clip_deleted/kept), note, resolved_by, resolved_at | Kept |
 | coach_notes | team_id, game_id, at_seconds, body, created_by, deleted_at | Coaches only; soft-deleted with the game |
 | activity | team_id, kind, game_id, member_id, detail, device (the browser it came from, "" for the site's own), created_at | Notifications' feed, and the admin Log's Videos and Photos lines: uploads, live streams, processing, clips, removal requests, and a video or game deleted (with who); hard-deleted after 90 days |
-| photos | team_id, image_id (its Cloudflare Images id, unique), taken_at, width, height, bytes, uploaded_by, delete_after, created_at, deleted_at, deleted_reason (admin/removal_request/retention) | Not linked to games; soft delete once Images no longer has it; the row goes 90 days after, unless a removal request names it |
+| photos | team_id, image_id (its Cloudflare Images id, unique), taken_at, width, height, bytes, uploaded_by, delete_after, created_at, deleted_at, deleted_reason (admin/removal_request/retention), upload_key (the phone's key for it, unique in a team; none for older photos) | Not linked to games; soft delete once Images no longer has it; the row goes 90 days after, unless a removal request names it |
 | photo_removal_requests | team_id, photo_id, member_id, reason, status (open/photo_deleted/kept), note, resolved_by, resolved_at | Kept; deleting the photo closes its requests |
 | video_views | team_id, video_id, member_id, opened_at (first opening only) | Drives the New tag (a video is New for 21 days until you open it); hard-deleted after 30 days |
 | favourites | team_id, member_id, game_id or clip_id (exactly one; once each per member), created_at | A member's starred games and clips; unstarring hard-deletes the row |
@@ -1023,9 +1046,10 @@ erDiagram
 | sessions | id (the cookie token's SHA-256), email, device, created_at, expires_at (30 days), last_seen_at, ended_at, view (desktop/mobile, from the `courtside_view` cookie `public/view.js` sets), counted_week | One row a signed-in device (the site's own sign-in) |
 | view_weeks | week (its Monday), view, devices | The devices that opened the site in each view each week, each session counted once a week (`auth/session-view.ts`); Insights' Mobile and desktop; 12 weeks |
 | sign_in_codes | email, code_hash (of email and code), ip, created_at, expires_at (10 minutes), tries, used_at, voided_at | A code sent by email; the newest live one is the one that counts |
-| sign_in_events | kind (code_sent/unknown_email/limited/wrong/signed_in/robot/desktop_view/mobile_view), email, ip, device, at | What happened at the sign-in page, for its limits, Platform's Sign-ins row and the admin Log, and which view a device uses when first seen or changed; a month (31 days, the 3am job) |
+| sign_in_events | kind (code_sent/unknown_email/limited/wrong/signed_in/robot/desktop_view/mobile_view/access), email, ip, device, at | What happened at the sign-in page, for its limits, Platform's Sign-ins row and the admin Log, and which view a device uses when first seen or changed; a month (31 days, the 3am job) |
 | problems | team_id (no foreign key; null when it's no team's), kind (server_error/job_failed/email_failed/golive_problem/upload_problem/photo_problem/stream_problem/ai_failed/site_problem), who (an email, or "site"), what, detail, device, times, first_at, at | Anything that failed, for the admin Log's Problems; the same one again within 30 minutes counts on its line. A month (the 3am job); a deleted team's go with it |
 | cost_views | month (UTC), team_id ('' for no team's), minutes (Stream's minutes watched), saved_at | Costs' minutes watched, from Cloudflare by video; kept when a team is deleted |
+| cost_months | month (UTC), team_id, storage, viewing, uploads, shared (US$), billed (0 to 1), billed_days, stored, gb_months, watched, saved_at | Each team's spent month as Costs showed it, saved by the 3am job a week after the month ends (`costs-saved.ts`) and read in place of working it out again; kept when a team is deleted |
 | billed_usage | day (UTC), service, family, quantity, billable, unit, billed (US$), period_start, saved_at | Cloudflare's own bill, day by day (its billable usage): read every night and when Costs's copy is 20 hours old, each read replacing the days it returns; kept 400 days. The days it covers are actual on Costs (`costs-bill.ts`, `costs-reconcile.ts`) |
 | exchange_rates | pair ('USD/<the club's currency code>'), rate, rate_date (the European Central Bank's day), fetched_at | Costs' club currency; read again after six hours |
 | platform_alerts | kind (stream_storage/images/daily_job/sync_job/database/site_errors/email/email_allowance/budget/ai_models/joiner/game_day), level (ok/warn/urgent), detail, since, failures, checked_at, ticket_id (its latest) | One row a kind: where it stands, and its ticket |

@@ -19,6 +19,8 @@ interface LivePageProps {
 	unavailable: boolean;
 	/** Why the last try at this game wasn't saved, if it wasn't. */
 	lastTry: string | null;
+	/** That try was an external app's: reopening set the game back to the camera, and the app's input may have gone. */
+	lastTryApp: boolean;
 	/** Streaming from this page: its recording upload, still going. */
 	recordingVideoId: number | null;
 	/** That recording is this filmer's (the page can offer to save it even if it wasn't made on this phone). */
@@ -58,13 +60,15 @@ function streamStep(p: LivePageProps): SafeHtml {
 	return html`<div class="step"><span class="n live" aria-hidden="true">2</span><div class="stack">${webLiveCard(p.selected!.id, p.recordingVideoId, p.ended, p.mine, teamCopy(p.frame.team).ask)}${useAppButton(p)}</div></div>`;
 }
 
+const APP_AGAIN = "Streaming from the external app again? Tap Use an external app instead, then copy the Server and Stream key into the camera's app afresh: the ones it saved may not work any more.";
+
 const UNAVAILABLE = "Go live can't start just now: the video service isn't answering. Wait a minute, then reload this page.";
 
 export function livePage(p: LivePageProps): SafeHtml {
 	const ready = p.input !== null || p.ended || p.recordingVideoId !== null || p.unavailable || p.app !== null;
 	const body = !p.selected || !ready
 		? notice(`There's no game to stream today or coming up. Ask ${teamCopy(p.frame.team).ask} to add the game to the Fixture first. Already played? Upload the video instead.`, "warn")
-		: html`${p.unavailable ? notice(UNAVAILABLE, "warn") : ""}${p.lastTry ? notice(`${p.lastTry} You're all set to go live again: tap Start camera.`, "warn") : ""}
+		: html`${p.unavailable ? notice(UNAVAILABLE, "warn") : ""}${p.lastTry ? notice(`${p.lastTry} ${p.lastTryApp ? APP_AGAIN : "You're all set to go live again: tap Start camera."}`, "warn") : ""}
 <div class="panel stack golive">${gamePicker(p)}${streamStep(p)}
 ${p.app ? html`<p class="small">More help: <a href="/help#ai-cameras">Filming with an AI tracking camera</a> in Help.</p>`
 		: html`<p class="small">More help: <a href="/help#live-game">Live streaming a game</a> in Help.</p>`}</div>`;

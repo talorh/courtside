@@ -66,7 +66,7 @@ async function untilDeleted(deps: TestDeps, max = 10) {
 const GONE = ["clip_players", "favourites", "video_views", "win_seen", "coach_notes", "game_scores", "removal_requests", "clip_removal_requests",
 	"photo_removal_requests", "recording_segments", "clips", "live_streams", "activity", "ask_counts", "roster_slots", "roster_weeks", "roster_duties", "roster_families", "players",
 	"playhq_fixtures", "photos", "support_messages", "support_requests", "game_lines", "problems"];
-const KEPT = ["admin_log", "cost_views", "downloads", "games", "media_downloads", "members", "videos"];
+const KEPT = ["admin_log", "cost_months", "cost_views", "downloads", "games", "media_downloads", "members", "videos"];
 
 describe("deleting a closed team once its date has passed", () => {
 	it("has a say over every table with a team's rows: a new one goes in GONE or KEPT", async () => {
@@ -273,10 +273,12 @@ describe("deleting a closed team once its date has passed", () => {
 		await deps.db.prepare("DELETE FROM downloads WHERE team_id = ?").bind(G).run();
 		await adminLogStatement(deps.db, { device: "", adminEmail: MANAGER, teamId: G, action: "team_onboarded", detail: "g14.5", at: "2026-10-01T00:00:00.000Z" }).run();
 		await deps.db.prepare("INSERT INTO cost_views (month, team_id, minutes, saved_at) VALUES ('2026-10', ?, 12, '2026-10-12T00:00:00.000Z')").bind(G).run();
+		await deps.db.prepare(`INSERT INTO cost_months (month, team_id, storage, viewing, uploads, shared, billed, billed_days, stored, gb_months, watched, saved_at)
+			VALUES ('2026-10', ?, 1, 0, 0, 2, 1, 31, 40, 0, 12, '2026-11-08T00:00:00.000Z')`).bind(G).run();
 		await untilDeleted(deps);
 		await runSync(deps);
 		expect(await status(deps)).toBeNull();
-		for (const table of ["admin_log", "cost_views"]) expect(await count(deps, table), table).toBe(0);
+		for (const table of ["admin_log", "cost_views", "cost_months"]) expect(await count(deps, table), table).toBe(0);
 		const lines = (await listAdminLog(deps.db, 50)).filter((l) => l.action === "team_onboarded" || l.action === "team_deleted");
 		expect(lines.map((l) => [l.action, l.team])).toEqual([["team_deleted", { code: "g14.5", seasonStart: 2026 }], ["team_onboarded", { code: "g14.5", seasonStart: 2026 }]]);
 		// B12.1 untouched.

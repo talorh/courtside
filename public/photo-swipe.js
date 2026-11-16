@@ -2,7 +2,8 @@
 // the picture and follow the finger, the swipe snaps to the next one, and the page's address (replaced, not added to,
 // so Back still goes to All photos), caption and buttons change to match without a reload. Each neighbour shows its
 // small thumbnail at once, blurred, until its full picture has come; the pages either side are read in advance, so
-// the photos beyond them are loading before a swipe. Newer and Older stay as links.
+// the photos beyond them are loading before a swipe. Newer and Older stay as links. A pinch zooms the page, as anywhere
+// else; while it's zoomed in, a finger moves around the photo instead of swiping.
 import { setUpSave } from "./photo-save.js";
 import { facts, forget, known, opened, pageFor, show } from "./photo-pages.js";
 
@@ -35,6 +36,8 @@ function slide(side, big = side?.src ? img(side.src, "big") : null) {
 	return el;
 }
 const warm = (side) => { if (side) { for (const src of [side.thumb, side.src]) if (src) new Image().src = src; } };
+/** The page pinched bigger than it opened (a browser with no visualViewport can't say, so it never is). */
+const zoomed = () => (window.visualViewport?.scale ?? 1) > 1;
 const idle = (job) => ("requestIdleCallback" in window ? requestIdleCallback(job) : setTimeout(job, 300));
 
 function setUp(figure) {
@@ -98,7 +101,8 @@ function setUp(figure) {
 
 	let startX = 0, startY = 0, startAt = 0, tracking = false, dx = 0;
 	figure.addEventListener("touchstart", (e) => {
-		if (e.touches.length !== 1) return;
+		// A second finger is a pinch, not a swipe: the photo goes back to its place.
+		if (e.touches.length !== 1 || zoomed()) { if (tracking) { tracking = false; at(0, true); } return; }
 		startX = e.touches[0].clientX; startY = e.touches[0].clientY; startAt = Date.now(); tracking = true; dx = 0;
 	}, { passive: true });
 	figure.addEventListener("touchmove", (e) => {
@@ -121,6 +125,8 @@ function setUp(figure) {
 		busy = true;
 		snapped().then(() => become(which)).finally(() => { busy = false; });
 	};
+	// Zoomed in, a finger moves around the photo any way (app.css lets it move only up and down, for the swipe).
+	window.visualViewport?.addEventListener("resize", () => { figure.style.touchAction = zoomed() ? "auto" : ""; });
 	figure.addEventListener("touchend", settle, { passive: true });
 	figure.addEventListener("touchcancel", () => { tracking = false; at(0, true); }, { passive: true });
 }

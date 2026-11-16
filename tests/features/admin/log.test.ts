@@ -72,6 +72,18 @@ describe("the admin Log", () => {
 		expect((await lines(deps)).some((l) => l.includes("robot check"))).toBe(true);
 		expect(await lines(deps, "?show=admins")).toEqual([]);
 	});
+	it("shows each Request access try among the sign-in page's lines, not as a warning, and filters by it", async () => {
+		const deps = createTestDeps();
+		const at = deps.now().toISOString();
+		await recordSignInEvent(deps.db, { kind: "access", email: "steph@example.com", ip: "5.5.5.5", at });
+		await recordSignInEvent(deps.db, { kind: "access", email: "n…", ip: "5.5.5.5", at });
+		await recordSignInEvent(deps.db, { kind: "code_sent", email: MANAGER, ip: "1.2.3.4", at });
+		const line = "used Request access on the sign-in page, asking to be added to a team";
+		expect(await lines(deps, "?show=signins&event=access")).toEqual([`n… ${line} from 5.5.5.5`, `steph@example.com ${line} from 5.5.5.5`]);
+		const page = await (await makeClient(deps)("/admin/log?show=signins")).text();
+		expect(page).toContain('<optgroup label="Sign-in page"><option value="access">Access asked for (2)</option>');
+		expect(await lines(deps, "?warn=1")).toEqual([]);
+	});
 	// The test clock: 11am Thursday 15 Oct 2026 in the club's time zone (00:00 UTC).
 	const seeded = async () => {
 		const deps = createTestDeps();

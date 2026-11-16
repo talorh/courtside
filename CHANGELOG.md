@@ -12,6 +12,10 @@ Builds) sends the top line, in plain words, as its message.
 
 - [Enhancement] **Fixture:** A finals game now has a subtle gold border wherever it's listed: on Watch games, Home and the Fixture.
 - [Feature] **Watch games:** The first time you open a game the club won, once its video is ready, a win pop-up with confetti in the club's colours shows for about a second. It never says the score, and never shows to anyone who hides scores.
+- [Enhancement] **Costs:** Every month's teams now add up to its bill, last season's kept footage and next season's early teams included; next season's teams join Team budgets in their season's first month, and spent months are kept as they were.
+- [Enhancement] **Photos:** A photo sent again on a weak signal is added once, not twice; pinch to zoom a photo; the Photos pages read only the photos they show.
+- [Enhancement] **Go live:** After End game with minutes still on the phone, the site waits up to 12 hours for them before saving by itself (30 minutes when nothing's left), and Help says to choose an AI camera's app again and copy its key afresh after a test.
+- [Enhancement] **Sign-in:** Request access takes 10 tries in 15 minutes from one internet address, and each try is in the Log.
 - [Fix] **Photos:** Fixed an issue where swiping to another photo and back showed the other photo's caption and buttons, so Delete photo could delete the wrong photo; Keep it works again after a swipe, the photo stays centred when the phone is turned, and see-through pictures are added on white.
 - [Fix] **Go live:** Fixed an issue where End game soon after Carry on streaming could throw the game away as a test, and where a page closed while End game saved could leave the recording unable to be saved; footage kept on the phone is cleared once its recording is saved.
 - [Fix] **Watching live:** Pausing the live player no longer brings up "will resume shortly", and a tap on the picture plays it again.

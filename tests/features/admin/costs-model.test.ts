@@ -127,3 +127,26 @@ describe("a team's season, put right by Cloudflare's bill", () => {
 		expect(month(free!, "2027-03").viewing).toBeCloseTo(Math.max(0, month(plain, "2027-03").use.watched - 500) / 1000, 6);
 	});
 });
+
+describe("every month's shares add up to the month's bill", () => {
+	const shown = (all: ReturnType<typeof cost>, m: string) => all.reduce((s, c) => s + (c.months.find((x) => x.month === m)?.total ?? 0), 0);
+
+	it("with last season's team still storing its footage and next season's onboarded early: each its own use, the fixed costs this season's", () => {
+		const last = team("last", { seasonStart: 2025, createdAt: "2025-10-01T00:00:00.000Z" });
+		const next = team("next", { seasonStart: 2027, createdAt: "2026-10-20T00:00:00.000Z" });
+		const items = [video("last", 900, "2026-05-01T00:00:00.000Z"), video("a", 600), video("next", 100, "2026-10-25T00:00:00.000Z")];
+		const all = cost({ teams: [last, team("a"), next], items, bought: 2000 });
+		// 1,600 minutes stored in October, and 2,000 bought in November: the bundle's 1,000 and one more $5 block.
+		expect(shown(all, "2026-10")).toBeCloseTo(fixedAMonth() + 5, 6);
+		expect(shown(all, "2026-11")).toBeCloseTo(fixedAMonth() + 5, 6);
+		const [l, a, n] = all;
+		// Last season's footage is its own, on its own page, while it's kept; next season's team's upload is its own too.
+		expect(month(l!, "2026-11")).toMatchObject({ shared: 0, estimate: false, use: { stored: 900 } });
+		expect(month(l!, "2026-11").storage).toBeCloseTo((5 * 900) / 1600, 6);
+		expect(month(n!, "2026-10")).toMatchObject({ shared: 0, use: { stored: 100 } });
+		expect(month(a!, "2026-10").shared).toBeCloseTo(fixedAMonth(), 6);
+		// What it's cost since its season counts in last season's team's spend.
+		expect(l!.soFar).toBeCloseTo(l!.months.filter((m) => !m.estimate).reduce((s, m) => s + m.total, 0), 6);
+		expect(l!.months.map((m) => m.month).slice(-2)).toEqual(["2026-10", "2026-11"]);
+	});
+});

@@ -50,13 +50,23 @@ When the bill can't be read, the 3am job raises its ticket and Costs shows the c
 <li><b>A team's own costs</b> are its storage (its videos' and clips' minutes in Stream), its watching (Stream's minutes
 watched, read from Cloudflare by video) and its uploads (its originals in R2).</li>
 <li><b>The site's fixed costs</b> (Workers Paid, the bundle, the domain) are shared by the days each team ran in the
-month, so a team that joined mid-month carries its share only from then.</li>
+month, so a team that joined mid-month carries its share only from then. Only the teams in their own season share
+them: a team onboarded early for next season starts in its season's first month.</li>
+<li><b>A team's own use outside its season</b> stays its own: last season's footage, kept until the end of December,
+costs its team video storage and watching (on that team's Costs page, and its season's), and an upload before a
+team's season is that team's. So every month's teams add up to what the month cost.</li>
+<li><b>Months over are saved</b>: a week after a month ends (once Cloudflare's late minutes watched and bill are in),
+the 3am job saves each team's month as Costs shows it, in cost_months, and Costs reads it from there after that. A
+video or a team deleted later changes nothing in a month already spent. A month isn't saved from a read of Cloudflare
+that failed; the next night tries again.</li>
 <li><b>Dollars</b> are Cloudflare's US dollars, or ${CLUB.currency.name} at the European Central Bank's rate for the day, read a
 few times a day and kept if the rate can't be read.</li>
 <li><b>The estimate</b> for a season uses the team's own figures once it has three games; before that, 30 games of an
 hour, three clips a game and nine families each watching twice.</li>
 <li><b>The budget</b> is $200 a season until one is set on the team's Costs page. Over budget so far is urgent, and
-estimated to go over is a warning: the Team budgets alert, checked each night.</li>
+estimated to go over is a warning: the Team budgets alert, checked each night. A team onboarded for next season is
+left out of it until its season's first month (until then its estimate has it carrying a whole season's fixed costs
+alone).</li>
 <li><b>Download for Excel</b>, beside the seasons, is the season and currency on the page as a workbook: Summary (the
 tiles' figures, each actual or estimated), Teams (a row each), Months (a row a team's month, by kind of cost, to sort
 or pivot), Team by team, and Cloudflare's bill for the season's days (US dollars). Figures stay numbers, so Excel adds

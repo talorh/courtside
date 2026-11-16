@@ -67,11 +67,12 @@ export function registerLiveRoutes(router: Router): void {
 			res.headers.append("Set-Cookie", clearedSessionCookie());
 			return res;
 		}
-		const none = { input: null, unavailable: false, lastTry: null, recordingVideoId: null, mine: false, ended: false, app: null, recorded };
+		const none = { input: null, unavailable: false, lastTry: null, lastTryApp: false, recordingVideoId: null, mine: false, ended: false, app: null, recorded };
 		if (!selected) return htmlResponse(livePage({ frame, games, selected: null, ...none }));
 		// The last try at this game wasn't saved (a quick test, say): tell them, then reopen it at the same address.
 		const last = await getLatestLiveForGame(db, deps.team.id, selected.id);
 		const lastTry = last?.status === "cancelled" ? last.cancelReason : null;
+		const lastTryApp = last?.status === "cancelled" && last.source === "app";
 		const before = await getOpenLiveForGame(db, deps.team.id, selected.id);
 		const recording = before?.recordingVideoId ? await getVideo(db, deps.team.id, before.recordingVideoId) : null;
 		const recordingVideoId = recording?.status === "uploading" ? recording.id : null;
@@ -89,7 +90,7 @@ export function registerLiveRoutes(router: Router): void {
 		const open = before ?? await getOpenLiveForGame(db, deps.team.id, selected.id);
 		// The filmer's own recording, not made on this phone (or its start didn't finish): the page offers to save it.
 		const mine = recordingVideoId !== null && recording?.uploadedBy === member.id;
-		return htmlResponse(livePage({ frame, games, selected, input, unavailable, lastTry, recordingVideoId, mine, ended: open?.endRequestedAt != null, app, recorded }));
+		return htmlResponse(livePage({ frame, games, selected, input, unavailable, lastTry, lastTryApp, recordingVideoId, mine, ended: open?.endRequestedAt != null, app, recorded }));
 	});
 
 	router.post("/api/live/:gameId/browser", "filmer", async ({ req, params, member, deps }) => {

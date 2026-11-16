@@ -62,7 +62,8 @@ async function sendCode(req: Request, url: URL, deps: AppDeps): Promise<Response
 	return page(deps, "email", email, next, result === "unknown" ? "unknown" : "limited", result === "unknown" ? 200 : 429);
 }
 
-/** Request access: the same robot check as a code (Cloudflare not answering leaves the form's own limits to hold). */
+/** Request access: the same robot check as a code (Cloudflare not answering leaves the form's own limits to hold: the
+ * site's requests an hour, and an internet address's tries, access-service.ts). */
 async function askForAccess(req: Request, url: URL, deps: AppDeps): Promise<Response> {
 	const form = await parseForm(req, accessSchema);
 	const again = (message: Parameters<typeof accessPage>[0]["message"], status: number) =>
@@ -73,7 +74,7 @@ async function askForAccess(req: Request, url: URL, deps: AppDeps): Promise<Resp
 		console.warn(JSON.stringify({ event: "turnstile_unreachable", teamId: null, detail: check.detail }));
 		await logProblem(deps, { kind: "site_problem", teamId: null, what: "The access request form's robot check (Turnstile) didn't answer, so only its limits held", detail: check.detail });
 	}
-	const result = await requestAccess(deps, form);
+	const result = await requestAccess(deps, form, ipOf(req));
 	if (result === "sent") return htmlResponse(accessSentPage());
 	return again(result, result === "busy" ? 429 : result === "missing" || result === "notEmail" ? 400 : 200);
 }

@@ -8,6 +8,8 @@ export interface LiveStream {
 	lastLiveAt: string | null;
 	/** The filmer tapped End game: nothing can stream to the game again. */
 	endRequestedAt: string | null;
+	/** Minutes of the game still only on the filming phone at End game, as its page said (null: it didn't say). */
+	endKeptMinutes: number | null;
 	createdAt: string;
 	status: "open" | "saved" | "cancelled";
 	/** Why it closed without saving, in words for the filmer. */
@@ -20,14 +22,14 @@ export interface LiveStream {
 
 interface Row {
 	id: number; game_id: number; live_input_uid: string; started_by: number | null; last_live_at: string | null;
-	end_requested_at: string | null; created_at: string; status: LiveStream["status"]; cancel_reason: string | null;
+	end_requested_at: string | null; end_kept_minutes: number | null; created_at: string; status: LiveStream["status"]; cancel_reason: string | null;
 	recording_video_id: number | null; source: LiveSource;
 }
 
-const COLUMNS = "id, game_id, live_input_uid, started_by, last_live_at, end_requested_at, created_at, status, cancel_reason, recording_video_id, source";
+const COLUMNS = "id, game_id, live_input_uid, started_by, last_live_at, end_requested_at, end_kept_minutes, created_at, status, cancel_reason, recording_video_id, source";
 const toLive = (r: Row): LiveStream => ({
 	id: r.id, gameId: r.game_id, liveInputUid: r.live_input_uid, startedBy: r.started_by, lastLiveAt: r.last_live_at,
-	endRequestedAt: r.end_requested_at, createdAt: r.created_at, status: r.status, cancelReason: r.cancel_reason,
+	endRequestedAt: r.end_requested_at, endKeptMinutes: r.end_kept_minutes, createdAt: r.created_at, status: r.status, cancelReason: r.cancel_reason,
 	recordingVideoId: r.recording_video_id, source: r.source,
 });
 
@@ -69,7 +71,7 @@ export async function insertLive(
  * from the camera (an app is chosen again each time). */
 export async function reopenLive(db: D1Database, teamId: string, id: number, startedBy: number, nowIso: string): Promise<void> {
 	await db.prepare(`UPDATE live_streams SET status = 'open', started_by = ?, created_at = ?, last_live_at = NULL,
-		end_requested_at = NULL, finished_at = NULL, cancel_reason = NULL, recording_video_id = NULL, source = 'camera' WHERE team_id = ? AND id = ? AND status = 'cancelled'`)
+		end_requested_at = NULL, end_kept_minutes = NULL, finished_at = NULL, cancel_reason = NULL, recording_video_id = NULL, source = 'camera' WHERE team_id = ? AND id = ? AND status = 'cancelled'`)
 		.bind(startedBy, nowIso, teamId, id).run();
 }
 
@@ -113,9 +115,10 @@ export async function cancelLiveWithRecording(
 	return r.meta.changes > 0;
 }
 
-export async function requestEnd(db: D1Database, teamId: string, id: number, nowIso: string): Promise<void> {
-	await db.prepare("UPDATE live_streams SET end_requested_at = ? WHERE team_id = ? AND id = ? AND status = 'open' AND end_requested_at IS NULL")
-		.bind(nowIso, teamId, id).run();
+/** End game, once: the first one's time and what its phone still held (`keptMinutes`) stand. */
+export async function requestEnd(db: D1Database, teamId: string, id: number, nowIso: string, keptMinutes: number | null = null): Promise<void> {
+	await db.prepare("UPDATE live_streams SET end_requested_at = ?, end_kept_minutes = ? WHERE team_id = ? AND id = ? AND status = 'open' AND end_requested_at IS NULL")
+		.bind(nowIso, keptMinutes, teamId, id).run();
 }
 
 /** Links the recording, found by its R2 key, to the open stream: batched with the recording's insert (Go live's start).

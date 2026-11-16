@@ -1,6 +1,8 @@
 // Each running team against its season's budget, in the club's currency: over it (what it's cost so far is more) is
 // urgent; on track to go over (its season, estimated, is more) warns. The worst team's words are the alert's (a ticket,
-// like every alert). Checked when Costs or Insights opens, and by the 3am job every night.
+// like every alert). A team onboarded for next season is left out until its season's first month: till then its
+// estimate has it carrying a whole season's fixed costs on its own. Checked when Costs or Insights opens, and by the 3am
+// job every night.
 import { alertFailed } from "./problem-log.ts";
 import type { AppDeps } from "../../app/deps.ts";
 import { teamLabel } from "../teams/team-code.ts";
@@ -8,6 +10,7 @@ import type { AlertLevel } from "./alerts-repository.ts";
 import { setAlert } from "./alerts-service.ts";
 import { money } from "./costs-currency.ts";
 import type { TeamCosts } from "./costs-estimate.ts";
+import { monthOf, seasonMonths } from "./costs-prices.ts";
 
 export type BudgetLevel = AlertLevel | "none";
 
@@ -27,7 +30,9 @@ export function budgetWords(c: TeamCosts): string {
 
 const RANK: Record<BudgetLevel, number> = { none: 0, ok: 1, warn: 2, urgent: 3 };
 
-export async function checkBudgets(deps: AppDeps, costs: TeamCosts[]): Promise<void> {
+export async function checkBudgets(deps: AppDeps, all: TeamCosts[]): Promise<void> {
+	const thisMonth = monthOf(deps.now().toISOString());
+	const costs = all.filter((c) => seasonMonths(c.team.seasonStart)[0]! <= thisMonth);
 	const over = costs.filter((c) => RANK[budgetLevel(c)] >= RANK.warn).sort((a, b) => RANK[budgetLevel(b)] - RANK[budgetLevel(a)]);
 	const level: AlertLevel = over.length ? (budgetLevel(over[0]!) === "urgent" ? "urgent" : "warn") : "ok";
 	const running = costs.filter((c) => budgetLevel(c) !== "none").length;

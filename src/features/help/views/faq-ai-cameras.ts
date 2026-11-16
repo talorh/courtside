@@ -22,7 +22,7 @@ export it to Photos or Files, then use <b>Upload video</b> after the game. Famil
 <ol class="steps">
 <li>Open <b>Go live</b> and check it shows the right game. Under the red Start camera button, tap the green <b>Use an external app instead</b>.</li>
 <li>Copy the <b>Server</b> and the <b>Stream key</b> into the app's Custom RTMP settings (each has a Copy button). The stream
-key is that game's password, so don't share it. Every game has its own.</li>
+key is that game's password, so don't share it. Every game has its own, so copy them in on the day.</li>
 <li>Start the stream in the app during the warm-up. The Go live page says <b>Live</b> once the site is receiving it.</li>
 <li>After the final buzzer, stop the stream in the app, then tap <b>End game</b> on the Go live page. Forgot? The game
 saves itself 20 minutes after the app stops.</li></ol>
@@ -34,4 +34,6 @@ phone, so its video doesn't have that problem.) If the app records the game too,
 <li><b>A gap in the stream</b> of under 10 minutes carries on the same video. After a longer one, the longest part is the
 game's video and the others are kept as clips.</li>
 <li><b>Try it at home first, for under a minute.</b> Anything that short is a test and isn't saved.</li>
+<li><b>Tried it at home first?</b> A test ends the app's stream for that game: Go live goes back to the phone's camera, and the stream key the app saved may stop working.
+On game day, open <b>Go live</b>, tap <b>Use an external app instead</b> again, and copy the <b>Server</b> and the <b>Stream key</b> into the app afresh, even if they look the same.</li>
 <li><b>Changed your mind?</b> Until the app has streamed, tap <b>Use this phone's camera instead</b>.</li></ul>`);

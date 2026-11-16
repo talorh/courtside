@@ -7,7 +7,8 @@ import { logMediaDownloads } from "../videos/downloads-repository.ts";
 import { getActiveMember } from "../members/members-repository.ts";
 import { photoLinks } from "./photo-links.ts";
 import { deletePhotoForRequest, keepPhoto, requestPhotoRemoval } from "./photo-removals-service.ts";
-import { listPhotos, type Photo } from "./photos-repository.ts";
+import { photoAndNeighbours, photosOnPage } from "./photos-paging-repository.ts";
+import type { Photo } from "./photos-repository.ts";
 import { addPhoto, deletePhotoFromPage, MAX_PHOTO_BYTES, requirePhoto } from "./photos-service.ts";
 import { photoFileName } from "./photo-name.ts";
 import { photoMessages, photoPage } from "./views/photo-page.ts";
@@ -34,30 +35,24 @@ const pageParam = (url: URL) => { const n = Number(url.searchParams.get("page") 
 
 export function registerPhotoRoutes(router: Router): void {
 	router.get("/photos", "watcher", async ({ url, frame, deps }) => {
-		const all = await listPhotos(deps.db, deps.team.id);
-		const pages = Math.max(1, Math.ceil(all.length / PHOTOS_PER_PAGE));
-		const page = Math.min(pages, pageParam(url));
-		const photos = all.slice((page - 1) * PHOTOS_PER_PAGE, page * PHOTOS_PER_PAGE);
+		const { photos, page, pages } = await photosOnPage(deps.db, deps.team.id, pageParam(url), PHOTOS_PER_PAGE);
 		const message = doneMessage(PHOTOS_MESSAGES, url);
 		return htmlResponse(photosPage({ frame, photos, urls: await photoLinks(deps, photos, "thumb"), page, pages, message }));
 	});
 
 	router.get("/photos/:id", "watcher", async ({ url, params, frame, member, deps }) => {
-		const id = idParam(params.id, "Photo");
-		const all = await listPhotos(deps.db, deps.team.id);
-		const at = all.findIndex((p) => p.id === id);
-		const photo = all[at];
-		if (!photo) throw notFound("Photo");
+		const found = await photoAndNeighbours(deps.db, deps.team.id, idParam(params.id, "Photo"));
+		if (!found) throw notFound("Photo");
+		const { photo, newer, older, place } = found;
 		const addedBy = member.role === "manager" ? await getActiveMember(deps.db, deps.team.id, photo.uploadedBy) : null;
 		// The neighbours' pictures too, and everyone's thumbnail, for the swipe between photos on a phone (public/photo-swipe.js).
-		const newer = all[at - 1], older = all[at + 1];
 		const three = [newer, photo, older].filter((x): x is Photo => Boolean(x));
 		const links = await photoLinks(deps, three, "large"), thumbs = await photoLinks(deps, three, "thumb");
-		const of = (map: Map<number, string> | null, p?: Photo) => (p ? map?.get(p.id) ?? null : null);
+		const of = (map: Map<number, string> | null, p: Photo | null) => (p ? map?.get(p.id) ?? null : null);
 		return htmlResponse(photoPage({
 			frame, photo, url: links?.get(photo.id) ?? null, newer: newer?.id ?? null, older: older?.id ?? null,
 			newerUrl: of(links, newer), olderUrl: of(links, older), thumbUrl: of(thumbs, photo), newerThumb: of(thumbs, newer), olderThumb: of(thumbs, older),
-			page: Math.floor(at / PHOTOS_PER_PAGE) + 1, addedBy, message: doneMessage(photoMessages(deps.team), url),
+			page: Math.floor(place / PHOTOS_PER_PAGE) + 1, addedBy, message: doneMessage(photoMessages(deps.team), url),
 		}));
 	});
 
@@ -71,15 +66,15 @@ export function registerPhotoRoutes(router: Router): void {
 		return fileResponse(bytes, "image/jpeg", name);
 	});
 
-	// The phone sends each photo on its own (public/photos.js): the JPEG it made, and when the photo was taken. Anyone on
-	// the team can add them (families too).
+	// The phone sends each photo on its own (public/photos.js): the JPEG it made, when the photo was taken, and its key
+	// (the same each time it's sent; none from a page opened before there were keys). Anyone on the team can add them.
 	router.post("/api/photos", "watcher", async ({ req, member, deps }) => {
 		const form = await photoForm(req).catch((err: unknown) => { throw err instanceof HttpError ? err : badRequest("Please send the photo from the Photos page.", err); });
 		const file = form.get("photo");
 		if (!(file instanceof File)) throw badRequest("Choose a photo to add.");
 		if (file.size > MAX_PHOTO_BYTES) throw tooBig();
-		const takenAt = form.get("takenAt");
-		const id = await addPhoto(deps, member, new Uint8Array(await file.arrayBuffer()), typeof takenAt === "string" ? takenAt : "");
+		const [takenAt, key] = [form.get("takenAt"), form.get("key")];
+		const id = await addPhoto(deps, member, new Uint8Array(await file.arrayBuffer()), typeof takenAt === "string" ? takenAt : "", typeof key === "string" ? key : null);
 		return jsonOk({ id }, 201);
 	});
 

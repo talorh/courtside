@@ -7,6 +7,7 @@ import { checkAiModels } from "../features/admin/ai-model-checks.ts";
 import { checkJoiner } from "../features/admin/joiner-checks.ts";
 import { loadBill } from "../features/admin/costs-bill.ts";
 import { inLocal, loadCosts } from "../features/admin/costs-load.ts";
+import { saveSpentMonths } from "../features/admin/costs-saved.ts";
 import { checkDatabase, checkImages, checkJobRan, recordDailyRun } from "../features/admin/usage-checks.ts";
 import { databaseBytes } from "../features/admin/platform-repository.ts";
 import { forgetServerErrors } from "../features/admin/server-errors-repository.ts";
@@ -53,6 +54,8 @@ export async function runDaily(deps: AppDeps): Promise<void> {
 	await loadBill(deps, { force: true }).then((b) => { if (b.read === "failed") throw new Error("Cloudflare's bill couldn't be read (Costs shows the copy saved)"); })
 		.catch((err: unknown) => void errors.push(err));
 	await loadCosts(deps).then((c) => checkBudgets(deps, inLocal(c))).catch((err: unknown) => void errors.push(err));
+	// Costs' months over a week ago, saved as they stand (costs-saved.ts).
+	await loadCosts(deps).then((c) => saveSpentMonths(deps, c)).catch((err: unknown) => void errors.push(err));
 	await logJobProblems(deps, "daily", [], errors);
 	await recordDailyRun(deps, errors);
 	// And the 5-minute job's heartbeat: it can't say it has stopped running (usage-checks.ts).

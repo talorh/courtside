@@ -7,7 +7,7 @@ import { parseForm } from "../../shared/validation.ts";
 import { zipStream } from "../../shared/zip-stream.ts";
 import { photoFileName, photosZipName } from "./photo-name.ts";
 import { logMediaDownloads } from "../videos/downloads-repository.ts";
-import { listPhotos } from "./photos-repository.ts";
+import { photosWithIds } from "./photos-paging-repository.ts";
 import { deletePhotosFromPage } from "./photos-service.ts";
 import { PHOTOS_PER_PAGE } from "./views/photos-page.ts";
 
@@ -20,8 +20,7 @@ export function registerPhotoPickRoutes(router: Router): void {
 	router.get("/photos/download", "watcher", async ({ url, member, deps }) => {
 		const picked = pickedSchema.safeParse({ id: url.searchParams.getAll("id") });
 		if (!picked.success) throw badRequest(`Choose up to ${PHOTOS_PER_PAGE} photos to download.`);
-		const wanted = new Set(picked.data.id);
-		const photos = (await listPhotos(deps.db, deps.team.id)).filter((p) => wanted.has(p.id)).sort((a, b) => a.id - b.id);
+		const photos = await photosWithIds(deps.db, deps.team.id, picked.data.id);
 		if (!photos.length) throw notFound("Photo");
 		// Each photo in it is a download, logged before the zip's first byte (as a single photo's is).
 		await logMediaDownloads(deps.db, {

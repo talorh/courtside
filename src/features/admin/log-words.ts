@@ -81,6 +81,7 @@ const SIGN_IN: Record<SignInEvent, string> = {
 	robot: "was refused: the robot check (Turnstile) said no",
 	desktop_view: "is using the desktop view",
 	mobile_view: "is using the mobile view",
+	access: "used Request access on the sign-in page, asking to be added to a team",
 };
 
 /** The line as a row of the table. */

@@ -37,7 +37,7 @@ export function appLiveCard(gameId: number, { address, status }: AppLive): SafeH
 	return html`<section class="appcard appstream" aria-labelledby="app-title" data-app-game="${gameId}">
 <h3 id="app-title">Stream from an external app</h3>${appStatusLine(status)}
 <p class="small"><b>RTMPS</b> is the standard way a camera app sends a live stream to a website. The app needs two things from here: a server address and a stream key.</p>
-<ol class="steps"><li>In the camera's app, open its live streaming settings and choose <b>Custom RTMP</b> (or RTMPS). Copy these in.
+<ol class="steps"><li>In the camera's app, open its live streaming settings and choose <b>Custom RTMP</b> (or RTMPS). Copy these in, even after a test at home: the ones the app saved then may not work now.
 <b>The stream key is this game's password: don't share it.</b>${copy}</li>
 <li>Start the stream in the app during the warm-up. This page says when the site is receiving it.</li>
 <li>Only after the final buzzer, stop the stream in the app, then tap <b>End game</b> here: once ended, it can't start again.</li></ol>

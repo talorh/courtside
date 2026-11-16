@@ -216,10 +216,14 @@ describe("stopping and saving an external app's stream", () => {
 		expect(await row()).toMatchObject({ status: "cancelled", cancel_reason: "The live stream was only 30 seconds, so it was treated as a test and not saved." });
 		expect(deps.stream.deleted).toEqual(["rec-1"]);
 		expect(await gamePage()).toContain("only 30 seconds");
-		const camera = await (await sam(`/live?game=${gameId}`)).text();
+		const camera = (await (await sam(`/live?game=${gameId}`)).text()).replaceAll("&#39;", "'");
 		expect(camera).toContain("only 30 seconds");
 		expect(camera).toContain('class="appcard weblive"');
 		expect(await row()).toMatchObject({ status: "open", source: "camera" });
+		// Go live is back on the phone's camera, and the input the app was given may go: the page says to choose the app
+		// again and copy its details in afresh, not to tap Start camera.
+		expect(camera).toContain("Streaming from the external app again? Tap Use an external app instead, then copy the Server and Stream key into the camera's app afresh: the ones it saved may not work any more.");
+		expect(camera).not.toContain("tap Start camera");
 	});
 	it("stopped before the app sent anything: closed, saying so; an app game nobody used closes after a day", async () => {
 		const stopped = await streaming();

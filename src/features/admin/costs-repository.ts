@@ -1,6 +1,7 @@
 // What the Costs page reads: every team that isn't deleted, what each stores in Stream and R2 (from its videos and clips),
-// which team each Stream video and live input is, and the minutes watched saved by month. Admins only, so it reads every
-// team (a CROSS_TEAM exception in scripts/rules.mjs). Figures only: no names or emails. And the exchange rate saved.
+// which team each Stream video and live input is, the minutes watched saved by month, and each team's months saved
+// once they're over. Admins only, so it reads every team (a CROSS_TEAM exception in scripts/rules.mjs). Figures only:
+// no names or emails. And the exchange rate saved.
 import { CLUB } from "../../club.ts";
 import { DEFAULT_BUDGET_LOCAL } from "./costs-prices.ts";
 
@@ -53,6 +54,26 @@ export async function saveViews(db: D1Database, months: string[], rows: Array<Om
 		...months.map((m) => db.prepare("DELETE FROM cost_views WHERE month = ?").bind(m)),
 		...rows.map((r) => db.prepare("INSERT INTO cost_views (month, team_id, minutes, saved_at) VALUES (?, ?, ?, ?)").bind(r.month, r.teamId, r.minutes, savedAt)),
 	]);
+}
+
+/** A team's month as Costs showed it once the month was over (costs-saved.ts): its dollars, how much of it Cloudflare
+ * billed, and its use. */
+export interface SavedMonth {
+	month: string; teamId: string; storage: number; viewing: number; uploads: number; shared: number; billed: number; billedDays: number;
+	stored: number; gbMonths: number; watched: number;
+}
+
+export async function savedMonths(db: D1Database): Promise<SavedMonth[]> {
+	const { results } = await db.prepare(`SELECT month, team_id AS teamId, storage, viewing, uploads, shared, billed, billed_days AS billedDays,
+		stored, gb_months AS gbMonths, watched FROM cost_months`).all<SavedMonth>();
+	return results;
+}
+
+/** Saved once: a team's month already saved keeps its row. */
+export async function saveMonths(db: D1Database, rows: SavedMonth[], savedAt: string): Promise<void> {
+	if (!rows.length) return;
+	await db.batch(rows.map((r) => db.prepare(`INSERT INTO cost_months (month, team_id, storage, viewing, uploads, shared, billed, billed_days, stored, gb_months, watched, saved_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (month, team_id) DO NOTHING`).bind(r.month, r.teamId, r.storage, r.viewing, r.uploads, r.shared, r.billed, r.billedDays, r.stored, r.gbMonths, r.watched, savedAt)));
 }
 
 /** `budget` null: back to the default. */

@@ -2,7 +2,7 @@ import { CLUB, onSubdomain } from "../../club.ts";
 // What the Costs page charges with: Cloudflare's list prices for what the site has (the account's subscriptions:
 // Workers Paid, the Images and Stream bundle, R2, and the domain), in US dollars; the baseline a team's season is
 // estimated from; and the months it counts in (UTC months, as Cloudflare bills them).
-import { MONTHS } from "../../shared/time.ts";
+import { MONTHS, seasonEndDeadline } from "../../shared/time.ts";
 
 /** Cloudflare's list prices, in US dollars (what it bills in, and what the model counts in). The bundle includes the
  * first 1,000 minutes of Stream storage and 100,000 photos in Images. */
@@ -40,6 +40,16 @@ export function monthSpan(month: string): { start: string; end: string } {
 /** A season's twelve months: October of the year it starts to the September after. */
 export const seasonMonths = (start: number) =>
 	Array.from({ length: 12 }, (_, i) => new Date(Date.UTC(start, 9 + i, 1)).toISOString().slice(0, 7));
+
+/** The months after a season while its footage is still kept: October to December, the month it's deleted in. */
+export function keptMonths(start: number): string[] {
+	const last = monthOf(seasonEndDeadline(start)), out: string[] = [];
+	for (let i = 12; ; i++) {
+		const m = new Date(Date.UTC(start, 9 + i, 1)).toISOString().slice(0, 7);
+		if (m > last) return out;
+		out.push(m);
+	}
+}
 
 const DAY_MS = 86_400_000;
 

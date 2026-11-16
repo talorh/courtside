@@ -89,7 +89,9 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  locked out by it (it's logged as `turnstile_unreachable`). Those limits (`auth/sign-in-limits.ts`): an address gets
  10 codes an hour (then a 15-minute hold), 20 a day and 15 wrong codes a day (then a day's hold); an IP address 30
  codes in 15 minutes, 10 unknown addresses in 15 minutes and 30 wrong codes an hour; and the whole site 200 codes an
- hour, which also raises a ticket for the admins. A token that Cloudflare says is bad is still refused.
+ hour, which also raises a ticket for the admins. Request access (`features/signin/access-service.ts`) has its own:
+ 10 tries in 15 minutes from one IP address (each a sign-in event of its own kind, `access`, which no sign-in limit
+ counts), and the whole site 10 requests an hour. A token that Cloudflare says is bad is still refused.
 
 ## Edge security
 

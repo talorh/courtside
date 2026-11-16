@@ -51,7 +51,7 @@ export function goLivePage({ recordingVideoId = null, mine = false, ended = fals
 
 /** The game page's live player, as Watch only sees it while the game is streamed. `whep`: the address it plays. */
 export function livePlayerPage(whep) {
-	return layout({ title: "Live", frame: member("watcher"), current: "games", scripts: ["/watch.js", "/whep.js"] }, livePlayer({ source: { whep }, isLive: true, ended: false })).__html;
+	return layout({ title: "Live", frame: member("watcher"), current: "games", scripts: ["/watch.js", "/whep.js"] }, livePlayer({ source: { whep }, isLive: true, ended: false, stillOnPhone: false })).__html;
 }
 
 /** The Photos page as someone set to Watch and film sees it before any are added; `address` has ?done=added once they're in. */

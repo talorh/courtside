@@ -13,10 +13,15 @@ import { listSegments } from "./recording-segments-repository.ts";
 // While a phone films or saves, a part reaches R2 about every 25 seconds: a newer one means it's still sending.
 export const STILL_SENDING_SECONDS = 120;
 // The cron saves a recording by itself: with no End game (the page died mid-game), once it's this old and nothing has
-// come from its phone for as long, so a phone has the night to find Wi-Fi; after End game the phone has only its last
-// parts to send, so this long with none means its page has gone.
+// come from its phone for as long, so a phone has the night to find Wi-Fi. After End game with minutes of the game still
+// only on the phone (a weak signal), the same: the parent may lock it and go home. After End game with none, the phone
+// has only its last parts to send, so this long with none means its page has gone.
 export const QUIET_HOURS = 12;
 export const ENDED_QUIET_MINUTES = 30;
+
+/** Whether the cron gives the phone QUIET_HOURS, not ENDED_QUIET_MINUTES: no End game, or one that left minutes on it. */
+export const waitsForPhone = (stream: Pick<LiveStream, "endRequestedAt" | "endKeptMinutes">): boolean =>
+	stream.endRequestedAt === null || (stream.endKeptMinutes ?? 0) > 0;
 
 /**
  * A recording whose phone stopped part way (page closed, flat battery) becomes the game video from R2's own list of
@@ -92,13 +97,13 @@ async function decideSave(deps: TeamDeps, member: Member, gameId: number): Promi
 
 /**
  * Cron, for an open stream whose phone isn't streaming: a recording nothing has come from for long enough is saved by
- * itself (flat battery, the page closed for good or closed as Saving appeared). Half an hour after End game; without
- * one, 12 hours after Go live. True if it was dealt with.
+ * itself (flat battery, the page closed for good or closed as Saving appeared). Half an hour after End game; 12 hours
+ * after an End game that left minutes on the phone; without one, 12 hours after Go live. True if it was dealt with.
  */
 export async function saveIfStopped(deps: TeamDeps, stream: LiveStream): Promise<boolean> {
 	const video = stream.recordingVideoId ? await getVideo(deps.db, deps.team.id, stream.recordingVideoId) : null;
 	if (video?.status !== "uploading") return false;
-	const quietSeconds = stream.endRequestedAt ? ENDED_QUIET_MINUTES * 60 : QUIET_HOURS * 3600;
+	const quietSeconds = waitsForPhone(stream) ? QUIET_HOURS * 3600 : ENDED_QUIET_MINUTES * 60;
 	const since = Date.parse(stream.endRequestedAt ?? video.createdAt);
 	if (deps.now().getTime() - since < quietSeconds * 1000) return false;
 	const result = await saveRecordedSoFar(deps, stream, video, quietSeconds);

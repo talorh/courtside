@@ -2,6 +2,7 @@
 // running total, the season by kind of cost, and the change on last month. Pure: from costs-estimate.ts's months.
 import type { TeamCosts } from "./costs-estimate.ts";
 import type { MonthCost } from "./costs-model.ts";
+import { seasonMonths } from "./costs-prices.ts";
 
 /** The kinds of cost, in the order they stack (bottom first), and their names. */
 export const KINDS = [
@@ -13,6 +14,11 @@ export type Kind = (typeof KINDS)[number]["key"];
 export interface MonthBar { month: string; estimate: boolean; parts: Record<Kind, number>; total: number; billedDays: number }
 
 const bar = (m: MonthCost): MonthBar => ({ month: m.month, estimate: m.estimate, total: m.total, billedDays: m.billedDays, parts: { shared: m.shared, storage: m.storage, viewing: m.viewing, uploads: m.uploads } });
+
+/** A season's twelve months, and any other month its teams cost something in (an upload before it, footage kept
+ * after it), in order. */
+export const shownMonths = (costs: TeamCosts[], season: number): string[] =>
+	[...new Set([...seasonMonths(season), ...costs.flatMap((c) => c.months.map((m) => m.month))])].sort();
 
 /** One team's months, or every team's added up, in `months` order (a month no team has is nothing). */
 export function monthBars(costs: TeamCosts[], months: string[], thisMonth: string): MonthBar[] {

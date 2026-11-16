@@ -12,7 +12,7 @@ const TEAM_GROUPS: Array<{ title: string; tables: string[] }> = [
 ];
 
 const SITE_WIDE = ["admins", "sessions", "sign_in_codes", "sign_in_events", "sign_in_holds", "view_weeks", "support_requests", "support_messages",
-	"platform_alerts", "server_errors", "problems", "email_months", "admin_log", "docs_ask_counts", "cost_views", "exchange_rates", "billed_usage"];
+	"platform_alerts", "server_errors", "problems", "email_months", "admin_log", "docs_ask_counts", "cost_views", "cost_months", "exchange_rates", "billed_usage"];
 
 /** A card: its heading, then a table name a line. */
 const card = (x: number, y: number, w: number, title: string, lines: string[], kind: string) => html`<g class="dg-box k-${kind}"><rect x="${x}" y="${y}" width="${w}" height="${34 + lines.length * 17}" rx="10"/>

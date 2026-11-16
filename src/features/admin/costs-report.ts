@@ -13,6 +13,7 @@ import type { TeamCosts } from "./costs-estimate.ts";
 import type { MonthCost } from "./costs-model.ts";
 import { monthName, monthOf, seasonMonths } from "./costs-prices.ts";
 import type { Rate } from "./costs-rate.ts";
+import { shownMonths } from "./costs-summary.ts";
 
 export interface ReportInput { costs: TeamCosts[]; season: number; cur: Currency; rate: Rate; bill: Bill; now: Date }
 
@@ -77,7 +78,7 @@ function months(p: ReportInput): Sheet {
 }
 
 function grid(p: ReportInput, thisMonth: string): Sheet {
-	const season = seasonMonths(p.season), sorted = [...p.costs].sort((a, b) => b.estimate - a.estimate);
+	const season = shownMonths(p.costs, p.season), sorted = [...p.costs].sort((a, b) => b.estimate - a.estimate);
 	const total = (c: TeamCosts, m: string) => monthOfTeam(c, m)?.total ?? 0;
 	const rows = [...sorted.map((c) => [teamLabel(c.team), ...season.map((m) => total(c, m)), c.estimate]),
 		["Every team", ...season.map((m) => sum(p.costs, (c) => total(c, m))), sum(p.costs, (c) => c.estimate)]];
@@ -97,7 +98,7 @@ function bill(p: ReportInput): Sheet {
 
 /** The workbook's sheets, in order. */
 export function costReport(p: ReportInput): Sheet[] {
-	const season = seasonMonths(p.season), nowMonth = monthOf(p.now.toISOString());
-	const past = nowMonth > season[11]!, thisMonth = past ? season[11]! : nowMonth;
+	const nowMonth = monthOf(p.now.toISOString());
+	const past = nowMonth > seasonMonths(p.season)[11]!, thisMonth = past ? shownMonths(p.costs, p.season).at(-1)! : nowMonth;
 	return [summary(p, past, thisMonth), teams(p, thisMonth), months(p), grid(p, thisMonth), bill(p)];
 }

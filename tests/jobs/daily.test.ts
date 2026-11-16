@@ -77,3 +77,13 @@ describe("the daily job reads Cloudflare's bill for Costs", () => {
 		expect(err?.errors?.map(String).join(" ")).toContain("Cloudflare's bill couldn't be read");
 	});
 });
+
+describe("the daily job saves Costs' spent months", () => {
+	it("each team's month once it's been over a week, so a video or team deleted later changes nothing in it", async () => {
+		const deps = { ...createTestDeps(new Date("2026-12-08T16:00:00Z")), cloudflare: { figures: async () => { throw new Error("not this"); }, minutesByVideo: async () => [] } };
+		await deps.db.prepare("UPDATE teams SET created_at = '2026-10-01T00:00:00.000Z'").run();
+		await runDaily(deps).catch(() => {});
+		const saved = await deps.db.prepare("SELECT month, team_id AS teamId FROM cost_months ORDER BY month").all();
+		expect(saved.results).toEqual([{ month: "2026-10", teamId: deps.team.id }, { month: "2026-11", teamId: deps.team.id }]);
+	});
+});

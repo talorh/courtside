@@ -152,7 +152,9 @@ recording waits. A camera that comes back carries on by itself; one the phone sw
 **Resume camera** (one tap, the same on iPhone and Android), in the same video, the gap left out. The recording is always
 landscape, whichever way the phone was held when a camera started. On a weak signal the recording is sent behind the
 game; once minutes of it are only on the phone, the camera screen and the Saving panel say how many, and to keep the
-page open until Saved.
+page open until Saved. A page closed after End game is saved by the site from what reached it half an hour later, or,
+if End game left minutes of the game on the phone, 12 hours later, so reopening Go live on that phone can still send
+them (as with no End game).
 
 - **Closed by mistake?** (Safari closed, the phone restarted, the tab killed.) Reopen Go live on the same phone: it
  remembers the recording and offers **Carry on streaming**. The button counts down while the last of the recording
@@ -376,8 +378,9 @@ families scoring, one on lollies and one on video. There's no video duty when ev
 
 Everyone on the team gets **Add photos** (**Choose photos**, any number, or on a computer drag
 them onto the box; sent three at a time after the first when it went up quickly, else one at a time (a weak signal), with
-progress; one the site turns down, or that can't be opened, is listed and the rest carry on; a page left part way says
-how many weren't added the next time Photos is opened). Everyone sees and downloads
+progress; one the site turns down, or that can't be opened, is listed and the rest carry on; one sent again after a
+lost answer (a weak signal) is added once, never twice; a page left part way says how many weren't added the next time
+Photos is opened). Everyone sees and downloads
 them.
 
 - **Not linked to games**: newest first by when each was taken, under a heading for
@@ -390,7 +393,7 @@ them.
 - **Several at once**: **Select photos**, tap the ones wanted, then **Download** (one zip; on an
  iPhone **Save to Photos**, the share menu with them all) or **Delete** (shown only when every chosen one is the
  person's own, or for a team manager). Each photo is named in Cloudflare Images as it downloads.
-- **A photo's page:** the photo and when it was taken, Newer and Older (on a phone, a swipe left or right slides to the next photo in place, like a camera roll), **Download photo** (the JPEG as stored,
+- **A photo's page:** the photo and when it was taken, Newer and Older (on a phone, a swipe left or right slides to the next photo in place, like a camera roll; a pinch zooms in, and while it's zoomed a finger moves around the photo instead), **Download photo** (the JPEG as stored,
  `saints-b12-1-<date>-photo-<id>.jpg`; on an iPhone or iPad it's **Save photo**, which opens the share menu, where Save
  Image puts it in Photos), and **Ask for this photo to be removed**. Whoever added it gets **Delete photo** instead
  (added by mistake, say), and a team manager sees who added any photo and when, and **Delete photo**
@@ -555,10 +558,13 @@ counts beside Insights (alerts that aren't ok) and Support (tickets waiting). An
  budgets, every team's season on one scale, every team month by month in one grid with their total (Team by team),
  where the money goes this month and over the season, and what the teams used this month, as a dashboard of tiles and widgets. Download for Excel gives the season, in the currency shown, as a workbook: the figures, each team, each team's months by kind of cost, Team by team and Cloudflare's bill, as numbers Excel can add up. Each
  team has its own page with its budget, set there, its months against a twelfth of it, and what a
- player and a game cost. A team's own storage, watching and uploads are its own; the site's fixed costs are shared by
- the days each team ran in the month. The estimate: 30 games a season, an hour of video, three clips and nine
+ player and a game cost. A team's own storage, watching and uploads are its own, in any month (last season's footage,
+ kept to the end of December, is its team's, on that team's page; an upload before a team's season is its own); the
+ site's fixed costs are shared by the days each team ran in the month, between the teams in their own season, so
+ every month's teams add up to what it cost. A month is saved a week after it ends and shown as saved from then on, so
+ a video or team deleted later changes nothing in it. The estimate: 30 games a season, an hour of video, three clips and nine
  families each watching twice, until the team has three games of its own. Over budget so far, or estimated to go over,
- is the Team budgets alert.
+ is the Team budgets alert; a team onboarded for next season is checked from its season's first month.
 - **Documentation** (`/admin/docs`), laid out as documentation sites are: the contents in groups and a search box down the left (behind a button
  on a phone), one section at a time with a breadcrumb and cards to the sections either side, and "On this page" down
  the right on a wide screen. The search finds words in any heading, paragraph, table row or caption and goes to the
@@ -708,7 +714,7 @@ resolves itself when it clears. There are no reminders.
 | --- | --- |
 | Address | saints.example, its own zone. The old an earlier address redirected here until it was retired. |
 | Sign-in | The site's own: a six-digit code by email, only for an address on a team's list or an admin's (anyone else is told to ask their team manager, and gets no code), then a fixed 30-day session per device, several devices at once. Limits per address, per IP address and site-wide. The sign-in page has the club's logo and colours. Cloudflare Access did this from 15 to 31 Oct 2026 (the team `courtside` from 28 Oct). |
-| Who gets in | The sign-in checks the teams' lists and the admins table before sending a code, and the site checks them again on every request, so removal is instant. A person sees their current team (remembered for a year on each phone or computer); someone in several teams picks on Which team?; anyone on no list sees "Ask your team manager to sub you in". Someone not on a list can raise an access request from the sign-in page (name, team, email), a ticket for the admins; nothing is emailed to the address typed. |
+| Who gets in | The sign-in checks the teams' lists and the admins table before sending a code, and the site checks them again on every request, so removal is instant. A person sees their current team (remembered for a year on each phone or computer); someone in several teams picks on Which team?; anyone on no list sees "Ask your team manager to sub you in". Someone not on a list can raise an access request from the sign-in page (name, team, email), a ticket for the admins; nothing is emailed to the address typed, and it's limited like the sign-in (10 tries in 15 minutes from one internet address), so it can't be used to find out who is on a list. |
 | Filming | The phone's camera app, 1080p at 30 frames a second (High Efficiency on an iPhone: about 4 GB a game, a third of 4K), landscape on a tripod. Help and the Upload page say so. Stadiums have no Wi-Fi, so upload at home. |
 | Live streaming | From the Go live page's camera, the same on every phone. Phone apps as the usual way were dropped: Moblin on iPhone, and no Android app was good enough (Larix, IRL Pro, PRISM, LifeStreamer, Streamlabs). An external app over RTMPS came back as the quiet second way, for AI tracking cameras only (XbotGo's app could, at the time of writing): Stream's recording, a 10-minute reconnect window and a 20-minute wait, as before. A page closed mid-game carries on from the same phone, the segments joined into one video by a Cloudflare container (the joiner). |
 | Downloads | Stream's HD MP4 only. No agreement to click. |

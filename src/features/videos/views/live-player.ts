@@ -16,6 +16,8 @@ export interface LiveView {
 	isLive: boolean;
 	/** End game was tapped: the phone is finishing its recording upload (or Stream its recording of the app). */
 	ended: boolean;
+	/** End game left minutes of the game on the filming phone (a weak signal): ready once that phone has sent them. */
+	stillOnPhone: boolean;
 }
 
 /** How often the game's page reloads itself for this stream: once it's stopped (the video is on its way), or while an
@@ -35,7 +37,7 @@ function appPlayer(player: string, isLive: boolean): SafeHtml {
 export function livePlayer(live: LiveView): SafeHtml {
 	// Full time: the Game break card's look (the club's deep colour, court lines, the club's logo), so the game ends as it paused.
 	if (live.ended) {
-		return html`<div class="player"><div class="live-over" role="status">${COURT}<span class="over-title">Full time</span><img src="/club-mark.webp" alt=""><b>The live stream has ended</b><span class="over-note">It's being saved and will be ready to watch here in about 20 to 25 minutes.</span></div></div>`;
+		return html`<div class="player"><div class="live-over" role="status">${COURT}<span class="over-title">Full time</span><img src="/club-mark.webp" alt=""><b>The live stream has ended</b><span class="over-note">${live.stillOnPhone ? html`It's being saved. Some of the game is still on the filming phone, so it'll be ready to watch here about 20 to 25 minutes after that phone has sent it.` : html`It's being saved and will be ready to watch here in about 20 to 25 minutes.`}</span></div></div>`;
 	}
 	if ("player" in live.source) return appPlayer(live.source.player, live.isLive);
 	const note = live.isLive

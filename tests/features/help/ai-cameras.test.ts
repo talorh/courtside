@@ -27,6 +27,10 @@ describe("Help: AI tracking cameras", () => {
 		expect(section).toContain("tap <b>End game</b>");
 		expect(section).toContain("about half a minute behind");
 		expect(section).toContain("under a minute");
+		// A test closes the game's stream (Go live goes back to the camera, and the app's key may stop working), so game
+		// day starts again from Use an external app instead, with the details copied afresh.
+		expect(section).toContain("<b>Tried it at home first?</b> A test ends the app's stream for that game: Go live goes back to the phone's camera, and the stream key the app saved may stop working.");
+		expect(section).toContain("On game day, open <b>Go live</b>, tap <b>Use an external app instead</b> again, and copy the <b>Server</b> and the <b>Stream key</b> into the app afresh");
 		// After Live streaming's own sections.
 		expect(page.indexOf('id="live-browser"')).toBeLessThan(page.indexOf('id="ai-cameras"'));
 		// Go live's link lands on it.

@@ -3,6 +3,9 @@
 // Nothing is ever emailed to the address typed: once they're on a list, they sign in with it as everyone does.
 import { z } from "zod";
 import type { AppDeps } from "../../app/deps.ts";
+import { countSignInEvents, recordSignInEvent } from "../../auth/sign-in-codes-repository.ts";
+import { LIMITS, since } from "../../auth/sign-in-limits.ts";
+import { storedEmail } from "../../auth/sign-in-service.ts";
 import { loadViewer } from "../../auth/viewer.ts";
 import { trySend } from "../admin/support-desk-service.ts";
 import { isEmail } from "../members/members-service.ts";
@@ -19,19 +22,30 @@ export type AccessResult = "sent" | "missing" | "notEmail" | "onList" | "already
 
 /** Requests an hour from the whole site, so the form can't flood the admins' inboxes. */
 export const ACCESS_PER_HOUR = 10;
-const HOUR = 3_600_000;
+/** Tries from one internet address in 15 minutes, as many as the sign-in's unknown addresses, so the form can't be used
+ * to find out, address after address, who is on a team's list. */
+export const ACCESS_PER_IP_15M = LIMITS.unknownPerIp15m;
+const MINUTE = 60_000, HOUR = 3_600_000;
 
 /** Typed text on one line, for a ticket's title and the email's subject. */
 const oneLine = (text: string) => text.replace(/\s+/g, " ").trim();
 
-export async function requestAccess(deps: AppDeps, form: AccessForm): Promise<AccessResult> {
+/** `ip`: who's asking, for the form's limit. Every try is a sign-in event ("access"), which no sign-in limit counts. */
+export async function requestAccess(deps: AppDeps, form: AccessForm, ip: string): Promise<AccessResult> {
 	const name = oneLine(form.name), team = oneLine(form.team), email = form.email.toLowerCase();
+	const now = deps.now();
+	// Recorded before it's counted, so tries sent at the same moment each count the others; over the limit, the answer
+	// is the same whatever the address, and the list isn't looked at.
+	await recordSignInEvent(deps.db, { kind: "access", email: storedEmail(email), ip, at: now.toISOString(), device: deps.device });
+	if (await countSignInEvents(deps.db, "access", since(now, 15 * MINUTE), { ip }) > ACCESS_PER_IP_15M) {
+		console.log(JSON.stringify({ event: "access_refused", teamId: null, why: "limited" }));
+		return "busy";
+	}
 	if (!name || !team || !email) return "missing";
 	if (!isEmail(email)) return "notEmail";
 	const viewer = await loadViewer(deps.db, email, deps.now());
 	if (viewer.isAdmin || viewer.memberships.length > 0) return "onList";
 	if (await hasOpenAccessRequest(deps.db, email)) return "already";
-	const now = deps.now();
 	if (await countAccessRequestsSince(deps.db, new Date(now.getTime() - HOUR).toISOString()) >= ACCESS_PER_HOUR) return "busy";
 	const id = await insertAddressTicket(deps.db, {
 		kind: "access", email, title: `Access request: ${name}, ${team}`, nowIso: now.toISOString(),

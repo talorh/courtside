@@ -21,9 +21,10 @@ export function savingPanel(card) {
 			bar.value = p.uploadedParts;
 			const waiting = p.waitingBytes > 0 ? ` ${Math.ceil(p.waitingBytes / 1e6)} MB to go.` : "";
 			const behind = onPhoneMinutes({ waitingBytes: p.waitingBytes });
-			// On a weak signal: what's still to send is only on this phone, and leaving the page loses it.
+			// On a weak signal: what's still to send is only on this phone (kept there if the page closes). End game told the
+			// site so, and it waits 12 hours for them before saving what reached it by itself (recording-save-service.ts).
 			text.innerHTML = behind >= BEHIND_MINUTES
-				? `<b>Saving the video…</b> Keep this page open until it says Saved: about ${behind} minutes of the game are still only on this phone, and closing the page or leaving it loses them.${waiting} On Wi-Fi it's quicker.`
+				? `<b>Saving the video…</b> Keep this page open until it says Saved: about ${behind} minutes of the game are still only on this phone.${waiting} On Wi-Fi it's quicker. Page closed before then? Open Go live on this phone again within 12 hours of End game and tap <b>Save what was recorded</b>: they're sent first.`
 				: `<b>Saving the video…</b> Keep this page open.${waiting}`;
 		},
 		saved() {

@@ -12,7 +12,7 @@ import type { TeamCosts } from "../costs-estimate.ts";
 import type { MonthCost } from "../costs-model.ts";
 import { BASELINE, DEFAULT_BUDGET_LOCAL, monthName, monthOf, seasonMonths } from "../costs-prices.ts";
 import type { Rate } from "../costs-rate.ts";
-import { monthBars } from "../costs-summary.ts";
+import { monthBars, shownMonths } from "../costs-summary.ts";
 import type { Viewing } from "../costs-viewing.ts";
 import { adminLayout } from "./admin-layout.ts";
 import { budgetUse, burnUp, kindBars } from "./costs-burnup.ts";
@@ -56,9 +56,10 @@ ${tile(money(cur)(c.estimate / BASELINE.games), "A game", `The season's estimate
 /** `billed`: Cloudflare's bill has been read, so what's spent is actual. */
 export function costTeamPage(p: { frame: AdminFrame; costs: TeamCosts; viewing: Viewing; now: Date; thisSeason: number; cur: Currency; rate: Rate; message: string | null; billed: boolean }): SafeHtml {
 	const c = p.costs, b = c.team.budget, d = money(p.cur), thisMonth = monthOf(p.now.toISOString());
-	const bars = monthBars([c], seasonMonths(c.team.seasonStart), thisMonth);
+	const bars = monthBars([c], shownMonths([c], c.team.seasonStart), thisMonth), season = seasonMonths(c.team.seasonStart);
 	let spent = 0;
-	const rows = c.months.map((m, i) => { spent += m.total; return monthRow(m, spent, (b * (i + 1)) / c.months.length, p.cur); });
+	// The budget to date: a twelfth a month of its season (none before it, all of it after).
+	const rows = c.months.map((m) => { spent += m.total; return monthRow(m, spent, (b * season.filter((s) => s <= m.month).length) / 12, p.cur); });
 	const g = c.perGame;
 	const basis = `Each game left: ${thousands(g.minutes)} minutes of video (${g.own.length ? "its own so far" : "the baseline"}), ${BASELINE.clipsAGame} clips, ${thousands(g.watched)} minutes watched (${g.own.watched ? "its own so far" : `the baseline: ${BASELINE.families} families each watching it ${times(BASELINE.viewsPerFamily)}`}) and a ${g.gb.toFixed(1)} GB original.`;
 	const status = p.billed ? ACTUAL : NOT_BILLED;
@@ -71,7 +72,7 @@ export function costTeamPage(p: { frame: AdminFrame; costs: TeamCosts; viewing: 
 	return adminLayout({ title: teamLabel(c.team, { season: true }), current: "costs", frame: p.frame, back: { href: costsHref(c.team.seasonStart, p.thisSeason, p.cur), label: "Costs" }, head: currencySwitch(p.cur, `/admin/costs/${c.team.id}`, p.rate), lede: c.team.status === "active" ? "What this team costs on Cloudflare." : "Its season is over: it's no longer sharing the site's costs." },
 		html`${notice(p.message)}${board}<div class="costdash"><div class="cd-main">${monthsChart("Month by month", bars, thisMonth, b / 12, p.cur)}</div>
 <div class="cd-side">${kindBars(bars, p.cur, thisMonth)}${unitCosts(c, p.cur)}</div>
-<div class="cd-half">${burnUp("The season against its budget", bars, b, p.cur)}</div><div class="cd-half">${budgetPanel(c, p.cur, p.cur === "local" ? b : b * p.rate.localPerUsd)}</div></div>
+<div class="cd-half">${burnUp("The season against its budget", bars, b, p.cur, season)}</div><div class="cd-half">${budgetPanel(c, p.cur, p.cur === "local" ? b : b * p.rate.localPerUsd)}</div></div>
 <details class="panel costtable" open><summary>The months as a table</summary><div class="tablewrap"><table class="datatable costmonths"><thead><tr><th>Month</th><th>Video storage</th><th>Watching</th><th>Uploads (R2)</th><th>Shared</th><th>Month's total</th><th>Spent to date</th><th>Budget to date</th></tr></thead>
 <tbody>${rows}</tbody></table></div><p class="small">${basis}</p><p class="small">${readLine(p.viewing)}</p></details>`);
 }

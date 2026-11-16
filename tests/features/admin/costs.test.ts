@@ -205,6 +205,20 @@ describe("the admin Costs page", () => {
 		expect(page).toMatch(/<td class="c-month">\$0\.00<span class="sub">Down \$[\d.]+ \(100%\) on Oct<\/span>/);
 	});
 
+	it("shows last season's footage, kept to December, on its own team's page and its season's, sharing none of the fixed costs", async () => {
+		const deps = { ...createTestDeps(), now: () => new Date("2027-11-15T00:00:00.000Z") };
+		await deps.db.prepare("UPDATE teams SET created_at = '2026-10-01T00:00:00.000Z', status = 'closed', closed_at = '2027-09-30T00:00:00.000Z', delete_after = '2027-12-31T13:00:00.000Z'").run();
+		await addTeam(deps.db, { ...G14_5, id: "g14.5-2027", seasonStart: 2027 });
+		await seedVideo(deps, { gameId: await seedGame(deps, { startsAt: "2027-03-01T10:00" }), streamUid: "uid-kept", createdAt: "2027-03-01T03:00:00.000Z" });
+		const client = makeClient(deps);
+		const team = await (await client(`/admin/costs/${deps.team.id}?cur=usd`)).text();
+		// November: the fake Stream's 1,100 minutes bought (one $5 block past the bundle) are all its 47 minutes' to pay.
+		expect(team).toMatch(/<tr><td>Nov 2027<\/td>\s*<td>\$5\.00<span class="sub">47 min<\/span><\/td><td>\$0\.00<span[^]*?<td>\$0\.00<\/td><td><b>\$5\.00<\/b><\/td>/);
+		expect(team).toMatch(/<tr><td>Oct 2027<\/td>\s*<td>\$0\.00<span class="sub">47 min<\/span>/);
+		const past = await (await client("/admin/costs?season=2026")).text();
+		expect(past).toContain("<span>Nov 2027, its last month</span>");
+	});
+
 	it("counts a clip as gone with its video, when the video goes first", async () => {
 		const deps = createTestDeps();
 		const video = await seedVideo(deps, { gameId: await seedGame(deps, { startsAt: "2026-10-10T09:00" }), streamUid: "uid-v" });

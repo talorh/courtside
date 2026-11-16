@@ -15,7 +15,7 @@ import type { TeamCosts } from "../costs-estimate.ts";
 import type { Bill } from "../costs-bill.ts";
 import { BASELINE, monthOf, seasonMonths } from "../costs-prices.ts";
 import type { Rate } from "../costs-rate.ts";
-import { monthBars } from "../costs-summary.ts";
+import { monthBars, shownMonths } from "../costs-summary.ts";
 import type { Viewing } from "../costs-viewing.ts";
 import { adminLayout } from "./admin-layout.ts";
 import { budgetUse, burnUp, kindBars, monthSpark } from "./costs-burnup.ts";
@@ -34,7 +34,7 @@ export function costsHref(s: number, thisSeason: number, cur: Currency): string 
 const sum = (costs: TeamCosts[], f: (c: TeamCosts) => number) => costs.reduce((s, c) => s + f(c), 0);
 
 function teamRow(c: TeamCosts, thisMonth: string, cur: Currency): SafeHtml {
-	const m = money(cur), bars = monthBars([c], seasonMonths(c.team.seasonStart), thisMonth), b = c.team.budget;
+	const m = money(cur), bars = monthBars([c], shownMonths([c], c.team.seasonStart), thisMonth), b = c.team.budget;
 	const use = html`${budgetUse(c.soFar, c.estimate, b)}<span class="sub">${b ? Math.round((c.soFar / b) * 100) : 0}% used of ${m(b)}${c.team.budgetDefault ? " (the default)" : ""}; ${b ? Math.round((c.estimate / b) * 100) : 0}% estimated</span>`;
 	const href = `/admin/costs/${c.team.id}${cur === "usd" ? "?cur=usd" : ""}`;
 	return html`<tr${c.team.status === "active" ? "" : html` class="past"`}><td class="c-team"><a href="${href}"><b>${teamLabel(c.team, { season: true })}</b></a><span class="sub">${c.team.status === "active" ? `${c.games} of ${BASELINE.games} games, ${c.team.players} ${c.team.players === 1 ? "player" : "players"}` : "Season over"}</span></td>
@@ -45,9 +45,10 @@ function teamRow(c: TeamCosts, thisMonth: string, cur: Currency): SafeHtml {
 /** The season's teams (`costs`), among the seasons any team was onboarded for (`seasons`, newest first). `thisSeason`:
  * the one plain /admin/costs shows. */
 export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: Viewing; minutesBought: number | null; now: Date; season: number; seasons: number[]; thisSeason: number; cur: Currency; rate: Rate; bill: Bill }): SafeHtml {
-	const months = seasonMonths(p.season), nowMonth = monthOf(p.now.toISOString());
-	// A past season's months are all spent: its last month stands where this month does, and every team's budget counts.
-	const past = nowMonth > months[11]!, thisMonth = past ? months[11]! : nowMonth;
+	const months = shownMonths(p.costs, p.season), nowMonth = monthOf(p.now.toISOString());
+	// A past season's months are all spent: its last month (September, or the last its footage was kept in) stands where
+	// this month does, and every team's budget counts.
+	const past = nowMonth > seasonMonths(p.season)[11]!, thisMonth = past ? months.at(-1)! : nowMonth;
 	const bars = monthBars(p.costs, months, thisMonth);
 	// The running teams' budgets, against their own costs (a team closed mid-season has no budget to keep to).
 	const budgeted = past ? p.costs : p.costs.filter((c) => c.team.status === "active");
@@ -63,7 +64,7 @@ export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: V
 		html`${seasons}${tiles(board)}<div class="costdash"><div class="cd-main">${monthsChart("Every team, month by month", bars, thisMonth, null, p.cur)}</div>
 <div class="cd-side">${kindBars(bars, p.cur, thisMonth)}${usedThisMonth(p.costs, thisMonth, past ? `Used in ${shortMonth(thisMonth)}` : "Used this month")}</div>
 <div class="cd-full">${billWidget(p.bill, { cur: p.cur, localPerUsd: p.rate.localPerUsd, bought: p.minutesBought })}</div>
-<div class="cd-half">${burnUp(past ? "The teams against their budgets" : "The running teams against their budgets", monthBars(budgeted, months, thisMonth), budget, p.cur)}</div>
+<div class="cd-half">${burnUp(past ? "The teams against their budgets" : "The running teams against their budgets", monthBars(budgeted, months, thisMonth), budget, p.cur, seasonMonths(p.season))}</div>
 <div class="cd-half">${teamSeasons(p.costs, p.cur)}</div>
 <div class="cd-full">${teamMonths(p.costs, bars, thisMonth, p.cur)}</div></div>${teams}${workings(p.viewing, p.minutesBought, p.rate)}`);
 }

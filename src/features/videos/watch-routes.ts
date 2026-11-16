@@ -55,6 +55,7 @@ export function registerWatchRoutes(router: Router): void {
 			source: open.source === "app" ? { player: playerUrl(config.streamCustomerCode, token) } : { whep: whepUrl(config.streamCustomerCode, token) },
 			isLive,
 			ended: open.endRequestedAt !== null,
+			stillOnPhone: open.endRequestedAt !== null && (open.endKeptMinutes ?? 0) > 0,
 		} : null;
 		// Why the last stream wasn't saved (a test, say), while the game still has no video.
 		const last = !video && !open ? await getLatestLiveForGame(db, deps.team.id, game.id) : null;

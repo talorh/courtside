@@ -41,8 +41,9 @@ says <b>Saved</b>. The game is in Watch games about 20 to 25 minutes later, and 
 <li><b>Weak signal?</b> The live picture reconnects by itself, and the saved video is unaffected. The video may be sent
 behind the game: if the page says minutes of the game are only on this phone, keep the page open after the final
 buzzer until it says <b>Saved</b> (on Wi-Fi if you can). Closed it before then? Those minutes are kept on the phone:
-open <b>Go live</b> again on that phone and tap <b>Save what was recorded</b>, and they're sent first. Closed the page
-just as it said Saving? It saves itself half an hour later, and the video turns up in Watch games as usual.</li>
+open <b>Go live</b> again on that phone within 12 hours of End game and tap <b>Save what was recorded</b>, and they're
+sent first (the site waits that long for them before it saves what reached it by itself). Closed the page just as it
+said Saving, with nothing left on the phone? It saves itself half an hour later, and the video turns up in Watch games as usual.</li>
 <li><b>Safari's bars back over the picture?</b> They can come back if the phone turns or locks. On an iPhone, tap the
 button at the left of the address and choose <b>Hide Toolbar</b> (on older iPhones it's under <b>aA</b>). The stream and
 the recording carry on either way.${SAFARI_BARS}</li>
@@ -66,7 +67,8 @@ sent when the page closed is kept on the phone and goes up by itself.
 comes back, finds the recording and offers Carry on streaming. If the warning goes away by itself, the recording has carried on: keep filming.</li>
 <li><b>End game tapped too early?</b> It can't be restarted, so keep filming: open the <b>Camera</b> app and record the
 rest of the game. Afterwards, send that video to ${h.c.ask} (Google Drive, Dropbox or AirDrop) and ${h.c.ask} will add
-it. Can't get back to Go live to save? What reached the site saves itself half an hour later.</li>
+it. Can't get back to Go live to save? What reached the site saves itself half an hour later (12 hours if minutes of
+the game were still on the phone).</li>
 <li><b>Asked for a new code when you open Go live?</b> That's so your sign-in can't run out part way through the game.</li>
 <li><b>Try it at home first, for under a minute.</b> Anything that short is a test: it's thrown away when you tap End
 game, and the game can still be streamed for real. A paused stretch doesn't count. A game carried on with <b>Carry on

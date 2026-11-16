@@ -55,6 +55,7 @@ export const EVENTS: Record<LogEvent, { name: string; tone: Tone; kind: LogKind 
 	...each("signins", {
 		code_sent: ["Code sent", "plain"], signed_in: ["Signed in", "good"], wrong: ["Wrong code", "warn"], unknown_email: ["Not on a team", "warn"],
 		limited: ["Over a limit", "warn"], robot: ["Robot check said no", "warn"], desktop_view: ["Desktop view", "plain"], mobile_view: ["Mobile view", "plain"],
+		access: ["Access asked for", "plain"],
 	}),
 };
 

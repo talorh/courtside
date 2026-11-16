@@ -741,7 +741,7 @@ fieldset.players label{padding:6px 10px;font-size:14px}
 .pickbar .confirm[open]{flex-basis:100%}
 .photoview{margin:0;display:grid;place-items:center;background:var(--black);border-radius:12px;overflow:hidden}
 .photoview img{display:block;width:auto;height:auto;max-width:100%;max-height:78vh}
-.photoview{touch-action:pan-y}
+.photoview{touch-action:pan-y pinch-zoom}
 /* The grid would centre the three-wide track over the figure (the middle slide one width to the left): it starts at the figure's left edge. */
 .photoview .track{display:flex;width:300%;will-change:transform;justify-self:start}
 .photoview .track.snap{transition:transform .22s ease-out}

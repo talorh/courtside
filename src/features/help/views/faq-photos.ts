@@ -13,7 +13,7 @@ until it says <b>Photos added</b>: on a weak signal they go up one by one, so it
 the page is closed part way, it says how many weren't added next time you open Photos: choose those again.</li>
 <li><b>Privacy:</b> a photo's location is removed when it's added.</li>
 ${shot("photos", "The Photos page with Add photos at the top and a green Choose photos button, before any photos are added")}
-<li><b>Looking:</b> the newest are first. Tap one to see it bigger, then swipe left or right to flick through (or tap <b>Newer</b> and <b>Older</b>). <b>Select photos</b> on the Photos page downloads or deletes several at once.</li>
+<li><b>Looking:</b> the newest are first. Tap one to see it bigger, then swipe left or right to flick through (or tap <b>Newer</b> and <b>Older</b>). Pinch to zoom in. <b>Select photos</b> on the Photos page downloads or deletes several at once.</li>
 <li><b>Download:</b> on a photo, tap <b>Download photo</b>. On an iPhone it's <b>Save photo</b>: then tap
 <b>Save Image</b> to put it in Photos.</li>
 <li><b>Several at once:</b> tap <b>Select photos</b>, tap the ones you want, then <b>Download</b> (they come as one zip

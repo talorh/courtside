@@ -28,7 +28,9 @@ Cloudflare can't be reached the code still goes, with the limits below holding.<
 <p>Someone not on a list can tap <b>raise an access request here</b> at the foot of the sign-in page: their name, their
 team and their email, behind the same Turnstile check, open one of the site's own tickets on the support desk (Access
 request: the name, the team), emailed to the admins. An address gets one open request at a time, an address already on a
-list is told to sign in, and the whole site takes ten an hour. Nothing is ever emailed to the address typed: an admin
+list is told to sign in, and the whole site takes ten an hour. One internet address gets 10 tries in 15 minutes, after
+which the form says to try again later, whatever the address, so it can't be used to find out who is on a list; each
+try is in the Log (Access asked for), and none counts toward the sign-in's own limits. Nothing is ever emailed to the address typed: an admin
 adds it to the team's list (Manage team) and resolves the ticket, and the person signs in as everyone does. The ticket
 shows who asked (their name, team and email, with Copy email); to write to them, an admin uses their own email.</p>
 <p>An address Email Sending won't send to (its emails bounced, or its owner marked one as spam, so it's on Email
@@ -83,9 +85,12 @@ sent says how many weren't, the next time Photos is opened on that phone (kept i
 <li><b>In the Worker:</b> 10 MB at most, checked as a whole JPEG with any metadata left taken out. Its row is saved
 first, out of sight, so the photo has its number; then Images keeps it privately, named as it downloads
 (${code("saints-b12-1-<date>-photo-<id>.jpg")}), and the row is filled in. A photo with no date, or one still to come,
-gets the time it was added.</li>
+gets the time it was added. Each photo comes with a key made on the phone, so one sent again after a lost answer is
+that photo, not a second.</li>
 <li><b>Looking:</b> newest taken first under each day, 60 a page, through signed links that last six hours. A photo's
-page has Newer and Older (on a phone a swipe slides between photos in place, the neighbours' pictures already on the page: public/photo-swipe.js) and Download photo.</li>
+page has Newer and Older (on a phone a swipe slides between photos in place, the neighbours' pictures already on the page: public/photo-swipe.js) and Download photo.
+Each page reads only the photos it shows. A pinch zooms a photo, and while it's zoomed a finger moves around it instead
+of swiping.</li>
 <li><b>Several at once:</b> Select photos ticks them, then Download sends them as one zip (stored, written a photo at a
 time so a page of 60 is never in memory at once), or on an iPhone opens the share menu with them all; Delete deletes
 them together, all or none, offered only when every one is the member's own (or for a team manager).</li>

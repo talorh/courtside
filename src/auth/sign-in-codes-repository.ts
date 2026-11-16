@@ -4,9 +4,10 @@ import { ALL_TIME, type LogRange } from "../shared/time.ts";
 
 export interface LiveCode { id: number; codeHash: string; tries: number }
 
-/** What happened at the sign-in page ("robot": Turnstile said no, features/signin/signin-routes.ts); and, once signed in,
- * which view a device uses (first seen, or changed). */
-export type SignInEvent = "code_sent" | "unknown_email" | "limited" | "wrong" | "signed_in" | "robot" | "desktop_view" | "mobile_view";
+/** What happened at the sign-in page ("robot": Turnstile said no, features/signin/signin-routes.ts; "access": a Request
+ * access try, features/signin/access-service.ts, counted only for that form's own limit); and, once signed in, which
+ * view a device uses (first seen, or changed). */
+export type SignInEvent = "code_sent" | "unknown_email" | "limited" | "wrong" | "signed_in" | "robot" | "desktop_view" | "mobile_view" | "access";
 
 export async function insertCode(db: D1Database, c: { email: string; codeHash: string; ip: string; createdAt: string; expiresAt: string }): Promise<void> {
 	await db.prepare("INSERT INTO sign_in_codes (email, code_hash, ip, created_at, expires_at) VALUES (?, ?, ?, ?, ?)")
@@ -61,7 +62,8 @@ export async function countSignInEvents(db: D1Database, kind: SignInEvent, since
 
 export interface SignInFigures { codesSent: number; wrong: number; refused: number; signedIn: number }
 
-/** Platform's Sign-ins row: what happened since `sinceIso` (refused: unknown emails and requests over a limit). */
+/** Platform's Sign-ins row: what happened since `sinceIso` (refused: unknown emails, requests over a limit and the robot
+ * check; Request access's tries aren't sign-ins, so none of these). */
 export async function signInFigures(db: D1Database, sinceIso: string): Promise<SignInFigures> {
 	const { results } = await db.prepare("SELECT kind, COUNT(*) AS n FROM sign_in_events WHERE at > ? GROUP BY kind").bind(sinceIso).all<{ kind: SignInEvent; n: number }>();
 	const n = (kind: SignInEvent) => results.find((r) => r.kind === kind)?.n ?? 0;

@@ -1,6 +1,7 @@
 // Go live, End game: the live picture ends, the site is told, and the recording either finishes uploading and becomes
 // the game video, or (under a minute, the site's call) is thrown away as a test. The camera closes once it's recorded.
 import { fillScreen } from "./golive-screen.js";
+import { onPhoneMinutes } from "./golive-status.js";
 import { api, withRetries } from "./upload-net.js";
 
 /**
@@ -15,8 +16,9 @@ export async function stopStream(s) {
 	// Under a minute recorded (pauses left out) the site may call it a test (thrown away, the game free again), so wait
 	// for its answer.
 	const warn = (err) => console.warn(`stop stream: ${err.message ?? err}`);
-	// How it ended goes in the site's Log: End game tapped (the only way it ends; the site also takes "camera" from older pages).
-	const body = { recordedSeconds: s.rec.recordedSeconds(), cause: "tapped" };
+	// How it ended goes in the site's Log: End game tapped (the only way it ends; the site also takes "camera" from older
+	// pages). keptMinutes: what's still only on this phone, so the site waits for it before saving by itself.
+	const body = { recordedSeconds: s.rec.recordedSeconds(), cause: "tapped", keptMinutes: onPhoneMinutes(s.progress()) };
 	const answer = body.recordedSeconds < 60 ? await api(`/api/live/${s.gameId}/end`, body).catch((err) => warn(err) ?? null) : null;
 	if (!answer) withRetries(() => api(`/api/live/${s.gameId}/end`, body), warn).catch(warn);
 	try {

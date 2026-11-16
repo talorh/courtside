@@ -1,8 +1,10 @@
 // What each team costs a month. A team's own use is priced at Cloudflare's rates: Stream storage the
 // account buys past the bundle (shared out by the minutes each team stores), minutes watched, and R2 for its originals
-// past the free 10 GB (by each team's share). The site's fixed costs (Workers Paid, the bundle, the domain) and minutes
-// watched that no team has are shared between the teams running that month, by the days each ran in it.
-import { addMs, fixedAMonth, PRICES, shareOfMonth } from "./costs-prices.ts";
+// past the free 10 GB (by each team's share), whether or not the month is in its season (last season's footage is kept to
+// December; next season's team can upload early). The site's fixed costs (Workers Paid, the bundle, the domain) and
+// minutes watched that no team has are shared between the teams running that month in their own season, by the days
+// each ran in it.
+import { addMs, fixedAMonth, PRICES, seasonMonths, shareOfMonth } from "./costs-prices.ts";
 import type { CostTeam, SavedViews, StoredItem } from "./costs-repository.ts";
 
 /** One team's use in a month: minutes stored at any time in it, GB-months of originals, minutes watched. */
@@ -61,14 +63,19 @@ export function allocate(month: string, o: { uses: Map<string, Usage>; running: 
 	return out;
 }
 
-/** Each team's months so far, from the first month any team's season has to this one. */
+/** The teams that share `month`'s fixed costs, each by how much of it it ran: those running in their own season. */
+const sharing = (month: string, teams: CostTeam[]) => new Map(teams.filter((t) => seasonMonths(t.seasonStart).includes(month))
+	.map((t) => [t.id, runningShare(month, t)] as const).filter(([, w]) => w > 0));
+
+/** Each team's months so far: every month any team's season has to this one, and the months after a season while its
+ * footage is kept. */
 export function actualMonths(p: { months: string[]; teams: CostTeam[]; items: StoredItem[]; views: SavedViews[]; thisMonth: string; minutesBoughtNow: number | null; freeMinutes?: number }): Map<string, MonthCost>[] {
 	return p.months.map((month) => {
 		const uses = new Map(p.teams.map((t) => [t.id, usageIn(month, t.id, p.items, p.views)]));
 		// A deleted team's minutes stay its own (and off the page); only those no team ever had are shared.
 		const unmatched = p.views.filter((v) => v.month === month && v.teamId === "").reduce((s, v) => s + v.minutes, 0);
 		return allocate(month, {
-			uses, unmatched, estimate: false, running: new Map(p.teams.map((t) => [t.id, runningShare(month, t)] as const).filter(([, w]) => w > 0)),
+			uses, unmatched, estimate: false, running: sharing(month, p.teams),
 			minutesBought: month === p.thisMonth ? p.minutesBoughtNow : null, freeMinutes: p.freeMinutes ?? 0,
 		});
 	});

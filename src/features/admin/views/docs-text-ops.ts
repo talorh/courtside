@@ -33,7 +33,7 @@ ${alertDiagram()}
 managers change (teams, people and players, letting someone sign in, games added, changed or deleted, and videos deleted
 or moved), the teams' videos and photos (uploads, processing, clips, Go live, photos added and deleted, removal
 requests), and every sign-in attempt from the last month, with the internet address it came from: a code sent, a wrong
-code, an email on no list, a limit reached, a failed robot check. It also says which view each signed-in device uses,
+code, an email on no list, a limit reached, a failed robot check, a Request access try. It also says which view each signed-in device uses,
 the mobile view or the desktop one, when a device's first page says and whenever it switches, and which device every
 line from a person came from. Its <b>Problems</b> are anything that failed: a page or request that failed, a job's
 step, an email that didn't send, Stream, PlayHQ, Images, Cloudflare or the AI not answering, and what the phones report

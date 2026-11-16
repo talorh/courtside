@@ -6,7 +6,10 @@ import { switchOff } from "./live-service.ts";
 
 // What End game sends: how much the phone recorded, pauses left out, and whether End game was tapped or the camera
 // stopped (an older page sends neither).
-export const stopSchema = z.object({ recordedSeconds: z.number().min(0).max(36_000).optional(), cause: z.enum(["tapped", "camera"]).optional() });
+// keptMinutes: whole minutes of the game recorded but still only on the phone (golive-status.js onPhoneMinutes).
+export const stopSchema = z.object({
+	recordedSeconds: z.number().min(0).max(36_000).optional(), cause: z.enum(["tapped", "camera"]).optional(), keptMinutes: z.number().int().min(0).max(600).optional(),
+});
 
 // A minute of recording is about 20 MB (2.5 Mbps picture and the sound), so more than two 8 MB parts in storage is
 // more than a minute recorded, whatever the page counted.

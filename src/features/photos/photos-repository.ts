@@ -15,14 +15,15 @@ export interface Photo {
 	createdAt: string;
 }
 
-interface PhotoRow {
+export interface PhotoRow {
 	id: number; image_id: string; taken_at: string; width: number; height: number; bytes: number; uploaded_by: number; created_at: string;
 }
 
-const COLUMNS = "id, image_id, taken_at, width, height, bytes, uploaded_by, created_at";
-const ACTIVE = "team_id = ? AND deleted_at IS NULL";
+export const COLUMNS = "id, image_id, taken_at, width, height, bytes, uploaded_by, created_at";
+/** A team's photos on show: not deleted, and not still waiting for Images. */
+export const ACTIVE = "team_id = ? AND deleted_at IS NULL";
 
-const toPhoto = (r: PhotoRow): Photo => ({
+export const toPhoto = (r: PhotoRow): Photo => ({
 	id: r.id, imageId: r.image_id, takenAt: r.taken_at, width: r.width, height: r.height, bytes: r.bytes, uploadedBy: r.uploaded_by, createdAt: r.created_at,
 });
 
@@ -39,17 +40,26 @@ const STILL_PENDING = `${PENDING}%`;
 /**
  * A new photo's row before Images has its image, so the photo has its number (and so its name) first. It's kept out of
  * sight meanwhile, as a deleted row is; should the Worker stop before it's filled in, the nightly clean-up takes it.
+ * `uploadKey`: the phone's key for the photo, when it sent one. Null when a row has that key already (the photo sent
+ * again), so nothing is added.
  */
 export async function reservePhoto(
 	db: D1Database,
-	p: { teamId: string; takenAt: string; width: number; height: number; bytes: number; uploadedBy: number; deleteAfter: string; createdAt: string },
-): Promise<number> {
+	p: { teamId: string; takenAt: string; width: number; height: number; bytes: number; uploadedBy: number; deleteAfter: string; createdAt: string; uploadKey?: string | null },
+): Promise<number | null> {
 	const result = await db
-		.prepare(`INSERT INTO photos (team_id, image_id, taken_at, width, height, bytes, uploaded_by, delete_after, created_at, deleted_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-		.bind(p.teamId, `${PENDING}${crypto.randomUUID()}`, p.takenAt, p.width, p.height, p.bytes, p.uploadedBy, p.deleteAfter, p.createdAt, p.createdAt)
+		.prepare(`INSERT INTO photos (team_id, image_id, taken_at, width, height, bytes, uploaded_by, delete_after, created_at, deleted_at, upload_key)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (team_id, upload_key) WHERE upload_key IS NOT NULL DO NOTHING`)
+		.bind(p.teamId, `${PENDING}${crypto.randomUUID()}`, p.takenAt, p.width, p.height, p.bytes, p.uploadedBy, p.deleteAfter, p.createdAt, p.createdAt, p.uploadKey ?? null)
 		.run();
-	return result.meta.last_row_id;
+	return result.meta.changes === 1 ? result.meta.last_row_id : null;
+}
+
+/** The row with the phone's key for a photo, and whether it's still waiting for Images; null when there's none. */
+export async function photoByKey(db: D1Database, teamId: string, uploadKey: string): Promise<{ id: number; waiting: boolean } | null> {
+	const row = await db.prepare("SELECT id, image_id LIKE ? AS waiting FROM photos WHERE team_id = ? AND upload_key = ?")
+		.bind(STILL_PENDING, teamId, uploadKey).first<{ id: number; waiting: number }>();
+	return row ? { id: row.id, waiting: row.waiting === 1 } : null;
 }
 
 /** The reserved row with its image, now on the page. False when the row has gone meanwhile. */

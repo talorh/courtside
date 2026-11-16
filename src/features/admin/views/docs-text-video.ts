@@ -51,8 +51,9 @@ two minutes, with a countdown.</li>
 seconds, while a part arrived in the last two minutes, the recording began less than two minutes ago (its first part
 may still be going up) or Stream still sees a phone; <b>Delete it and start again</b> is refused then too). If nobody taps either, the
 5-minute job saves it by itself: half an hour after End game with nothing more from the phone (it had only its last
-parts to send), or, where the page died mid-game with no End game, after 12 quiet hours, so a phone has the night to
-reach Wi-Fi or better signal. Each save's outcome is a ${code("live_save")} line in Workers Logs.</li>
+parts to send), or after 12 quiet hours where End game said minutes of the game were still only on the phone
+(${code("live_streams.end_kept_minutes")}, from a weak signal: the parent may lock it and go home) or the page died
+mid-game with no End game, so a phone has the night to reach Wi-Fi or better signal. Each save's outcome is a ${code("live_save")} line in Workers Logs.</li>
 <li><b>What the closed page hadn't sent is kept.</b> What a page has recorded but not yet sent sits on the phone
 (IndexedDB, ${code("golive-store.js")}). The reopened page sends it while the game streams again, and keeps it through
 a second close too (${code("golive-kept.js")}).</li>
@@ -102,5 +103,8 @@ is about a second behind). Home, Watch games and the Log's Right now show it the
 <li><b>Saving:</b> after End game (the one on the app's card: whoever chose the app, a coach or a team manager; the
 camera's End game is refused for an app's stream), or by itself 20 minutes after the app stops. Stream finishes its recording 10
 minutes after the app stops sending, and the 5-minute job then makes it the game's video. A gap under 10 minutes stays
-one recording; after a longer one the longest part is the video and the others are clips. Under a minute is a test.</li></ul>`});
+one recording; after a longer one the longest part is the video and the others are clips. Under a minute is a test:
+the stream closes and its input is switched off, and the next Go live reopens it on the phone's camera (the same input
+while Stream still has it, a new one once the nightly clean-up has taken it), so Help and Go live tell whoever films to
+choose the app again on game day and copy the Server and Stream key in afresh.</li></ul>`});
 

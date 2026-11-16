@@ -9,7 +9,7 @@ import { footageDue } from "../teams/team-code.ts";
 import { cleanJpeg } from "./jpeg.ts";
 import { photoFileName } from "./photo-name.ts";
 import { resolveRequestsForPhotoWrite } from "./photo-removals-repository.ts";
-import { dropReservedPhoto, fillPhoto, getPhoto, listExpiredPhotos, type Photo, type PhotoDeleteReason, reservePhoto, softDeletePhotoWrite } from "./photos-repository.ts";
+import { dropReservedPhoto, fillPhoto, getPhoto, listExpiredPhotos, type Photo, type PhotoDeleteReason, photoByKey, reservePhoto, softDeletePhotoWrite } from "./photos-repository.ts";
 
 /** Cloudflare Images keeps photos up to 10 MB. The phone makes them far smaller first (public/photos.js). */
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -17,6 +17,9 @@ const RETENTION_BATCH = 50;
 /** The Log's detail for photos the site deleted at the season's end (log-photos.ts). */
 export const PHOTO_SEASON_OVER = "season over";
 const SAVE_FAILED = "Couldn't save the photo just now. Try again in a minute.";
+
+/** The phone's key for a photo (public/photos.js, a UUID); anything else is taken as no key. */
+const UPLOAD_KEY = /^[0-9A-Za-z-]{16,64}$/;
 
 /** A real local date and time to the second, 'YYYY-MM-DDTHH:MM:SS'. */
 const isTakenAt = (value: string) => /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(value) && isRealDate(value.slice(0, 10));
@@ -26,9 +29,10 @@ const isTakenAt = (value: string) => /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d
  * photo before the phone made it smaller (public/photos.js); with none, one still to come or one that isn't a date
  * (a camera's clock never set), it's now. The photo goes with its team's season, at the end of 31 December of the year
  * that season ends, as its videos do, whenever it was taken. Its row comes first, so Images can name it as it downloads.
- * Returns its id.
+ * `key`: the phone's key for this photo, the same each time it's sent; a photo whose key the team has already is that
+ * photo, answered without adding it again or sending Images anything (its first answer was lost). Returns its id.
  */
-export async function addPhoto(deps: TeamDeps, member: Member, file: Uint8Array, takenAt: string): Promise<number> {
+export async function addPhoto(deps: TeamDeps, member: Member, file: Uint8Array, takenAt: string, key: string | null = null): Promise<number> {
 	const { db } = deps;
 	const now = deps.now();
 	const added = localTimeSeconds(now);
@@ -38,9 +42,12 @@ export async function addPhoto(deps: TeamDeps, member: Member, file: Uint8Array,
 	const jpeg = cleanJpeg(file);
 	if (!jpeg) throw badRequest("That isn't a photo the site can take. Choose a photo and try again.");
 	const teamId = deps.team.id;
-	const id = await reservePhoto(db, {
+	const reserved = await reserve(db, {
 		teamId, takenAt: taken, width: jpeg.width, height: jpeg.height, bytes: jpeg.bytes.length, uploadedBy: member.id, deleteAfter, createdAt: now.toISOString(),
+		uploadKey: key !== null && UPLOAD_KEY.test(key) ? key : null,
 	});
+	if (reserved.had) return reserved.id;
+	const { id } = reserved;
 	let imageId: string;
 	try {
 		imageId = await deps.images.upload(jpeg.bytes, { teamId, uploadedBy: member.id, filename: photoFileName(deps.team, { id, takenAt: taken }) });
@@ -59,6 +66,22 @@ export async function addPhoto(deps: TeamDeps, member: Member, file: Uint8Array,
 		await logProblem(deps, { kind: "photo_problem", teamId, who: member.email, what: "A photo that didn't save couldn't be deleted from Images (the nightly clean-up does it)", error: cleanup });
 	});
 	throw new Error(`The photo's row ${id} went before its image was saved`);
+}
+
+/**
+ * The new photo's row, or the photo already added with its key (`had`). A row an earlier try with the key left waiting
+ * for Images is dropped for this one: should that try still finish, its row has gone, so it deletes its own image
+ * (addPhoto) and the photo is added once. Busy (tried again by the phone) in the rare case the rows keep changing.
+ */
+async function reserve(db: D1Database, row: Parameters<typeof reservePhoto>[1]): Promise<{ id: number; had: boolean }> {
+	for (let tries = 0; tries < 3; tries++) {
+		const id = await reservePhoto(db, row);
+		if (id !== null) return { id, had: false };
+		const had = row.uploadKey ? await photoByKey(db, row.teamId, row.uploadKey) : null;
+		if (had && !had.waiting) return { id: had.id, had: true };
+		if (had) await dropReservedPhoto(db, row.teamId, had.id);
+	}
+	throw new HttpError(503, "photo_busy", SAVE_FAILED);
 }
 
 export async function requirePhoto(db: D1Database, teamId: string, id: number): Promise<Photo> {

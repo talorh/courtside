@@ -11,7 +11,7 @@ import { oneAtATime, sendPhotos, uploadLanes } from "./photo-queue.js";
 import { leftWords, unsentNote } from "./photo-unsent.js";
 import { reportProblem } from "./problems.js";
 import { enableDrop } from "./upload-drop.js";
-import { apiForm, isNetworkTrouble, needsReload, withRetries } from "./upload-net.js";
+import { apiForm, isNetworkTrouble, needsReload, newId, withRetries } from "./upload-net.js";
 
 const LONGEST = 2560, QUALITY = 0.88;
 const $ = (id) => document.getElementById(id);
@@ -43,13 +43,15 @@ async function shrink(file) {
 	}
 }
 
-/** When it was taken, and the photo made smaller: one at a time, as an iPhone has room to draw only so many at once. */
+/** When it was taken, and the photo made smaller: one at a time, as an iPhone has room to draw only so many at once.
+ * Its key goes with it each time it's sent, so the site adds it once though an answer is lost and it's sent again. */
 const prepare = oneAtATime(async (file) => {
 	// A file dropped on a computer can be anything; an empty type is left to the drawing to find out.
 	if (file.type && !file.type.startsWith("image/")) throw new Error("it isn't a photo");
 	const body = new FormData();
 	body.set("takenAt", await takenAt(file));
 	body.set("photo", await shrink(file), "photo.jpg");
+	body.set("key", newId());
 	return body;
 });
 

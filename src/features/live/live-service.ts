@@ -104,13 +104,13 @@ export async function switchOff(deps: TeamDeps, stream: Pick<LiveStream, "id" | 
 
 /**
  * End game: no more broadcasts to this game, ever (Go live won't open it again, and the input is switched off).
- * The phone's recording upload, still finishing, then saves it as the game video.
+ * The phone's recording upload, still finishing, then saves it as the game video (`keptMinutes`: still on the phone).
  */
-export async function endLive(deps: TeamDeps, gameId: number): Promise<void> {
+export async function endLive(deps: TeamDeps, gameId: number, keptMinutes: number | null = null): Promise<void> {
 	const open = await getOpenLiveForGame(deps.db, deps.team.id, gameId);
 	if (!open) throw notFound("Live stream");
 	if (open.endRequestedAt) return;
-	await requestEnd(deps.db, deps.team.id, open.id, deps.now().toISOString());
+	await requestEnd(deps.db, deps.team.id, open.id, deps.now().toISOString(), keptMinutes);
 	await switchOff(deps, open);
 }
 

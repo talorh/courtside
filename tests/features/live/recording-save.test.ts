@@ -138,24 +138,58 @@ describe("saving what was recorded when the phone stopped", () => {
 		await runSync(deps);
 		expect((await video()).status).toBe("processing");
 	});
-	it("after End game the phone has only the last parts to send: 30 quiet minutes and it saves itself", async () => {
+	it("after End game with nothing left on the phone (or a page that doesn't say): 30 quiet minutes and it saves itself", async () => {
+		for (const said of [{ keptMinutes: 0 }, {}]) {
+			const { deps, gameId, sam, video, later, reached, row } = await filmed();
+			later(60);
+			expect((await sam(`/api/live/${gameId}/end`, jsonBody({ recordedSeconds: 3600, cause: "tapped", ...said }))).status).toBe(200);
+			reached([1, 2], 1);
+			later(10);
+			await runSync(deps);
+			expect((await video()).status).toBe("uploading");
+			// Half an hour since End game, but the last part arrived 22 minutes ago: still sending.
+			reached([1, 2, 3], 1);
+			later(21);
+			await runSync(deps);
+			expect((await video()).status).toBe("uploading");
+			later(12);
+			await runSync(deps);
+			expect(await video()).toMatchObject({ status: "processing", streamUid: "uid-1" });
+			expect(deps.originals.completed[0]?.parts.map((p) => p.partNumber)).toEqual([1, 2, 3]);
+			expect(await row()).toMatchObject({ status: "saved" });
+		}
+	});
+	it("after End game with minutes of the game still on the phone, it waits 12 quiet hours, as with no End game, so the phone can send them", async () => {
 		const { deps, gameId, sam, video, later, reached, row } = await filmed();
 		later(60);
-		expect((await sam(`/api/live/${gameId}/end`, jsonBody({ recordedSeconds: 3600, cause: "tapped" }))).status).toBe(200);
+		expect((await sam(`/api/live/${gameId}/end`, jsonBody({ recordedSeconds: 3600, cause: "tapped", keptMinutes: 10 }))).status).toBe(200);
 		reached([1, 2], 1);
-		later(10);
+		// The parent locked the phone and drove home: nothing for an hour.
+		later(60);
 		await runSync(deps);
 		expect((await video()).status).toBe("uploading");
-		// Half an hour since End game, but the last part arrived 22 minutes ago: still sending.
-		reached([1, 2, 3], 1);
-		later(21);
+		// Back on Wi-Fi at 9 hours, Go live sends what the phone kept, then the page is closed before it saves.
+		later(8 * 60);
+		reached([1, 2, 3, 4], 0);
+		later(11 * 60);
 		await runSync(deps);
 		expect((await video()).status).toBe("uploading");
-		later(12);
+		later(61);
 		await runSync(deps);
 		expect(await video()).toMatchObject({ status: "processing", streamUid: "uid-1" });
-		expect(deps.originals.completed[0]?.parts.map((p) => p.partNumber)).toEqual([1, 2, 3]);
+		expect(deps.originals.completed[0]?.parts.map((p) => p.partNumber)).toEqual([1, 2, 3, 4]);
 		expect(await row()).toMatchObject({ status: "saved" });
+	});
+	it("End game says how many minutes were still on the phone: in the Log, and only the first End game counts", async () => {
+		const { deps, gameId, sam, later } = await filmed();
+		const end = (body: object) => sam(`/api/live/${gameId}/end`, jsonBody({ recordedSeconds: 3600, cause: "tapped", ...body }));
+		later(60);
+		expect((await end({ keptMinutes: -1 })).status).toBe(400);
+		expect((await end({ keptMinutes: 10 })).status).toBe(200);
+		expect((await end({ keptMinutes: 0 })).status).toBe(200);
+		expect(await deps.db.prepare("SELECT end_kept_minutes AS kept FROM live_streams").first<{ kept: number }>()).toEqual({ kept: 10 });
+		const line = await deps.db.prepare("SELECT detail FROM admin_log WHERE action = 'live_ended'").first<{ detail: string }>();
+		expect(line?.detail).toMatch(/: End game tapped, with about 10 minutes of the game still on the phone$/);
 	});
 	it("once stopped, a stream Stream still calls connected isn't live: the game isn't shown live and its recording still saves itself", async () => {
 		const { deps, gameId, sam, video, later, reached } = await filmed();

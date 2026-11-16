@@ -1,14 +1,16 @@
-// Each team's season: its months so far (costs-model.ts), then an estimate of the months left. A running team's games
+// Each team's season: its months so far (costs-model.ts), then an estimate of the months left; and, spent, any month
+// outside its season it has something in (footage kept after it, an upload before it). A running team's games
 // left (30 a season, less those with a video) are spread evenly over its months left, each adding its video and three
 // clips to what it stores, its minutes watched and its original in R2. The team's own figures stand in for the baseline
 // once it has three games with a video (one short test isn't a season): its videos' and clips' length, its originals'
 // size, and minutes watched a game. Cloudflare's bill, when there is one, puts the months it has billed right
 // (costs-reconcile.ts), and the plan's free watching it shows comes off the months to come.
 import type { BilledMonth } from "./costs-bill-summary.ts";
-import { BASELINE, monthOf, monthSpan, seasonMonths } from "./costs-prices.ts";
+import { BASELINE, keptMonths, monthOf, monthSpan, seasonMonths } from "./costs-prices.ts";
 import { actualMonths, allocate, type MonthCost, runningShare, type Usage } from "./costs-model.ts";
 import { reconcile } from "./costs-reconcile.ts";
 import type { CostTeam, SavedViews, StoredItem } from "./costs-repository.ts";
+import { type SavedMonths, savedFor } from "./costs-saved.ts";
 
 export interface TeamCosts {
 	team: CostTeam; months: MonthCost[]; thisMonth: MonthCost | null; soFar: number; estimate: number;
@@ -42,13 +44,28 @@ export interface BillForCosts { months: Map<string, BilledMonth>; freeMinutes: n
 const daysSoFar = (month: string, thisMonth: string, now: Date) =>
 	month < thisMonth ? Math.round((Date.parse(monthSpan(month).end) - Date.parse(monthSpan(month).start)) / 86_400_000) : now.getUTCDate();
 
-export function teamCosts(p: { teams: CostTeam[]; items: StoredItem[]; views: SavedViews[]; now: Date; minutesBoughtNow: number | null; bill?: BillForCosts }): TeamCosts[] {
+type CostsInput = { teams: CostTeam[]; items: StoredItem[]; views: SavedViews[]; now: Date; minutesBoughtNow: number | null; bill?: BillForCosts; saved?: SavedMonths };
+
+/** The months so far: each saved once it was over (costs-saved.ts) as it was saved; the rest worked out, and put right
+ * by Cloudflare's bill. */
+function spentMonths(p: CostsInput, past: string[], thisMonth: string): Map<string, MonthCost>[] {
+	const fresh = past.filter((m) => !p.saved?.has(m));
+	const worked = actualMonths({ months: fresh, teams: p.teams, items: p.items, views: p.views, thisMonth, minutesBoughtNow: p.minutesBoughtNow, freeMinutes: p.bill?.freeMinutes ?? 0 })
+		.map((m, i) => reconcile(m, p.bill?.months.get(fresh[i]!), daysSoFar(fresh[i]!, thisMonth, p.now)));
+	const byMonth = new Map(fresh.map((m, i) => [m, worked[i]!]));
+	return past.map((m) => byMonth.get(m) ?? savedFor(m, p.teams, p.saved!.get(m)!));
+}
+
+/** A month outside a team's season it has something in: an upload before it, or footage kept after it. */
+const used = (m: MonthCost) => m.total > 0 || m.use.stored > 0 || m.use.gbMonths > 0 || m.use.watched > 0;
+
+export function teamCosts(p: CostsInput): TeamCosts[] {
 	const thisMonth = monthOf(p.now.toISOString());
 	const months = [...new Set(p.teams.flatMap((t) => seasonMonths(t.seasonStart)))].sort();
-	const past = months.filter((m) => m <= thisMonth);
+	// Spent: every season's months so far, and the months after a season while its footage is kept.
+	const past = [...new Set([...months, ...p.teams.flatMap((t) => keptMonths(t.seasonStart))])].filter((m) => m <= thisMonth).sort();
 	const freeMinutes = p.bill?.freeMinutes ?? 0;
-	const actual = actualMonths({ months: past, teams: p.teams, items: p.items, views: p.views, thisMonth, minutesBoughtNow: p.minutesBoughtNow, freeMinutes })
-		.map((m, i) => reconcile(m, p.bill?.months.get(past[i]!), daysSoFar(past[i]!, thisMonth, p.now)));
+	const actual = spentMonths(p, past, thisMonth);
 	const basis = new Map(p.teams.map((t) => [t.id, perGame(t, p.items, p.views, seasonMonths(t.seasonStart), thisMonth)]));
 	// Each running team's games left, a month, over its months left; and what it stores this month, to build on.
 	const ahead = new Map(p.teams.map((t) => {
@@ -70,7 +87,7 @@ export function teamCosts(p: { teams: CostTeam[]; items: StoredItem[]; views: Sa
 	});
 	return p.teams.map((t) => {
 		const season = seasonMonths(t.seasonStart);
-		const mine = [...actual, ...future].map((m) => m.get(t.id)).filter((m): m is MonthCost => m !== undefined && season.includes(m.month));
+		const mine = [...actual, ...future].map((m) => m.get(t.id)).filter((m): m is MonthCost => m !== undefined && (season.includes(m.month) || used(m)));
 		const soFar = mine.filter((m) => !m.estimate).reduce((s, m) => s + m.total, 0);
 		return {
 			team: t, months: mine, thisMonth: mine.find((m) => m.month === thisMonth) ?? null, soFar,

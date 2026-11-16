@@ -83,6 +83,8 @@ export const scenarios = [
 			t.check(!hasExif(first.jpeg), "the first sent with no EXIF and no location");
 			t.check(second.takenAt === "", `the screenshot sent with no date, so the site uses when it was added (sent "${second.takenAt}")`);
 			t.check(second.size?.width === 800 && second.size?.height === 600, `the screenshot kept its size (sent ${second.size?.width} x ${second.size?.height})`);
+			const keys = sent.map((f) => f.key?.toString() ?? "");
+			t.check(keys.every((k) => /^[0-9a-f-]{36}$/.test(k)) && keys[0] !== keys[1], `each sent with a key of its own (sent ${JSON.stringify(keys)})`);
 		},
 	},
 	{
@@ -139,6 +141,10 @@ export const scenarios = [
 			const said = await t.text("#photo-hint");
 			t.check(said === `Not added: IMG_0003.JPG (${SEASON_OVER.replace(/\.$/, "")}); IMG_0004.JPG (it couldn't be opened).`, `which weren't added, and why (said "${said}")`);
 			t.check(posts === 4, `the first photo sent again after the dropped connection and the busy site, then the second (${posts} posts)`);
+			// Sent again with the same key, so a lost answer can't add it twice; the next photo has its own.
+			const keys = t.harness.calls("POST /api/photos").map((c) => fields(c.body).key?.toString() ?? "");
+			const first = keys.slice(0, -1), last = keys.at(-1);
+			t.check(first.length >= 2 && first.every((k) => k && k === first[0]) && last && last !== first[0], `the first photo's key the same each time it was sent (${JSON.stringify(keys)})`);
 			t.check(await t.visible("#photo-see"), "a See the photos button");
 			t.check(!t.page.url().includes("done=added"), "the page staying put, so the list can be read");
 		},
@@ -226,7 +232,7 @@ export const scenarios = [
 		},
 	},
 	{
-		name: "a photo's page on a phone: a swipe left slides to the older photo and right to the newer, in place; a scroll doesn't",
+		name: "a photo's page on a phone: a swipe left slides to the older photo and right to the newer, in place; a scroll or a zoomed-in drag doesn't",
 		phones: ["android", "iphone"],
 		async run(t) {
 			t.harness.page("/photo", () => photoPage({ newer: 9, older: 5 }));
@@ -291,6 +297,19 @@ export const scenarios = [
 			await t.until(() => t.page.evaluate(() => document.querySelector(".photoview")?.dataset.id === "7"), "the page to be photo 7's again");
 			const back = await own();
 			t.check(JSON.stringify(back) === JSON.stringify(opened), `photo 7's own caption and links again (${JSON.stringify(back)}, opened ${JSON.stringify(opened)})`);
+			// Pinched to zoom in: a finger moves around the photo, in any direction, and doesn't swipe to the next one.
+			t.check(await t.page.evaluate(() => getComputedStyle(document.querySelector(".photoview")).touchAction) === "pan-y pinch-zoom", "the photo lets a pinch zoom it");
+			const zoomTo = (scale) => t.page.evaluate((scale) => {
+				Object.defineProperty(window.visualViewport, "scale", { configurable: true, get: () => scale });
+				window.visualViewport.dispatchEvent(new Event("resize"));
+			}, scale);
+			await zoomTo(2);
+			await swipe(-180, 10);
+			await t.page.waitForTimeout(600);
+			const zoomed = await t.page.evaluate(() => ({ id: document.querySelector(".photoview").dataset.id, touch: document.querySelector(".photoview").style.touchAction, url: location.pathname }));
+			t.check(zoomed.id === "7" && zoomed.url === "/photos/7" && zoomed.touch === "auto", `zoomed in, a drag stays on photo 7 and pans it any way (${JSON.stringify(zoomed)})`);
+			await zoomTo(1);
+			t.check(await t.page.evaluate(() => document.querySelector(".photoview").style.touchAction === ""), "zoomed out, up and down only again, for the swipe");
 			// The phone turned on its side: the photo's own slide still sits over the figure, not half of each neighbour.
 			const size = t.page.viewportSize();
 			await t.page.setViewportSize({ width: size.height, height: size.width });
