@@ -25,6 +25,8 @@ The usual tip-off comes from the team's code, boys and girls the same; an age be
 
 A VJBL season (the example league; the labels are the club's, `seasonPhases` in `club.ts`) runs in phases, and each phase's rounds start again from 1: three rounds of **grading phase 1**, a **crossover game**, three rounds of **grading phase 2**, then the **championship season** in the division the grading settled, its rounds and finals. Every league game carries its phase (`games.phase`: grading1, crossover, grading2 or championship; `season-phase.ts`). PlayHQ gives it: each game's grade is named for its phase ("12 Boys Grading 1 - Pool 2D", "12 Boys Grading 1 - Crossover", "U12 Boys Grading 2 - AA Pool B", then the division, "U12 Boys - VJL1 (P1)"), and the phase is read from that name on every check, anything that isn't grading or the crossover being the championship season. A spreadsheet's Phase column and a page read by AI say it in words; the game form has a Phase choice. It shows as a tag beside the league on the Fixture and Watch games, and a grading or crossover game's title says it ("Grading phase 1, Round 2 · vs Hillcrest 2", "Crossover game · vs Hillcrest 2"); the championship season's games are titled by their round alone. The phase stays on a game once PlayHQ drops it: after each grading phase the played games leave PlayHQ, and here they're kept, marked "Not on PlayHQ any more". A tournament or practice match never has one.
 
+**Finals** get a subtle gold border wherever the game is listed: Watch games, Home's Latest game and Coming up, and the Fixture. A game is a final when its round's name says so ("Semi Final", "Finals Round 1", "Grand Final"), in any competition (`isFinalsGame` in `game-format.ts`); nothing is stored, so a round PlayHQ renames is read afresh.
+
 ### From PlayHQ
 
 - **The link** is a team's public page on playhq.com, with /org/ and /teams/ in it; its last part is PlayHQ's id for the team. A My teams link (from a parent signed in to PlayHQ, with their own id in it) is refused and never stored. A PlayHQ fixture is VJBL or a tournament, never a practice match.
@@ -76,9 +78,12 @@ Games from a page or a spreadsheet are shown first, sorted by date, with every p
 
 During a game's hour it says In progress, unless its final score is in sooner. For a game from a PlayHQ fixture, the 5-minute job asks PlayHQ for its result (`discoverGame`) from half an hour after tip-off: every run until 3 hours after tip-off, then about hourly. It enters the score only when PlayHQ's status is FINAL with both scores in, and never over one a team manager typed. It stops 3 days after tip-off. A failed ask is logged and tried again later, on the same back-off; it never fails the run. A team manager can enter or fix any game's score once it has started, and any member can hide scores everywhere for themselves.
 
+**Win pop-up.** The first time a member opens a game the club won, once its video is ready to watch, a pop-up says so over the game's page for about a second, with confetti in the club's colours, then goes by itself. It never says the score and there's nothing to tap. It shows once per member per game (`win_seen`), and never for a draw or a loss, on a highlight clip's page, or for a member who hides scores. With reduced motion set on the phone, the confetti doesn't move.
+
 | Table | Holds |
 | --- | --- |
 | `games` | Every game, with the league season's phase it's in, its PlayHQ game id and fixture when it came from one, when PlayHQ stopped listing it, when it was marked No video (and whether the site did, a week on with nothing filmed), when a team manager last set it back to Video (it waits a week from then), and when PlayHQ was last asked for its score |
 | `playhq_fixtures` | Each PlayHQ team added: its link and PlayHQ id, competition, name, No video, whether it's still checked, when it last was, how many games, and the last error |
 | `game_scores` | Each game's final score, whether a team manager or PlayHQ gave it, who entered it and when |
+| `win_seen` | Who has had each won game's win pop-up, so it shows once per member per game |
 | `game_lines` | A team's own game lines, a row for each group its team manager changed (one line a row); a group with no row uses the club's |

@@ -43,11 +43,12 @@ const GAMES = `SELECT g.id FROM games g
 	AND NOT EXISTS (SELECT 1 FROM videos v WHERE v.team_id = g.team_id AND v.game_id = g.id)
 	ORDER BY g.id`;
 
-/** The game, its score, its coaches' notes, its favourites and its closed streams (a deleted game has no open one). */
+/** The game, its score, its coaches' notes, its favourites, who's had its win pop-up and its closed streams (a deleted game has no open one). */
 export const gameTombstoneWrites = (db: D1Database, teamId: string, id: number) => [
 	db.prepare("DELETE FROM coach_notes WHERE team_id = ? AND game_id = ?").bind(teamId, id),
 	db.prepare("DELETE FROM game_scores WHERE team_id = ? AND game_id = ?").bind(teamId, id),
 	db.prepare("DELETE FROM favourites WHERE team_id = ? AND game_id = ?").bind(teamId, id),
+	db.prepare("DELETE FROM win_seen WHERE team_id = ? AND game_id = ?").bind(teamId, id),
 	db.prepare("DELETE FROM live_streams WHERE team_id = ? AND game_id = ? AND status <> 'open'").bind(teamId, id),
 	db.prepare("DELETE FROM games WHERE team_id = ? AND id = ? AND deleted_at IS NOT NULL").bind(teamId, id),
 ];

@@ -20,6 +20,7 @@
   --live-deep:#C21F25;   /* the live bar: white words on it read at 5.9:1 */
   --warn-soft:#FFF4D6;
   --warn-ink:#7A5800;
+  --gold:#B08A2E;        /* a finals game's border: deep enough to show on white */
   --display:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
@@ -27,9 +28,9 @@
   --cb-board:var(--club);--cb-edge:var(--club-ink);--cb-sheet:#F4E7CC;--cb-plank:#EADBBA;--cb-frame:#1C1C1C;--cb-ink:#0E0C08;--cb-muted:#3F3628;--cb-rule:#CDB993;--cb-chip:var(--club-ink);--cb-green:var(--club-ink);--cb-field:#FFFDF7;--cb-fieldline:#B9A57F;--cb-shadow:0 14px 30px rgba(0,0,0,.28);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--cb-board:var(--club);--cb-edge:var(--club-ink);--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:var(--club-ink);--cb-green:var(--club-ink);--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}}
+  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--gold:#C9A256;--cb-board:var(--club);--cb-edge:var(--club-ink);--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:var(--club-ink);--cb-green:var(--club-ink);--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}}
 :root[data-theme="dark"]{
-  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--cb-board:var(--club);--cb-edge:var(--club-ink);--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:var(--club-ink);--cb-green:var(--club-ink);--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}
+  --black:#050706;--bg:#0D110E;--surface:#161C18;--fg:#ECF1ED;--muted:#9DAAA1;--line:#2A332D;--live:#F0484D;--live-deep:#B81E24;--warn-soft:#2E2610;--warn-ink:#E8C766;--gold:#C9A256;--cb-board:var(--club);--cb-edge:var(--club-ink);--cb-sheet:#E6D5B1;--cb-plank:#DCC9A2;--cb-frame:#141414;--cb-ink:#0E0C08;--cb-muted:#3A3226;--cb-rule:#B9A57E;--cb-chip:var(--club-ink);--cb-green:var(--club-ink);--cb-field:#F7F0E0;--cb-fieldline:#A8946C;--cb-shadow:0 18px 40px rgba(0,0,0,.55);color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
@@ -40,6 +41,8 @@ input,select,textarea{font-size:16px}
 /* iPhone Safari counts a dropdown's longest option towards the page width (the page slid sideways); keep it in the box. */
 select{contain:paint}
 :focus-visible{outline:3px solid var(--club);outline-offset:2px}
+/* On the top bar the club-coloured ring can be hard to see: white there. */
+.appbar :focus-visible{outline-color:#fff}
 .wrap{max-width:1080px;margin:0 auto;padding-inline:16px}
 
 /* App header */
@@ -58,6 +61,9 @@ main{padding-block:24px 64px}
 .btn.quiet{border-color:transparent;background:transparent;color:var(--muted);padding-inline:0;font-weight:500;text-decoration:underline}
 .btn.big{padding:14px 20px;font-size:17px;justify-content:center}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+/* A finals game (game-format.ts): a subtle gold border wherever the game is listed: Home's cards here, Watch games'
+   cards and the Fixture's rows below. */
+.panel.final{border-color:var(--gold)}
 .note{border-left:3px solid var(--club);background:var(--club-soft);padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px}
 .note.warn{border-color:var(--warn-ink);background:var(--warn-soft)}
 .pagehead h1{font-size:34px;font-weight:800;letter-spacing:-.01em}
@@ -72,6 +78,7 @@ input[type=email],input[type=text],input[type=url],input[type=date],input[type=n
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer}
 .games{display:grid;gap:10px}
 .game{display:grid;grid-template-columns:150px 1fr auto;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;text-align:left;width:100%}
+.game.final{border-color:var(--gold)}
 .game:hover{border-color:var(--club)}
 .thumb{aspect-ratio:16/9;border-radius:8px;position:relative;overflow:hidden;background:var(--bar);max-width:100%}
 .thumb::before{content:"";position:absolute;inset:18% 30%;border:2px solid rgba(255,255,255,.35);border-radius:50%}
@@ -130,6 +137,10 @@ table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
 th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
 th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500}
 tr:last-child td{border-bottom:0}
+/* A final's row on the Fixture: gold drawn inside its cells, as a table row has no border of its own. */
+tr.final td{box-shadow:inset 0 1px 0 var(--gold),inset 0 -1px 0 var(--gold)}
+tr.final td:first-child{box-shadow:inset 0 1px 0 var(--gold),inset 0 -1px 0 var(--gold),inset 1px 0 0 var(--gold)}
+tr.final td:last-child{box-shadow:inset 0 1px 0 var(--gold),inset 0 -1px 0 var(--gold),inset -1px 0 0 var(--gold)}
 .role{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--bg);border:1px solid var(--line)}
 .role.f{background:var(--warn-soft);color:var(--warn-ink);border-color:transparent}
 .role.c{background:var(--club-soft);color:var(--club-ink);border-color:transparent}
@@ -421,6 +432,8 @@ a.btn.watchbtn:hover{opacity:.88}
   .cards tbody{display:grid;gap:10px}
   .cards tr{display:grid;gap:8px 10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;align-items:center}
   .cards td{display:block;padding:0;border:0;min-width:0}
+  .cards tr.final{border-color:var(--gold)}
+  .cards tr.final td{box-shadow:none}
   .cards td:empty{display:none}
   .cards td[colspan]{grid-column:1/-1}
   .fixture tr{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"date date status" "game game game" "type venue venue" "acts acts acts"}
@@ -483,7 +496,7 @@ a.btn.watchbtn:hover{opacity:.88}
 /* Full time, once End game is tapped: the Game break card's look (golive-slate.js) as a page, sized by the player's
    width so it reads the same on a phone and a TV. */
 .player:has(.live-over){container-type:inline-size}
-.live-over{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;color:#fff;padding:3cqw;background:radial-gradient(ellipse at center,#0D5A2B 0,#062E16 100%)}
+.live-over{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;color:#fff;padding:3cqw;background:radial-gradient(ellipse at center,rgba(255,255,255,.1) 0,rgba(0,0,0,.3) 100%),var(--bar)}
 .live-over .court{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--club);stroke-width:9;stroke-linecap:round}
 .live-over .dash{stroke-dasharray:24 20}
 .live-over>*{position:relative}
@@ -874,3 +887,20 @@ body.entry main{padding-block:12px 48px}
 .packlist{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:8px}
 .packlist li{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}
 .packlist a{font-weight:700}
+
+/* The win pop-up (win-pop.ts): the Full time card's look over the game's page for about a second, then gone by
+   itself. Nothing to tap, and taps pass through to the page. public/win.js throws the confetti on its two canvases, one
+   behind the card and one in front, and holds the pop-up back (.waiting) in a tab that isn't showing. */
+.winpop{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:16px;overflow:hidden;pointer-events:none;background:rgba(6,9,14,.72);opacity:0;animation:winpop 1.45s linear both}
+.winpop.waiting,.winpop.waiting .wincard{animation:none}
+@keyframes winpop{0%{opacity:0}12%{opacity:1}76%{opacity:1}100%{opacity:0}}
+.winpop canvas{position:absolute;inset:0;width:100%;height:100%}
+.wincard{position:relative;overflow:hidden;width:100%;max-width:380px;display:grid;justify-items:center;gap:8px;text-align:center;color:#fff;padding:30px 22px;border-radius:20px;
+  background:radial-gradient(ellipse at 50% 34%,rgba(255,255,255,.14) 0,rgba(0,0,0,.28) 100%),var(--bar);box-shadow:0 0 0 1px rgba(255,255,255,.14),0 24px 60px rgba(0,0,0,.5);animation:wincard .26s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes wincard{from{transform:scale(.82)}to{transform:none}}
+.wincard .court{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--club);stroke-width:3;stroke-linecap:round;opacity:.5}
+.wincard>*:not(.court){position:relative}
+.wincard img{width:150px;height:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35))}
+.wincard h2{font-family:"Saira Semi Condensed",var(--display);font-weight:800;font-size:min(52px,13.2vw);white-space:nowrap;line-height:1;letter-spacing:.02em;text-transform:uppercase;margin-top:4px}
+.wingame{margin:6px 0 0;font-size:16px;font-weight:600;color:rgba(255,255,255,.82)}
+@media (prefers-reduced-motion:reduce){.wincard{animation:none}}

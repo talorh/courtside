@@ -3,7 +3,7 @@ import { html, type SafeHtml } from "../../../shared/html.ts";
 import { formatDay, formatGameDate } from "../../../shared/time.ts";
 import { ICON_BELL, ICON_CALENDAR, ICON_HELP, ICON_PEOPLE, ICON_PHOTO, ICON_PLAY, ICON_ROSTER, ICON_UPLOAD } from "../../../ui/icons.ts";
 import { layout, navFor, type NavKey, type PageFrame } from "../../../ui/layout.ts";
-import { gameTitle } from "../../games/game-format.ts";
+import { finalClass, gameTitle } from "../../games/game-format.ts";
 import type { Game } from "../../games/games-repository.ts";
 import { LIVE_DOT, liveCards } from "../../live/views/live-card.ts";
 import type { Player } from "../../players/players-repository.ts";
@@ -46,7 +46,7 @@ export function homePage(p: HomePageProps): SafeHtml {
 	// Upload and Go live for those who film (everyone but Watch only), while the season's on.
 	const canUpload = films(p.frame.member.role) && p.frame.team.status === "active";
 	const latest = p.latest
-		? html`<a class="panel latest" href="/games/${p.latest.id}"><span class="eyebrow">Latest game${p.latestIsNew ? html` <span class="t new">New</span>` : ""}</span>
+		? html`<a class="panel latest${finalClass(p.latest)}" href="/games/${p.latest.id}"><span class="eyebrow">Latest game${p.latestIsNew ? html` <span class="t new">New</span>` : ""}</span>
 <b>${gameTitle(p.latest)}</b><span class="small">${formatGameDate(p.latest.startsAt)} ${scoreTag(p.latestScore, p.frame.member.hideScores)}</span><span class="go">Watch ▶</span></a>`
 		: "";
 	const open = new Map(navFor(p.frame.member.role).map((i) => [i.key, i]));
@@ -54,7 +54,7 @@ export function homePage(p: HomePageProps): SafeHtml {
 	const goes = p.deletesAfter
 		? html`<p class="note warn" role="status">This season's videos and photos go after <b>${formatDay(p.deletesAfter)}</b>. Download any you'd like to keep before then.${p.frame.member.role === "manager" ? html` <a href="/manage#season-pack">The end-of-season pack</a> on Manage team has them all.` : ""}</p>` : "";
 	const next = p.next
-		? html`<a class="panel next deskonly" href="/fixture"><span class="eyebrow">Coming up</span><b>${gameTitle(p.next)}</b><span class="small">${formatGameDate(p.next.startsAt)}${p.next.venue ? html` · ${p.next.venue}` : ""}</span><span class="go">Fixture ▶</span></a>`
+		? html`<a class="panel next deskonly${finalClass(p.next)}" href="/fixture"><span class="eyebrow">Coming up</span><b>${gameTitle(p.next)}</b><span class="small">${formatGameDate(p.next.startsAt)}${p.next.venue ? html` · ${p.next.venue}` : ""}</span><span class="go">Fixture ▶</span></a>`
 		: "";
 	return layout({ title: "Home", frame: p.frame }, html`<div class="home">${liveCards(p.live)}${goes}
 <div class="homehero"><img class="homecourt" src="/court.webp" alt="A basketball court with the club's logo at centre court" width="1600" height="900">

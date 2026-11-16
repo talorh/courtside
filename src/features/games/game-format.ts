@@ -18,6 +18,12 @@ export function gameTitle(game: Titled): string {
 	return `${label} · vs ${game.opponent}`;
 }
 
+/** A finals game, by its round's name as PlayHQ and fixtures give it ("Semi Final", "Finals Round 1", "Grand Final"): it's
+ * picked out with a gold border wherever the game is listed (app.css, `.final`). */
+export const isFinalsGame = (game: Pick<Game, "roundLabel">): boolean => /finals?\b/i.test(game.roundLabel);
+/** " final" for a finals game's card or row, else "". */
+export const finalClass = (game: Pick<Game, "roundLabel">): string => (isFinalsGame(game) ? " final" : "");
+
 /** "VJBL U12 Boys" for B12.1: the league with the team's own age group. */
 export function competitionLabel(competition: Competition, team: Pick<Team, "code">): string {
 	const p = parseTeamCode(team.code);

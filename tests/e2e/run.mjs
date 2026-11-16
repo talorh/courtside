@@ -24,6 +24,7 @@ import { scenarios as signIn } from "./signin.e2e.mjs";
 import { scenarios as upload } from "./upload.e2e.mjs";
 import { scenarios as videos } from "./videos.e2e.mjs";
 import { scenarios as viewer } from "./viewer.e2e.mjs";
+import { scenarios as win } from "./win.e2e.mjs";
 
 // An iPhone has no element full screen (game night, 23 Oct 2026: the phone logged fs=undefined), so it's taken away if
 // the WebKit build has it. WebKit here has no camera or recorder either: fake-camera.mjs and fake-recorder.mjs stand in.
@@ -62,7 +63,7 @@ const harness = await startHarness({ publicDir: "/repo/public", bridge: { answer
 harness.page("/bridge", () => "<!doctype html><title>bridge</title>");
 bridge = await startBridge(chromium, bridgeUrl);
 
-const all = [...goLive, ...viewer, ...photos, ...photosPick, ...upload, ...videos, ...guard, ...launch, ...confirm, ...admin, ...help, ...layout, ...manage, ...theme, ...signIn].filter((s) => !filter || s.name.toLowerCase().includes(filter));
+const all = [...goLive, ...viewer, ...photos, ...photosPick, ...upload, ...videos, ...guard, ...launch, ...confirm, ...admin, ...help, ...layout, ...manage, ...theme, ...signIn, ...win].filter((s) => !filter || s.name.toLowerCase().includes(filter));
 const results = [];
 for (const phoneName of only) {
 	const phone = PHONES[phoneName];

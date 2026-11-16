@@ -2,7 +2,7 @@ import { html, type SafeHtml } from "../../../shared/html.ts";
 import { formatGameDate } from "../../../shared/time.ts";
 import { notice, pageHead } from "../../../ui/components.ts";
 import { layout, type PageFrame } from "../../../ui/layout.ts";
-import { gamePhase, gameTitle } from "../game-format.ts";
+import { gamePhase, gameTitle, isFinalsGame } from "../game-format.ts";
 import type { Game, GameWithVideo } from "../games-repository.ts";
 import type { PlayhqFixture } from "../playhq-repository.ts";
 import type { Score } from "../../scores/scores-repository.ts";
@@ -75,11 +75,14 @@ export function fixturePage(p: FixturePageProps): SafeHtml {
 	return p.canEdit ? editorPage(p) : viewPage(p);
 }
 
+/** A finals game's row is picked out in gold. */
+const finalRow = (game: Game): SafeHtml | "" => (isFinalsGame(game) ? html` class="final"` : "");
+
 /** The games, for everyone: when, who against, where, and whether it's still to come, being played or over. */
 function viewPage(p: FixturePageProps): SafeHtml {
 	const PHASE = { upcoming: html`<span class="role">Upcoming</span>`, in_progress: html`<span class="role">In progress</span>`, complete: html`<span class="role c">Complete</span>` };
 	const played = (g: Game) => PHASE[gamePhase(g.startsAt, p.nowLocal, p.scores.has(g.id))];
-	const rows = p.games.map(({ game }) => html`<tr><td class="f-date">${formatGameDate(game.startsAt)}</td><td class="f-game"><a href="/games/${game.id}">${gameTitle(game)}</a> ${scoreTag(p.scores.get(game.id), p.frame.member.hideScores)}</td>
+	const rows = p.games.map(({ game }) => html`<tr${finalRow(game)}><td class="f-date">${formatGameDate(game.startsAt)}</td><td class="f-game"><a href="/games/${game.id}">${gameTitle(game)}</a> ${scoreTag(p.scores.get(game.id), p.frame.member.hideScores)}</td>
 <td class="f-type">${competitionTags(game)}</td><td class="f-venue">${game.venue}</td><td class="f-status">${played(game)}${planTag(game, p.nowLocal)}</td></tr>`);
 	return layout({ title: "Fixture", frame: p.frame, current: "fixture" }, html`${pageHead("This season", "Fixture")}
 <p class="small">Every game, with tip-off times and venues. ${teamCopy(p.frame.team).Ask} keeps it up to date.</p>
@@ -94,7 +97,7 @@ ${p.editing.fromPlayhq ? html`<p class="small">This game comes from PlayHQ, and 
 <div class="row-actions"><button class="btn primary">Save game</button><a class="btn" href="/fixture">Cancel</a></div></form>`
 		: html`<div class="addbar"><details class="panel"><summary class="btn primary">Add game</summary><form method="post" action="/fixture" class="stack addgame">${gameFields({}, p.defaultStart)}
 <div class="row-actions"><button class="btn primary">Save game</button></div></form></details>${addFixtureForm(fixtureTeamName(p.frame.team.code))}${addSheetForm()}</div>`;
-	const rows = p.games.map((row) => html`<tr><td class="f-date">${formatGameDate(row.game.startsAt)}</td><td class="f-game"><a href="/games/${row.game.id}">${gameTitle(row.game)}</a> ${scoreTag(p.scores.get(row.game.id), p.frame.member.hideScores)}</td>
+	const rows = p.games.map((row) => html`<tr${finalRow(row.game)}><td class="f-date">${formatGameDate(row.game.startsAt)}</td><td class="f-game"><a href="/games/${row.game.id}">${gameTitle(row.game)}</a> ${scoreTag(p.scores.get(row.game.id), p.frame.member.hideScores)}</td>
 <td class="f-type">${competitionTags(row.game)}</td><td class="f-venue">${row.game.venue}${row.game.playhqGone ? html`<span class="gone">Not on PlayHQ any more</span>` : ""}</td><td class="f-status">${status(row, p.nowLocal, p.live.get(row.game.id), p.scores.has(row.game.id))}</td>
 <td class="f-acts row-actions"><a class="btn quiet" href="/fixture?edit=${row.game.id}">Edit</a>${deleteAction(row)}</td></tr>`);
 	return layout({ title: "Fixture", frame: p.frame, current: "fixture" }, html`${pageHead(null, "Fixture")}

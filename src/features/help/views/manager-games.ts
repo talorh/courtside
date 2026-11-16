@@ -17,7 +17,8 @@ ${faqItem("g-playhq", "Linking PlayHQ, so games fill in by themselves", html`<ol
 <li>On <b>Fixture</b>, tap <b>Add fixture</b>, paste the link, pick ${CLUB.league} or Tournament, and tap <b>Read fixture</b>. Its games come straight in.</li></ol>
 <p class="small">League games come in with their phase of the season, from how PlayHQ names the grade: <b>Grading phase 1</b>,
 the <b>Crossover game</b>, <b>Grading phase 2</b>, then the <b>Championship season</b>. A grading game stays here after
-PlayHQ drops it, marked "Not on PlayHQ any more". Gone up or down a grade? If PlayHQ gives the team a new page, add that
+PlayHQ drops it, marked "Not on PlayHQ any more". A finals game (its round says so, like "Semi Final") gets a gold
+border wherever it's listed. Gone up or down a grade? If PlayHQ gives the team a new page, add that
 link too.</p>
 <p class="small">The link from <b>My teams</b>, when you're signed in to PlayHQ, is private (it has <b>/account/my-teams/</b> in it), and the site can't read it. Paste one and the site says so.</p>
 <p class="small">It checks PlayHQ again every 8 hours for new or changed games, and every hour over a tournament's four

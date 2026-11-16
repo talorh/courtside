@@ -10,6 +10,8 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 16 Nov 2026
 
+- [Enhancement] **Fixture:** A finals game now has a subtle gold border wherever it's listed: on Watch games, Home and the Fixture.
+- [Feature] **Watch games:** The first time you open a game the club won, once its video is ready, a win pop-up with confetti in the club's colours shows for about a second. It never says the score, and never shows to anyone who hides scores.
 - [Enhancement] **New install:** The first deploy makes the admins named in deploy.config.ts (firstAdmins) the site's first admins, and until the first team is onboarded every page opens the admin area, where Insights says how to get started.
 
 ## 15 Nov 2026

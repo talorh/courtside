@@ -16,15 +16,6 @@ import { managerActions } from "./watch-manager.ts";
 import { askWho, teamCopy } from "../../teams/team-copy.ts";
 import type { Team } from "../../teams/team.ts";
 
-/** The game page's messages after a change (`?done=`), in the team's words. */
-export const watchMessages = (team: Team): Record<string, string> => ({
-	moved: "Video moved to this game.", deleted: "Video deleted. The files are kept for 24 hours in case it was a mistake.", removal: `Thanks. ${teamCopy(team).Ask} will look at your request.`,
-	clip: "Clip saved. It'll be ready to watch in a minute or two.", clipdeleted: "Clip deleted.",
-	clipremoval: `Thanks. ${teamCopy(team).Ask} will look at your request to remove the clip.`, clipplayers: "Players saved.",
-	note: "Note saved.", notedeleted: "Note deleted.", score: "Score saved.", scorecleared: "Score cleared.",
-	kept: "The first part was kept as the game's video: it's being processed.",
-});
-
 export interface WatchPageProps {
 	frame: PageFrame;
 	game: Game;
@@ -53,6 +44,8 @@ export interface WatchPageProps {
 	scoreForm: SafeHtml | "";
 	/** This member's favourites: the game itself, and which of its clips. */
 	stars: { game: boolean; clips: Set<number> };
+	/** The win pop-up (win-pop.ts), the first time this member opens a won game that's ready; else empty. */
+	win: SafeHtml | "";
 }
 
 // Uploading or processing: a pulsing card over the court, so it's clear the video is on its way (the page refreshes).
@@ -129,7 +122,7 @@ export function watchPage(p: WatchPageProps): SafeHtml {
 	const v = p.video;
 	const ready = v?.status === "ready" ? v : null;
 	const maker = ready && !p.currentClip && p.frame.team.status === "active" ? clipMaker(ready.id, p.players) : "";
-	const scripts = ["/stream-sdk.js", "/watch.js", "/thumbs.js", ...(ready ? ["/video-save.js"] : []), ...(p.live && !p.live.ended ? ["/whep.js"] : [])];
+	const scripts = ["/stream-sdk.js", "/watch.js", "/thumbs.js", ...(ready ? ["/video-save.js"] : []), ...(p.live && !p.live.ended ? ["/whep.js"] : []), ...(p.win ? ["/win.js"] : [])];
 	// Refreshes itself while the video is on its way or a stopped stream is saving, but never under the live player (a
 	// reload cuts the picture and the sound; the recording counts as uploading): whep.js reloads it once it's over.
 	const refreshSeconds = p.live ? liveRefreshSeconds(p.live) : isOnItsWay(v) ? 60 : undefined;
@@ -138,5 +131,5 @@ ${notice(p.message)}${liveNote(p)}<div class="watch${p.coachNotes ? " coaching" 
 ${heading(p)}${maker}${ready ? removalForm(ready, p.frame.team) : ""}</div>
 <aside class="side">${p.coachNotes}${ready ? clipsPanel(p.clips, p.game.id, p.currentClip?.id ?? null, p.frame.member, p.players, { starred: p.stars.clips, back: p.result.back }) : ""}${ready ? downloads(ready) : ""}
 ${gameDetails(p.game, p.result, p.frame.team)}${p.scoreForm}
-${v && p.frame.member.role === "manager" ? managerActions(v, p.moveTargets) : ""}</aside></div>`);
+${v && p.frame.member.role === "manager" ? managerActions(v, p.moveTargets) : ""}</aside></div>${p.win}`);
 }

@@ -57,6 +57,8 @@ hasn't after 5 minutes, refresh the page. A Full time screen means the game's ov
 to take it off.</li>
 <li><b>No spoilers:</b> tap <b>Hide scores</b>, at the top of Watch games or on a game's page. Scores stay hidden wherever
 you're signed in, until you tap <b>Show scores</b>.</li>
+<li><b>${CLUB.nickname} win!</b> The first time you open a game the ${CLUB.nickname} won, a pop-up says so for a second, with
+confetti. It never shows while you hide scores.</li>
 <li><b>Download:</b> on the game's page, tap <b>Download HD video</b>. If it says it's being prepared, try again in a few
 minutes. A whole game is 1 to 3 GB, so use Wi-Fi. On an iPhone it goes to Files: to put it in Photos, open it there, tap
 Share, then Save Video.</li>

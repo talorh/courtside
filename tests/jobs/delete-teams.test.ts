@@ -40,6 +40,7 @@ async function closedG14(deleteAfter = PAST) {
 	await run("INSERT INTO roster_weeks (team_id, week, extra_off, updated_at) VALUES (?, '2026-10-12', 1, '2026-10-12T00:00:00.000Z')", G);
 	await run("INSERT INTO game_lines (team_id, kind, lines, updated_at) VALUES (?, 'won', 'The Saints beat {opponent} at {venue}. It was {ours} to {them}.', '2026-10-12T00:00:00.000Z')", G);
 	await run("INSERT INTO video_views (team_id, video_id, member_id, opened_at) VALUES (?, ?, ?, '2026-10-12T00:00:00.000Z')", G, g.videoId, g.members.coach);
+	await run("INSERT INTO win_seen (team_id, game_id, member_id, seen_at) VALUES (?, ?, ?, '2026-10-12T00:00:00.000Z')", G, g.gameId, g.members.coach);
 	await run("INSERT INTO support_requests (team_id, member_id, topic, message, contact, created_at) VALUES (?, ?, 'videos', 'Help', 'x', '2026-10-12T00:00:00.000Z')", G, g.members.manager);
 	await deps.db.prepare("UPDATE teams SET status = 'closed', closed_at = '2026-10-12T00:00:00.000Z', delete_after = ? WHERE id = ?").bind(deleteAfter, G).run();
 	return { deps, b, g };
@@ -60,7 +61,7 @@ async function untilDeleted(deps: TestDeps, max = 10) {
 }
 
 /** Every table with a team's rows, once the team is deleted: gone, or kept for the download log (and the admin log, and Costs' figures). */
-const GONE = ["clip_players", "favourites", "video_views", "coach_notes", "game_scores", "removal_requests", "clip_removal_requests",
+const GONE = ["clip_players", "favourites", "video_views", "win_seen", "coach_notes", "game_scores", "removal_requests", "clip_removal_requests",
 	"photo_removal_requests", "recording_segments", "clips", "live_streams", "activity", "ask_counts", "roster_slots", "roster_weeks", "roster_duties", "roster_families", "players",
 	"playhq_fixtures", "photos", "support_messages", "support_requests", "game_lines", "problems"];
 const KEPT = ["admin_log", "cost_views", "downloads", "games", "media_downloads", "members", "videos"];

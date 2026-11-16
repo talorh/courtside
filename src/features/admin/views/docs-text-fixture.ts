@@ -33,6 +33,9 @@ crossover game's title says it ("Grading phase 1, Round 2 · vs Hillcrest 2", "C
 championship season's games are titled by their round alone. The phase stays on a game once PlayHQ drops it: after
 each grading phase the played games leave PlayHQ, and here they're kept, marked "Not on PlayHQ any more". A tournament
 or practice match never has one.</p>
+<p><b>Finals</b> get a subtle gold border wherever the game is listed: Watch games, Home's Latest game and Coming up, and
+the Fixture. A game is a final when its round's name says so ("Semi Final", "Finals Round 1", "Grand Final"), in any
+competition (${code("isFinalsGame")} in ${code("game-format.ts")}); nothing is stored, so a round PlayHQ renames is read afresh.</p>
 <h3>From PlayHQ</h3>
 <ul class="docs-points">
 <li><b>The link</b> is a team's public page on playhq.com, with /org/ and /teams/ in it; its last part is PlayHQ's
@@ -109,9 +112,14 @@ hours after tip-off, then about hourly. It enters the score only when PlayHQ's s
 never over one a team manager typed. It stops 3 days after tip-off. A failed ask is logged and tried again later, on the
 same back-off; it never fails the run. A team manager can enter or fix any game's score once it has started, and any member can
 hide scores everywhere for themselves.</p>
+<p><b>Win pop-up.</b> The first time a member opens a game the club won, once its video is ready to watch, a pop-up says
+so over the game's page for about a second, with confetti in the club's colours, then goes by itself. It never says the
+score and there's nothing to tap. It shows once per member per game (${code("win_seen")}), and never for a draw or a loss,
+on a highlight clip's page, or for a member who hides scores. With reduced motion set on the phone, the confetti doesn't move.</p>
 ${table(["Table", "Holds"], [
 		[code("games"), "Every game, with the league season's phase it's in, its PlayHQ game id and fixture when it came from one, when PlayHQ stopped listing it, when it was marked No video (and whether the site did, a week on with nothing filmed), when a team manager last set it back to Video (it waits a week from then), and when PlayHQ was last asked for its score"],
 		[code("playhq_fixtures"), "Each PlayHQ team added: its link and PlayHQ id, competition, name, No video, whether it's still checked, when it last was, how many games, and the last error"],
 		[code("game_scores"), "Each game's final score, whether a team manager or PlayHQ gave it, who entered it and when"],
+		[code("win_seen"), "Who has had each won game's win pop-up, so it shows once per member per game"],
 		[code("game_lines"), "A team's own game lines, a row for each group its team manager changed (one line a row); a group with no row uses the club's"],
 	])}`});

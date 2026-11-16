@@ -11,6 +11,7 @@ import { photoPage as photoView } from "../../src/features/photos/views/photo-pa
 import { PHOTOS_MESSAGES, photosPage as photosView } from "../../src/features/photos/views/photos-page.ts";
 import { livePlayer } from "../../src/features/videos/views/live-player.ts";
 import { uploadPage } from "../../src/features/videos/views/upload-page.ts";
+import { winPop } from "../../src/features/scores/views/win-pop.ts";
 import { watchPage } from "../../src/features/videos/views/watch-page.ts";
 import { html } from "../../src/shared/html.ts";
 import { launchPage } from "../../src/ui/landing-pages.ts";
@@ -79,8 +80,9 @@ export function photoPage({ id = PHOTO.id, newer = null, older = null } = {}) {
 
 export const CLIP_ID = 5;
 
-/** The game page with its video ready and one highlight clip, as Watch only sees it (no player: Stream isn't here). */
-export function gamePageWithClip(videoId) {
+/** The game page with its video ready and one highlight clip, as Watch only sees it (no player: Stream isn't here).
+ * `win`: opened for the first time after a win, so with the win pop-up. */
+export function gamePageWithClip(videoId, { win = false } = {}) {
 	const video = {
 		id: videoId, teamId: "b12.1-2026", gameId: GAME_ID, status: "ready", streamUid: "s1", r2Key: null, r2UploadId: null, originalName: null,
 		originalBytes: null, durationSeconds: 2460, failureReason: null, uploadedBy: 1, deleteAfter: "2027-12-31T13:00:00.000Z", createdAt: "2026-10-23T09:00:00.000Z", hdReadyAt: "2026-10-23T09:40:00.000Z",
@@ -89,7 +91,7 @@ export function gamePageWithClip(videoId) {
 	return watchPage({
 		frame: member("watcher"), game, video, playerSrc: null, moveTargets: [], message: null, clips: [{ clip, thumbUrl: null, players: [] }], players: [],
 		currentClip: null, coachNotes: "", live: null, upcoming: false, liveNote: null, result: { score: null, inProgress: false, hidden: false, back: `/games/${GAME_ID}` },
-		blurb: "", scoreAdmin: "", stars: { game: false, clips: new Set() },
+		blurb: "", scoreForm: "", processingSince: null, stars: { game: false, clips: new Set() }, win: win ? winPop(game) : "",
 	}).__html;
 }
 

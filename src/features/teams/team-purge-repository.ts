@@ -38,7 +38,7 @@ export const forgetOriginal = (db: D1Database, teamId: string, id: number) => db
 // Each after everything that points at it: clip players before clips and players, requests before what they're about,
 // roster weeks and duties before families, and so on.
 const CHILD_ROWS = [
-	"clip_players", "favourites", "video_views", "coach_notes", "game_scores", "removal_requests", "clip_removal_requests", "photo_removal_requests",
+	"clip_players", "favourites", "video_views", "win_seen", "coach_notes", "game_scores", "removal_requests", "clip_removal_requests", "photo_removal_requests",
 	"recording_segments", "clips", "live_streams", "activity", "ask_counts", "roster_slots", "roster_weeks", "roster_duties", "roster_families", "players", "playhq_fixtures", "photos",
 	"support_messages", "support_requests", "game_lines", "problems",
 ];

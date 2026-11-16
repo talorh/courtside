@@ -951,6 +951,7 @@ erDiagram
  teams ||--o{ photos: "keeps"
  games ||--o| videos: "one video"
  games ||--o| game_scores: "final score"
+ games ||--o{ win_seen: "win pop-up had"
  teams ||--o{ game_lines: "own lines"
  games ||--o{ live_streams: "streamed"
  live_streams |o--o| videos: "recording"
@@ -995,6 +996,7 @@ erDiagram
 | photo_removal_requests | team_id, photo_id, member_id, reason, status (open/photo_deleted/kept), note, resolved_by, resolved_at | Kept; deleting the photo closes its requests |
 | video_views | team_id, video_id, member_id, opened_at (first opening only) | Drives the New tag (a video is New for 21 days until you open it); hard-deleted after 30 days |
 | favourites | team_id, member_id, game_id or clip_id (exactly one; once each per member), created_at | A member's starred games and clips; unstarring hard-deletes the row |
+| win_seen | team_id, game_id, member_id (one row each), seen_at | Who has had a game's win pop-up, so it shows once per member per game: the game page inserts the row and shows the pop-up only when the insert took (`win-seen-repository.ts`, `win-pop.ts`, `public/win.js`); goes with the game's row |
 | ask_counts | team_id, member_id, day, n | Ask Virtual Team Manager's questions per member per local day (20 at most); kept a week; the questions are never stored |
 | docs_ask_counts | email (the admin's), day, n | The Documentation AI assistant's questions per admin per local day (50 at most); kept a week; the questions are never stored |
 | admin_log | admin_email (who: an admin, a team manager, or "site" for the jobs), team_id (null when it's no team's, or its team's row has gone), team_code and team_season (a deleted team's, once its row has gone), action, detail, created_at, device (the browser it came from, "" for the site's own) | What admins, team managers (people and players added, changed or removed, letting someone sign in, games added, changed or deleted, and videos deleted or moved), Go live (who went live, the game ending with End game, a stream thrown away as a test, its recording saved; `live-log.ts`) and the site did; the admin area's Log shows it with the sign-in's events, filtered and 200 to 2,000 lines; kept |

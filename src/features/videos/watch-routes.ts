@@ -6,7 +6,8 @@ import { localTime } from "../../shared/time.ts";
 import { doneMessage, idParam, parseForm } from "../../shared/validation.ts";
 import { deleteVideo } from "./video-removal-service.ts";
 import { keepFirstPart } from "./keep-first-service.ts";
-import { watchMessages, watchPage } from "./views/watch-page.ts";
+import { watchMessages } from "./views/watch-messages.ts";
+import { watchPage } from "./views/watch-page.ts";
 import { listNotes } from "../notes/notes-repository.ts";
 import { isCoach } from "../notes/notes-routes.ts";
 import { notesPanel } from "../notes/views/notes-panel.ts";
@@ -22,6 +23,8 @@ import { markOpened } from "./video-views-repository.ts";
 import { gamePhase } from "../games/game-format.ts";
 import { getScore } from "../scores/scores-repository.ts";
 import { scorePanel } from "../scores/views/score-line.ts";
+import { firstSightOfWin } from "../scores/win-seen-repository.ts";
+import { isWinToShow, winPop } from "../scores/views/win-pop.ts";
 import { gameBlurb } from "../games/game-blurb.ts";
 import { getGameLines } from "../games/game-lines-repository.ts";
 import { starredBy } from "../favourites/favourites-repository.ts";
@@ -70,7 +73,11 @@ export function registerWatchRoutes(router: Router): void {
 		const blurb = gameBlurb(game, phase, member.hideScores ? null : score, await getGameLines(db, deps.team.id));
 		const starred = await starredBy(db, deps.team.id, member.id);
 		const stars = { game: starred.games.has(game.id), clips: starred.clips };
-		return htmlResponse(watchPage({ frame, game, video, processingSince, moveTargets: targets, message, coachNotes, live, liveNote, upcoming: phase === "upcoming", result, scoreForm, blurb, stars, ...view }));
+		// The win pop-up: the full game, ready to watch, the first time this member opens it.
+		const celebrate = view.playerSrc !== null && !view.currentClip && isWinToShow(score, member.hideScores)
+			&& await firstSightOfWin(db, { teamId: deps.team.id, gameId: game.id, memberId: member.id, nowIso: deps.now().toISOString() });
+		const win = celebrate ? winPop(game) : "";
+		return htmlResponse(watchPage({ frame, game, video, processingSince, moveTargets: targets, message, coachNotes, live, liveNote, upcoming: phase === "upcoming", result, scoreForm, blurb, stars, win, ...view }));
 	});
 
 	router.post("/videos/:id/move", "manager", async ({ req, params, member, viewer, deps }) => {

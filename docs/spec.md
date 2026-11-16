@@ -223,6 +223,11 @@ member starred with **☆ Favourite** (on a game's page and on each clip), each 
 - **Hide scores:** a switch on Watch games and on a game's page, per member, so it follows them to every phone and
  computer. Hidden means no score or result anywhere on the site. Scores show unless a member hides them, and In
  progress still shows, as it isn't a spoiler.
+- **Win pop-up:** the first time a member opens a game the club won, once its video is ready to watch, a pop-up over
+ the page says "<nickname> win!" (`club.ts`) with the club's logo, the game's name and confetti in the club's colours.
+ It's up for about a second, then goes by itself: nothing to tap, and it never says the score. Once per member per
+ game. Never for a draw or a loss, on a highlight clip's page, or for a member who hides scores (they get it on their
+ first opening after showing scores again). With the phone set to reduce motion the confetti doesn't move.
 - **Ask for this video to be removed**, for anyone.
 - **For team managers:** move the video to another of the team's games (only games without a video) and delete it.
 - **Coaches' notes** (below) for coaches, and the game's **highlight clips** beside the player.
@@ -268,6 +273,10 @@ game with no time yet, and a game a fixture page gives no time for, get it too.
   the Fixture and Watch games, and a grading or crossover game's title says it ("Grading phase 1, Round 2 · vs Hillcrest
   2", "Crossover game · vs Hillcrest 2"); the championship season's games are titled by their round alone. The labels
   are the club's (`seasonPhases` in `club.ts`). Tournaments and practice matches have none.
+- **Finals** are picked out with a subtle gold border wherever the game is listed: its card on Watch games and on
+  Home (Latest game, Coming up), and its row on the Fixture. A game is a final when its round's name says so ("Semi
+  Final", "Finals Round 1", "Preliminary Final", "Grand Final"), as PlayHQ and fixture pages name them, in any
+  competition, and one typed by hand counts too. A card that's processing keeps its own border until it's ready.
 - **Add fixture** takes a PlayHQ team link (VJBL or Tournament) and brings in all its games. Added fixtures are listed
  with **Check now** and **Remove**, and each is checked again every 8 hours until it's over: six weeks after its last
  game for VJBL (later rounds after a break, and finals, still come in). A tournament runs over four days (Friday to

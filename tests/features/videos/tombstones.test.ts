@@ -56,7 +56,7 @@ describe("tombstones: rows deleted over 90 days ago, their media gone, that noth
 		expect(await clearTombstones(deps)).toMatchObject({ tombstonesCleared: 0, errors: [] });
 		expect(await count(deps, "videos")).toBe(6);
 	});
-	it("a game goes once its last video has, with its score, notes, favourites and closed streams; one with a kept video stays", async () => {
+	it("a game goes once its last video has, with its score, notes, favourites, win pop-up record and closed streams; one with a kept video stays", async () => {
 		const deps = createTestDeps();
 		const t = deps.team.id;
 		const { id, game } = await deletedVideo(deps, LONG_AGO);
@@ -64,6 +64,7 @@ describe("tombstones: rows deleted over 90 days ago, their media gone, that noth
 		await deps.db.prepare("INSERT INTO game_scores (team_id, game_id, ours, opponent, source, entered_at) VALUES (?, ?, 40, 30, 'manual', ?)").bind(t, game, LONG_AGO).run();
 		await deps.db.prepare("INSERT INTO coach_notes (team_id, game_id, body, created_by, deleted_at) VALUES (?, ?, 'n', 1, ?)").bind(t, game, LONG_AGO).run();
 		await deps.db.prepare("INSERT INTO favourites (team_id, member_id, game_id, created_at) VALUES (?, 1, ?, ?)").bind(t, game, LONG_AGO).run();
+		await deps.db.prepare("INSERT INTO win_seen (team_id, game_id, member_id, seen_at) VALUES (?, ?, 1, ?)").bind(t, game, LONG_AGO).run();
 		const kept = await deletedVideo(deps, LONG_AGO);
 		await deps.db.prepare("INSERT INTO downloads (team_id, video_id, member_id, kind, created_at) VALUES (?, ?, 1, 'hd', ?)").bind(t, kept.id, LONG_AGO).run();
 		await deps.db.prepare("UPDATE games SET deleted_at = ? WHERE id = ?").bind(LONG_AGO, kept.game).run();
@@ -76,6 +77,7 @@ describe("tombstones: rows deleted over 90 days ago, their media gone, that noth
 		expect(await count(deps, "game_scores", `game_id = ${game}`)).toBe(0);
 		expect(await count(deps, "coach_notes", `game_id = ${game}`)).toBe(0);
 		expect(await count(deps, "favourites", `game_id = ${game}`)).toBe(0);
+		expect(await count(deps, "win_seen", `game_id = ${game}`)).toBe(0);
 		expect(await count(deps, "live_streams", `game_id = ${game}`)).toBe(0);
 		expect(await count(deps, "games", `id = ${kept.game}`)).toBe(1);
 		expect(await count(deps, "videos", `id = ${kept.id}`)).toBe(1);

@@ -5,7 +5,7 @@ import { draw, figure } from "./docs-draw.ts";
 
 const TEAM_GROUPS: Array<{ title: string; tables: string[] }> = [
 	{ title: "People", tables: ["members", "players", "favourites", "ask_counts"] },
-	{ title: "Games", tables: ["games", "game_scores", "game_lines", "playhq_fixtures", "coach_notes"] },
+	{ title: "Games", tables: ["games", "game_scores", "win_seen", "game_lines", "playhq_fixtures", "coach_notes"] },
 	{ title: "Video", tables: ["videos", "recording_segments", "clips", "clip_players", "live_streams", "downloads", "media_downloads", "video_views"] },
 	{ title: "Photos and roster", tables: ["photos", "roster_families", "roster_slots", "roster_duties", "roster_weeks"] },
 	{ title: "Requests", tables: ["removal_requests", "clip_removal_requests", "photo_removal_requests", "activity"] },
