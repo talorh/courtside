@@ -62,3 +62,12 @@ describe("Workers AI client", () => {
 		await expect(port.readJson("s", "page", schema)).rejects.toThrow("isn't JSON: not json");
 	});
 });
+
+describe("Workers AI before the install (local development with deploy.config.ts's placeholders)", () => {
+	it("isn't bound, so every use says so plainly and the rest of the site runs", async () => {
+		const port = createAi(undefined);
+		for (const ask of [() => port.answer("s", "q"), () => port.explain("s", "q"), () => port.readJson("s", "t", {}), () => port.retirements()]) {
+			await expect(ask()).rejects.toThrow("Workers AI isn't set up here yet (deploy.config.ts has no account): INSTALL.md");
+		}
+	});
+});

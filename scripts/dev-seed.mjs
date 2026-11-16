@@ -21,7 +21,6 @@ const games = [
 	["2026-11-20T18:40", league, "7", "Seaview Breakers", "Saints Stadium, Court 1", null, null],
 ];
 const sql = [
-	"DELETE FROM game_scores; DELETE FROM roster_slots; DELETE FROM roster_families; DELETE FROM players; DELETE FROM games; DELETE FROM members; DELETE FROM admins; DELETE FROM teams;",
 	`INSERT INTO teams (id, name, code, season_start, ask_name, created_at) VALUES ('${team}', 'Saints U12 Boys 12.1', 'b12.1', 2026, 'Sam', '${now}');`,
 	`INSERT INTO members (id, team_id, email, name, role, created_at) VALUES (1, '${team}', '${email}', 'Sam Rivers', 'manager', '${now}'),
 	 (2, '${team}', 'coach@saints.example', 'Alex Coach', 'coach', '${now}'), (3, '${team}', 'parent@saints.example', 'Jordan Appleby', 'filmer', '${now}'),
@@ -37,6 +36,11 @@ const dir = join(LOCAL_STATE, "v3", "d1", "miniflare-D1DatabaseObject");
 const files = readdirSync(dir).filter((f) => f.endsWith(".sqlite")).sort((a, b) => statSync(join(dir, b)).mtimeMs - statSync(join(dir, a)).mtimeMs);
 if (!files.length) throw new Error(`no local database in ${dir}: run npm run dev:db first`);
 const db = new DatabaseSync(join(dir, files[0]));
+// Starting over: every table emptied (the migrations' own record and SQLite's and cf's kept), so whatever a session left
+// behind (sign-ins, the Log, alerts, videos) can't hold on to a team or a member the seed replaces.
+const tables = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' AND name <> 'd1_migrations'").all();
+db.exec("PRAGMA foreign_keys = OFF");
+db.exec(tables.map(({ name }) => `DELETE FROM "${name}";`).join("\n"));
 db.exec("PRAGMA foreign_keys = ON");
 db.exec(sql);
 db.close();

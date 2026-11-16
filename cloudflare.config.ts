@@ -52,7 +52,8 @@ export default defineConfig(({ mode, isPreview }) => {
 				ORIGINALS: bindings.r2({ name: bucket }),
 				// Workers AI: Ask Virtual Team Manager (Help), the Documentation AI assistant and reading fixture pages
 				// (platform/workers-ai.ts). Needs no setup: it comes with the deploy.
-				AI: bindings.ai(),
+				// Workers AI runs on Cloudflare even in development, so a copy not yet installed goes without (workers-ai.ts).
+				AI: isDev && DEPLOY.accountId.startsWith("REPLACE_WITH") ? undefined : bindings.ai(),
 				// The team's photos, in Cloudflare Images (the account's Images and Stream bundle). No token: the binding is
 				// the Worker's own way in, and it signs the photos' links. `cf dev` keeps its photos on this computer.
 				IMAGES: bindings.images(),

@@ -195,7 +195,9 @@ curl -X POST "http://localhost:5173/cdn-cgi/local/explorer/api/local/scheduled?w
 
 `.dev.vars` only supplies secrets; plain values come from `cloudflare.config.ts` in development mode. Photos added in
 `cf dev` stay on this computer. `.dev.vars.example` gives every secret a stand-in (the Worker won't start with one
-empty); calls to Stream fail with them and the pages carry on without. Go live's stream and recording path is tried on
+empty); calls to Stream fail with them and the pages carry on without. Workers AI only runs on Cloudflare, so until
+`deploy.config.ts` has the account it isn't bound and Ask and the Documentation assistant say they couldn't answer.
+`npm run dev:seed` empties every table before it fills them, so it starts over however the database has been used. Go live's stream and recording path is tried on
 staging, with real Stream, before a phone test.
 
 ## 7. The video joiner

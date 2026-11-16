@@ -22,7 +22,13 @@ export interface AiPort {
 	retirements(): Promise<ModelStanding[]>;
 }
 
-export function createAi(ai: Ai): AiPort {
+/** `ai`: the binding, which local development leaves out until deploy.config.ts has the account (Workers AI always runs
+ * on Cloudflare): then every use fails plainly, and the pages that ask say they couldn't. */
+export function createAi(ai: Ai | undefined): AiPort {
+	if (!ai) {
+		const unset = async (): Promise<never> => { throw new Error("Workers AI isn't set up here yet (deploy.config.ts has no account): INSTALL.md"); };
+		return { answer: unset, explain: unset, readJson: unset, retirements: unset };
+	}
 	// Gemma 4 answers in a chat reply's first choice; some models answer in `response`. Gemma thinks first by default,
 	// which would spend the answer's tokens: it answers straight away.
 	const run = async (input: Record<string, unknown>): Promise<unknown> => {

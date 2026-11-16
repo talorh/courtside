@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 16 Nov 2026
 
+- [Fix] **Local development:** The local site now starts before the install fills in deploy.config.ts (Workers AI waits for the account), the example data starts over cleanly however the local database has been used, and the README's screenshots show the new logo.
 - [Enhancement] **Branding:** The example club's logo is new: a ball on fire ripping through the hoop and swinging a burning net, in a ring of the club's colours, on the Home Screen icon, the launch screen, the Full time and win cards and the court.
 - [Fix] **Insights:** Fixed an issue where the video storage alert stayed up for up to an hour after more Stream minutes were bought: opening Insights or Platform, or Check again, now checks Stream there and then.
 - [Enhancement] **Costs:** A new team's season is now estimated from the other teams' own games (their length, minutes watched and file sizes, averaged game for game) until it has three of its own, instead of a fixed guess that overstated watching several times over; the team's Costs page says which it uses.
