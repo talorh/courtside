@@ -12,7 +12,7 @@
 <p align="center">
   <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-2F6FDB"></a>
   <img alt="Runs on Cloudflare" src="https://img.shields.io/badge/runs%20on-Cloudflare-14274E">
-  <img alt="2,000 unit tests passing" src="https://img.shields.io/badge/unit%20tests-2%2C000%20passing-2F6FDB">
+  <img alt="2,001 unit tests passing" src="https://img.shields.io/badge/unit%20tests-2%2C001%20passing-2F6FDB">
   <img alt="217 browser tests passing" src="https://img.shields.io/badge/browser%20tests-217%20passing-2F6FDB">
   <img alt="Node 26" src="https://img.shields.io/badge/node-26-14274E">
 </p>
@@ -24,17 +24,17 @@
 
 <br>
 
-<img src="docs/screenshots/desktop-home.png" alt="A team's home page on a computer: upload, go live, watch games, the roster, the fixture and photos" width="100%">
+<img src="docs/screenshots/desktop-home.png" alt="A team manager's home page on a computer: the sidebar, the next game and the squad" width="100%">
 
-<table>
-<tr>
-<td><img src="docs/screenshots/mobile-home.png" alt="The team's home page on a phone" width="190"></td>
-<td><img src="docs/screenshots/mobile-games.png" alt="The list of games on a phone" width="190"></td>
-<td><img src="docs/screenshots/mobile-game.png" alt="One game's page on a phone" width="190"></td>
-<td><img src="docs/screenshots/mobile-fixture.png" alt="The fixture on a phone" width="190"></td>
-<td><img src="docs/screenshots/mobile-golive.png" alt="The Go live page on a phone" width="190"></td>
-</tr>
-</table>
+<p align="center">
+  <img src="docs/screenshots/mobile-home.png" alt="The team's home page on a phone" width="32%">
+  <img src="docs/screenshots/mobile-games.png" alt="The list of games on a phone" width="32%">
+  <img src="docs/screenshots/mobile-game.png" alt="One game's page on a phone" width="32%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/mobile-fixture.png" alt="The fixture on a phone" width="32%">
+  <img src="docs/screenshots/mobile-golive.png" alt="The Go live page on a phone" width="32%">
+</p>
 
 <sub>Everyone in these screenshots is made up. The example club is the Saints, and its squad is named after the 1992
 Dream Team.</sub>
@@ -213,7 +213,7 @@ Good places to start:
 - [Why it's built this way](docs/admin/30-technology-decisions.md)
 - [AGENTS.md](AGENTS.md), the rules every change follows
 
-Every change has to pass all 2,000 unit tests and 217 browser tests before it ships. The unit tests include two teams
+Every change has to pass all 2,001 unit tests and 217 browser tests before it ships. The unit tests include two teams
 going through every page to prove neither can see the other's. The browser tests run Go live on Android, iPhone and
 Firefox.
 
