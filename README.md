@@ -33,7 +33,8 @@ and kids love watching themselves play.
 Posting kids' games on social media isn't the answer. Courtside gives each team its own private place for game video
 and photos, seen only by the families on that team.
 
-It started as one parent filming their son's team, and grew into something any club can run.
+It was built by a parent and team manager at a VJBL club who wanted a better way to run a junior team than the way
+it's usually done. It's now generic, so any club can run it.
 
 <br>
 
