@@ -350,6 +350,9 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
  never silenced, and code nothing uses is deleted rather than left behind.
 - Commit after each finished task with a clear message, and only after `npm run check` has passed (chain it: `npm run
  check && git commit`).
+- **The README's test counts stay true.** Its badges and its For developers section give how many unit tests and
+ browser tests pass. A change that adds or removes tests updates both in the same commit, from the totals
+ `npm run check` and `npm run e2e` print.
 - **Branches**: a change is built on `feature/<name>` or `fix/<name>`, off `staging`. `staging`
  is the staging environment's branch (`npm run staging` deploys nothing else) and `main` is production, only ever
  fast-forwarded to `staging` by `npm run release`. A change is merged into `staging` when its checks pass, tested

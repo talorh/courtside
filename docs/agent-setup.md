@@ -82,7 +82,9 @@ of the same repository: you work there, on `staging` and on your own branches.
    also adds its lines at the top of `CHANGELOG.md`, under today's date, as release notes: `- [Feature]`,
    `[Enhancement]` or `[Fix]`, the area in bold, then a plain sentence ("- [Fix] **Costs:** Fixed an issue where ...").
    The release needs one, and the top line becomes the deployment's message. A change to the admin Documentation's
-   text also runs `npm run docs`, so `docs/admin/` stays in step.
+   text also runs `npm run docs`, so `docs/admin/` stays in step. A change that adds or removes tests updates the
+   unit and browser test counts in `README.md` (its badges and its For developers section) to the totals the checks
+   print.
 5. Merge into staging: `git switch staging && git merge --no-ff feature/<name>`.
 6. `npm run staging` deploys `staging` to the staging site (it applies staging's database migrations too). Test the
    change there, signed in: the pages it touches, and Go live, an upload or the jobs if it touches them. If your tool
