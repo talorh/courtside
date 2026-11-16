@@ -36,11 +36,11 @@ export function nightlyDiagram(): SafeHtml {
 	const d = draw("nightly");
 	const night: Step[] = [
 		{ title: "Backup", sub: "the database, to R2", kind: "store" }, { title: "Sweep", sub: "leftover media", kind: "job" },
-		{ title: "Sign-in clean-up", sub: "old sessions, codes", kind: "step" }, { title: "Nightly checks", sub: "sizes, costs, the joiner", kind: "step" },
+		{ title: "Clean-up", sub: "sign-in, seasons over", kind: "step" }, { title: "Nightly checks", sub: "sizes, costs, the joiner", kind: "step" },
 	];
 	return figure("nightly", {
 		w: 760, h: 130, min: 640, title: "The 3am job",
-		desc: "Every night at 3am local time: a checked backup of the database to R2, a sweep of leftover media in Stream and Images, a clean-up of finished sign-in sessions and codes, and the nightly checks, a test of the video joiner among them.",
+		desc: "Every night at 3am local time: a checked backup of the database to R2, a sweep of leftover media in Stream and Images, a clean-up of finished sign-in sessions and codes, the closing of teams whose season is over, and the nightly checks, a test of the video joiner among them.",
 		caption: "Each step stands on its own: a failure is reported on Platform and raises a ticket, and the next night runs again.",
 	}, html`${d.label(10, 22, "Every night at 3am, local time")}
 ${night.map((s, i) => html`${d.box({ ...s, x: 10 + i * 192, y: 44, w: 168, h: 64 })}${i < 3 ? d.arrow([[178 + i * 192, 76], [200 + i * 192, 76]]) : ""}`)}`);

@@ -2,6 +2,7 @@ import type { AppDeps } from "../app/deps.ts";
 import { addDays, localDate, localTime, mondayOf } from "../shared/time.ts";
 import { WEEKS } from "../features/admin/insights-service.ts";
 import { backupDatabase } from "./backup-db.ts";
+import { closeSeasonsOver } from "./close-seasons.ts";
 import { checkBudgets } from "../features/admin/budget-checks.ts";
 import { checkAiModels } from "../features/admin/ai-model-checks.ts";
 import { checkJoiner } from "../features/admin/joiner-checks.ts";
@@ -31,7 +32,7 @@ export const dailyDue = (scheduledTime: number) => localTime(new Date(scheduledT
 
 /**
  * Daily cron: the database backup, then the orphan sweep, whose outcome is kept for the admin area's Platform page (recordSweep), then
- * the sign-in's leftovers. Each runs even if another fails; any failure fails the run. The backup goes first: a run cut short still has it.
+ * the sign-in's leftovers, then the teams whose season is over. Each runs even if another fails; any failure fails the run. The backup goes first: a run cut short still has it.
  */
 export async function runDaily(deps: AppDeps): Promise<void> {
 	const errors: unknown[] = [];
@@ -41,6 +42,8 @@ export async function runDaily(deps: AppDeps): Promise<void> {
 	await recordSweep(deps, sweep).catch((err: unknown) => void errors.push(err));
 	// The sign-in's leftovers (auth/): sessions that are over, codes older than a day, events older than a month, and holds.
 	await purgeSignIn(deps).catch((err: unknown) => void errors.push(err));
+	// Running teams whose season's videos and photos are due close, to be deleted from tonight (close-seasons.ts).
+	await closeSeasonsOver(deps).catch((err: unknown) => void errors.push(err));
 	// The admins' alerts (features/admin/usage-checks.ts): Images' photos (from the clean-up's own list), the database's
 	// size, and how the night went; and the server errors' count keeps two days.
 	if (!("failed" in sweep) && sweep.imagesStored !== null) await checkImages(deps, sweep.imagesStored).catch((err: unknown) => void errors.push(err));

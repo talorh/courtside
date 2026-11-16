@@ -62,11 +62,27 @@ describe("editing a team", () => {
 		expect(await res.text()).toContain("Saints G14.5 has photos now, so its season stays as it is.");
 		expect(await team(deps)).toMatchObject({ season_start: 2026 });
 		const page = await (await admin(deps)(`/admin/teams/${G}/edit`)).text();
-		expect(page).toMatch(/name="season"[^>]*readonly/);
+		expect(page).toContain('<label>Season<input type="text" readonly value="2026/27" aria-describedby="locked"></label><input type="hidden" name="season" value="2026">');
 		expect(page).not.toMatch(/name="code"[^>]*readonly/);
 		expect(page).toContain("Its season stays as it is now it has photos. Change the code only to fix a mistake: it can't change once the team has a game.");
 		expect((await admin(deps)(`/admin/teams/${G}`, form({ code: "g14.6", season: "2026", askName: "" }))).status).toBe(303);
 		expect(await team(deps)).toMatchObject({ code: "g14.6", season_start: 2026 });
+	});
+
+	it("shows its season as 2026/27, offering the same seasons as onboarding while it can still change, and saves it as onboarding does", async () => {
+		const deps = await withG14();
+		const page = await (await admin(deps)(`/admin/teams/${G}/edit`)).text();
+		expect(page).toContain('<select name="season"><option value="2026" selected>2026/27 (this season)</option><option value="2027">2027/28</option></select>');
+		const onboard = await (await admin(deps)("/admin/teams/new")).text();
+		expect(onboard).toContain('<select name="season"><option value="2026" selected>2026/27 (this season)</option><option value="2027">2027/28</option></select>');
+		expect((await admin(deps)(`/admin/teams/${G}`, form({ code: "g14.5", season: "2027", askName: "" }))).status).toBe(303);
+		expect(await team(deps)).toMatchObject({ season_start: 2027 });
+		await addGame(deps);
+		const locked = await (await admin(deps)(`/admin/teams/${G}/edit`)).text();
+		expect(locked).toContain('<label>Season<input type="text" readonly value="2027/28" aria-describedby="locked"></label><input type="hidden" name="season" value="2027">');
+		expect(locked).not.toContain('<select name="season">');
+		expect((await admin(deps)(`/admin/teams/${G}`, form({ code: "g14.5", season: "2027", askName: "Jane" }))).status).toBe(303);
+		expect(await team(deps)).toMatchObject({ season_start: 2027, ask_name: "Jane" });
 	});
 
 	it("never takes a code an open team has, and an edited team's old code can be onboarded again", async () => {
@@ -221,6 +237,8 @@ describe("the Teams page's controls", () => {
 		expect(menu("Saints B12.1")).toContain('<summary class="btn">More<span class="sr"> for Saints B12.1</span></summary>');
 		expect(menu("Saints B12.1")).toContain(`<a href="/admin/teams/${B12_1.id}/edit">Edit</a>`);
 		expect(menu("Saints B12.1")).toContain(`<a class="danger" href="/admin/teams/${B12_1.id}/close">End season and close team</a>`);
+		expect(row("Saints B12.1")).toContain('<td class="t-status"><span class="t src">Active</span><span class="sub">Closes by itself after Fri 31 Dec 2027</span></td>');
+		expect(row("Saints G14.5")).not.toContain("Closes by itself");
 		expect(row("Saints G14.5")).toContain("To be deleted Fri 31 Dec 2027");
 		expect(menu("Saints G14.5")).toContain(`<a href="/admin/teams/${G}/reopen">Reopen</a>`);
 		expect(menu("Saints G14.5")).toContain(`<a class="danger" href="/admin/teams/${G}/delete">Delete tonight</a>`);

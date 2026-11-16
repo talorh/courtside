@@ -12,9 +12,14 @@ import { welcomeMessage } from "../welcome-message.ts";
 import { adminLayout } from "./admin-layout.ts";
 import { openTeamForm } from "./teams-page.ts";
 
+/** The Season box's choices, onboarding's and Edit's: `seasons` (onboardSeasons: this one, then next), plus a team's own
+ * (`also`) when it's neither, each by its label ("2026/27 (this season)") and posted as the year it starts. */
+export const seasonChoices = (seasons: number[], also?: number) => [...new Set([...seasons, ...(also === undefined ? [] : [also])])]
+	.sort((a, b) => a - b).map((s) => ({ value: String(s), label: s === seasons[0] ? `${seasonLabel(s)} (this season)` : seasonLabel(s) }));
+
 /** `values`: what was typed, kept when the site refuses it (`error`). */
 export function onboardPage(p: { frame: AdminFrame; seasons: number[]; values: OnboardInput; error?: string }): SafeHtml {
-	const seasons = p.seasons.map((s, i) => ({ value: String(s), label: i === 0 ? `${seasonLabel(s)} (this season)` : seasonLabel(s) }));
+	const seasons = seasonChoices(p.seasons);
 	const v = p.values;
 	return adminLayout({ title: "Onboard a team", current: "teams", frame: p.frame, back: { href: "/admin/teams", label: "Teams" } }, html`<form class="panel stack" method="post" action="/admin/teams">
 <p class="small">Just enough to get them going: the team manager does the rest (families, players, games, the roster), with their own questions first on Help.</p>

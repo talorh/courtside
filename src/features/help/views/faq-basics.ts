@@ -1,6 +1,8 @@
 import { CLUB, mailFrom } from "../../../club.ts";
 import { html } from "../../../shared/html.ts";
 import { faqItem, type HelpFor } from "./faq-item.ts";
+
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 import { I_AIRPLAY, shot, shots } from "./faq-mock.ts";
 
 /** A game's label exactly as Watch games shows it (library-page.ts), so Help matches what parents see. */
@@ -101,10 +103,10 @@ ${faqItem("labels", "What do Ready to watch, Processing and the other labels mea
 ${CLUB.league} games, or ${h.c.ask} enters it.</li>
 <li>${label("novideo", "No video")} (greyed): this game isn't being filmed, or wasn't.</li></ul>`)}`;
 
-/** Last under Watching. The dates follow the team's own season (October to September), so they never need changing. */
+/** Last under Watching. The dates follow the team's own season (from the club's first month), so they never need changing. */
 export function faqKept(h: HelpFor) {
 	const { season } = h;
 	return faqItem("kept", "How long are the videos and photos kept?", html`<p>Until <b>31 December of the year the season ends</b>.
-Seasons start in October, so for this season (${season.label}), that's <b>31 December ${season.end}</b>. After that,
-they're deleted automatically, so download any you'd like to keep before then.</p>`);
+Seasons start in ${MONTH_NAMES[CLUB.seasonStartMonth - 1]}, so for this season (${season.label}), that's <b>31 December ${season.end}</b>. The team's site
+stays open until then, unless the site's admin ends the season earlier. After that, it closes and they're deleted automatically, so download any you'd like to keep before then.</p>`);
 }

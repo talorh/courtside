@@ -80,7 +80,7 @@ export async function deleteGame(deps: TeamDeps, id: number): Promise<void> {
 export const isFree = (r: GameWithVideo) => r.videoStatus === null || r.videoStatus === "failed";
 
 /** Games a filmer can upload for, newest first, with video status. Games marked "No video" are left out.
- * Anything dated in its team's season's two years (seasons start in October): for 2026/27, 2026 and 2027, which also
+ * Anything dated in its team's season's two years (seasons start in the club's first month, CLUB.seasonStartMonth): for 2026/27, 2026 and 2027, which also
  * covers the practice games from before the season. None once the team's videos have been deleted. */
 export async function pickerGames(db: D1Database, team: Team, now: Date): Promise<GameWithVideo[]> {
 	if (footageDue(team) <= now.toISOString()) return [];

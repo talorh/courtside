@@ -1,5 +1,5 @@
-// A team's life after onboarding: fixing its details, closing it at the end of its
-// season (read-only, deleted when its footage is due or tonight), reopening it, and when it's deleted. Each change is
+// A team's life after onboarding: fixing its details, closing it at the end of its season (an admin's End season, or the
+// 3am job once its footage is due; read-only, deleted when its footage is due or tonight), reopening it, and when it's deleted. Each change is
 // made only from the state it applies to, then logged (a change someone else made first logs nothing).
 import { type AppDeps, withTeam } from "../../app/deps.ts";
 import { badRequest, conflict } from "../../app/errors.ts";
@@ -79,10 +79,28 @@ export async function closeTeam(deps: AppDeps, adminEmail: string, team: Team, i
 	if (!tonight && due <= now.toISOString()) {
 		throw badRequest(`${teamLabel(team)}'s videos and photos were due to be deleted on ${dueDay(team)}, so they'd go tonight: type ${team.code} to end its season.`);
 	}
-	if (await busy(deps, team)) throw conflict(`${teamLabel(team)} has an upload or live stream going: close it once that's done.`);
 	const deleteAfter = tonight ? nextLocal3am(now).toISOString() : due;
-	if (!(await closeTeamWrite(deps.db, team.id, now.toISOString(), deleteAfter)).meta.changes) throw conflict(`${teamLabel(team)}'s season is over already.`);
-	await log(deps, adminEmail, team, "team_closed", tonight ? "deleted tonight" : "deleted at the season's end");
+	if (!(await closeAs(deps, adminEmail, team, deleteAfter, tonight ? "deleted tonight" : "deleted at the season's end"))) {
+		throw conflict(`${teamLabel(team)} has an upload or live stream going: close it once that's done.`);
+	}
+}
+
+/** The 3am job's close of a running team whose season's videos and photos are due (jobs/close-seasons.ts), as End
+ * season's "When they're due" closes it: its delete date is that due date, so the 5-minute job deletes it from tonight.
+ * A team still uploading or streaming is refused as End season refuses it ("busy"), and the next night tries again. */
+export async function closeSeasonOver(deps: AppDeps, team: Team): Promise<"closed" | "busy" | "running"> {
+	const due = seasonEndDeadline(team.seasonStart);
+	if (team.status !== "active" || due > deps.now().toISOString()) return "running";
+	return await closeAs(deps, "site", team, due, `deleted tonight, as its videos and photos were due on ${dueDay(team)}`) ? "closed" : "busy";
+}
+
+/** Closing, for End season and the 3am job: nothing while something's being sent (false), else read-only at once with
+ * its delete date, and logged as `who` (an admin's email, or "site"). */
+async function closeAs(deps: AppDeps, who: string, team: Team, deleteAfter: string, detail: string): Promise<boolean> {
+	if (await busy(deps, team)) return false;
+	if (!(await closeTeamWrite(deps.db, team.id, deps.now().toISOString(), deleteAfter)).meta.changes) throw conflict(`${teamLabel(team)}'s season is over already.`);
+	await log(deps, who, team, "team_closed", detail);
+	return true;
 }
 
 export async function reopenTeam(deps: AppDeps, adminEmail: string, team: Team): Promise<void> {

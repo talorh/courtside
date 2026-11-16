@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 16 Nov 2026
 
+- [Enhancement] **Teams:** A team's season now shows as 2026/27 on its Edit page too, and a team closes by itself once its season's videos and photos are due, at the end of 31 December of the year its season ends; Teams says when, and End season still closes one earlier.
 - [Enhancement] **Fixture:** A finals game now has a subtle gold border wherever it's listed: on Watch games, Home and the Fixture.
 - [Feature] **Watch games:** The first time you open a game the club won, once its video is ready, a win pop-up with confetti in the club's colours shows for about a second. It never says the score, and never shows to anyone who hides scores.
 - [Enhancement] **Costs:** Every month's teams now add up to its bill, last season's kept footage and next season's early teams included; next season's teams join Team budgets in their season's first month, and spent months are kept as they were.

@@ -67,7 +67,8 @@ function setupCell(s: TeamSummary): SafeHtml | string {
 function teamRow(s: TeamSummary, now: Date): SafeHtml {
 	const t = s.team;
 	const open = t.status === "active";
-	const status = open ? html`<span class="t src">Active</span>` : html`<span class="t">Season over</span><span class="sub">${deleteWhen(t, now)}</span>`;
+	// A running team closes by itself at the 3am job after its season's footage is due (jobs/close-seasons.ts).
+	const status = open ? html`<span class="t src">Active</span><span class="sub">Closes by itself after ${dueDay(t)}</span>` : html`<span class="t">Season over</span><span class="sub">${deleteWhen(t, now)}</span>`;
 	return html`<tr${open ? "" : html` class="past"`}><td class="t-team"><b>${teamLabel(t)}</b><span class="sub">${t.name}</span></td>
 <td class="t-season">${seasonLabel(t.seasonStart)}</td><td class="t-status">${status}</td>
 <td class="t-members">${s.members}</td><td class="t-managers">${s.managers.join(", ") || "None"}</td>

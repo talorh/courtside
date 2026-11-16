@@ -8,14 +8,15 @@ import { teamLabel } from "../../teams/team-code.ts";
 import type { Team } from "../../teams/team.ts";
 import type { EditInput } from "../team-lifecycle-service.ts";
 import { adminLayout } from "./admin-layout.ts";
+import { seasonChoices } from "./onboard-page.ts";
 
 /** `values`: what was typed, kept when the site refuses it (`error`). `locked`: it has games; `seasonLocked`: photos. */
 export function editPage(p: { frame: AdminFrame; team: Team; seasons: number[]; locked: boolean; seasonLocked: boolean; values?: EditInput; error?: string }): SafeHtml {
 	const v = p.values ?? { code: p.team.code, season: String(p.team.seasonStart), askName: p.team.askName ?? "" };
-	const seasons = [...new Set([p.team.seasonStart, ...p.seasons])].sort().map((s) => ({ value: String(s), label: seasonLabel(s) }));
+	// Shown by its label, read-only or a choice as on onboarding, and posted as the year it starts.
 	const season = p.locked || p.seasonLocked
-		? html`<label>Season<input name="season" type="text" readonly value="${v.season}" aria-describedby="locked"></label>`
-		: html`<label>Season<select name="season">${selectOptions(seasons, v.season)}</select></label>`;
+		? html`<label>Season<input type="text" readonly value="${seasonLabel(p.team.seasonStart)}" aria-describedby="locked"></label><input type="hidden" name="season" value="${String(p.team.seasonStart)}">`
+		: html`<label>Season<select name="season">${selectOptions(seasonChoices(p.seasons, p.team.seasonStart), v.season)}</select></label>`;
 	return adminLayout({ title: `Edit ${teamLabel(p.team)}`, current: "teams", frame: p.frame, back: { href: "/admin/teams", label: "Teams" } }, html`<form class="panel stack" method="post" action="/admin/teams/${p.team.id}">
 ${p.error ? html`<div class="note warn" role="alert">${p.error}</div>` : ""}
 <div class="formgrid"><label>Team code<input name="code" type="text" required maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" value="${v.code}"${p.locked ? html` readonly aria-describedby="locked"` : ""}></label>

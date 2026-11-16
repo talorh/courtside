@@ -10,9 +10,11 @@ ${faqItem("g-score", "Entering a score", html`<p>Once a game has started, its pa
 <b>Save score</b>. PlayHQ games fill in by themselves when PlayHQ says the game's final.</p>`)}
 <h2 class="faqgroup">End of the season</h2>
 ${faqItem("g-end", "When the season's over", html`<ul class="steps">
-<li>The site's admin closes your team. From then it's read only: families can still watch, download and ask for something
-to be removed, but nothing new is added.</li>
-<li>Its videos and photos are deleted at the end of <b>31 December ${h.season.end}</b>, as Help tells families.</li>
+<li>Your team's site stays open, and everything on it is kept, until the end of <b>31 December ${h.season.end}</b> (the end
+of the year your ${h.season.label} season ends), as Help tells families. Then it closes by itself, and its videos and photos
+are deleted that night.</li>
+<li>The site's admin can end the season earlier. From then it's read only: families can still watch, download and ask for
+something to be removed, but nothing new is added.</li>
 <li>Before then, the <b>end-of-season pack</b> at the bottom of <b>Manage team</b> has everything to keep: every game's HD
 video to download (tap <b>Get every HD copy ready</b> first, and they're all ready about 15 minutes later), each player's
 highlight clips under their name, and where to save the photos and the roster.</li>

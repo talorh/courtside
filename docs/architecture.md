@@ -624,7 +624,7 @@ as failed in Workers Observability, and six failed runs in a row raise a ticket.
 run's 200 outside calls; work past that
 waits for the next run and is logged as `deferred`.
 
-## The 3am job: the backup, the sweep, the sign-in's leftovers and the nightly checks
+## The 3am job: the backup, the sweep, the sign-in's leftovers, seasons that are over and the nightly checks
 
 Cron triggers are UTC only, so two fire, 16:00 UTC (3am in daylight saving) and 17:00 UTC (3am in winter), and the
 job runs on whichever one is 3am in the club's time zone (`dailyDue` in `src/jobs/daily.ts`).
@@ -655,6 +655,14 @@ days and unfinished uploads after 7.
 **The sign-in's leftovers** (`src/jobs/daily.ts` `purgeSignIn`): sessions that are over (signed out, or past their 30
 days), codes older than a day and sign-in events older than a month (31 days) are deleted, and the count logged
 (`sign_in_purged`).
+
+**Seasons that are over** (`src/jobs/close-seasons.ts`): a team's site stays open and everything is kept until the end
+of 31 December of the year its season ends, in the club's time zone (`seasonEndDeadline`). The first night after that,
+each running team past it is closed by `closeSeasonOver` (`team-lifecycle-service.ts`), the same close as End season's
+"When they're due": read-only, `delete_after` its due date, and a `team_closed` line in the Log by `site`. That date has
+passed, so the 5-minute job starts deleting it that night (Deleting a team, below). A team still uploading or streaming
+is refused, as End season refuses it, and left running for the next night (`season_close_waits` in the logs; the night
+doesn't fail). An admin can end a season earlier on Teams.
 
 **The nightly checks**: photos against Images' 100,000 (from the sweep's own list), the database's size, and each
 running team's costs against its season's budget (`budget-checks.ts`, reading Cloudflare's minutes watched and the day's
@@ -703,7 +711,8 @@ the season's footage goes points team managers to it.
 ## Deleting a team
 
 A closed team is deleted once its `delete_after` has passed: the end of 31 December of the year its season ends (what
-Help tells families), or 3am on the night an admin chose, with the team's code typed (`src/jobs/delete-teams.ts`). The
+Help tells families), or 3am on the night an admin chose, with the team's code typed (`src/jobs/delete-teams.ts`). A
+team nobody closed is closed by the 3am job once that date has passed, so it's deleted that night too. The
 5-minute run does it a slice at a time, after every team's own steps, with at most 20 calls to Images, Stream and R2 a
 run (Stream's also come out of the run's 200 outside calls), so a big team's deletion never holds up a game night:
 
@@ -850,7 +859,8 @@ section and keeps one More menu open at a time.
  team's figures come from one query; the weeks come from hourly counts put into the club's weeks in code. With no
  team on the site (a new install), Get started takes the numbers' place.
  `/admin/insights` redirects here.
-- **Teams** (`/admin/teams`): every team that isn't deleted, running ones first (season, status, people,
+- **Teams** (`/admin/teams`): every team that isn't deleted, running ones first (season as its label, 2026/27, as on
+ Edit; status, with when a running team closes by itself, "Closes by itself after Fri 31 Dec 2027"; people,
  team managers, setup (`teams/team-setup.ts`: "3 of 4" and what's left, as Manage team's checklist), last used, open
  tickets), each with Open (it becomes the admin's current team, as its team manager)
  and a More menu: View as Watch only, Watch and film, coach or team manager, Edit, and End season and close team; or, its season over,

@@ -545,7 +545,8 @@ counts beside Insights (alerts that aren't ok) and Support (tickets waiting). An
  Start here.
 - **Teams** (`/admin/teams`): **Onboard a team**, and for each team **Open** and a **More** menu: View as Watch only,
  Watch and film, coach or team manager, Edit, **End season and close team**, Reopen, and Delete tonight.
- Each running team's setup ("3 of 4" and what's still to add, as Manage team's checklist).
+ Each running team's setup ("3 of 4" and what's still to add, as Manage team's checklist), and when it closes by
+ itself ("Closes by itself after Fri 31 Dec 2027"). Every season reads as its label, 2026/27, here and on Edit.
 - **Support** (`/admin/support`): a ticket queue (what needs an answer, yours, waiting on the team manager, resolved,
  all), each ticket's conversation, reply, private notes, owner and status, and the site's own tickets from its
  monitoring.
@@ -605,7 +606,11 @@ welcome page shows it, to copy or email again. A team's code and season can be f
 only until its first photo too, since a photo is deleted with the season it was added in. **Ending a season** closes
 the team: read-only at once, and deleted when its season's footage is due (31 December of the year its season ends, as
 Help tells families) or at 3am that night, with its code typed. Once that date has passed, it can only be deleted that
-night, with its code typed. It can be reopened until deleting starts. Deleting takes every photo, video, clip, original
+night, with its code typed. It can be reopened until deleting starts. **A season ends by itself**:
+a team's site stays open and everything is kept until the end of 31 December of the year its season ends (31 Dec 2027
+for 2026/27), then the 3am job closes it as End season's "When they're due" would, a line in the Log by the site, and
+it's deleted that night. A team still uploading or streaming at 3am is left for the next night. An admin can end a
+season earlier on Teams. Deleting takes every photo, video, clip, original
 and record of the team, except what the download log names (kept its two years).
 
 ### Smaller pages
@@ -680,7 +685,8 @@ and record of the team, except what the download log names (kept its two years).
 - **Videos and clips** (their Stream copies) are deleted automatically at the end of **31 December of the year their
  team's season ends**, local time: 31 Dec 2027 for a 2026/27 team, 31 Dec 2028 for 2027/28. A team is one
  season's squad, so every one of its videos goes then, a practice game's from the September before too, and Help shows that date.
- Once a team's videos are gone, its games aren't offered for upload. A video can be moved to any of its team's games.
+ The team's site stays open until then and closes by itself that night, when it's deleted (an admin can end a season
+ earlier). Once a team's videos are gone, its games aren't offered for upload. A video can be moved to any of its team's games.
 - **Photos** go the same way, with their team's season, whenever they were taken (once a team's photos are gone, no
  more are added).
 - **A deleted video, clip, game or photo's row** (its media already gone) is kept 90 days, then goes for good, unless
