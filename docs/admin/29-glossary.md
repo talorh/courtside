@@ -23,7 +23,7 @@ Cloudflare's words and the site's own, in plain English.
 | RTMPS | The standard way a camera app sends its stream to a website: the app is given a server address and a stream key. Use an external app instead, the green button below Start camera, shows a game's, for an AI tracking camera's app. |
 | Signed link | A link that works for a short time and only for whoever asked. Videos, clips and photos are only ever shown through them, so nothing is reachable without signing in. |
 | Images | Cloudflare's picture service: it stores each photo privately and serves two sizes (a thumbnail and a large copy) through signed links. The bundle includes 100,000 photos. |
-| Workers AI | Cloudflare's AI models. The site uses one (Gemma 4) for Ask Virtual Team Manager, which answers from the asker's own Help page, the Documentation AI assistant and reading PlayHQ fixture pages. Questions aren't stored. |
+| Workers AI | Cloudflare's AI models. The site uses one (Gemma 4) for Ask Virtual Team Manager, which answers from the asker's own Help page, the Documentation AI assistant and reading fixture pages (a PlayHQ link is read from PlayHQ directly). Questions aren't stored. |
 | Turnstile | Cloudflare's "are you a person" check on the sign-in page, usually invisible. A code is only emailed once it passes. |
 | Zone | A domain on Cloudflare and its settings: saints.example, its DNS, certificate, and the protections below. |
 | WAF | The web application firewall: rules at the edge that turn away attacks before a request reaches the Worker. Cloudflare's managed rules plus three of our own. |

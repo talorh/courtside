@@ -10,7 +10,7 @@ It has one helper, the video joiner: a second small Worker, `courtside-join`, th
 
 ![How the site fits together](diagrams/02-1.svg)
 
-*Solid lines go through the Worker. Dashed lines are the phone going straight to storage on short-lived signed links, so big files never pass through the Worker. The bottom row runs, watches and ships the site.*
+*Solid lines go through the Worker. Dashed lines skip it: the phone going straight to storage on short-lived signed links, so big files never pass through the Worker, and an AI camera streaming to Stream.*
 
 - **One database for every team.** Every team's rows carry its team, and every query names it.
 - **Big files skip the Worker.** Phones send videos straight to R2 and photos are signed links from Images, so the Worker only ever handles small requests. The joiner is handed signed links too, never the files.

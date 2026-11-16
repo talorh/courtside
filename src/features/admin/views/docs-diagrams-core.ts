@@ -5,39 +5,52 @@ import { type Box, draw, figure } from "./docs-draw.ts";
 
 export function systemDiagram(): SafeHtml {
 	const d = draw("system");
-	// The services the Worker uses (the phone reaches R2, Stream and Images directly too), then what runs and ships it.
-	const services: Array<Omit<Box, "x" | "y" | "w">> = [
-		{ title: "D1: courtside", sub: "every team's data", kind: "store" }, { title: "R2", sub: "originals, backups", kind: "store" },
+	const row = (boxes: Array<Omit<Box, "y">>, y: number) => boxes.map((b) => d.box({ ...b, y }));
+	// Data, media, AI and email: the Worker uses all but Email Routing, and the phone reaches R2, Stream and Images itself.
+	const stores: Array<Omit<Box, "x" | "y" | "w">> = [
+		{ title: "D1", sub: "data, Time Travel", kind: "store" }, { title: "R2", sub: "uploads, backups", kind: "store" },
 		{ title: "Stream", sub: "video, clips, live", kind: "service" }, { title: "Images", sub: "photos", kind: "store" },
 		{ title: "Workers AI", sub: "Ask, docs, fixtures", kind: "service" }, { title: "Email Sending", sub: "codes, alerts", kind: "service" },
+		{ title: "Email Routing", sub: "security@ mail", kind: "service" },
 	];
+	const sx = (i: number) => 28 + i * 130, scx = (i: number) => sx(i) + 60;
 	const ops: Array<Omit<Box, "x" | "y" | "w">> = [
-		{ title: "Workers Logs", sub: "errors, job runs", kind: "job" }, { title: "GraphQL Analytics", sub: "traffic, for Insights", kind: "job" },
-		{ title: "Billing API", sub: "the bill, for Costs", kind: "job" }, { title: "Workers Builds", sub: "deploys from Artifacts", kind: "job" },
-		{ title: "Previews", sub: "the staging site", kind: "job" }, { title: "DNS, DMARC", sub: "the domain, its email", kind: "job" },
+		{ title: "Artifacts", sub: "the code", kind: "job" }, { title: "Workers Builds", sub: "checks, deploys", kind: "job" },
+		{ title: "Previews", sub: "the staging site", kind: "job" }, { title: "Workers Logs", sub: "errors, job runs", kind: "job" },
+		{ title: "GraphQL Analytics", sub: "traffic, for Insights", kind: "job" }, { title: "Billing API", sub: "the bill, for Costs", kind: "job" },
 	];
-	const x = (i: number) => 10 + i * 144, cx = (i: number) => x(i) + 65;
+	const ox = (i: number) => 28 + i * 152;
 	return figure("system", {
-		w: 880, h: 590, min: 680, title: "How the site fits together",
-		desc: "Phones and computers reach the Worker through Cloudflare's edge protection (DDoS, WAF, bot blocking, rate limits), with Turnstile checking the sign-in. Cron Triggers run the Worker's jobs. The Worker uses D1, R2, Stream, Images, Workers AI and Email Sending, and hands a stopped-and-restarted live stream's parts to the joiner, a Durable Object in the courtside-join Worker, which runs a Container with ffmpeg to make one video. Uploads, playback and photos go from the phone straight to R2, Stream and Images on signed links. Workers Logs, GraphQL Analytics and the Billing API feed the admin area; Workers Builds deploys from Artifacts, Previews runs staging, and DNS with DMARC looks after the domain.",
-		caption: "Solid lines go through the Worker. Dashed lines are the phone going straight to storage on short-lived signed links, so big files never pass through the Worker. The bottom row runs, watches and ships the site.",
-	}, html`${d.zone(4, 96, 872, 488, "Cloudflare account: Courtside")}
-${d.box({ x: 340, y: 16, w: 200, title: "Phones and computers", sub: "families, coaches, admins", kind: "person" })}
-${d.box({ x: 30, y: 126, w: 190, title: "Turnstile", sub: "the sign-in's human check", kind: "edge" })}
-${d.box({ x: 290, y: 126, w: 300, title: "Edge protection", sub: "DDoS, WAF, bot blocking, rate limits", kind: "edge" })}
-${d.box({ x: 650, y: 126, w: 210, title: "Container", sub: "ffmpeg joins the parts", kind: "worker" })}
-${d.box({ x: 30, y: 222, w: 190, title: "Cron Triggers", sub: "every 5 minutes, and 3am", kind: "job" })}
-${d.box({ x: 320, y: 222, w: 240, title: "Worker: courtside", sub: "pages, API, sign-in", kind: "worker" })}
-${d.box({ x: 650, y: 222, w: 210, title: "Durable Object: Joiner", sub: "in the courtside-join Worker", kind: "worker" })}
-${d.arrow([[340, 44], [212, 44], [212, 124]], { dashed: true })}
-${d.arrow([[440, 72], [440, 124]])}${d.arrow([[440, 182], [440, 220]])}${d.arrow([[220, 250], [318, 250]])}
-${d.arrow([[560, 250], [648, 250]], { label: "a game's parts", at: [566, 240] })}${d.arrow([[755, 222], [755, 184]])}
-${services.map((s, i) => html`${d.box({ ...s, x: x(i), y: 366, w: 130 })}${d.arrow([[440, 278], [cx(i), 364]])}`)}
-${d.arrow([[540, 44], [870, 44], [870, 340], [cx(1), 340], [cx(1), 364]], { dashed: true })}
-${d.arrow([[cx(2), 340], [cx(2), 364]], { dashed: true })}${d.arrow([[cx(3), 340], [cx(3), 364]], { dashed: true })}
-${d.label(600, 36, "direct, on signed links")}
-${d.label(14, 470, "Running, watching and shipping it")}
-${ops.map((s, i) => d.box({ ...s, x: x(i), y: 482, w: 130 }))}`);
+		w: 960, h: 624, min: 680, title: "How the site fits together",
+		desc: "Everything is in the club's Cloudflare account. Phones and computers come in through the club's domain (DNS with DNSSEC, registered with Cloudflare Registrar), its edge protection (DDoS, the WAF, bot management, rate limiting, TLS) and its rules (cache, redirects, security headers), with Turnstile checking the sign-in. The Worker serves every page and runs the jobs Cron Triggers start; the Maintenance Worker takes over only while the site is down for work. The Worker uses D1, R2, Stream, Images, Workers AI and Email Sending, and hands a stopped-and-restarted live stream's parts to the joiner, a Durable Object in the courtside-join Worker, which runs a Container with ffmpeg to make one video. Phones send uploads and photos, and play video, straight to R2, Stream and Images on signed links; an AI tracking camera's app streams to Stream over RTMPS. Email Routing forwards security@ mail. Artifacts holds the code and Workers Builds deploys it, Previews runs staging, and the admin area reads Workers Logs, GraphQL Analytics and the Billing API.",
+		caption: "Solid lines go through the Worker. Dashed lines skip it: the phone going straight to storage on short-lived signed links, so big files never pass through the Worker, and an AI camera streaming to Stream.",
+	}, html`${d.box({ x: 362, y: 14, w: 200, title: "Phones and computers", sub: "families, coaches, admins", kind: "person" })}
+${d.box({ x: 640, y: 14, w: 220, title: "AI tracking camera", sub: "its own app, over RTMPS", kind: "person" })}
+${d.zone(4, 96, 952, 522, "Cloudflare account: Courtside")}
+${d.zone(16, 126, 928, 104, "The club's domain")}
+${row([{ x: 28, w: 236, title: "Turnstile", sub: "the sign-in's human check", kind: "edge" },
+		{ x: 300, w: 324, title: "Edge protection", sub: "DDoS, WAF, bot management, rate limits, TLS", kind: "edge" },
+		{ x: 636, w: 160, title: "Rules", sub: "cache, redirects, headers", kind: "edge" },
+		{ x: 808, w: 124, title: "DNS", sub: "DNSSEC, Registrar", kind: "edge" }], 160)}
+${d.zone(16, 246, 928, 104, "Workers")}
+${row([{ x: 28, w: 150, title: "Maintenance", sub: "the Back soon page", kind: "worker" },
+		{ x: 190, w: 150, title: "Cron Triggers", sub: "5 minutes, and 3am", kind: "job" },
+		{ x: 352, w: 220, title: "Worker: courtside", sub: "pages, API, sign-in, jobs", kind: "worker" },
+		{ x: 640, w: 170, title: "Durable Object", sub: "the joiner, courtside-join", kind: "worker" },
+		{ x: 822, w: 110, title: "Container", sub: "ffmpeg", kind: "worker" }], 280)}
+${d.zone(16, 366, 928, 116, "Data, media, AI and email")}
+${stores.map((s, i) => d.box({ ...s, x: sx(i), y: 414, w: 120 }))}
+${d.zone(16, 498, 928, 108, "Code, deploys, and what the admin area reads")}
+${row(ops.map((o, i) => ({ ...o, x: ox(i), w: 140 })), 532)}
+${d.arrow([[462, 70], [462, 158]])}${d.arrow([[462, 216], [462, 278]])}${d.arrow([[340, 308], [350, 308]])}
+${d.arrow([[362, 42], [238, 42], [238, 158]], { dashed: true })}
+${d.arrow([[572, 308], [638, 308]], { label: "parts", at: [588, 298] })}${d.arrow([[810, 308], [820, 308]])}
+${stores.slice(0, 6).map((_, i) => d.arrow([[462, 336], [scx(i), 412]]))}
+${d.arrow([[562, 42], [600, 42], [600, 86], [946, 86], [946, 396], [scx(1), 396], [scx(1), 412]], { dashed: true })}
+${d.arrow([[860, 42], [946, 42], [946, 84]], { dashed: true })}
+${d.arrow([[scx(2), 396], [scx(2), 412]], { dashed: true })}${d.arrow([[scx(3), 396], [scx(3), 412]], { dashed: true })}
+${d.label(612, 82, "straight to storage and Stream")}
+${d.arrow([[168, 560], [178, 560]])}`);
 }
 
 export function placementDiagram(): SafeHtml {

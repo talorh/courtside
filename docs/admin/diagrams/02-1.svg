@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 590" width="880" height="590" role="img" aria-labelledby="dg-system-t dg-system-d" class="dg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 624" width="960" height="624" role="img" aria-labelledby="dg-system-t dg-system-d" class="dg">
 <style>.dg text{font-family:system-ui, -apple-system, 'Segoe UI', sans-serif}
 .dg-box rect{fill:#FFFFFF;stroke:#E1E5E2;stroke-width:1.5}
 .dg-t{fill:#121513;font-size:14px;font-weight:700;text-anchor:middle}
@@ -22,42 +22,50 @@
 .dg-label.mid{text-anchor:middle}
 .dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
 .dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
-<rect width="880" height="590" fill="#FFFFFF"/>
-<title id="dg-system-t">How the site fits together</title><desc id="dg-system-d">Phones and computers reach the Worker through Cloudflare&#39;s edge protection (DDoS, WAF, bot blocking, rate limits), with Turnstile checking the sign-in. Cron Triggers run the Worker&#39;s jobs. The Worker uses D1, R2, Stream, Images, Workers AI and Email Sending, and hands a stopped-and-restarted live stream&#39;s parts to the joiner, a Durable Object in the courtside-join Worker, which runs a Container with ffmpeg to make one video. Uploads, playback and photos go from the phone straight to R2, Stream and Images on signed links. Workers Logs, GraphQL Analytics and the Billing API feed the admin area; Workers Builds deploys from Artifacts, Previews runs staging, and DNS with DMARC looks after the domain.</desc>
+<rect width="960" height="624" fill="#FFFFFF"/>
+<title id="dg-system-t">How the site fits together</title><desc id="dg-system-d">Everything is in the club&#39;s Cloudflare account. Phones and computers come in through the club&#39;s domain (DNS with DNSSEC, registered with Cloudflare Registrar), its edge protection (DDoS, the WAF, bot management, rate limiting, TLS) and its rules (cache, redirects, security headers), with Turnstile checking the sign-in. The Worker serves every page and runs the jobs Cron Triggers start; the Maintenance Worker takes over only while the site is down for work. The Worker uses D1, R2, Stream, Images, Workers AI and Email Sending, and hands a stopped-and-restarted live stream&#39;s parts to the joiner, a Durable Object in the courtside-join Worker, which runs a Container with ffmpeg to make one video. Phones send uploads and photos, and play video, straight to R2, Stream and Images on signed links; an AI tracking camera&#39;s app streams to Stream over RTMPS. Email Routing forwards security@ mail. Artifacts holds the code and Workers Builds deploys it, Previews runs staging, and the admin area reads Workers Logs, GraphQL Analytics and the Billing API.</desc>
 <defs><marker id="ah-system" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
-<g class="dg-zone"><rect x="4" y="96" width="872" height="488" rx="14"/><text x="18" y="116">Cloudflare account: Courtside</text></g>
-<g class="dg-box k-person"><rect x="340" y="16" width="200" height="56" rx="10"/>
-<text class="dg-t" x="440" y="41">Phones and computers</text><text class="dg-s" x="440" y="58">families, coaches, admins</text></g>
-<g class="dg-box k-edge"><rect x="30" y="126" width="190" height="56" rx="10"/>
-<text class="dg-t" x="125" y="151">Turnstile</text><text class="dg-s" x="125" y="168">the sign-in&#39;s human check</text></g>
-<g class="dg-box k-edge"><rect x="290" y="126" width="300" height="56" rx="10"/>
-<text class="dg-t" x="440" y="151">Edge protection</text><text class="dg-s" x="440" y="168">DDoS, WAF, bot blocking, rate limits</text></g>
-<g class="dg-box k-worker"><rect x="650" y="126" width="210" height="56" rx="10"/>
-<text class="dg-t" x="755" y="151">Container</text><text class="dg-s" x="755" y="168">ffmpeg joins the parts</text></g>
-<g class="dg-box k-job"><rect x="30" y="222" width="190" height="56" rx="10"/>
-<text class="dg-t" x="125" y="247">Cron Triggers</text><text class="dg-s" x="125" y="264">every 5 minutes, and 3am</text></g>
-<g class="dg-box k-worker"><rect x="320" y="222" width="240" height="56" rx="10"/>
-<text class="dg-t" x="440" y="247">Worker: courtside</text><text class="dg-s" x="440" y="264">pages, API, sign-in</text></g>
-<g class="dg-box k-worker"><rect x="650" y="222" width="210" height="56" rx="10"/>
-<text class="dg-t" x="755" y="247">Durable Object: Joiner</text><text class="dg-s" x="755" y="264">in the courtside-join Worker</text></g>
-<path class="dg-arrow dash" d="M340 44 L212 44 L212 124" marker-end="url(#ah-system)"/>
-<path class="dg-arrow" d="M440 72 L440 124" marker-end="url(#ah-system)"/><path class="dg-arrow" d="M440 182 L440 220" marker-end="url(#ah-system)"/><path class="dg-arrow" d="M220 250 L318 250" marker-end="url(#ah-system)"/>
-<path class="dg-arrow" d="M560 250 L648 250" marker-end="url(#ah-system)"/><text class="dg-label" x="566" y="240">a game&#39;s parts</text><path class="dg-arrow" d="M755 222 L755 184" marker-end="url(#ah-system)"/>
-<g class="dg-box k-store"><rect x="10" y="366" width="130" height="56" rx="10"/>
-<text class="dg-t" x="75" y="391">D1: courtside</text><text class="dg-s" x="75" y="408">every team&#39;s data</text></g><path class="dg-arrow" d="M440 278 L75 364" marker-end="url(#ah-system)"/><g class="dg-box k-store"><rect x="154" y="366" width="130" height="56" rx="10"/>
-<text class="dg-t" x="219" y="391">R2</text><text class="dg-s" x="219" y="408">originals, backups</text></g><path class="dg-arrow" d="M440 278 L219 364" marker-end="url(#ah-system)"/><g class="dg-box k-service"><rect x="298" y="366" width="130" height="56" rx="10"/>
-<text class="dg-t" x="363" y="391">Stream</text><text class="dg-s" x="363" y="408">video, clips, live</text></g><path class="dg-arrow" d="M440 278 L363 364" marker-end="url(#ah-system)"/><g class="dg-box k-store"><rect x="442" y="366" width="130" height="56" rx="10"/>
-<text class="dg-t" x="507" y="391">Images</text><text class="dg-s" x="507" y="408">photos</text></g><path class="dg-arrow" d="M440 278 L507 364" marker-end="url(#ah-system)"/><g class="dg-box k-service"><rect x="586" y="366" width="130" height="56" rx="10"/>
-<text class="dg-t" x="651" y="391">Workers AI</text><text class="dg-s" x="651" y="408">Ask, docs, fixtures</text></g><path class="dg-arrow" d="M440 278 L651 364" marker-end="url(#ah-system)"/><g class="dg-box k-service"><rect x="730" y="366" width="130" height="56" rx="10"/>
-<text class="dg-t" x="795" y="391">Email Sending</text><text class="dg-s" x="795" y="408">codes, alerts</text></g><path class="dg-arrow" d="M440 278 L795 364" marker-end="url(#ah-system)"/>
-<path class="dg-arrow dash" d="M540 44 L870 44 L870 340 L219 340 L219 364" marker-end="url(#ah-system)"/>
-<path class="dg-arrow dash" d="M363 340 L363 364" marker-end="url(#ah-system)"/><path class="dg-arrow dash" d="M507 340 L507 364" marker-end="url(#ah-system)"/>
-<text class="dg-label" x="600" y="36">direct, on signed links</text>
-<text class="dg-label" x="14" y="470">Running, watching and shipping it</text>
-<g class="dg-box k-job"><rect x="10" y="482" width="130" height="56" rx="10"/>
-<text class="dg-t" x="75" y="507">Workers Logs</text><text class="dg-s" x="75" y="524">errors, job runs</text></g><g class="dg-box k-job"><rect x="154" y="482" width="130" height="56" rx="10"/>
-<text class="dg-t" x="219" y="507">GraphQL Analytics</text><text class="dg-s" x="219" y="524">traffic, for Insights</text></g><g class="dg-box k-job"><rect x="298" y="482" width="130" height="56" rx="10"/>
-<text class="dg-t" x="363" y="507">Billing API</text><text class="dg-s" x="363" y="524">the bill, for Costs</text></g><g class="dg-box k-job"><rect x="442" y="482" width="130" height="56" rx="10"/>
-<text class="dg-t" x="507" y="507">Workers Builds</text><text class="dg-s" x="507" y="524">deploys from Artifacts</text></g><g class="dg-box k-job"><rect x="586" y="482" width="130" height="56" rx="10"/>
-<text class="dg-t" x="651" y="507">Previews</text><text class="dg-s" x="651" y="524">the staging site</text></g><g class="dg-box k-job"><rect x="730" y="482" width="130" height="56" rx="10"/>
-<text class="dg-t" x="795" y="507">DNS, DMARC</text><text class="dg-s" x="795" y="524">the domain, its email</text></g></svg>
+<g class="dg-box k-person"><rect x="362" y="14" width="200" height="56" rx="10"/>
+<text class="dg-t" x="462" y="39">Phones and computers</text><text class="dg-s" x="462" y="56">families, coaches, admins</text></g>
+<g class="dg-box k-person"><rect x="640" y="14" width="220" height="56" rx="10"/>
+<text class="dg-t" x="750" y="39">AI tracking camera</text><text class="dg-s" x="750" y="56">its own app, over RTMPS</text></g>
+<g class="dg-zone"><rect x="4" y="96" width="952" height="522" rx="14"/><text x="18" y="116">Cloudflare account: Courtside</text></g>
+<g class="dg-zone"><rect x="16" y="126" width="928" height="104" rx="14"/><text x="30" y="146">The club&#39;s domain</text></g>
+<g class="dg-box k-edge"><rect x="28" y="160" width="236" height="56" rx="10"/>
+<text class="dg-t" x="146" y="185">Turnstile</text><text class="dg-s" x="146" y="202">the sign-in&#39;s human check</text></g><g class="dg-box k-edge"><rect x="300" y="160" width="324" height="56" rx="10"/>
+<text class="dg-t" x="462" y="185">Edge protection</text><text class="dg-s" x="462" y="202">DDoS, WAF, bot management, rate limits, TLS</text></g><g class="dg-box k-edge"><rect x="636" y="160" width="160" height="56" rx="10"/>
+<text class="dg-t" x="716" y="185">Rules</text><text class="dg-s" x="716" y="202">cache, redirects, headers</text></g><g class="dg-box k-edge"><rect x="808" y="160" width="124" height="56" rx="10"/>
+<text class="dg-t" x="870" y="185">DNS</text><text class="dg-s" x="870" y="202">DNSSEC, Registrar</text></g>
+<g class="dg-zone"><rect x="16" y="246" width="928" height="104" rx="14"/><text x="30" y="266">Workers</text></g>
+<g class="dg-box k-worker"><rect x="28" y="280" width="150" height="56" rx="10"/>
+<text class="dg-t" x="103" y="305">Maintenance</text><text class="dg-s" x="103" y="322">the Back soon page</text></g><g class="dg-box k-job"><rect x="190" y="280" width="150" height="56" rx="10"/>
+<text class="dg-t" x="265" y="305">Cron Triggers</text><text class="dg-s" x="265" y="322">5 minutes, and 3am</text></g><g class="dg-box k-worker"><rect x="352" y="280" width="220" height="56" rx="10"/>
+<text class="dg-t" x="462" y="305">Worker: courtside</text><text class="dg-s" x="462" y="322">pages, API, sign-in, jobs</text></g><g class="dg-box k-worker"><rect x="640" y="280" width="170" height="56" rx="10"/>
+<text class="dg-t" x="725" y="305">Durable Object</text><text class="dg-s" x="725" y="322">the joiner, courtside-join</text></g><g class="dg-box k-worker"><rect x="822" y="280" width="110" height="56" rx="10"/>
+<text class="dg-t" x="877" y="305">Container</text><text class="dg-s" x="877" y="322">ffmpeg</text></g>
+<g class="dg-zone"><rect x="16" y="366" width="928" height="116" rx="14"/><text x="30" y="386">Data, media, AI and email</text></g>
+<g class="dg-box k-store"><rect x="28" y="414" width="120" height="56" rx="10"/>
+<text class="dg-t" x="88" y="439">D1</text><text class="dg-s" x="88" y="456">data, Time Travel</text></g><g class="dg-box k-store"><rect x="158" y="414" width="120" height="56" rx="10"/>
+<text class="dg-t" x="218" y="439">R2</text><text class="dg-s" x="218" y="456">uploads, backups</text></g><g class="dg-box k-service"><rect x="288" y="414" width="120" height="56" rx="10"/>
+<text class="dg-t" x="348" y="439">Stream</text><text class="dg-s" x="348" y="456">video, clips, live</text></g><g class="dg-box k-store"><rect x="418" y="414" width="120" height="56" rx="10"/>
+<text class="dg-t" x="478" y="439">Images</text><text class="dg-s" x="478" y="456">photos</text></g><g class="dg-box k-service"><rect x="548" y="414" width="120" height="56" rx="10"/>
+<text class="dg-t" x="608" y="439">Workers AI</text><text class="dg-s" x="608" y="456">Ask, docs, fixtures</text></g><g class="dg-box k-service"><rect x="678" y="414" width="120" height="56" rx="10"/>
+<text class="dg-t" x="738" y="439">Email Sending</text><text class="dg-s" x="738" y="456">codes, alerts</text></g><g class="dg-box k-service"><rect x="808" y="414" width="120" height="56" rx="10"/>
+<text class="dg-t" x="868" y="439">Email Routing</text><text class="dg-s" x="868" y="456">security@ mail</text></g>
+<g class="dg-zone"><rect x="16" y="498" width="928" height="108" rx="14"/><text x="30" y="518">Code, deploys, and what the admin area reads</text></g>
+<g class="dg-box k-job"><rect x="28" y="532" width="140" height="56" rx="10"/>
+<text class="dg-t" x="98" y="557">Artifacts</text><text class="dg-s" x="98" y="574">the code</text></g><g class="dg-box k-job"><rect x="180" y="532" width="140" height="56" rx="10"/>
+<text class="dg-t" x="250" y="557">Workers Builds</text><text class="dg-s" x="250" y="574">checks, deploys</text></g><g class="dg-box k-job"><rect x="332" y="532" width="140" height="56" rx="10"/>
+<text class="dg-t" x="402" y="557">Previews</text><text class="dg-s" x="402" y="574">the staging site</text></g><g class="dg-box k-job"><rect x="484" y="532" width="140" height="56" rx="10"/>
+<text class="dg-t" x="554" y="557">Workers Logs</text><text class="dg-s" x="554" y="574">errors, job runs</text></g><g class="dg-box k-job"><rect x="636" y="532" width="140" height="56" rx="10"/>
+<text class="dg-t" x="706" y="557">GraphQL Analytics</text><text class="dg-s" x="706" y="574">traffic, for Insights</text></g><g class="dg-box k-job"><rect x="788" y="532" width="140" height="56" rx="10"/>
+<text class="dg-t" x="858" y="557">Billing API</text><text class="dg-s" x="858" y="574">the bill, for Costs</text></g>
+<path class="dg-arrow" d="M462 70 L462 158" marker-end="url(#ah-system)"/><path class="dg-arrow" d="M462 216 L462 278" marker-end="url(#ah-system)"/><path class="dg-arrow" d="M340 308 L350 308" marker-end="url(#ah-system)"/>
+<path class="dg-arrow dash" d="M362 42 L238 42 L238 158" marker-end="url(#ah-system)"/>
+<path class="dg-arrow" d="M572 308 L638 308" marker-end="url(#ah-system)"/><text class="dg-label" x="588" y="298">parts</text><path class="dg-arrow" d="M810 308 L820 308" marker-end="url(#ah-system)"/>
+<path class="dg-arrow" d="M462 336 L88 412" marker-end="url(#ah-system)"/><path class="dg-arrow" d="M462 336 L218 412" marker-end="url(#ah-system)"/><path class="dg-arrow" d="M462 336 L348 412" marker-end="url(#ah-system)"/><path class="dg-arrow" d="M462 336 L478 412" marker-end="url(#ah-system)"/><path class="dg-arrow" d="M462 336 L608 412" marker-end="url(#ah-system)"/><path class="dg-arrow" d="M462 336 L738 412" marker-end="url(#ah-system)"/>
+<path class="dg-arrow dash" d="M562 42 L600 42 L600 86 L946 86 L946 396 L218 396 L218 412" marker-end="url(#ah-system)"/>
+<path class="dg-arrow dash" d="M860 42 L946 42 L946 84" marker-end="url(#ah-system)"/>
+<path class="dg-arrow dash" d="M348 396 L348 412" marker-end="url(#ah-system)"/><path class="dg-arrow dash" d="M478 396 L478 412" marker-end="url(#ah-system)"/>
+<text class="dg-label" x="612" y="82">straight to storage and Stream</text>
+<path class="dg-arrow" d="M168 560 L178 560" marker-end="url(#ah-system)"/></svg>

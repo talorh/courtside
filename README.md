@@ -188,7 +188,7 @@ team and by player, with a budget for each team.
 Everything runs in your club's own Cloudflare account. Phones talk to one Worker, behind Cloudflare's edge protection,
 and send video straight to storage on short-lived signed links.
 
-![How the site fits together: phones and computers reach the Worker through Cloudflare's edge protection, with Turnstile on the sign-in and Cron Triggers running its jobs. The Worker uses D1, R2, Stream, Images, Workers AI and Email Sending, and hands a game's parts to a Durable Object that runs a Container with ffmpeg. Workers Logs, GraphQL Analytics, the Billing API, Workers Builds, Previews and DNS run and ship it](docs/admin/diagrams/02-1.svg)
+![How the site fits together, in four layers. The club's domain: Turnstile, edge protection, rules and DNS. Workers: the maintenance Worker, Cron Triggers, the courtside Worker, and the joiner's Durable Object and Container. Data, media, AI and email: D1, R2, Stream, Images, Workers AI, Email Sending and Email Routing. Code, deploys and what the admin area reads: Artifacts, Workers Builds, Previews, Workers Logs, GraphQL Analytics and the Billing API. Phones send video straight to R2, Stream and Images, and an AI camera streams to Stream over RTMPS](docs/admin/diagrams/02-1.svg)
 
 <br>
 

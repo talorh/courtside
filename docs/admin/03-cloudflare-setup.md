@@ -12,7 +12,7 @@ Everything runs in the club's own Cloudflare account (its id in `deploy.config.t
 | R2 | `courtside-originals`, in the same region | Uploaded videos (deleted after 30 days, once Stream has its copy) and the nightly backups (kept 14 days, locked so nothing can delete or overwrite one before then) |
 | Stream | The account's Stream | Playback copies, highlight clips, HD downloads and a live input for each streamed game. Signed links only |
 | Images | Variants `thumb` (512 px) and `large` (1600 px) | Photos, private, shown only through signed links that last six hours |
-| Workers AI | The `AI` binding | One model (Gemma 4, platform/workers-ai.ts): Ask Virtual Team Manager, which answers from the person's own Help page, the Documentation AI assistant, and reading PlayHQ fixture pages |
+| Workers AI | The `AI` binding | One model (Gemma 4, platform/workers-ai.ts): Ask Virtual Team Manager, which answers from the person's own Help page, the Documentation AI assistant, and reading fixture pages (a PlayHQ link is read from PlayHQ directly) |
 | Email Sending | From `alerts@saints.example` | Sign-in codes, welcomes, support tickets and the site's alerts |
 | Email Routing | `security@saints.example` | Where security reports go (named on the site's security.txt), forwarded to the owner |
 | Artifacts | Repository `courtside/courtside` | The site's code, hosted by Cloudflare in this account; a push to its main branch is a deploy (Where the code lives) |
