@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Router } from "../../../src/app/router.ts";
-import { checkDatabase, checkEmails, checkImages, checkSiteErrors, checkStreamStorage, recordDailyRun, recordSyncRun } from "../../../src/features/admin/usage-checks.ts";
+import { checkStreamStorage } from "../../../src/features/admin/storage-check.ts";
+import { checkDatabase, checkEmails, checkImages, checkSiteErrors, recordDailyRun, recordSyncRun } from "../../../src/features/admin/usage-checks.ts";
 import { getAlert } from "../../../src/features/admin/alerts-repository.ts";
 import { FetchBudgetSpent } from "../../../src/platform/fetch-budget.ts";
 import { makeClient, MANAGER } from "../../helpers/app.ts";
@@ -56,6 +57,32 @@ describe("Stream storage, from the 5-minute job at most hourly", () => {
 		quiet();
 		await checkStreamStorage(deps);
 		expect(await level(deps, "stream_storage")).toBe("warn");
+	});
+
+	it("is set again from Stream as Insights or Platform opens, so minutes just bought show without waiting the hour", async () => {
+		for (const page of ["/admin", "/admin/platform"]) {
+			const { deps, later } = clocked();
+			deps.live.usage = { usedMinutes: 1000, limitMinutes: 1100 };
+			await checkStreamStorage(deps);
+			expect(await level(deps, "stream_storage")).toBe("urgent");
+			later(5);
+			deps.live.usage = { usedMinutes: 1000, limitMinutes: 2100 };
+			const html = await (await makeClient(deps, MANAGER)(page)).text();
+			expect(await level(deps, "stream_storage"), page).toBe("ok");
+			expect(html, page).toContain("1,100 minutes left for 1 team");
+			expect(html, page).not.toContain("100 minutes left for 1 team. Since");
+		}
+	});
+
+	it("is left as it was by a page when Stream doesn't answer it", async () => {
+		const { deps, later } = clocked();
+		deps.live.usage = { usedMinutes: 1000, limitMinutes: 1100 };
+		await checkStreamStorage(deps);
+		later(5);
+		deps.live.down = true;
+		quiet();
+		expect((await makeClient(deps, MANAGER)("/admin")).status).toBe(200);
+		expect(await level(deps, "stream_storage")).toBe("urgent");
 	});
 
 	it("leaves it to the next run, logging nothing, when this run's outside calls are used up", async () => {

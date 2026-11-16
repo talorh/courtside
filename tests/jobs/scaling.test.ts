@@ -28,8 +28,8 @@ async function site(more: number, o: { now?: Date; live?: number } = {}) {
 
 /** Stream minutes enough for every team, as a site this size would have bought: the storage alert scales with the
  * teams, and one raised would be a ticket's trips in the run. */
-function roomy(deps: TestDeps) {
-	deps.live.usage = { usedMinutes: 65, limitMinutes: 100_000 };
+function roomy(deps: TestDeps, minutes = 100_000) {
+	deps.live.usage = { usedMinutes: 65, limitMinutes: minutes };
 	return deps;
 }
 
@@ -90,6 +90,7 @@ describe("scaling: each job runs in one invocation, inside D1's 1,000 queries, h
 			}
 			return out;
 		};
-		expect(await count(await site(50))).toEqual(await count(await site(1)));
+		// Each site with the minutes its teams need, and no more: buying blocks is a cost, and Costs is behind Insights.
+		expect(await count(roomy(await site(50), 51 * 400))).toEqual(await count(roomy(await site(1), 1100)));
 	}, 120_000);
 });

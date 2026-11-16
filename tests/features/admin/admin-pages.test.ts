@@ -83,7 +83,6 @@ describe("the Platform page", () => {
 		const deps = createTestDeps();
 		const fresh = await platform(deps);
 		for (const [label, state, first] of [
-			["Video storage (Stream)", "Not checked yet", "Not checked yet: the 5-minute job checks it every hour."],
 			["Photos (Images)", "Not checked yet", "Not checked yet: the 3am job checks it every night."], ["Database (D1)", "Not checked yet", "Not checked yet: the 3am job checks it every night."],
 			["Server errors", "Not checked yet", "Not checked yet: the 5-minute job checks it every run."], ["Emails", "Not checked yet", "Not checked yet: the 5-minute job checks it every run."],
 			["Emails this month", "Not checked yet", "Not checked yet: the 5-minute job checks it every run."],
@@ -93,12 +92,14 @@ describe("the Platform page", () => {
 			expect(watchRow(fresh, label), label).toContain(`<span class="t">${state}</span>`);
 			expect(watchRow(fresh, label), label).toContain(`<p class="small">${first}</p>`);
 		}
-		await deps.db.prepare("INSERT INTO support_requests (source, alert_kind, title, topic, message, created_at) VALUES ('site', 'stream_storage', 'Video storage is running low', 'platform', 'x', '2026-10-14T22:10:00.000Z')").run();
-		await deps.db.prepare("INSERT INTO platform_alerts (kind, level, detail, since, checked_at, ticket_id) VALUES ('stream_storage', 'warn', '150 minutes left', '2026-10-14T22:10:00.000Z', '2026-10-14T23:55:00.000Z', 1)").run();
+		// Stream's storage is checked as the page opens: fine with the fake's minutes, then running low, with its ticket.
+		expect(watchRow(fresh, "Video storage (Stream)")).toContain('<span class="t src">Ok</span>');
+		expect(watchRow(fresh, "Video storage (Stream)")).toContain('<p class="small">1,035 minutes left for 1 team.</p>');
+		deps.live.usage = { usedMinutes: 950, limitMinutes: 1100 };
 		await deps.db.prepare("INSERT INTO platform_alerts (kind, level, detail, checked_at) VALUES ('sync_job', 'ok', 'The last run was fine', '2026-10-14T23:55:00.000Z')").run();
 		const page = await platform(deps);
 		expect(watchRow(page, "Video storage (Stream)")).toContain('<span class="t warn">Running low</span>');
-		expect(watchRow(page, "Video storage (Stream)")).toContain('<p class="small">150 minutes left. Since Thu 15 Oct 2026, 9:10am. <a href="/admin/support/1">Ticket #1</a></p>');
+		expect(watchRow(page, "Video storage (Stream)")).toMatch(/<p class="small">150 minutes left for 1 team\. Since [^<]+\. <a href="\/admin\/support\/1">Ticket #1<\/a><\/p>/);
 		expect(watchRow(page, "The 5-minute job")).toContain('<span class="t src">Ok</span>');
 		expect(watchRow(page, "The 5-minute job")).toContain('<p class="small">The last run was fine.</p>');
 	});

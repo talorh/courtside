@@ -804,7 +804,7 @@ to buy or something to fix, and no spam.
 
 | What's watched | Checked | Warns | Urgent | Clears |
 | --- | --- | --- | --- | --- |
-| Stream's minutes left | 5-minute job, at most hourly | under 300 a running team (two to three weeks before urgent) | under 150 a team (one game night won't fit, as the game check) | 50 above the warning |
+| Stream's minutes left | 5-minute job, at most hourly; and from Stream's own figure whenever Insights or Platform opens (so Check again checks it) | under 300 a running team (two to three weeks before urgent) | under 150 a team (one game night won't fit, as the game check) | 50 above the warning |
 | Photos in Images (of 100,000) | 3am job, from the sweep's list | 80,000 | 95,000 | under 78,000 |
 | The database's size (of D1's 10 GB) | 3am job, D1's own answer | 4 GB | 9 GB | under 3.8 GB |
 | Server errors (this hour and last) | every 5-minute run | | 10 or more | under 3 |

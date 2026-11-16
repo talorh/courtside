@@ -45,7 +45,7 @@ Platform's last 30 days, the Worker's errors on Insights' Alerts and the minutes
 
 | Alert | Set by | From |
 | --- | --- | --- |
-| Stream's minutes left | The 5-minute job, at most hourly | Stream's API |
+| Stream's minutes left | The 5-minute job, at most hourly, and whenever Insights or Platform opens | Stream's API |
 | Photos in Images, the database's size | The 3am job | The database; D1 says its size with every answer |
 | Server errors | Every 5-minute run | The site's own count of the errors it answers, an hour at a time (server_errors) |
 | Emails waiting, the month's emails | Every 5-minute run | Emails saved but not sent; every email counted by its UTC month (email_months) |

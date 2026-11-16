@@ -22,6 +22,7 @@ import { countLiveSessions } from "../../auth/session-repository.ts";
 import { signInFigures } from "../../auth/sign-in-codes-repository.ts";
 import { emailsSentIn, monthKey } from "./email-count-repository.ts";
 import { adminLogStatement, lastTestEmail } from "./admin-log-repository.ts";
+import { withStorageAlert } from "./storage-check.ts";
 import { listAlerts } from "./alerts-repository.ts";
 import { countPhotosStored, databaseBytes } from "./platform-repository.ts";
 import { PLATFORM_MESSAGES, platformPage } from "./views/platform-page.ts";
@@ -68,9 +69,10 @@ export function platformRoutes(router: AdminRouter): void {
 	router.get("/admin/platform", async ({ deps, frame, url }) => {
 		const now = deps.now();
 		await checkAiModelsSoon(deps); // first, so its row shows how the models stand now
+		const stream = withStorageAlert(deps, streamStorage(deps)); // the storage alert, from this page's own reading
 		const [backups, sweeps, storage, photos, people, alerts, testEmail, dbBytes, figures, signIns, sessions, emailsThisMonth] = await Promise.all([
-			deps.originals.list(BACKUP_PREFIX), deps.originals.list(SWEEP_RECORD), streamStorage(deps), countPhotosStored(deps.db),
-			countPeopleOnTeams(deps.db), listAlerts(deps.db), lastTestEmail(deps.db), databaseBytes(deps.db), cloudflareFigures(deps, addDays(now, -30), now),
+			deps.originals.list(BACKUP_PREFIX), deps.originals.list(SWEEP_RECORD), stream, countPhotosStored(deps.db),
+			countPeopleOnTeams(deps.db), stream.then(() => listAlerts(deps.db)), lastTestEmail(deps.db), databaseBytes(deps.db), cloudflareFigures(deps, addDays(now, -30), now),
 			signInFigures(deps.db, addDays(now, -1).toISOString()), countLiveSessions(deps.db, now.toISOString()), emailsSentIn(deps.db, monthKey(now)),
 		]);
 		return htmlResponse(platformPage({

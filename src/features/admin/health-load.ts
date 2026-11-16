@@ -14,6 +14,7 @@ import { inLocal, loadCosts } from "./costs-load.ts";
 import { type Check, healthChecks, STUCK_HOURS } from "./health-checks.ts";
 import { type HealthCounts, healthCounts } from "./health-repository.ts";
 import { cloudflareFigures, streamStorage } from "./platform-routes.ts";
+import { withStorageAlert } from "./storage-check.ts";
 
 export interface Health { checks: Check[]; counts: HealthCounts; sessions: number }
 
@@ -24,9 +25,11 @@ export async function loadHealth(deps: AppDeps, now: Date): Promise<Health> {
 		console.error(JSON.stringify({ event: "budget_check_failed", teamId: null, error: String(err) }));
 		await logProblem(deps, { kind: "site_problem", teamId: null, what: "The team budgets couldn't be checked", error: err });
 	});
+	// Stream's storage alert is set from this page's own reading, so Check again checks it.
+	const stream = withStorageAlert(deps, streamStorage(deps));
 	const [alerts, counts, backups, sweeps, storage, figures, signIns, sessions] = await Promise.all([
-		budgets.then(() => listAlerts(deps.db)), healthCounts(deps.db, { stuckBefore: new Date(now.getTime() - STUCK_HOURS * 3_600_000).toISOString(), failedSince: addDays(now, -7).toISOString() }),
-		deps.originals.list(BACKUP_PREFIX), deps.originals.list(SWEEP_RECORD), streamStorage(deps), cloudflareFigures(deps, day, now),
+		Promise.all([budgets, stream]).then(() => listAlerts(deps.db)), healthCounts(deps.db, { stuckBefore: new Date(now.getTime() - STUCK_HOURS * 3_600_000).toISOString(), failedSince: addDays(now, -7).toISOString() }),
+		deps.originals.list(BACKUP_PREFIX), deps.originals.list(SWEEP_RECORD), stream, cloudflareFigures(deps, day, now),
 		signInFigures(deps.db, day.toISOString()), countLiveSessions(deps.db, now.toISOString()),
 	]);
 	const checks = healthChecks({

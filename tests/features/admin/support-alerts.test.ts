@@ -50,9 +50,10 @@ describe("Insights' Alerts section", () => {
 		await healthy(deps);
 		await deps.db.prepare("INSERT INTO support_requests (id, source, alert_kind, title, topic, message, status, created_at) VALUES (7, 'site', 'stream_storage', 'Video storage', 'platform', 'Low', 'open', ?)").bind(NOW).run();
 		await deps.db.prepare("UPDATE platform_alerts SET level = 'urgent', detail = '40 minutes left', since = ?, ticket_id = 7 WHERE kind = 'stream_storage'").bind(NOW).run();
+		deps.live.usage = { usedMinutes: 1060, limitMinutes: 1100 };
 		const page = await health(deps);
 		expect(page).toContain('<section class="healthbanner urgent" role="alert"><span class="dot" aria-hidden="true"></span><div><h2>1 urgent</h2><p>Something needs you now: it&#39;s first below.');
-		expect(page).toMatch(/<ul class="checks"><li class="check urgent">[^]*?Video storage \(Stream\)<\/a><\/h3><p>40 minutes left<\/p><span class="sub"><a href="\/admin\/support\/7">Ticket #7<\/a>, since Sun 15 Nov 2026/);
+		expect(page).toMatch(/<ul class="checks"><li class="check urgent">[^]*?Video storage \(Stream\)<\/a><\/h3><p>40 minutes left for 1 team<\/p><span class="sub"><a href="\/admin\/support\/7">Ticket #7<\/a>, since Sun 15 Nov 2026/);
 	});
 
 	it("warns when the nightly backup and clean-up are missing, a video is stuck, or an upload failed", async () => {

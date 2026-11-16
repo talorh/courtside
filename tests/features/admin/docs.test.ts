@@ -140,7 +140,7 @@ describe("the admin area's Documentation", () => {
 		const html = await page();
 		expect(html).toContain('<h2 id="admin-h"><span class="docs-num">18.</span> The admin area and its figures</h2>');
 		for (const words of ["CROSS_TEAM", "view_weeks", "platform_alerts", "sign_in_events", "CF_INSIGHTS_TOKEN", "courtside-insights-read", "cost_views",
-			"over an hour old", "exchange_rates", "Frankfurter", "$1.42", "costs-prices.ts", "by the days each ran", "three games with a video", "the other teams' figures, averaged game for game", "$200",
+			"over an hour old", "exchange_rates", "Frankfurter", "$1.42", "costs-prices.ts", "by the days each ran", "three games with a video", "the other teams' figures, averaged game for game", "and whenever Insights or Platform opens", "$200",
 			"server_errors", "email_months", "clearing point"]) {
 			expect(html, words).toContain(words);
 		}

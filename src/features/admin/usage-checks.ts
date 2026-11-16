@@ -1,63 +1,31 @@
-// What sets each alert: Stream's minutes from the 5-minute job, at most hourly;
-// Images' photos and the database's size from the 3am job; server errors and emails waiting from every
+// What sets each alert (Stream's minutes: storage-check.ts): Images' photos and the database's size from the 3am job; server errors and emails waiting from every
 // 5-minute run (basic monitoring); and each job's own failures. A level only drops once its figure
 // is past the clearing point, so one sitting on a threshold doesn't flap. A check never fails its job: an alert's ticket
 // is saved, and its email is sent later if it doesn't go now.
-import { alertFailed, logProblem } from "./problem-log.ts";
+import { alertFailed } from "./problem-log.ts";
 import type { AppDeps } from "../../app/deps.ts";
-import { FetchBudgetSpent } from "../../platform/fetch-budget.ts";
 import { formatGameDate, localTime } from "../../shared/time.ts";
 import { type AlertKind, type AlertLevel, getAlert } from "./alerts-repository.ts";
 import { setAlert } from "./alerts-service.ts";
 import { serverErrorsLately } from "./server-errors-repository.ts";
 import { countUnsentBefore } from "./support-desk-repository.ts";
 import { EMAILS_A_MONTH, emailsSentIn, monthKey } from "./email-count-repository.ts";
-import { MINUTES_A_GAME } from "./game-day-checks.ts";
-import { countRunningTeams } from "../teams/teams-repository.ts";
 
 const HOUR_MS = 3_600_000;
 // The 5-minute job failing this many runs in a row (half an hour) is urgent.
 const SYNC_FAILURES = 6;
 
 /** Higher is worse: urgent from `urgent`, warn from `warn`, ok below `clear`; in between, a warning stays one. */
-function banded(value: number, was: AlertLevel, t: { warn: number; urgent: number; clear: number }): AlertLevel {
+export function banded(value: number, was: AlertLevel, t: { warn: number; urgent: number; clear: number }): AlertLevel {
 	if (value >= t.urgent) return "urgent";
 	if (value >= t.warn) return "warn";
 	return value < t.clear || was === "ok" ? "ok" : "warn";
 }
 
-const thousands = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+export const thousands = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-async function alert(deps: AppDeps, kind: AlertKind, level: AlertLevel, detail: string, failures = 0): Promise<void> {
+export async function alert(deps: AppDeps, kind: AlertKind, level: AlertLevel, detail: string, failures = 0): Promise<void> {
 	await setAlert(deps, kind, level, detail, failures).catch((err: unknown) => alertFailed(deps, kind, err));
-}
-
-// A game night's room (the urgent level) and about three weeks of an hour's game: the warning's notice to buy more.
-const WARN_MINUTES_A_TEAM = 300;
-
-/** Scaled by the running teams (one at least), as each films about a game a week: under 300 minutes a team left warns
- * (two to three weeks before urgent; buying more is the admin's), under 150 a team is urgent (one game night won't fit,
- * the game check's own figure), and 50 above the warning clears. Stream not answering leaves it as it was; a run with no
- * outside calls left leaves it to the next. */
-export async function checkStreamStorage(deps: AppDeps): Promise<void> {
-	const prev = await getAlert(deps.db, "stream_storage");
-	if (prev && deps.now().getTime() - Date.parse(prev.checkedAt) < HOUR_MS) return;
-	let left: number;
-	try {
-		const { usedMinutes, limitMinutes } = await deps.live.storage();
-		left = Math.max(0, Math.floor(limitMinutes - usedMinutes));
-	} catch (err) {
-		if (err instanceof FetchBudgetSpent) return;
-		console.error(JSON.stringify({ event: "storage_check_failed", teamId: null, error: String(err) }));
-		await logProblem(deps, { kind: "site_problem", teamId: null, what: "Stream's storage couldn't be checked for its alert", error: err });
-		return;
-	}
-	const teams = Math.max(1, await countRunningTeams(deps.db));
-	const [warn, urgent] = [teams * WARN_MINUTES_A_TEAM, teams * MINUTES_A_GAME];
-	// As minutes used, so higher is worse.
-	const level = banded(-left, prev?.level ?? "ok", { urgent: -(urgent - 1), warn: -(warn - 1), clear: -(warn + 49) });
-	const detail = `${left === 0 ? "No minutes left" : `${thousands(left)} minutes left`} for ${teams} ${teams === 1 ? "team" : "teams"}`;
-	await alert(deps, "stream_storage", level, detail);
 }
 
 /** Images' 100,000 (from the 3am clean-up's own list): 80,000 warns, 95,000 is urgent, under 78,000 clears. */
