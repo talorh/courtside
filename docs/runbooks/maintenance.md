@@ -36,7 +36,9 @@ step runs as a dry run first; each line says what it did, in local time.
 is a git-ignored link to the repo's, made by the script. It has its own Workers Builds trigger on `main` (`docs/runbooks/cloudflare-setup.md`,
 Recorded values), which builds only when `maintenance/`, its tests or the deploy script change, runs `npm ci && npm run check` and
 deploys it as it stands: with its route if maintenance is on at that moment, without one if not. Switching on and off
-stays a command from a computer.
+stays a command from a computer. The page also uses two of the site's own files, `src/app/respond.ts` (its headers) and
+`src/shared/html.ts`, which the trigger doesn't watch: after a change to either, deploy it by hand (`npm run
+maintenance -- deploy`), or it waits for the next change in `maintenance/`.
 `cf` picks its login by folder: `courtside-prod` and `courtside-staging` are both bound to the login that reaches Saints Team
 Site (`cf auth activate <profile> <folder>`; from a folder that isn't, a deploy fails with "Authentication error").
 
@@ -45,7 +47,7 @@ Site (`cf auth activate <profile> <folder>`; from a folder that isn't, a deploy 
 - **Planned:** a deploy with migrations old code can't run on, such as the multi-team switchover
  (the design notes). Pick a weekday daytime with no game; the release still checks
  nothing is uploading or streaming.
-- **An emergency:** the site is broken and a fix will take a while. Switch on with a realistic time, fix, release with
+- **An emergency:** the site is broken and a fix will take a while. Switch on (the page always says we'll be back soon, with no time), fix, release with
  `--maintenance`, check as an admin, switch off. It works even when the site's Worker is broken: it only calls it for
  admins and the sign-in.
 - **From a phone, with no computer:** the dashboard, Workers & Pages, `courtside-maintenance`, Settings, Domains & Routes:

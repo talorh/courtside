@@ -37,10 +37,12 @@ export const clipTombstoneWrites = (db: D1Database, teamId: string, id: number) 
 	db.prepare("DELETE FROM clips WHERE team_id = ? AND id = ? AND deleted_at IS NOT NULL").bind(teamId, id),
 ];
 
-/** Games deleted before `beforeIso` with no video rows left (a kept video keeps its game). */
+/** Games deleted before `beforeIso` with no video rows left (a kept video keeps its game). A PlayHQ game stays while
+ * its fixture is on the site: its row is what keeps the next check from adding it again. */
 const GAMES = `SELECT g.id FROM games g
 	WHERE g.team_id = ?1 AND g.deleted_at IS NOT NULL AND g.deleted_at < ?2
 	AND NOT EXISTS (SELECT 1 FROM videos v WHERE v.team_id = g.team_id AND v.game_id = g.id)
+	AND NOT (g.playhq_game_id IS NOT NULL AND EXISTS (SELECT 1 FROM playhq_fixtures f WHERE f.team_id = g.team_id AND f.id = g.playhq_fixture_id))
 	ORDER BY g.id`;
 
 /** The game, its score, its coaches' notes, its favourites, who's had its win pop-up and its closed streams (a deleted game has no open one). */

@@ -14,7 +14,7 @@ ${dataDiagram()}
 ${table(["What", "How long it's kept"], [
 		["Videos, clips and photos", "Until the end of 31 December of the year the team's season ends"],
 		["A deleted video", "Gone from the site at once; its copies are kept one more day, in case it was a mistake"],
-		["A deleted video, clip, game or photo's row", "90 days, unless the download log or a removal request names it"],
+		["A deleted video, clip, game or photo's row", "90 days, unless the download log or a removal request names it. A deleted game from PlayHQ stays while its PlayHQ fixture is on the site, so the next check doesn't add it again"],
 		["Uploaded originals in R2", "30 days (unfinished uploads 7 days)"],
 		["Download log", "Two years"],
 		["Notifications' activity", "90 days"],
@@ -54,7 +54,7 @@ ${table(["Watched", "Warns", "Urgent"], [
 		["A team's costs (Costs)", "Its season estimated over its budget", "Over its budget so far"],
 		["An AI model (Workers AI)", "A planned retirement date", "Two weeks before it, or gone from the catalog"],
 		["The video joiner", "Not answering its nightly test, or the test join failed", "A game's parts couldn't be joined after six tries (Keep the first part, or deleting the video, clears it once no team's game is still waiting)"],
-		["The game check (each live game 8 hours before tip-off, and Platform's button)", "A game's Go live input gone from Stream, the joiner not answering, another alert at a warning (not budgets or AI models)", "Stream not answering or short of minutes for the coming games, the 5-minute job stopped, another alert at urgent"],
+		["The game check (each live game 8 hours before tip-off, and Platform's button)", "A game's Go live input gone from Stream, the joiner not answering, another alert at a warning (not budgets, AI models or the 3am job's own alert)", "Stream not answering or short of minutes for the coming games, the 5-minute job stopped, another alert at urgent"],
 	])}
 <p>A team manager's question is a ticket too: answered on the site, emailed both ways, with private notes only admins
 see. Tickets are New, Open, Waiting (on the team manager) or Resolved. A ticket's emails are saved before they're

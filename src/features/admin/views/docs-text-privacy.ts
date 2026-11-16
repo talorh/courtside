@@ -14,10 +14,10 @@ ${table(["Rule", "How the site keeps it"], [
 		["Only the team's own people get in", "Codes go only to addresses on a team's list or an admin's; the lists are checked on every request, so removal is instant."],
 		["Game footage only", "One video a game; photos of the team's games and events; no training, no other teams, no chat, comments or stats."],
 		["Families can say no", "Any family can ask for a video, clip or photo to be removed, or that their child isn't filmed or shown; requests go to the team manager and are logged."],
-		["Nothing is kept for keeps", "Everything a team puts up is deleted at the end of 31 December of the year its season ends; the download log is the one record kept longer, two years."],
+		["Nothing is kept for keeps", "Everything a team puts up is deleted at the end of 31 December of the year its season ends; the download log is kept longer, two years, and the Log's record of who changed what for good."],
 		["No real names outside a team", "Help, the documentation and tests use made-up names after NBA players; counts on Insights, never anyone's email."],
 		["Nothing about where a photo was taken", "Photos are made smaller on the phone, which drops the location; the Worker strips any metadata left."],
-		["Admins see counts, not people", "Insights and Costs show figures; the Log shows who changed what, sign-in attempts, which device each line came from (\"iPhone, Safari\", nothing finer) and what failed for whom, for a month, because that's what safety and support need. Coaches' notes are the coaches' own: View as coach leaves them out, and the notes' pages refuse."],
+		["Admins see counts, not people", "Insights and Costs show figures; the Log shows who changed what, sign-in attempts, which device each line came from (\"iPhone, Safari\", nothing finer) and what failed for whom, because that's what safety and support need. Sign-in attempts and problems are kept a month, the teams' activity (uploads, removal requests) 90 days, and the lines of who changed what (admins' and team managers' changes, Go live, photos) for good. Coaches' notes are the coaches' own: View as coach leaves them out, and the notes' pages refuse."],
 	])}
 <h3>What the site can't do</h3>
 <p>A downloaded video or photo can be shared on, and other parents can film or photograph on their own phones. Both are

@@ -55,6 +55,12 @@ describe("asking the Documentation AI assistant", () => {
 		expect(asked!.system).toContain("9. The fixture and PlayHQ");
 		expect(asked!.system).toContain("api.playhq.com/graphql");
 	});
+	it("keeps a range of numbers a range when it takes the AI's dashes out", async () => {
+		const deps = createTestDeps();
+		deps.ai.reply = "A recording saves itself 20–25 minutes later — sometimes 30 – 35.";
+		const { data } = await (await makeClient(deps)("/admin/docs/ask", ask("How does PlayHQ keep the fixture up to date?"))).json() as { data: { answer: string } };
+		expect(data.answer).toBe("A recording saves itself 20 to 25 minutes later, sometimes 30 to 35.");
+	});
 	it("says when the documentation doesn't cover it, without asking the AI", async () => {
 		const deps = createTestDeps();
 		const { data } = await (await makeClient(deps)("/admin/docs/ask", ask("zzzz qqqq"))).json() as { data: { answer: string; sources: unknown[] } };
@@ -70,9 +76,14 @@ describe("asking the Documentation AI assistant", () => {
 	it(`takes ${DOCS_DAILY_QUESTIONS} questions an admin a day, refuses an empty one, and says so kindly when the AI is down`, async () => {
 		const deps = createTestDeps();
 		const client = makeClient(deps);
-		expect((await client("/admin/docs/ask", ask(""))).status).toBe(400);
+		const empty = await client("/admin/docs/ask", ask(""));
+		expect(empty.status).toBe(400);
+		expect(await empty.json()).toMatchObject({ ok: false, error: { code: "bad_request" } });
 		for (let i = 0; i < DOCS_DAILY_QUESTIONS; i++) expect((await client("/admin/docs/ask", ask("How often is PlayHQ checked?"))).status).toBe(200);
-		expect((await client("/admin/docs/ask", ask("How often is PlayHQ checked?"))).status).toBe(429);
+		const limited = await client("/admin/docs/ask", ask("How often is PlayHQ checked?"));
+		expect(limited.status).toBe(429);
+		// JSON, as a page script's call gets everywhere, so the assistant shows why.
+		expect(await limited.json()).toEqual({ ok: false, error: { code: "too_many_questions", message: "That's a lot of questions for one day. Try the search, or ask again tomorrow." } });
 		const fresh = createTestDeps();
 		fresh.ai.down = true;
 		const { data } = await (await makeClient(fresh)("/admin/docs/ask", ask("How often is PlayHQ checked?"))).json() as { data: { answer: string } };

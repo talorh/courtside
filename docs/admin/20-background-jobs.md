@@ -24,7 +24,7 @@ Two scheduled jobs keep things moving, one every five minutes and one at 3am loc
 | Clips | Processing clips become ready, and get their MP4 started, or failed. | A batch |
 | Retention | Deletes videos past their date (the Stream copy, the R2 original, then the row softly), cancels uploads abandoned for 7 days, and takes the media of videos a person deleted once their day of grace is up. Drops download log rows older than 2 years, activity older than 90 days and who-watched-what older than 30 days. | 15 of each |
 | Photos' retention | Photos past their season's date go, Images first. | 50 photos |
-| Tombstones | Rows deleted over 90 days ago, their media long gone, go for good with their children, unless something kept names them: the download log or a removal request keeps a video, a request or a favourite keeps a clip, a kept video keeps its game. | A few rows |
+| Tombstones | Rows deleted over 90 days ago, their media long gone, go for good with their children, unless something kept names them: the download log or a removal request keeps a video, a request or a favourite keeps a clip, a kept video keeps its game. A deleted game from PlayHQ stays while its PlayHQ fixture is on the site, so the next check doesn't add it again. | A few rows |
 | PlayHQ fixtures | Each fixture still being checked is read again once its last check is 8 hours old; a tournament every hour while it's on. New games are added, changed ones updated, dropped ones marked gone (never deleted). Checks stop six weeks after the last game. | Those due |
 | Final scores | PlayHQ games are asked for their score from half an hour after tip-off: every run until 3 hours after it, then hourly, until 3 days after tip-off (a fixture's Check now asks at once). A final score ends In progress straight away. Only a FINAL status with both scores is entered, and never over a score already there. | 4 games |
 
@@ -63,7 +63,7 @@ Cron triggers are UTC only, so two fire, 16:00 and 17:00 UTC, and the job runs o
 
 ### The game check
 
-Each run of the 5-minute job looks at every running team's live games in the next 8 hours (not No video, not recorded and uploaded). Once one of them hasn't had its check yet, so 8 hours before each game's tip-off, the site asks itself whether they're good to go; two games on one evening get a check each, and a game moved later is checked again. The answer is the game check alert: ok says what was found; a problem raises a ticket for the admins saying what to do, and the check runs again every hour until tip-off, so the first fine check resolves it. With no live game left in the next 8 hours, an alert still up is set to ok, saying so. Platform's **Run the game check now** checks the week's live games at once, without counting as any game's 8-hour check. Each game remembers when its 8-hour check was (`games.ready_checked_at`).
+Each run of the 5-minute job looks at every running team's live games in the next 8 hours (not No video, not recorded and uploaded). Once one of them hasn't had its check yet, so 8 hours before each game's tip-off, the site asks itself whether they're good to go; two games on one evening get a check each, and a game moved later is checked again. The answer is the game check alert: ok says what was found; a problem raises a ticket for the admins saying what to do, and the check runs again every hour until tip-off, so the first fine check resolves it. With no live game left in the next 8 hours, an alert still up is set to ok, saying so. Platform's **Run the game check now** checks the week's live games at once, without counting as any game's 8-hour check. Its answer stands until a game's 8-hour check, or for a week; while it isn't ok, the week's games are checked again every hour, and it clears once they're fine or the week has no live game left. A run whose outside calls are used up leaves the check to the next run. Each game remembers when its 8-hour check was (`games.ready_checked_at`).
 
 | Checked | Warns | Urgent |
 | --- | --- | --- |
@@ -71,4 +71,4 @@ Each run of the 5-minute job looks at every running team's live games in the nex
 | Each game's Go live input | Set up but gone from Stream (Go live sets up a new one) |  |
 | The video joiner | Not answering, or its test join failed |  |
 | The 5-minute job |  | No run for 15 minutes (staging has none, and isn't asked) |
-| The other alerts (not Team budgets or AI models, which don't touch a game) | Any up at a warning | Any up at urgent |
+| The other alerts (not Team budgets, AI models or the 3am job's own alert, which don't touch a game) | Any up at a warning | Any up at urgent |

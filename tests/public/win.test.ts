@@ -5,7 +5,7 @@ import { celebrate, makePieces, placeAt } from "../../public/win.js";
 // The win pop-up's confetti (public/win.js), on a stand-in page: a phone's screen with the card in the middle.
 const CARD = { left: 16, top: 300, width: 358, height: 240 };
 const PHONE = { width: 390, height: 844 };
-const COLOURS = ["#2A8F3D", "#FFFFFF"];
+const COLOURS = ["#2F6FDB", "#FFFFFF"];
 
 interface Piece { x: number; y: number; colour: string; front: boolean }
 const pieces = (screen = PHONE): Piece[] => makePieces(CARD, screen, COLOURS, () => 0.5);

@@ -7,8 +7,8 @@ import { CLUB } from "../../club.ts";
 // it gets worse.
 import type { AppDeps } from "../../app/deps.ts";
 import { formatGameDate, localTime } from "../../shared/time.ts";
-import { type AlertKind, type AlertLevel, getAlert, saveAlert, setAlertTicket } from "./alerts-repository.ts";
-import { findOpenSiteTicket, insertSiteTicket, messageStatement, retitleStatement, ticketStatement } from "./support-desk-repository.ts";
+import { type AlertKind, type AlertLevel, getAlert, type PlatformAlert, saveAlert, setAlertTicket } from "./alerts-repository.ts";
+import { findOpenSiteTicket, getTicket, insertSiteTicket, messageStatement, retitleStatement, ticketStatement } from "./support-desk-repository.ts";
 import { trySend } from "./support-desk-service.ts";
 
 const RANK: Record<AlertLevel, number> = { ok: 0, warn: 1, urgent: 2 };
@@ -38,6 +38,14 @@ const WORDS: Record<AlertKind, { thing: string; is: Record<"warn" | "urgent", st
 		todo: "open the team on Costs (in the admin area): its months show where the money goes. Raise its season's budget there if it's right, or ask the team manager about how much is filmed and watched." },
 };
 
+/** Whether this spell of the alert has had its ticket (an admin may have resolved it since): its latest ticket was opened
+ * as the spell began, or after. */
+async function spellHasTicket(db: D1Database, a: PlatformAlert): Promise<boolean> {
+	if (a.ticketId === null || a.since === null) return false;
+	const ticket = await getTicket(db, a.ticketId);
+	return ticket !== null && ticket.createdAt >= a.since;
+}
+
 const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 /** A ticket's name for an alert at a level: "Video storage is running low". */
 const titleOf = (kind: AlertKind, level: "warn" | "urgent") => capital(`${WORDS[kind].thing} ${WORDS[kind].is[level]}`);
@@ -58,8 +66,9 @@ export async function setAlert(deps: AppDeps, kind: AlertKind, level: AlertLevel
 		return;
 	}
 	if (!open) {
-		// Started, or worse than when an admin resolved its last ticket: a new ticket.
-		if (was !== "ok" && RANK[level] <= RANK[was]) return;
+		// Started, worse than when an admin resolved its last ticket, or on with no ticket yet (opening it failed): a new
+		// ticket.
+		if (was !== "ok" && RANK[level] <= RANK[was] && await spellHasTicket(db, prev!)) return;
 		const message = `${titleOf(kind, level)}: ${detail}.\nSince ${formatGameDate(localTime(new Date(since ?? nowIso)))}.\n\nWhat to do: ${WORDS[kind].todo}`;
 		const id = await insertSiteTicket(db, { alertKind: kind, title: titleOf(kind, level), message, nowIso });
 		await setAlertTicket(db, kind, id);

@@ -1,7 +1,7 @@
 import type { AppDeps } from "../app/deps.ts";
 import type { StoredObject } from "../platform/r2-originals.ts";
 import { localDate } from "../shared/time.ts";
-import { parentsFirst } from "./backup-sql.ts";
+import { parentsFirst, rowsOf, sqlStatements } from "./backup-sql.ts";
 
 /** R2 key prefix for nightly backups. The bucket's lifecycle rule deletes them after 14 days (infra/r2-lifecycle.json). */
 export const BACKUP_PREFIX = "backups/d1/";
@@ -67,14 +67,21 @@ const KEY_TABLES = ["teams", "members", "games", "players"];
 const sha256Hex = async (text: string) =>
 	[...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
-/** The dump has one INSERT line for every row it read, table by table (a value can't break a line out of its quotes). */
+/** The dump has one INSERT statement for every row it read, table by table, read as a restore reads it (a value may
+ * hold new lines, and lines that look like statements). */
 function checkDump(sql: string, tables: Record<string, number>): void {
-	const lines = sql.split("\n");
+	const found: Record<string, number> = {};
+	for (const s of sqlStatements(sql)) {
+		const name = rowsOf(s);
+		if (name !== undefined) found[name] = (found[name] ?? 0) + 1;
+	}
 	for (const [name, count] of Object.entries(tables)) {
-		const found = lines.filter((l) => l.startsWith(`INSERT INTO ${quoteId(name)} (`)).length;
-		if (found !== count) throw new Error(`Backup check: ${name} has ${count} rows but ${found} in the dump`);
+		if ((found[name] ?? 0) !== count) throw new Error(`Backup check: ${name} has ${count} rows but ${found[name] ?? 0} in the dump`);
 	}
 }
+
+/** Stored as it was sent: R2 checked its sha256 on the way in, and its size is the one the run wrote down. */
+const intact = (o: StoredObject) => /^[0-9a-f]{64}$/.test(o.custom.sha256 ?? "") && Number(o.custom.bytes) === o.size;
 
 /** Compared with the last backup: a key table emptied, or half the rows gone, is worth a person's look. */
 function shrinkage(previous: StoredObject | undefined, tables: Record<string, number>, rows: number): string[] {
@@ -87,23 +94,34 @@ function shrinkage(previous: StoredObject | undefined, tables: Record<string, nu
 }
 
 /**
- * Daily cron. One file per local date, so a re-run the same day overwrites rather than piling up. Checked three ways:
- * the dump holds every row it read, R2 stores exactly those bytes (sha256) and lists them back at the right size,
- * and nothing important shrank since the last backup. A failed check fails the run (the file is kept to look at).
+ * Daily cron. One file per local date. R2's lock keeps a backup from being overwritten or deleted in its first 14
+ * days, so a second run the same day finds the day's file stored intact and counts as done. Checked three ways: the dump
+ * holds every row it read, R2 stores exactly those bytes (sha256) and lists them back at the right size, and nothing
+ * important shrank since the last backup. A failed check fails the run (the file is kept to look at).
  */
 export async function backupDatabase(deps: AppDeps): Promise<string> {
+	const key = `${BACKUP_PREFIX}courtside-${localDate(deps.now())}.sql`;
+	const listed = await deps.originals.list(BACKUP_PREFIX);
+	const previous = listed.filter((o) => o.key < key).at(-1);
+	const today = listed.find((o) => o.key === key);
+	if (today && intact(today)) {
+		console.log(JSON.stringify({ event: "db_backup", key, already: true }));
+		if (today.custom.problems) throw new Error(`Backup check: ${key} is saved, but next to ${previous?.key ?? "the last backup"}: ${today.custom.problems}`);
+		return key;
+	}
 	const { sql, rows, tables } = await dumpDatabase(deps.db);
 	checkDump(sql, tables);
-	const key = `${BACKUP_PREFIX}courtside-${localDate(deps.now())}.sql`;
-	const previous = (await deps.originals.list(BACKUP_PREFIX)).filter((o) => o.key < key).at(-1);
 	const sha256 = await sha256Hex(sql);
-	const problems = shrinkage(previous, tables, rows);
-	const custom = { rows: String(rows), tables: JSON.stringify(tables), sha256, problems: problems.join("; ") };
-	await deps.originals.put(key, sql, "application/sql", { sha256, custom });
 	const bytes = new TextEncoder().encode(sql).byteLength;
+	const problems = shrinkage(previous, tables, rows);
+	const custom = { rows: String(rows), tables: JSON.stringify(tables), sha256, bytes: String(bytes), problems: problems.join("; ") };
+	await deps.originals.put(key, sql, "application/sql", { sha256, custom });
 	const stored = (await deps.originals.list(key)).find((o) => o.key === key);
 	if (!stored || stored.size !== bytes || stored.custom.sha256 !== sha256) {
-		if (stored) await deps.originals.remove(key);
+		if (!stored) throw new Error(`Backup check: ${key} wasn't stored`);
+		await deps.originals.remove(key).catch((err: unknown) => {
+			throw new Error(`Backup check: ${key} wasn't stored intact, and it couldn't be removed (the bucket's lock keeps a backup 14 days): ${String(err)}`);
+		});
 		throw new Error(`Backup check: ${key} wasn't stored intact, so it was removed`);
 	}
 	console.log(JSON.stringify({ event: "db_backup", key, rows, bytes, tables: Object.keys(tables).length, checked: problems.length === 0, problems }));

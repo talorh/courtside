@@ -29,12 +29,14 @@ Web Audio, not the camera itself. The recording is always landscape, whichever w
 started. A recording that hands over nothing for 20 seconds says so on the camera screen with Reload and carry on, and
 takes the warning back if it carries on by itself.</li>
 <li><b>Only End game ends a stream, and it's final.</b> Under a minute recorded (pauses left out), or nothing recorded
-at all, counts as a test and is thrown away, so a try at home leaves the game free to stream. On a weak signal the page says how many minutes of the
+at all, counts as a test and is thrown away, so a try at home leaves the game free to stream. A game carried on with
+Carry on streaming is never a test, however soon End game is tapped after it. On a weak signal the page says how many minutes of the
 game are still only on the phone.</li>
 <li><b>Watching</b> uses short-lived signed links, so only signed-in members can play anything. A picture that freezes
 asks whether the game has ended: if so the page shows the Full time card (the Game Break card's look) within seconds,
 otherwise "Live stream will resume shortly". The player then asks for the picture again by itself every 15 to 20 seconds, so a stream that's
-carried on comes back without a tap; the card's line to refresh after five minutes is a last resort.</li>
+carried on comes back without a tap; the card's line to refresh after five minutes is a last resort. A picture the
+family paused isn't frozen: no card comes up, and a tap on the picture plays it again.</li>
 <li><b>The live bar:</b> while a game is streaming, a red LIVE NOW bar with Watch live runs along the top of the team's
 pages (not Home or Watch games, which have the Live now card, nor Go live or that game's page). It reads only the
 database: a stream the 5-minute job saw sending in the last 8 minutes and not ended.</li></ul>

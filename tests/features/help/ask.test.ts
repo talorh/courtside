@@ -57,6 +57,12 @@ describe("Ask Virtual Sam", () => {
 		await ask();
 		expect(deps.ai.asked[2]?.system).not.toContain("The person asking is using");
 	});
+	it("keeps a range of numbers a range when it takes the AI's dashes out", async () => {
+		const deps = createTestDeps();
+		deps.ai.reply = "Film for 20–25 minutes — then stop. Rounds 3 – 5 are **played** on court 2—3.";
+		const res = await makeClient(deps)("/api/ask", jsonBody({ question: "How long do I film for?" }));
+		expect(await res.json()).toEqual({ ok: true, data: { answer: "Film for 20 to 25 minutes, then stop. Rounds 3 to 5 are played on court 2 to 3." } });
+	});
 	it("says Virtual Sam can't answer just now when the AI can't, and turns away empty or huge questions", async () => {
 		const deps = createTestDeps();
 		deps.ai.down = true;
@@ -93,7 +99,7 @@ describe("the helper reads the asker's own Help (one Help page, each role's topi
 		const [{ system }] = deps.ai.asked;
 		expect(system).toContain("You are Virtual Sam");
 		expect(system).toContain("Q: Adding the squad");
-		expect(system).toContain("suggest the support form at the bottom of the Help page");
+		expect(system).toContain("suggest the support form: Contact support, at the end of Running your team on the Help page, or on the Support page.");
 		expect(system).not.toContain("guide");
 	});
 
@@ -104,7 +110,7 @@ describe("the helper reads the asker's own Help (one Help page, each role's topi
 		expect(deps.ai.asked[0]?.system).not.toContain("support form");
 		expect(deps.ai.asked[0]?.system).toContain("suggest asking the real Sam at training");
 		await makeClient(deps)("/api/ask", jsonBody({ question: "Who do I ask about the site?" }));
-		expect(deps.ai.asked[1]?.system).toContain("suggest the support form at the bottom of the Help page");
+		expect(deps.ai.asked[1]?.system).toContain("suggest the support form: Contact support, at the end of Running your team on the Help page, or on the Support page.");
 	});
 
 	it("gives Watch only its own Help (no team manager's questions, no recording), and the team's own helper elsewhere", async () => {

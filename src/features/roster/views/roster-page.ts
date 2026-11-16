@@ -9,7 +9,7 @@ import type { Credit } from "../roster-away.ts";
 import { dutiesOn, dutyLabel, dutySentence, dutyWords, type RosterDuties } from "../roster-duties.ts";
 import { DUTIES, type Duty, type Slot, slotsFor, type Wanted } from "../roster-plan.ts";
 import type { RosterFamily } from "../roster-repository.ts";
-import { dutiesFor, needOf, type RosterWeek } from "../roster-service.ts";
+import { needOf, type RosterWeek } from "../roster-service.ts";
 import { dutiesPanel, familiesPanel, weekEditor } from "./roster-admin.ts";
 import { rosterDashboard } from "./roster-dashboard.ts";
 import { teamCopy } from "../../teams/team-copy.ts";
@@ -31,7 +31,7 @@ export interface RosterPageProps {
 	fair: Map<number, Record<Duty | "total", number>>;
 	/** Each family's time off the roster, counted as its share of those weeks (roster-away.ts). */
 	away: Map<number, Credit>;
-	/** The team's duties (lollies and video can be off); weeks before this one keep every duty. */
+	/** The team's duties (lollies and video can be off); a week before this one shows the ones it holds. */
 	duties: RosterDuties;
 	thisWeek: string;
 	season: string;
@@ -66,7 +66,8 @@ function weekCard(p: RosterPageProps, w: RosterWeek, mine: number | null): SafeH
 		const s = held.find((h) => h.duty === x.duty && h.position === x.position && h.gameId === x.gameId);
 		return s ? html`<span class="${s.familyId === mine ? "duty-fam mine" : "duty-fam"}">${p.names.get(s.familyId) ?? "?"}</span>` : html`<span class="duty-fam empty">Not set</span>`;
 	};
-	const has = dutiesFor(w.week, p.thisWeek, p.duties);
+	// A week before this one shows what was done: of the extra duty and video, the ones it holds, whatever the team has now.
+	const has = w.week >= p.thisWeek ? p.duties : { ...p.duties, lollies: held.some((s) => s.duty === "lollies"), video: held.some((s) => s.duty === "video") };
 	const wanted = slotsFor(needOf(w), has);
 	const names = (xs: Wanted[]) => xs.map((x, i) => html`${i ? ", " : ""}${name(x)}`);
 	// A weekend with several games: each game's own duties sit under that game; below them, what the weekend has none
@@ -91,7 +92,7 @@ function weekCard(p: RosterPageProps, w: RosterWeek, mine: number | null): SafeH
 	const venue = (i: number) => (w.games[i]!.game.venue && w.games[i]!.game.venue !== w.games[i - 1]?.game.venue ? html`<span class="small">${w.games[i]!.game.venue}</span>` : "");
 	return html`<li class="panel duty-week" id="w${w.week}"><ul class="duty-games">${w.games.map(({ game }, i) => html`<li><b>${formatShortDate(game.startsAt)}, ${formatClock(game.startsAt.slice(11))} · ${gameTitle(game)}</b>${i === 0 ? now : ""}
 ${venue(i)}${game.noVideo ? html`<span class="small">No video</span>` : ""}${gameDuties(game.id)}</li>`)}</ul>
-<div class="duties">${weekDuties}</div>${admin ? setByHand(w, held, p.duties) : ""}${admin ? weekEditor(w, held, p.families, p.names, has) : ""}</li>`;
+<div class="duties">${weekDuties}</div>${admin ? setByHand(w, held, p.duties) : ""}${admin ? weekEditor(w, held, p.families, p.names, has, w.week < p.thisWeek) : ""}</li>`;
 }
 
 /** Roster: who's on each of the team's duties each week, and how fair it is. The team manager runs it. */

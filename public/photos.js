@@ -28,7 +28,11 @@ async function shrink(file) {
 		const scale = Math.min(1, LONGEST / Math.max(img.naturalWidth, img.naturalHeight));
 		canvas.width = Math.round(img.naturalWidth * scale);
 		canvas.height = Math.round(img.naturalHeight * scale);
-		canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+		const g = canvas.getContext("2d");
+		// A see-through part (a PNG's) would be black in a JPEG: white behind it instead.
+		g.fillStyle = "#fff";
+		g.fillRect(0, 0, canvas.width, canvas.height);
+		g.drawImage(img, 0, 0, canvas.width, canvas.height);
 		const jpeg = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", QUALITY));
 		if (!jpeg) throw new Error("it couldn't be made smaller");
 		return jpeg;

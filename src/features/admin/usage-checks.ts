@@ -5,6 +5,7 @@
 // is saved, and its email is sent later if it doesn't go now.
 import { alertFailed, logProblem } from "./problem-log.ts";
 import type { AppDeps } from "../../app/deps.ts";
+import { FetchBudgetSpent } from "../../platform/fetch-budget.ts";
 import { formatGameDate, localTime } from "../../shared/time.ts";
 import { type AlertKind, type AlertLevel, getAlert } from "./alerts-repository.ts";
 import { setAlert } from "./alerts-service.ts";
@@ -30,7 +31,8 @@ async function alert(deps: AppDeps, kind: AlertKind, level: AlertLevel, detail: 
 }
 
 /** Under 400 minutes left warns (about 3 weeks' notice with a few teams filming: buying more is the admin's), under 100 is
- * urgent, 450 or more clears. Stream not answering leaves it as it was. */
+ * urgent, 450 or more clears. Stream not answering leaves it as it was; a run with no outside calls left leaves it to
+ * the next. */
 export async function checkStreamStorage(deps: AppDeps): Promise<void> {
 	const prev = await getAlert(deps.db, "stream_storage");
 	if (prev && deps.now().getTime() - Date.parse(prev.checkedAt) < HOUR_MS) return;
@@ -39,6 +41,7 @@ export async function checkStreamStorage(deps: AppDeps): Promise<void> {
 		const { usedMinutes, limitMinutes } = await deps.live.storage();
 		left = Math.max(0, Math.floor(limitMinutes - usedMinutes));
 	} catch (err) {
+		if (err instanceof FetchBudgetSpent) return;
 		console.error(JSON.stringify({ event: "storage_check_failed", teamId: null, error: String(err) }));
 		await logProblem(deps, { kind: "site_problem", teamId: null, what: "Stream's storage couldn't be checked for its alert", error: err });
 		return;
@@ -103,10 +106,11 @@ export async function checkDatabase(deps: AppDeps, bytes: number | null): Promis
 	await alert(deps, "database", level, `${size} of the 10 GB it can hold`);
 }
 
-/** The site failing: ten or more server errors this hour and last is urgent; under three clears it. */
+/** The site failing: ten or more server errors this hour and last is urgent; under three clears it, and in between it
+ * stays as it was. */
 export async function checkSiteErrors(deps: AppDeps): Promise<void> {
 	const n = await serverErrorsLately(deps.db, deps.now());
-	const level = banded(n, (await getAlert(deps.db, "site_errors"))?.level ?? "ok", { warn: 10, urgent: 10, clear: 3 });
+	const level = n >= 10 ? "urgent" : n < 3 ? "ok" : (await getAlert(deps.db, "site_errors"))?.level ?? "ok";
 	await alert(deps, "site_errors", level, `${thousands(n)} server ${n === 1 ? "error" : "errors"} in the last hour or two`);
 }
 

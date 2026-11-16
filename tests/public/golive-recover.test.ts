@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { webLiveCard } from "../../src/features/live/views/web-live-card.ts";
+import { fakeIndexedDb } from "../helpers/fake-indexeddb.ts";
+// @ts-expect-error plain browser module, no types
+import { openStore } from "../../public/golive-store.js";
 
 // Go live's panel for a recording already on its way (public/golive-recover.js), on a stand-in page: the filmer's own
 // recording from another phone (nothing kept on this one), so Save what was recorded and Delete it and start again.
@@ -70,5 +73,36 @@ describe("a recording on its way, from another of the filmer's phones", () => {
 		expect(card).toMatch(/<div class="confirmpanel" data-discardask role="alertdialog" aria-labelledby="discard-q" hidden><p id="discard-q"><b>Delete the recording\?<\/b>/);
 		expect(card).toContain('<button class="btn danger" type="button" data-act="discardyes">Yes, delete it</button>');
 		expect(card).toContain('<button class="btn" type="button" data-act="discardno">Keep it</button>');
+	});
+});
+
+describe("what this phone kept for a recording the site no longer has open", () => {
+	async function phoneWith(recording: string) {
+		const stored = new Map<string, string>([
+			["courtside-live:7", JSON.stringify({ videoId: 41, segment: 2, partSize: 1000, etags: { 1: '"e1"' } })],
+			["courtside-live:7:kept", JSON.stringify([{ videoId: 41, segment: 1, etags: { 1: '"e1"' } }])],
+		]);
+		vi.stubGlobal("localStorage", { getItem: (k: string) => stored.get(k) ?? null, setItem: (k: string, v: string) => stored.set(k, v), removeItem: (k: string) => stored.delete(k) });
+		vi.stubGlobal("document", { querySelector: () => null, documentElement: { dataset: {} }, addEventListener() {} });
+		const idb = fakeIndexedDb();
+		vi.stubGlobal("indexedDB", idb);
+		const store = await openStore();
+		const bytes = new Blob([new Uint8Array(10)], { type: "video/mp4" });
+		await store.putPart("41/1", 2, bytes);
+		await store.putTail("41/2", 0, bytes);
+		await store.putPart("52/1", 1, bytes); // another game's recording, still on its way
+		// @ts-expect-error: a browser script (plain JS), tested here on its own.
+		const { recordingInTheWay } = await import("../../public/golive-recover.js");
+		const card = { dataset: { game: "7", recording }, querySelector: () => null };
+		const stops = recordingInTheWay(card, { btn: () => fake(), say: () => {}, carryOn: {} });
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		const keys = [...idb.rows("parts"), ...idb.rows("tail")].map((r) => r.k);
+		return { stops, keys, stored };
+	}
+	it("saved or deleted elsewhere: the footage it kept goes with the notes, and nothing of any other recording", async () => {
+		const phone = await phoneWith("");
+		expect(phone.stops).toBe(false);
+		expect(phone.keys).toEqual(["52/1/1"]);
+		expect([...phone.stored.keys()]).toEqual([]);
 	});
 });

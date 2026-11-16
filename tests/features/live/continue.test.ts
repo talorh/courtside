@@ -89,4 +89,12 @@ describe("Carry on streaming after the page closed", () => {
 		deps.live.connected.add("live-1");
 		expect(await data<object>(await carryOn())).toEqual({ status: "streaming", retryIn: 20 });
 	});
+	it("Stream not answering whether the phone is connected carries on, and goes in the Log's Problems", async () => {
+		const { deps, reached, carryOn, later } = await closedMidGame();
+		later(20);
+		reached([1], 10);
+		deps.live.isConnected = () => Promise.reject(new Error("Stream timed out"));
+		expect((await data<{ segment: number }>(await carryOn())).segment).toBe(2);
+		expect(await deps.db.prepare("SELECT what, detail FROM problems WHERE kind = 'stream_problem'").first()).toMatchObject({ what: expect.stringContaining("Carry on"), detail: "Stream timed out" });
+	});
 });

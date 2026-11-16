@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { recordSignInEvent } from "../../../src/auth/sign-in-codes-repository.ts";
+import { quickDays } from "../../../src/features/admin/log-entries.ts";
 import { form, makeClient, MANAGER } from "../../helpers/app.ts";
 import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 import { addMember } from "../../helpers/two-teams.ts";
@@ -96,6 +97,16 @@ describe("the admin Log", () => {
 		const signIns = await (await makeClient(deps)("/admin/log?show=signins&from=2026-10-14&to=2026-10-14")).text();
 		expect(signIns).toContain('<a class="chip" href="/admin/log?show=teams&amp;from=2026-10-14&amp;to=2026-10-14">Teams <span class="n">0</span></a>');
 		expect(signIns).toContain('<a class="chip" href="/admin/log?show=signins&amp;from=2026-10-14&amp;to=2026-10-14" aria-current="true">Yesterday</a>');
+	});
+
+	it("counts its quick choices in the club's days, the nights the clocks change too", () => {
+		// Mon 5 Oct 2026, 12:30am in the club's time: 23 hours after the same time on Sunday, when daylight saving began.
+		expect(quickDays(new Date("2026-10-04T13:30:00.000Z"))).toEqual({
+			today: { from: "2026-10-05", to: "2026-10-05" }, yesterday: { from: "2026-10-04", to: "2026-10-04" },
+			week: { from: "2026-09-29", to: "2026-10-05" }, month: { from: "2026-09-05", to: "2026-10-05" },
+		});
+		// Sun 4 Apr 2027, 11:30pm: 25 hours after the same time on Saturday, as daylight saving ended.
+		expect(quickDays(new Date("2027-04-04T13:30:00.000Z")).yesterday).toEqual({ from: "2027-04-03", to: "2027-04-03" });
 	});
 
 	it("shows any dates typed in, either way round, with a form that keeps which lines", async () => {

@@ -30,7 +30,7 @@ form?.addEventListener("submit", async (e) => {
 			method: "POST", headers: { "Content-Type": "application/json", ...teamHeaders() }, body: JSON.stringify({ question }), redirect: "manual",
 			signal: timeoutSignal(ASK_TIMEOUT_MS),
 		});
-		// An expired sign-in answers with a redirect to the sign-in page.
+		// A signed-out post gets a 401 JSON reply, whose message is shown below; a redirect to the sign-in page is caught too.
 		if (res.type === "opaqueredirect") { out.textContent = "You've been signed out. Reload the page and sign in, then ask again."; return; }
 		const body = await res.json();
 		out.textContent = body.ok ? body.data.answer : body.error.message;

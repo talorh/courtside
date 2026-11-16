@@ -3,6 +3,7 @@
 import { z } from "zod";
 import type { TeamDeps } from "../../app/deps.ts";
 import { conflict, forbidden, notFound } from "../../app/errors.ts";
+import { logProblem } from "../admin/problem-log.ts";
 import type { Member } from "../members/members-repository.ts";
 import { getVideo } from "../videos/videos-repository.ts";
 import { LIVE_PART_SIZE } from "./browser-live-service.ts";
@@ -36,7 +37,13 @@ export async function continueBrowserLive(deps: TeamDeps, member: Member, gameId
 	const liveInput = await deps.live.getInput(open.liveInputUid);
 	if (!liveInput) throw conflict(`The stream is no longer there. ${START_AGAIN}`);
 	// A tab still alive would be doubled up: Stream still seeing the phone, or a part in the last two minutes, means wait.
-	if (await deps.live.isConnected(open.liveInputUid).catch(() => false)) {
+	// Stream not answering doesn't hold the phone back: the two-minute part check below still guards a tab still alive.
+	const connected = await deps.live.isConnected(open.liveInputUid).catch(async (err: unknown) => {
+		console.error(JSON.stringify({ event: "live_status_failed", teamId: deps.team.id, liveStreamId: open.id, error: String(err) }));
+		await logProblem(deps, { kind: "stream_problem", teamId: deps.team.id, what: "Stream didn't say whether the phone was still streaming, so Carry on streaming went ahead", error: err });
+		return false;
+	});
+	if (connected) {
 		// Stream keeps saying connected for a minute or two after a phone has gone: the wait Carry on shows. (Its
 		// player-side lifecycle answer is no quicker: it says live for an input switched off hours before.)
 		console.log(JSON.stringify({ event: "live_continue_wait", teamId: deps.team.id, gameId }));

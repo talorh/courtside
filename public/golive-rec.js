@@ -72,17 +72,17 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 			report();
 		});
 	}
-	// Equal parts (storage needs every part but the last the same size); each is kept on the phone until it's up.
+	// Equal parts (storage needs every part but the last the same size), and at End game what's left as the last. Each
+	// is kept on the phone as its own numbered part until it's up, so a later page never sends it again as one more.
 	function cut(final) {
-		let cuts = 0;
-		while (buffer.size >= partSize) {
-			kept.part(next, buffer.slice(0, partSize, mime));
-			send(buffer.slice(0, partSize, mime));
-			buffer = buffer.slice(partSize, buffer.size, mime);
-			cuts++;
+		const parts = [];
+		while (buffer.size >= partSize || (final && buffer.size > 0)) {
+			const size = Math.min(partSize, buffer.size);
+			parts.push({ n: next + parts.length, blob: buffer.slice(0, size, mime) });
+			buffer = buffer.slice(size, buffer.size, mime);
 		}
-		if (cuts) kept.cutTail(buffer);
-		if (final && buffer.size > 0) send(buffer);
+		if (parts.length) kept.cut(parts, buffer);
+		for (const p of parts) send(p.blob);
 	}
 
 	const recorder = new MediaRecorder(media, { mimeType: mime, videoBitsPerSecond: 2_500_000, audioBitsPerSecond: 128_000 });

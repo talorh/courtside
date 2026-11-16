@@ -104,6 +104,7 @@ export const pickName = (x: { duty: Duty; position: number; gameId: number }) =>
  * A change by hand to one week. A duty given a family is set by hand, and Generate roster keeps it.
  * One left as the roster's pick keeps its family (so an earlier week stays as it was, even a family since taken off),
  * unless that family is now set by hand to another duty that week: then the roster fills it fairly, as it fills any week.
+ * A week before this one holds what was done: only what's picked and what it keeps is written, and nothing is filled.
  */
 export async function setWeek(deps: TeamDeps, week: string, picks: Partial<Record<string, number>>): Promise<void> {
 	const { db } = deps;
@@ -115,7 +116,8 @@ export async function setWeek(deps: TeamDeps, week: string, picks: Partial<Recor
 	if (Object.values(picks).some((f) => f !== undefined && !families.includes(f))) throw badRequest("Choose a family that's on the roster.");
 	const range = seasonWeeks(deps.team);
 	const slots = await listSlots(db, deps.team.id, range.from, range.to);
-	const duties = dutiesFor(week, weekOf(localDate(deps.now())), await getRosterDuties(db, deps.team.id));
+	const thisWeek = weekOf(localDate(deps.now()));
+	const duties = dutiesFor(week, thisWeek, await getRosterDuties(db, deps.team.id));
 	const wanted = slotsFor(needOf(w), duties);
 	const byHand = wanted.flatMap((x) => {
 		const familyId = picks[pickName(x)];
@@ -129,6 +131,6 @@ export async function setWeek(deps: TeamDeps, week: string, picks: Partial<Recor
 	const kept = slots.filter((s) => s.week === week && wanted.some((x) => sameSlot(x, s)) && !held(s))
 		.map((s) => ({ ...s, byHand: false }));
 	const around = [...slots.filter((s) => s.week !== week), ...byHand, ...kept];
-	const added = fillWeeks([needOf(w)], families, around, duties, awayCredit(around, await familyPresence(db, deps.team.id), families, duties));
+	const added = week < thisWeek ? [] : fillWeeks([needOf(w)], families, around, duties, awayCredit(around, await familyPresence(db, deps.team.id), families, duties));
 	await db.batch([deleteWeekSlotsWrite(db, deps.team.id, week), ...[...byHand, ...kept, ...added].map((s) => insertSlotWrite(db, deps.team.id, s))]);
 }

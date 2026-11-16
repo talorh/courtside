@@ -126,16 +126,20 @@ export async function unlinkedGamesOn(db: D1Database, teamId: string, competitio
 }
 
 /** Adds the game, or (with `gameId`) brings it up to date with PlayHQ and links it. Already added: left alone.
- * `noVideoAt`: a game a No video fixture adds or takes over is marked No video, unless it has a video already. */
+ * `noVideoAt`: a game a No video fixture adds or takes over is marked No video, unless it has a video already.
+ * A game moved later loses the site's No video (set after a week with nothing filmed): it waits for video again (SET
+ * reads the row as it was, so `starts_at < ?1` compares the old time with the new). */
 export function playhqGameWrite(db: D1Database, teamId: string, fixtureId: number, playhqGameId: string, input: GameInput, gameId: number | null, noVideoAt: string | null = null) {
 	const values = [input.startsAt, input.competition, input.roundLabel, input.opponent, input.venue, phaseFor(input), playhqGameId, fixtureId];
 	if (gameId === null) {
 		return db.prepare(`INSERT OR IGNORE INTO games (team_id, starts_at, competition, round_label, opponent, venue, phase, playhq_game_id, playhq_fixture_id, no_video_at)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(teamId, ...values, noVideoAt);
 	}
-	return db.prepare(`UPDATE games SET starts_at = ?, competition = ?, round_label = ?, opponent = ?, venue = ?, phase = ?, playhq_game_id = ?,
-		playhq_fixture_id = ?, playhq_gone_at = NULL, no_video_at = COALESCE(no_video_at, CASE WHEN EXISTS (SELECT 1 FROM videos v WHERE v.team_id = games.team_id
-		AND v.game_id = games.id AND v.deleted_at IS NULL AND v.status <> 'failed') THEN NULL ELSE ? END) WHERE team_id = ? AND id = ? AND deleted_at IS NULL`).bind(...values, noVideoAt, teamId, gameId);
+	const siteOff = "(no_video_auto_at IS NOT NULL AND starts_at < ?1)";
+	return db.prepare(`UPDATE games SET starts_at = ?1, competition = ?2, round_label = ?3, opponent = ?4, venue = ?5, phase = ?6, playhq_game_id = ?7,
+		playhq_fixture_id = ?8, playhq_gone_at = NULL, no_video_auto_at = CASE WHEN ${siteOff} THEN NULL ELSE no_video_auto_at END,
+		no_video_at = COALESCE(CASE WHEN ${siteOff} THEN NULL ELSE no_video_at END, CASE WHEN EXISTS (SELECT 1 FROM videos v WHERE v.team_id = games.team_id
+		AND v.game_id = games.id AND v.deleted_at IS NULL AND v.status <> 'failed') THEN NULL ELSE ?9 END) WHERE team_id = ?10 AND id = ?11 AND deleted_at IS NULL`).bind(...values, noVideoAt, teamId, gameId);
 }
 
 /** Marks the fixture's games PlayHQ no longer lists (never deletes them). */

@@ -181,7 +181,7 @@ goes wrong, and the same text is exported here with its diagrams, so it reads wi
 Every change is built on a branch off `staging`, tested first (the unit tests, and the browser suite for anything a
 phone does), merged into `staging` and deployed there with `npm run staging`, and tried signed in on real phones. Then
 `main` is fast-forwarded and `npm run release` runs every check again, refuses while anyone is uploading or streaming,
-and pushes `main` to Cloudflare Artifacts, where Workers Builds checks it once more and deploys it. Never on a game day
+and pushes the commit it checked to `main` on Cloudflare Artifacts, where Workers Builds checks it once more and deploys it. Never on a game day
 unless it fixes something broken.
 
 ## What's where

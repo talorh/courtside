@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { makeClient } from "../../helpers/app.ts";
 import { B12_1, createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 import { addMember, addTeam, G14_5 } from "../../helpers/two-teams.ts";
-import { hourlyActivity } from "../../../src/features/admin/insights-repository.ts";
+import { hourlyActivity, teamCounts } from "../../../src/features/admin/insights-repository.ts";
 import { healthCounts } from "../../../src/features/admin/health-repository.ts";
 
 // Today in the tests: Thu 15 Oct 2026, 11am in the club's time zone (00:00 UTC), so this week starts Mon 12 Oct.
@@ -256,6 +256,16 @@ describe("Insights, the admin area's landing page (graphical, what needs attenti
 		}
 	});
 
+	it("leaves test runs out of each team's first views and last upload", async () => {
+		const deps = await site();
+		const game = (await run(deps, "INSERT INTO games (team_id, starts_at, competition, round_label, opponent) VALUES (?, '2026-10-14T18:40', 'Practice match', '', 'Test')", B12_1.id)).meta.last_row_id;
+		const test = (await run(deps, `INSERT INTO videos (team_id, game_id, status, stream_uid, duration_seconds, delete_after, created_at, deleted_at, deleted_reason)
+			VALUES (?, ?, 'ready', 't1', 120, '2027-12-31T13:00:00.000Z', '2026-10-14T05:00:00.000Z', '2026-10-14T05:10:00.000Z', 'live_test')`, B12_1.id, game)).meta.last_row_id;
+		await run(deps, "INSERT INTO video_views (team_id, video_id, member_id, opened_at) VALUES (?, ?, 1, '2026-10-14T05:01:00.000Z')", B12_1.id, test);
+		const b12 = (await teamCounts(deps.db, { since30: "2026-09-15T00:00:00.000Z", nowLocal: "2026-10-15T11:00", day30: "2026-09-15" })).find((c) => c.team.id === B12_1.id)!;
+		expect([b12.watchers30, b12.lastUpload]).toEqual([3, "2026-10-11T01:00:00.000Z"]);
+	});
+
 	it("counts a live stream as open only once it's under way, not a Go live page opened and left", async () => {
 		const deps = await site();
 		const game = (await run(deps, "INSERT INTO games (team_id, starts_at, competition, round_label, opponent) VALUES (?, '2026-10-15T18:40', 'VJBL', '12', 'Riverton')", B12_1.id)).meta.last_row_id;
@@ -265,6 +275,16 @@ describe("Insights, the admin area's landing page (graphical, what needs attenti
 		const video = (await run(deps, `INSERT INTO videos (team_id, game_id, status, delete_after, created_at) VALUES (?, ?, 'uploading', '2027-12-31T13:00:00.000Z', '2026-10-14T23:30:00.000Z')`, B12_1.id, game)).meta.last_row_id;
 		await run(deps, "UPDATE live_streams SET recording_video_id = ? WHERE live_input_uid = 'in-opened'", video);
 		expect((await healthCounts(deps.db, { stuckBefore: "2026-10-14T00:00:00.000Z", failedSince: "2026-10-08T00:00:00.000Z" })).liveNow).toBe(1);
+	});
+
+	it("links Uploads failed to the Log's lines for them", async () => {
+		const deps = createTestDeps();
+		const b = B12_1.id;
+		const game = (await run(deps, "INSERT INTO games (team_id, starts_at, competition, round_label, opponent) VALUES (?, '2026-10-10T18:40', 'VJBL', '9', 'Lakeside')", b)).meta.last_row_id;
+		await run(deps, "INSERT INTO videos (team_id, game_id, status, delete_after, created_at) VALUES (?, ?, 'failed', '2027-12-31T13:00:00.000Z', '2026-10-14T00:00:00.000Z')", b, game);
+		await run(deps, "INSERT INTO activity (team_id, kind, game_id, detail, created_at, device) VALUES (?, 'video_failed', ?, 'Stream said no', '2026-10-14T00:05:00.000Z', '')", b, game);
+		const href = (await page(deps)).match(/<a href="([^"]+)">Uploads failed<\/a>/)![1]!.replaceAll("&amp;", "&");
+		expect(await (await makeClient(deps)(href)).text()).toContain("video of Round 9");
 	});
 
 	it("never shows anyone's email", async () => {

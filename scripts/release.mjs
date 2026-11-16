@@ -19,7 +19,7 @@ import { cfToken } from "./deploy-config.mjs";
 import { firstAdminEmails, firstAdminSql } from "./first-admin.mjs";
 import { listRoutes, maintenanceRoutes } from "./maintenance-steps.mjs";
 import {
-	busyComputer,
+	busyComputer, e2eEnv, headMoved,
 	busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, QUIET_MINUTES, rebuildHint, sameAsLive, siteFromConfig,
 	SEGMENTS_SQL, STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL, JOINING_SQL, withLastParts,
 } from "./release-checks.mjs";
@@ -31,7 +31,7 @@ const fail = (why) => {
 	process.exit(1);
 };
 const stop = (why) => fail(`Nothing deployed. ${why}`);
-const passes = (cmd, args) => spawnSync(cmd, args, { stdio: "inherit" }).status === 0;
+const passes = (cmd, args, env = process.env) => spawnSync(cmd, args, { stdio: "inherit", env }).status === 0;
 const output = (cmd, args, env = {}) => execFileSync(cmd, args, { encoding: "utf8", env: { ...process.env, ...env }, maxBuffer: 64e6 });
 
 step("the code is committed on main");
@@ -63,7 +63,7 @@ if (loaded) stop(`${loaded}.`);
 step("npm run check");
 if (!passes("npm", ["run", "check"])) stop("npm run check failed.");
 step("the browser suite (npm run e2e)");
-if (!passes("npm", ["run", "e2e"])) stop("The browser suite failed: every scenario must pass before a deploy.");
+if (!passes("npm", ["run", "e2e"], e2eEnv(process.env))) stop("The browser suite failed: every scenario must pass before a deploy.");
 
 // cf's D1 calls sometimes want the account named and sometimes refuse it,
 // so a refusal is tried once the other way.
@@ -123,9 +123,11 @@ cfRun(["d1", "query", site.d1Id, "--sql", firstAdminSql(firstAdmins, new Date().
 step("push main to Cloudflare (Workers Builds deploys it)");
 const scriptId = workerTag(site.name); // looked up first: once main is pushed, Builds deploys whatever happens here
 const pushedAt = Date.now() - 120_000; // Cloudflare's clock may be a little behind this computer's
+const movedOn = headMoved(commit, output("git", ["rev-parse", "HEAD"]).trim());
+if (movedOn) stop(`${movedOn}.`);
 let moved;
 try {
-	moved = pushMain(site.accountId, site.name);
+	moved = pushMain(site.accountId, site.name, commit);
 } catch (err) {
 	stop(`The push to Cloudflare was refused or failed: ${`${err.stderr ?? ""}`.trim() || err.message}`);
 }

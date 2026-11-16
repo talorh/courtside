@@ -203,6 +203,55 @@ describe("roster", () => {
 		expect((await slotsOf(deps)).filter((s) => s.week === "2026-10-05").map((s) => `${s.duty}${s.position}g${s.g === lastWeek ? "G" : s.g} ${names.get(s.f)}`))
 			.toEqual(["lollies1gG Brown", "scoring1gG Smith", "scoring2gG Lee", "video1gG Rivers"]);
 	});
+	it("Save week on an earlier week writes only what's picked and what it held: nothing is filled in for it", async () => {
+		const { deps, manager } = await generated();
+		const lastWeek = await seedGame(deps, { startsAt: "2026-10-09T18:40", opponent: "Last Week" });
+		const ids = new Map((await deps.db.prepare("SELECT id, surname FROM roster_families").all<{ id: number; surname: string }>()).results.map((f) => [f.surname, f.id]));
+		const names = new Map([...ids].map(([name, id]) => [id, name]));
+		const held = async () => (await slotsOf(deps)).filter((s) => s.week === "2026-10-05").map((s) => `${s.duty}${s.position} ${names.get(s.f)}`);
+		// Last week only the two scorers were on: nobody brought lollies or filmed.
+		for (const [position, name] of [[1, "Smith"], [2, "Bruce"]] as const) {
+			await deps.db.prepare("INSERT INTO roster_slots (team_id, week, duty, position, game_id, family_id) VALUES (?, '2026-10-05', 'scoring', ?, ?, ?)").bind(deps.team.id, position, lastWeek, ids.get(name)).run();
+		}
+		const later = (await slotsOf(deps)).filter((s) => s.week !== "2026-10-05");
+		await manager("/roster/week/2026-10-05", form({ [`scoring2g${lastWeek}`]: String(ids.get("Lee")) }));
+		expect(await held()).toEqual(["scoring1 Smith", "scoring2 Lee"]);
+		// A duty picked for it by hand is written; the one that family held is left open, not shared out.
+		await manager("/roster/week/2026-10-05", form({ [`scoring2g${lastWeek}`]: String(ids.get("Lee")), [`lollies1g${lastWeek}`]: String(ids.get("Smith")) }));
+		expect(await held()).toEqual(["lollies1 Smith", "scoring2 Lee"]);
+		expect((await slotsOf(deps)).filter((s) => s.week !== "2026-10-05")).toEqual(later);
+	});
+	it("an earlier week shows the duties it holds, and its Change offers only those", async () => {
+		const { deps, manager } = await generated();
+		const lastWeek = await seedGame(deps, { startsAt: "2026-10-09T18:40", opponent: "Last Week" });
+		await deps.db.prepare("INSERT INTO roster_slots (team_id, week, duty, position, game_id, family_id) VALUES (?, '2026-10-05', 'scoring', 1, ?, 1), (?, '2026-10-05', 'scoring', 2, ?, 2)").bind(deps.team.id, lastWeek, deps.team.id, lastWeek).run();
+		const card = async () => {
+			const page = await (await manager("/roster")).text();
+			return page.slice(page.indexOf('id="w2026-10-05"'), page.indexOf('<section class="panel stack" id="duties">'));
+		};
+		const scorers = await card();
+		expect(scorers).toContain('<span class="duty-name">Scoring</span>');
+		expect(scorers).not.toMatch(/<span class="duty-name">(Lollies|Video)<\/span>/);
+		expect([...scorers.matchAll(/<select name="([a-z]+\d)g\d+">/g)].map((m) => m[1])).toEqual(["scoring1", "scoring2"]);
+		expect(scorers).not.toContain("Not set");
+		// Its Change says nothing is shared out for it, where an upcoming week's says the roster fills what's left.
+		expect(scorers).toContain("An earlier week keeps what was\ndone, so nothing is shared out for it: a duty left alone stays as it is.");
+		expect(scorers).not.toContain("the roster shares that duty out fairly");
+		const page = await (await manager("/roster")).text();
+		expect(page.slice(page.indexOf('id="w2026-10-12"'), page.indexOf('id="w2026-10-19"'))).toContain("Leave\nRoster's pick and the roster shares that duty out fairly.");
+		// Once it holds lollies, the week shows them, under the team's own name for the duty.
+		await manager("/roster/duties", form({ lollies: "1", lolliesLabel: "Oranges", video: "1" }));
+		await deps.db.prepare("INSERT INTO roster_slots (team_id, week, duty, position, game_id, family_id) VALUES (?, '2026-10-05', 'lollies', 1, ?, 3)").bind(deps.team.id, lastWeek).run();
+		const withLollies = await card();
+		expect(withLollies).toContain('<span class="duty-name">Oranges</span>');
+		expect([...withLollies.matchAll(/<select name="([a-z]+\d)g\d+">/g)].map((m) => m[1])).toEqual(["scoring1", "scoring2", "lollies1"]);
+		expect(withLollies).not.toContain('<span class="duty-name">Video</span>');
+		// A duty a family was moved off is open: Not set on the week and in its Change, never Roster's pick.
+		await manager("/roster/week/2026-10-05", form({ [`scoring2g${lastWeek}`]: "1" }));
+		const open = await card();
+		expect(open).toContain('<span class="duty-name">Scoring</span><span class="duty-fams"><span class="duty-fam empty">Not set</span>, <span class="duty-fam">Smith</span></span>');
+		expect(open).toContain(`<label>Scoring 1<select name="scoring1g${lastWeek}"><option value="">Not set</option>`);
+	});
 	it("Generate gives a duty left with a family that's off the roster (Rivers's one-off) to one on it", async () => {
 		const { deps, manager } = await generated();
 		await manager("/roster/families", familiesForm("Rivers"));
@@ -254,6 +303,7 @@ describe("roster", () => {
 		}
 		const admin = await (await makeClient(deps)("/roster")).text();
 		expect(admin).toContain("Generate roster</button>");
+		expect(admin).toContain("no family gets two duties in a week unless a weekend has more duties than families.");
 		expect(admin.indexOf("Families on the roster")).toBeLessThan(admin.indexOf("Roster fairness"));
 	});
 	it("reads sensibly with a No video tournament and a family taken off: fewer video turns, past duties kept", async () => {

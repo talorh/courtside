@@ -94,7 +94,7 @@ flowchart TD
 6. **The admin area** (`/admin` and everything under it, and `/changelog`, its old address) is for site admins only,
  and comes before anything of a team's: anyone else gets "Page not found", whether they asked for a page or posted
  a form. It has its own router (`src/app/admin-router.ts`) and its own frame, made once a request: who's asking,
- their current team, and the counts beside Support and Platform.
+ their current team, and the counts beside Insights and Support.
 7. **The site's own pages**: Which team? (`/teams`) and switching (`POST /teams/switch`, back to a page on this site
  with `next`), and View as (`POST /view-as` and `/view-as/stop`, admins only). Which team? opens the team straight
  away when there's only one to choose, and gives an admin Open Admin beneath every team.
@@ -106,9 +106,11 @@ flowchart TD
  every form written `method="post"`) and every page script call sends `X-Courtside-Team` (`upload-net.js`, `ask.js`).
  A form for a team other than the current one is refused (409, "reload"). A page script's write runs as its page's
  team when the person can open it, so an upload or a live stream survives switching team in another window. A write
- that names no team (a page from before multi-team) asks for a reload. A form's `_team` is read from a copy of the
- body, so a form over 2 MB (`MAX_FORM_BYTES`, well above the biggest a page sends) is refused (413) first: by its
- `Content-Length`, or, sent in chunks with none, once that much has been read.
+ that names no team (a page from before multi-team) asks for a reload. Every form or JSON body is read up to 2 MB
+ (`MAX_BODY_BYTES` in `src/shared/validation.ts`, well above the biggest a page sends) and refused (413) by its
+ `Content-Length`, or once that much has been read (sent in chunks, or with a wrong one). A form's `_team` is read
+ the same way, from a copy of the body. A photo post with no `Content-Length` is read only up to its 10 MB limit
+ (`photos-routes.ts`).
 10. **The membership** (`src/app/team-context.ts`): the person's own in that team, or for an admin a hidden team
  manager one, made on their first visit (logged as `team_opened`) and shown as Site admin. An admin viewing the team
  as another role (the `viewas` cookie, naming the team and the role, for the browser session) gets that role, still
@@ -258,8 +260,9 @@ sequenceDiagram
 ```
 
 1. `POST /api/uploads` checks the game has no video yet, starts an R2 multipart upload (through the binding) and adds
- the video's row as `uploading`. A failed video, or an upload untouched for 24 hours, is cleared out of the way
- first.
+ the video's row as `uploading`. A failed video, the same person's own unfinished upload, or anyone else's upload
+ started more than 24 hours ago (however recently a part arrived) is cleared out of the way first; another filmer
+ can't take over a newer one.
 2. The browser asks for pre-signed part links 24 at a time and puts 16 MiB parts straight into R2, up to six at once
  (fewer after a dropped connection). It remembers finished parts in `localStorage`, so choosing the same file again
  carries on where it stopped.
@@ -311,7 +314,8 @@ sequenceDiagram
  how long the phone recorded, pauses left out (`recordedSeconds`). Under 60 seconds since Go live, or under 60 seconds
  recorded while R2 holds no more than two parts (`live-test-rule.ts`: a minute is about 20 MB; R2 not answering counts as more, so the recording is kept), it's a test: the upload is aborted and deleted (`live_test`), the input disabled and the row
  cancelled with the reason, nothing is processed, and the game is free again (the next Go live reuses the input). A
- stream with no recording at all (Go live opened, the camera never started) is cancelled the same way, with nothing to
+ recording carried on with Carry on streaming (it has `recording_segments`) is never a test. A stream with no
+ recording at all (Go live opened, the camera never started) is cancelled the same way, with nothing to
  throw away.
  Otherwise `endLive` sets `end_requested_at` and switches the input off (`switchOff`: the database first, Stream
  best-effort), so the game can't be streamed again. The phone finishes uploading, and completing it closes the row as
@@ -462,8 +466,8 @@ back, for the one case the page's camera can't cover.
 
 ## Photos
 
-`src/features/photos/`, `src/platform/hosted-images.ts`, `public/photos.js`. Watch and film people, coaches and team
-managers add them; everyone sees and downloads them. They aren't linked to games.
+`src/features/photos/`, `src/platform/hosted-images.ts`, `public/photos.js`. Everyone on a team adds them, Watch only
+too; everyone sees and downloads them. They aren't linked to games.
 
 1. **On the phone or computer** (`photos.js`; chosen, or dropped on Add photos on a computer, `upload-drop.js`), each
  photo drawn one at a time and sent up to three at once (`photo-queue.js`), the first on its own so a refusal that
@@ -547,7 +551,8 @@ the videos, games and people only that log named.
  looked for in R2 as a joined file, or the joiner is asked about it, instead (every one, every run: an ask is
  answered at once, `join-service.ts`).
 3. **Processing to ready.** Read Stream's details, store the duration, and ask Stream to build the MP4 download. A
- Stream error marks the video `failed` (a team manager deletes it, which frees the game for another upload).
+ Stream error marks the video `failed`; uploading the game again replaces it (`clearSlot`), nothing needs deleting. A
+ team manager's Delete video or Move video gives the game another week from then (`waitAgain`, `waiting_since`).
 4. **HD MP4s.** For ready videos without `hd_ready_at`, check the download: ready means store the time and log it for
  Notifications; none means ask Stream again (which covers a failed request in step 3). Stream saying it can't make
  it sets `hd_failed_at`, which takes the video out of this step (and out of "busy" and Right now), writes one
@@ -562,7 +567,8 @@ the videos, games and people only that log named.
  no other video. Photos past `delete_after` go too, 50 a run (`enforcePhotoRetention`), Images first. Then the
  tombstones (`tombstones-service.ts`): a video, clip, game or photo deleted over 90 days ago, its media long gone,
  goes for good with its own child rows, a few a run, unless something kept names it: the download log (two years) or
- a removal request keeps a video, a request or a favourite keeps a clip, a kept video keeps its game.
+ a removal request keeps a video, a request or a favourite keeps a clip, a kept video keeps its game. A deleted game
+ from PlayHQ stays while its PlayHQ fixture is on the site, so the next check doesn't add it again.
 7. **PlayHQ fixtures.** Each added fixture still being checked is read again once its last check is 8 hours old
  (`playhq-service.ts`). Each league game's phase of the season comes from its grade's name in the feed (the game's,
  else its round's, else the team's). Games are matched by PlayHQ's game id (deleted games too, so a deleted game stays deleted), or
@@ -609,7 +615,7 @@ Cron triggers are UTC only, so two fire, 16:00 UTC (3am in daylight saving) and 
 job runs on whichever one is 3am in the club's time zone (`dailyDue` in `src/jobs/daily.ts`).
 
 **The backup** (`src/jobs/backup-db.ts`) writes a plain-SQL copy of the whole database (every table, then every row,
-parents first, then the indexes; the sign-in's three tables go without their rows, so a copy holds no session or code
+parents first, then the indexes; the sign-in's four tables go without their rows, so a copy holds no session or code
 hashes and no addresses or IP addresses from the limits, and a restored site starts everyone with a fresh code) to `backups/d1/courtside-YYYY-MM-DD.sql` (the local date) in the originals bucket.
 An R2 lifecycle rule deletes each file after 14 days, so two weeks of copies are kept. Each backup is checked: the dump
 holds one row line for every row read, R2 stores exactly those bytes (a SHA-256 R2 checks on the way in, then the size
@@ -656,7 +662,11 @@ asks: does Stream answer, with `MINUTES_A_GAME` (150) free for each
 game; is each game's open Go live input still in Stream (gone is a warning: `openLive` sets up a new one); does the
 joiner's self-test join; did the 5-minute job run in the last 15 minutes (not asked on staging); is any other alert up.
 `gameDayReadiness` turns that into the `game_day` alert's level and words, and `setAlert` raises or resolves its ticket
-as for every alert. It never throws: a failure is a problem in the Log (`alertFailed`).
+as for every alert. The button's answer on the week stands until a game's 8-hour check, or for a week: while it isn't
+ok, `checkComingGames` checks the week's games again every hour, and it's set to ok once they're fine or the week has
+no live game left. A 5-minute run whose outside calls are used up (`FetchBudgetSpent`) judges nothing and leaves the
+check to the next run. `NOT_A_GAME` lists the alerts that don't touch a game: Team budgets, AI models and the 3am job's
+own alert (`daily_job`). It never throws: a failure is a problem in the Log (`alertFailed`).
 
 ## Manage team: the setup checklist and the end-of-season pack
 
@@ -678,7 +688,7 @@ the season's footage goes points team managers to it.
 A closed team is deleted once its `delete_after` has passed: the end of 31 December of the year its season ends (what
 Help tells families), or 3am on the night an admin chose, with the team's code typed (`src/jobs/delete-teams.ts`). The
 5-minute run does it a slice at a time, after every team's own steps, with at most 20 calls to Images, Stream and R2 a
-run (Stream's also come out of the run's 45), so a big team's deletion never holds up a game night:
+run (Stream's also come out of the run's 200 outside calls), so a big team's deletion never holds up a game night:
 
 1. Its photos' images, each photo's row marked deleted as it goes.
 2. Every Stream copy its videos and clips have, deleted ones too, each row's `stream_uid` cleared as it goes.
@@ -691,7 +701,10 @@ removed. After two years the log's rows go (retention), and then those rows too.
 (straight away for a team nobody downloaded from, a test team say), its own row goes in the deleted team's next step,
 so its id is free for a new team (no `-2`): its Log lines keep its code and season (`admin_log.team_code`,
 `team_season`), and Costs' figures for it go. A call that fails leaves what's done
-done, and the next run carries on; something Images or Stream says is gone already counts as deleted. Live inputs are
+done and fails the run loudly, but the rest carry on: one failing item, or one team's failure, holds up nothing else,
+and the team's rows wait for a run that leaves nothing of it in Images, Stream or R2. Only the run's 20 calls, or its
+outside calls used up, end its deleting; the next run carries on. Something Images or Stream says is gone already
+counts as deleted. Live inputs are
 left to the nightly sweep, as always. While it's being deleted, a team has no steps of its own (no new Stream copies),
 can't be reopened, and is gone from its members' teams.
 
@@ -731,7 +744,7 @@ a day for an answer.
 
 ```mermaid
 stateDiagram-v2
- [*] --> New: a team manager or coach asks, or an alert starts
+ [*] --> New: a team manager asks, or an alert starts
  New --> Open: an admin takes it, gives it, or adds a note
  New --> Waiting: an admin replies
  Open --> Waiting: an admin replies
@@ -775,6 +788,8 @@ to buy or something to fix, and no spam.
 | The month's emails | each run | 2,400 of the 3,000 Workers Paid includes | 2,850 | under 2,300, or a new month |
 | AI models (Workers AI) | the 3am job, and whenever Platform opens | a model with a planned retirement date | two weeks before it, or a model gone from the catalog | every model current |
 | Team budgets (Costs) | the 3am job, and whenever Costs or Insights opens | a running team's season estimated over its budget | a running team's costs so far over it | every running team within its budget |
+| The video joiner | the 3am job, joining its own test files | it doesn't answer, or can't join them | a game's video couldn't be joined after 6 tries | a good night's join; after an urgent one, only once every such game is dealt with (Keep the first part, or its video deleted) |
+| The game check | the 5-minute job, for each live game 8 hours before tip-off, then hourly while it isn't ok; Platform's button for the week's | a Go live input gone, the joiner not ready, or another alert's warning that touches a game | Stream not answering or short of minutes (150 a game), the 5-minute job stopped, or another urgent alert that touches a game | a fine check, or no live game left in the next 8 hours |
 
 Each level is saved, and Platform and Insights' Alerts section show it with its ticket. A level only drops once its figure is past the clearing
 point, so one sitting on a line doesn't flap.
@@ -804,20 +819,21 @@ removed too) and logged.
 ## The admin area
 
 Site admins only (`src/features/admin/`), on a computer or a phone. Each page sits in `views/admin-layout.ts`: a
-bottle-green sidebar on a computer, one row of sections that scrolls sideways on a phone, with counts beside Support
-(tickets waiting for an answer) and Platform (alerts that aren't ok, red when one is urgent). `public/admin.css` is
+sidebar in the club's colour on a computer, one row of sections that scrolls sideways on a phone, with counts beside
+Insights (alerts that aren't ok, red when one is urgent) and Support (tickets waiting for an answer). `public/admin.css` is
 loaded on admin pages only, on the site's colour tokens, and `public/admin.js` scrolls the phone's row to the current
 section and keeps one More menu open at a time.
 
-- **Insights** (`/admin`, the landing page; `insights-*.ts`, `views/insights-*.ts`) reads the database only, so it
- opens quickly. First, what needs an admin (`insights-attention.ts`: alerts, support tickets waiting, families'
+- **Insights** (`/admin`, the landing page; `insights-*.ts`, `views/insights-*.ts`) reads the database for its
+ figures; only its Alerts ask outside it (Stream, Cloudflare and R2, below). First the Alerts, with what needs an
+ admin (`insights-attention.ts`: alerts, support tickets waiting, families'
  removal requests in any team, a running team with no team manager), worst first. Then a scoreboard of the whole site
  with each figure's last 12 weeks, first views week by week, when families watch (a heatmap of days and hours,
  local time), the rest as small charts (`insights-chart.ts`), the teams side by side, and what stands out. Every
  team's figures come from one query; the weeks come from hourly counts put into the club's weeks in code. With no
  team on the site (a new install), Get started takes the numbers' place.
  `/admin/insights` redirects here.
-- **Teams** (`/admin/teams`): every team that isn't deleted, running ones first (season, status, people against 25,
+- **Teams** (`/admin/teams`): every team that isn't deleted, running ones first (season, status, people,
  team managers, setup (`teams/team-setup.ts`: "3 of 4" and what's left, as Manage team's checklist), last used, open
  tickets), each with Open (it becomes the admin's current team, as its team manager)
  and a More menu: View as Watch only, Watch and film, coach or team manager, Edit, and End season and close team; or, its season over,
@@ -829,16 +845,18 @@ section and keeps one More menu open at a time.
  - **End season** closes the team: read-only at once, and refused while a phone is sending the team an upload, a
  recording or a live picture (the release's 15 quiet minutes). **Reopen** works until deleting starts, unless an open
  team has its code by then.
-- **Support** (`/admin/support`): the ticket desk (Emails, the support desk and monitoring), and its second tab,
- **Alerts**, the top of Insights (`health-load.ts`, `health-*.ts`, `views/alerts-section.ts`; `/admin/support/alerts`, its address as Support's second tab, lands there):
- is the site all right, in one answer: "All green" when it is, else how many urgent and warnings. Then what needs an
- admin (Insights' list without the alerts), and every check as a light, worst first: the ten alerts as they stand
- (the team budgets checked as it opens), and what it checks itself (the nightly backup and clean-up, older than 36
+- **Support** (`/admin/support`): the ticket desk (Emails, the support desk and monitoring); its menu link counts
+ tickets waiting for an answer.
+- **Alerts**, at the top of Insights (`health-load.ts`, `health-*.ts`, `views/alerts-section.ts`; `/admin/support/alerts`,
+ its old address, lands there): is the site all right, in one answer: "All green" when it is, else how many urgent and
+ warnings. Then what needs an admin (Insights' list without the alerts), and every check as a light, worst first: the
+ twelve alerts as they stand (the team budgets checked as it opens, which reads Costs' figures), and what it checks
+ itself, asking Stream, Cloudflare's figures and R2's list of backups (the nightly backup and clean-up, older than 36
  hours; Stream answering; videos processing over 4 hours since their processing began (`processing_at`, so a recording
  the site saved late isn't stuck the moment it starts); uploads failed
  in 7 days; the Worker's errors in the last 24 hours, 1% warns and 5% is urgent; over 100 sign-ins refused in a day),
  then what's going on now (live streams open, uploads under way, devices signed in). Grey for what hasn't been checked
- yet (staging's jobs). Support's menu link counts tickets waiting and alerts that aren't ok.
+ yet (staging's jobs). Insights' menu link counts the alerts that aren't ok.
 - **Platform** (`/admin/platform`): the site's health, each thing once. A row for each thing watched, with its figure
  against its limit and its alert: Stream's minutes, the sign-ins (devices signed in, and the last 24 hours' codes), photos against Images'
  100,000, D1's size against 10 GB (from D1's own answer, or Cloudflare's), server errors, emails, the 3am job with the
@@ -922,7 +940,7 @@ section and keeps one More menu open at a time.
  current state, written for people, with diagrams drawn as server-side SVG and coloured by classes (light and
  dark, no inline styles). Nothing is read from the database. A change to how the site works or is set up changes
  that page too, in the same commit. Its sections are listed once, in `views/docs-groups.ts`. "Working with an AI
- coding agent" shows `docs/agent-setup.md` as it is in the repository (a `?raw` import), with a Copy button, so the
+ coding agent" shows `docs/agent-setup.md` as it is in the repository (through `agent-setup-text.ts`, which `npm run docs` writes), with a Copy button, so the
  page and the file can't differ; `AGENTS.md` points other agents to `AGENTS.md` and that file.
  - **The Documentation AI assistant**, at the top of the page (`docs-assistant.ts`, `docs-knowledge.ts`,
  `public/docs-ask.js`; `POST /admin/docs/ask`): each section as plain text (a table's rows kept as rows, a diagram
@@ -969,10 +987,10 @@ erDiagram
 
 | Table | Key columns | Lifecycle |
 | --- | --- | --- |
-| teams | id (`<code>-<season>`: `b12.1-2026`), name, code (`b12.1`; one active team per code), season_start, ask_name (who members are told to ask; null: "your team manager"), status (active/closed/deleted), closed_at, delete_after, deleted_at, budget (its season's, in the club's currency; null: the default, $250) | Closed, then deleted; the row stays as a tombstone |
+| teams | id (`<code>-<season>`: `b12.1-2026`), name, code (`b12.1`; one active team per code), season_start, ask_name (who members are told to ask; null: "your team manager"), status (active/closed/deleted), closed_at, delete_after, deleted_at, budget (its season's, in the club's currency; null: the default, $200) | Closed, then deleted; the row stays as a tombstone |
 | admins | email (case-insensitive), added_by, added_at, removed_at | The site's admins, managed in the admin area; site-wide |
 | members | team_id, email (unique per team, case-insensitive), name, role (watcher/filmer/coach/manager: Watch only, Watch and film, Coach, Team manager), last_seen_at, hide_scores, hidden (an admin's own way into a team: never listed or counted, no Last seen), removed_at | Soft delete; adding them again brings them back. A person has a row in each team they're in |
-| games | team_id, starts_at, competition, round_label, phase (the league season's: grading1, crossover, grading2, championship; null otherwise, `games/season-phase.ts`), opponent, venue, live_stream (1, or 0: record and upload after), no_video_at (set: No video, which wins), no_video_auto_at (when the site set it, a week on with nothing filmed; cleared when it's set back to Video), waiting_since (when it was last set from No video back to Video: it waits a week from then), playhq_game_id, playhq_fixture_id, playhq_gone_at, score_checked_at, deleted_at | Soft delete, only when the game has no video; the row goes 90 days after, once its last video has |
+| games | team_id, starts_at, competition, round_label, phase (the league season's: grading1, crossover, grading2, championship; null otherwise, `games/season-phase.ts`), opponent, venue, live_stream (1, or 0: record and upload after), no_video_at (set: No video, which wins), no_video_auto_at (when the site set it, a week on with nothing filmed; cleared when it's set back to Video, or PlayHQ moves the game later), waiting_since (when it was last set from No video back to Video, or a team manager deleted or moved its video: it waits a week from then), playhq_game_id, playhq_fixture_id, playhq_gone_at, score_checked_at, deleted_at | Soft delete, only when the game has no video; the row goes 90 days after, once its last video has |
 | game_scores | team_id, game_id (one row per game), ours, opponent (0 to 300), source (playhq/manual), entered_by, entered_at | The final score; Clear score hard-deletes a typed one. Never replaced by PlayHQ |
 | game_lines | team_id, kind (upcoming, away, rivals_upcoming, playing, rivals_playing, played, rivals_played, won, won_by_one, lost, drew; one row each), lines (one a row, up to 20), updated_at | A team's own lines for a group its team manager changed on Manage team, Game lines; a group with no row uses the club's (`games/game-lines-club.ts`). Saving the club's lines, or an empty box, deletes the row. Deleted with the team |
 | playhq_fixtures | team_id, competition (the league or Tournament), playhq_team_id, url, name, auto_check, game_count, checked_at, last_error, no_video | Hard delete on Remove (its games stay) |
@@ -999,18 +1017,18 @@ erDiagram
 | win_seen | team_id, game_id, member_id (one row each), seen_at | Who has had a game's win pop-up, so it shows once per member per game: the game page inserts the row and shows the pop-up only when the insert took (`win-seen-repository.ts`, `win-pop.ts`, `public/win.js`); goes with the game's row |
 | ask_counts | team_id, member_id, day, n | Ask Virtual Team Manager's questions per member per local day (20 at most); kept a week; the questions are never stored |
 | docs_ask_counts | email (the admin's), day, n | The Documentation AI assistant's questions per admin per local day (50 at most); kept a week; the questions are never stored |
-| admin_log | admin_email (who: an admin, a team manager, or "site" for the jobs), team_id (null when it's no team's, or its team's row has gone), team_code and team_season (a deleted team's, once its row has gone), action, detail, created_at, device (the browser it came from, "" for the site's own) | What admins, team managers (people and players added, changed or removed, letting someone sign in, games added, changed or deleted, and videos deleted or moved), Go live (who went live, the game ending with End game, a stream thrown away as a test, its recording saved; `live-log.ts`) and the site did; the admin area's Log shows it with the sign-in's events, filtered and 200 to 2,000 lines; kept |
+| admin_log | admin_email (who: an admin, a team manager, or "site" for the jobs), team_id (null when it's no team's, or its team's row has gone), team_code and team_season (a deleted team's, once its row has gone), action, detail, created_at, device (the browser it came from, "" for the site's own) | What admins, team managers (people and players added, changed or removed, letting someone sign in, games added, changed or deleted, and videos deleted or moved), Go live (who went live, the game ending with End game, a stream thrown away as a test, its recording saved; `live-log.ts`) and the site did; the admin area's Log shows it with the sign-in's events, the teams' activity and problems, filtered, 100 lines a page from the newest 5,000 of each; kept for good |
 | support_requests | source (team/site), team_id and member_id (a team's), alert_kind and title (the site's own), kind (support/feature), stage (a feature request's: considering/planned/shipped/declined), topic, message, contact, status (new/open/waiting/resolved), assigned_to, emailed_at, created_at, updated_at, resolved_at, resolved_by | Support tickets; the site's own, at most one open a kind |
 | support_messages | request_id, team_id (the ticket's; null for the site's own), kind (reply/note/event), member_id or admin_email (neither: the site), body, email_to (admins, manager, an admin's email, or none), emailed_at, created_at | A ticket's conversation after its first message; private notes only by admins |
 | sessions | id (the cookie token's SHA-256), email, device, created_at, expires_at (30 days), last_seen_at, ended_at, view (desktop/mobile, from the `courtside_view` cookie `public/view.js` sets), counted_week | One row a signed-in device (the site's own sign-in) |
 | view_weeks | week (its Monday), view, devices | The devices that opened the site in each view each week, each session counted once a week (`auth/session-view.ts`); Insights' Mobile and desktop; 12 weeks |
 | sign_in_codes | email, code_hash (of email and code), ip, created_at, expires_at (10 minutes), tries, used_at, voided_at | A code sent by email; the newest live one is the one that counts |
-| sign_in_events | kind (code_sent/unknown_email/limited/wrong/signed_in/robot/desktop_view/mobile_view), email, ip, device, at | What happened at the sign-in page, for its limits, Platform's Sign-ins row and the admin Log, and which view a device uses when first seen or changed; two weeks |
+| sign_in_events | kind (code_sent/unknown_email/limited/wrong/signed_in/robot/desktop_view/mobile_view), email, ip, device, at | What happened at the sign-in page, for its limits, Platform's Sign-ins row and the admin Log, and which view a device uses when first seen or changed; a month (31 days, the 3am job) |
 | problems | team_id (no foreign key; null when it's no team's), kind (server_error/job_failed/email_failed/golive_problem/upload_problem/photo_problem/stream_problem/ai_failed/site_problem), who (an email, or "site"), what, detail, device, times, first_at, at | Anything that failed, for the admin Log's Problems; the same one again within 30 minutes counts on its line. A month (the 3am job); a deleted team's go with it |
 | cost_views | month (UTC), team_id ('' for no team's), minutes (Stream's minutes watched), saved_at | Costs' minutes watched, from Cloudflare by video; kept when a team is deleted |
 | billed_usage | day (UTC), service, family, quantity, billable, unit, billed (US$), period_start, saved_at | Cloudflare's own bill, day by day (its billable usage): read every night and when Costs's copy is 20 hours old, each read replacing the days it returns; kept 400 days. The days it covers are actual on Costs (`costs-bill.ts`, `costs-reconcile.ts`) |
 | exchange_rates | pair ('USD/<the club's currency code>'), rate, rate_date (the European Central Bank's day), fetched_at | Costs' club currency; read again after six hours |
-| platform_alerts | kind (stream_storage/images/daily_job/sync_job/database/site_errors/email/email_allowance/budget), level (ok/warn/urgent), detail, since, failures, checked_at, ticket_id (its latest) | One row a kind: where it stands, and its ticket |
+| platform_alerts | kind (stream_storage/images/daily_job/sync_job/database/site_errors/email/email_allowance/budget/ai_models/joiner/game_day), level (ok/warn/urgent), detail, since, failures, checked_at, ticket_id (its latest) | One row a kind: where it stands, and its ticket |
 | server_errors | hour (UTC, `YYYY-MM-DDTHH`), n | The 5xx answers the site gave, for the "site failing" alert; kept two days |
 
 Every repository query filters by `team_id`, except the site-wide ones `scripts/rules.mjs` lists as `CROSS_TEAM`,

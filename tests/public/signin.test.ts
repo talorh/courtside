@@ -16,13 +16,13 @@ function fakeEl(extra: Record<string, unknown> = {}): Fake {
 }
 
 /** The sign-in page's code step, as signin.js finds it. */
-async function open() {
+async function open(resendNow = false) {
 	vi.useFakeTimers();
 	const submit = vi.fn();
 	const form = fakeEl({ requestSubmit: submit });
 	const code = fakeEl({ form });
 	const email = fakeEl();
-	const resend = fakeEl();
+	const resend = fakeEl(resendNow ? { dataset: { resendNow: "" } } : {});
 	const viewport = fakeEl();
 	const win = fakeEl({ visualViewport: viewport });
 	let active: Fake | null = null;
@@ -67,6 +67,12 @@ describe("the sign-in page's code field", () => {
 	it("Send a new code waits a minute, counting down", async () => {
 		const { resend } = await open();
 		expect([resend.disabled, resend.textContent]).toEqual([true, "Send a new code (ready in 60s)"]);
+		vi.advanceTimersByTime(60_000);
+		expect([resend.disabled, resend.textContent]).toEqual([false, "Send a new code"]);
+	});
+	it("Send a new code is ready at once when the page says the code ran out (data-resend-now)", async () => {
+		const { resend } = await open(true);
+		expect([resend.disabled, resend.textContent]).toEqual([false, "Send a new code"]);
 		vi.advanceTimersByTime(60_000);
 		expect([resend.disabled, resend.textContent]).toEqual([false, "Send a new code"]);
 	});

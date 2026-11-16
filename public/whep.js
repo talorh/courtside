@@ -3,7 +3,7 @@
 // drops, so it needs no taps. An external app's stream plays in Stream's own player; for both, the page moves on by
 // itself once the stream is over.
 import { timeoutSignal } from "./upload-net.js";
-import { reloadWhenOver, waitCard } from "./whep-wait.js";
+import { frozenClock, playOnTap, reloadWhenOver, waitCard } from "./whep-wait.js";
 
 // Stream answers in a second or two; a request that hangs longer is given up and tried again.
 const ANSWER_TIMEOUT_MS = 15_000;
@@ -121,11 +121,7 @@ function watch(video, url, over) {
 	}, 5000);
 	// Meanwhile a frozen picture asks whether the game has ended, and says the stream will resume if it hasn't (whep-wait.js).
 	const card = document.querySelector("[data-live-wait]");
-	if (card) {
-		let lastFrameAt = 0;
-		const seen = () => { lastFrameAt = Date.now(); if (typeof video.requestVideoFrameCallback === "function") video.requestVideoFrameCallback(seen); };
-		if (typeof video.requestVideoFrameCallback === "function") video.requestVideoFrameCallback(seen); else video.addEventListener("timeupdate", seen);
-		waitCard(card, () => (lastFrameAt ? Date.now() - lastFrameAt : 0), over);
-	}
+	if (card) waitCard(card, frozenClock(video), over);
+	playOnTap(video.parentElement, video, () => play(video));
 	attempt();
 }

@@ -131,6 +131,17 @@ describe("members routes", () => {
 		await deps.db.prepare("UPDATE teams SET status = 'closed', closed_at = '2026-10-14T00:00:00.000Z' WHERE id = ?").bind(deps.team.id).run();
 		expect(await (await makeClient(deps)("/manage")).text()).not.toContain('id="addperson"');
 	});
+	it("a closed team's People rows show each name and role as plain text, with nothing to change and no Save", async () => {
+		const deps = createTestDeps();
+		await addMember(deps.db, deps.team.id, "clyde@x.com", "filmer", "Clyde Drexler");
+		await deps.db.prepare("UPDATE teams SET status = 'closed', closed_at = '2026-10-14T00:00:00.000Z' WHERE id = ?").bind(deps.team.id).run();
+		const page = await (await makeClient(deps)("/manage")).text();
+		const row = /<tr><td class="m-email">clyde@x.com[\s\S]*?<\/tr>/.exec(page)?.[0] ?? "";
+		expect(row).toContain('<td class="m-name">Clyde Drexler</td>');
+		expect(row).toContain('<td class="m-role">Watch and film</td>');
+		expect(row).not.toMatch(/<input name="name"|<select name="role"|data-save|id="member-/);
+		expect(row).toContain("Remove");
+	});
 	it("rejects an invalid role and keeps the last team manager", async () => {
 		const client = makeClient(createTestDeps());
 		expect((await client("/members/1", form({ name: "Sam", role: "admin" }))).status).toBe(400);

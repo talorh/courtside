@@ -43,9 +43,10 @@ interface FixturePageProps {
 	scores: Map<number, Score>;
 }
 
-/** No video for a game that won't be filmed; else Live stream or Recorded, for a game still to come or being played. */
-const planTag = (game: Game, nowLocal: string): SafeHtml | "" => game.noVideo ? html` <span class="t src">No video</span>`
-	: gamePhase(game.startsAt, nowLocal) !== "complete" ? html` <span class="t src">${game.liveStream ? "Live stream" : "Recorded"}</span>` : "";
+/** No video for a game that won't be filmed; else Live stream or Recorded, for a game still to come or being played
+ * (a game with its score in is over). */
+const planTag = (game: Game, nowLocal: string, scored = false): SafeHtml | "" => game.noVideo ? html` <span class="t src">No video</span>`
+	: gamePhase(game.startsAt, nowLocal, scored) !== "complete" ? html` <span class="t src">${game.liveStream ? "Live stream" : "Recorded"}</span>` : "";
 
 function status({ game, videoStatus }: GameWithVideo, nowLocal: string, live: "streaming" | "saving" | undefined, scored: boolean): SafeHtml {
 	if (videoStatus === "ready") return html`<span class="role c">Has video</span>`;
@@ -83,7 +84,7 @@ function viewPage(p: FixturePageProps): SafeHtml {
 	const PHASE = { upcoming: html`<span class="role">Upcoming</span>`, in_progress: html`<span class="role">In progress</span>`, complete: html`<span class="role c">Complete</span>` };
 	const played = (g: Game) => PHASE[gamePhase(g.startsAt, p.nowLocal, p.scores.has(g.id))];
 	const rows = p.games.map(({ game }) => html`<tr${finalRow(game)}><td class="f-date">${formatGameDate(game.startsAt)}</td><td class="f-game"><a href="/games/${game.id}">${gameTitle(game)}</a> ${scoreTag(p.scores.get(game.id), p.frame.member.hideScores)}</td>
-<td class="f-type">${competitionTags(game)}</td><td class="f-venue">${game.venue}</td><td class="f-status">${played(game)}${planTag(game, p.nowLocal)}</td></tr>`);
+<td class="f-type">${competitionTags(game)}</td><td class="f-venue">${game.venue}</td><td class="f-status">${played(game)}${planTag(game, p.nowLocal, p.scores.has(game.id))}</td></tr>`);
 	return layout({ title: "Fixture", frame: p.frame, current: "fixture" }, html`${pageHead("This season", "Fixture")}
 <p class="small">Every game, with tip-off times and venues. ${teamCopy(p.frame.team).Ask} keeps it up to date.</p>
 <div class="tablewrap cards"><table class="fixture"><thead><tr><th>Date</th><th>Game</th><th>Type</th><th>Venue</th><th>Status</th></tr></thead>

@@ -15,8 +15,8 @@ interface CountsRow extends TeamRow {
 	photos: number; watchers_30: number; downloads_30: number; streams: number; app_streams: number; last_upload: string | null; open_requests: number; open_support: number; questions_30: number;
 }
 
-/** Every team that isn't deleted, current ones first. `since30`: the instant 30 days ago; `nowLocal`: local wall time
- * (games.starts_at's format); `day30`: the local date 30 days ago (ask_counts.day's). */
+/** Every team that isn't deleted, current ones first, test runs aside (TEST_RUN below). `since30`: the instant 30 days
+ * ago; `nowLocal`: local wall time (games.starts_at's format); `day30`: the local date 30 days ago (ask_counts.day's). */
 export async function teamCounts(db: D1Database, p: { since30: string; nowLocal: string; day30: string }): Promise<TeamCounts[]> {
 	const { results } = await db.prepare(`SELECT ${TEAM_COLUMNS},
 		(SELECT COUNT(*) FROM members m WHERE m.team_id = t.id AND m.removed_at IS NULL AND m.hidden = 0) AS people,
@@ -27,10 +27,10 @@ export async function teamCounts(db: D1Database, p: { since30: string; nowLocal:
 			AND NOT EXISTS (SELECT 1 FROM videos v WHERE v.team_id = g.team_id AND v.game_id = g.id AND v.deleted_at IS NULL AND v.status <> 'failed')) AS awaiting_video,
 		(SELECT COUNT(*) FROM videos v WHERE v.team_id = t.id AND v.deleted_at IS NULL AND v.status = 'ready') AS videos,
 		(SELECT COALESCE(SUM(v.duration_seconds), 0) FROM videos v WHERE v.team_id = t.id AND v.deleted_at IS NULL AND v.status = 'ready') AS video_seconds,
-		(SELECT MAX(v.created_at) FROM videos v WHERE v.team_id = t.id AND v.status <> 'failed') AS last_upload,
+		(SELECT MAX(v.created_at) FROM videos v WHERE v.team_id = t.id AND v.status <> 'failed' AND NOT (${TEST_RUN("v")})) AS last_upload,
 		(SELECT COUNT(*) FROM clips c WHERE c.team_id = t.id AND c.deleted_at IS NULL AND c.status = 'ready') AS clips,
 		(SELECT COUNT(*) FROM photos f WHERE f.team_id = t.id AND f.deleted_at IS NULL) AS photos,
-		(SELECT COUNT(*) FROM video_views w WHERE w.team_id = t.id AND w.opened_at >= ?1) AS watchers_30,
+		(SELECT COUNT(*) FROM video_views w WHERE w.team_id = t.id AND w.opened_at >= ?1 AND ${NOT_A_TEST("w.video_id", "w.team_id")}) AS watchers_30,
 		(SELECT COUNT(*) FROM downloads d WHERE d.team_id = t.id AND d.created_at >= ?1)
 			+ (SELECT COUNT(*) FROM media_downloads md WHERE md.team_id = t.id AND md.created_at >= ?1) AS downloads_30,
 		(SELECT COUNT(DISTINCT s.game_id) FROM live_streams s WHERE s.team_id = t.id AND s.status = 'saved'

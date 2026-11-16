@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { getActiveVideoForGame, getVideo } from "../../../src/features/videos/videos-repository.ts";
-import { form, makeClient } from "../../helpers/app.ts";
-import { createTestDeps } from "../../helpers/fakes.ts";
+import { getGame } from "../../../src/features/games/games-repository.ts";
+import { runSync } from "../../../src/jobs/sync-videos.ts";
+import { form, jsonBody, makeClient } from "../../helpers/app.ts";
+import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 import { aDayLater } from "../../helpers/purge.ts";
 import { seedGame, seedVideo } from "../../helpers/seed.ts";
 
@@ -59,7 +61,7 @@ describe("game page", () => {
 			.bind(deps.team.id, gameId, "2026-10-14T03:15:00.000Z", "2026-10-14T03:20:00.000Z", videoId).run();
 		expect(await since()).toEqual(["2:20pm", "2:45pm"]);
 	});
-	it("lets admins move (only to a game without video, any of the team's: sweep 3) and delete", async () => {
+	it("lets admins move (only to a game without video, any of the team's) and delete", async () => {
 		const { deps, gameId, videoId } = await setup();
 		const client = makeClient(deps);
 		const taken = await seedGame(deps, { roundLabel: "8" });
@@ -90,5 +92,87 @@ describe("game page", () => {
 		expect(moved.headers.get("Location")).toBe(`/games/${target}?done=moved`);
 		expect(await getActiveVideoForGame(deps.db, deps.team.id, target)).toMatchObject({ id: videoId, status: "ready" });
 		expect(await deps.db.prepare("SELECT deleted_reason FROM videos WHERE id = ?").bind(failed).first("deleted_reason")).toBe("replaced");
+	});
+});
+
+describe("the team manager's panel", () => {
+	it("tells the truth about a failed video: uploading the game again replaces it", async () => {
+		const deps = createTestDeps();
+		const gameId = await seedGame(deps);
+		await seedVideo(deps, { gameId, status: "failed", r2Key: "originals/bad.mov" });
+		await deps.db.prepare("UPDATE videos SET failure_reason = 'Unreadable file'").run();
+		const page = await (await makeClient(deps)(`/games/${gameId}`)).text();
+		expect(page).toContain('<p class="small">Stream said: Unreadable file. Upload the game again: the new video replaces this one.</p>');
+	});
+});
+
+describe("a game whose video a team manager deletes or moves, after its week of waiting", () => {
+	// The club's time is UTC+11 in November: the game was Friday 13 Nov at 7:35pm; twelve days on, its week is long over.
+	const later = (deps: TestDeps, iso: string) => { (deps as { now: () => Date }).now = () => new Date(iso); };
+	const noVideo = async (deps: TestDeps, id: number) => (await getGame(deps.db, deps.team.id, id))!.noVideo;
+	async function filmed() {
+		const deps = createTestDeps(new Date("2026-11-13T09:00:00Z"));
+		const gameId = await seedGame(deps, { startsAt: "2026-11-13T19:35" });
+		const videoId = await seedVideo(deps, { gameId, streamUid: "u1", r2Key: "originals/a.mov" });
+		later(deps, "2026-11-25T09:00:00Z");
+		return { deps, gameId, videoId };
+	}
+
+	it("a deleted video's game waits a week from the delete for its new upload, then goes to No video", async () => {
+		const { deps, gameId, videoId } = await filmed();
+		expect((await makeClient(deps)(`/videos/${videoId}/delete`, form({ confirm: "yes" }))).status).toBe(303);
+		later(deps, "2026-11-25T09:05:00Z");
+		await runSync(deps);
+		expect(await noVideo(deps, gameId)).toBe(false);
+		expect(await (await makeClient(deps)("/upload")).text()).toContain(`value="${gameId}"`);
+		later(deps, "2026-12-02T08:55:00Z");
+		await runSync(deps);
+		expect(await noVideo(deps, gameId)).toBe(false);
+		later(deps, "2026-12-02T09:05:00Z");
+		await runSync(deps);
+		expect(await noVideo(deps, gameId)).toBe(true);
+	});
+	it("the game a video was moved off waits a week from the move", async () => {
+		const { deps, gameId, videoId } = await filmed();
+		const free = await seedGame(deps, { startsAt: "2026-11-20T19:35", roundLabel: "7" });
+		expect((await makeClient(deps)(`/videos/${videoId}/move`, form({ gameId: String(free) }))).status).toBe(303);
+		later(deps, "2026-11-25T09:05:00Z");
+		await runSync(deps);
+		expect(await noVideo(deps, gameId)).toBe(false);
+		later(deps, "2026-12-02T09:05:00Z");
+		await runSync(deps);
+		expect(await noVideo(deps, gameId)).toBe(true);
+		expect(await noVideo(deps, free)).toBe(false);
+	});
+});
+
+describe("Delete video on a live recording", () => {
+	async function streaming() {
+		const deps = createTestDeps(new Date("2026-10-15T00:00:00Z"));
+		await deps.db.prepare("INSERT INTO members (team_id, email, role) VALUES (?, 'sam@x.com', 'filmer')").bind(deps.team.id).run();
+		const gameId = await seedGame(deps, { startsAt: "2026-10-15T18:40" });
+		const res = await makeClient(deps, "sam@x.com")(`/api/live/${gameId}/browser`, jsonBody({ mimeType: "video/mp4" }));
+		const { videoId } = ((await res.json()) as { data: { videoId: number } }).data;
+		return { deps, gameId, videoId };
+	}
+	const minutesOn = (deps: TestDeps, minutes: number) => {
+		const at = new Date(deps.now().getTime() + minutes * 60_000);
+		(deps as { now: () => Date }).now = () => at;
+	};
+
+	it("is refused while a phone is still streaming it, or its parts may still be coming", async () => {
+		const { deps, videoId } = await streaming();
+		const del = () => makeClient(deps)(`/videos/${videoId}/delete`, form({ confirm: "yes" }));
+		// Just begun: its first part may still be on its way.
+		expect((await del()).status).toBe(409);
+		minutesOn(deps, 3);
+		deps.live.connected.add((await deps.db.prepare("SELECT live_input_uid AS uid FROM live_streams").first<{ uid: string }>())!.uid);
+		const streamingNow = await del();
+		expect(streamingNow.status).toBe(409);
+		expect((await streamingNow.text()).replaceAll("&#39;", "'")).toContain("This game is still being streamed from a phone, so its recording can't be deleted from here.");
+		expect(await getVideo(deps.db, deps.team.id, videoId)).not.toBeNull();
+		deps.live.connected.clear();
+		expect((await del()).status).toBe(303);
+		expect(await getVideo(deps.db, deps.team.id, videoId)).toBeNull();
 	});
 });

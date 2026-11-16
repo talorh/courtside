@@ -38,7 +38,7 @@ const safeFileName = (name: string) => name.replace(/[^A-Za-z0-9._-]+/g, "_").sl
 const STALE_UPLOAD_HOURS = 24;
 
 /**
- * One video per game. A failed video, your own unfinished upload, or anyone's upload untouched for a day is cleared
+ * One video per game. A failed video, your own unfinished upload, or anyone's upload started over a day ago is cleared
  * out of the way. (Resuming on the same device never gets here: the page carries on with its saved upload.)
  */
 async function clearSlot(deps: TeamDeps, member: Member, gameId: number): Promise<void> {

@@ -3,7 +3,7 @@ import type { TeamDeps } from "../../app/deps.ts";
 import { conflict, notFound } from "../../app/errors.ts";
 import { isRealDate, parseLocal } from "../../shared/time.ts";
 import {
-	COMPETITIONS, countActiveVideosForGame, createGame, type Game, type GameInput, type GameWithVideo, getGame, listGamesWithVideoStatus,
+	COMPETITIONS, countActiveVideosForGame, createGameOnce, type Game, type GameInput, type GameWithVideo, getGame, listGamesWithVideoStatus,
 	softDeleteGame, updateGame,
 } from "./games-repository.ts";
 import { closeUnusedLive } from "../live/live-service.ts";
@@ -43,9 +43,10 @@ export async function requireGame(db: D1Database, teamId: string, id: number): P
 	return game;
 }
 
-/** Add game: No video is marked now (Live stream sits underneath, unused, until an Edit picks Live stream or Record). */
-export async function addGame(deps: TeamDeps, input: GameInput, createdBy: number, video: GameVideo): Promise<number> {
-	return createGame(deps.db, deps.team.id, input, createdBy, video === "none" ? deps.now().toISOString() : null, video !== "record");
+/** Add game: No video is marked now (Live stream sits underneath, unused, until an Edit picks Live stream or Record).
+ * null when the same game is already on the fixture (a second tap): nothing is added. */
+export async function addGame(deps: TeamDeps, input: GameInput, createdBy: number, video: GameVideo): Promise<number | null> {
+	return createGameOnce(deps.db, deps.team.id, input, createdBy, video === "none" ? deps.now().toISOString() : null, video !== "record");
 }
 
 /**

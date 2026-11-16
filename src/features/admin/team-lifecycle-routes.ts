@@ -6,6 +6,7 @@ import { HttpError, notFound } from "../../app/errors.ts";
 import { htmlResponse, redirect } from "../../app/respond.ts";
 import { parseForm } from "../../shared/validation.ts";
 import { hasGames } from "../games/games-repository.ts";
+import { listPhotos } from "../photos/photos-repository.ts";
 import type { Team } from "../teams/team.ts";
 import { getTeam } from "../teams/teams-repository.ts";
 import { cancelDelete, closeTeam, deleteTonight, editTeam, reopenTeam } from "./team-lifecycle-service.ts";
@@ -38,7 +39,8 @@ async function orAgain(work: () => Promise<void>, done: string, again: (error: s
 export function teamLifecycleRoutes(router: AdminRouter): void {
 	const edit = async ({ deps, frame, params }: AdminCtx, values?: z.infer<typeof EditForm>, error?: string, status = 200) => {
 		const shown = await adminTeam(deps, params.id);
-		const page = editPage({ frame, team: shown, seasons: onboardSeasons(deps.now()), locked: await hasGames(deps.db, shown.id), values, error });
+		const seasonLocked = (await listPhotos(deps.db, shown.id)).length > 0;
+		const page = editPage({ frame, team: shown, seasons: onboardSeasons(deps.now()), locked: await hasGames(deps.db, shown.id), seasonLocked, values, error });
 		return htmlResponse(page, status);
 	};
 	router.get("/admin/teams/:id/edit", (ctx) => edit(ctx));

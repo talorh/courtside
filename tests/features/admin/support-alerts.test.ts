@@ -32,7 +32,7 @@ describe("Insights' Alerts section", () => {
 		expect((await makeClient(deps, { email: "boss@x.com" })("/admin")).status).toBe(404);
 		const moved = await makeClient(deps)("/admin/support/alerts");
 		expect([moved.status, moved.headers.get("location")]).toEqual([302, "/admin#alerts"]);
-		expect(await health(deps)).toContain('<section class="stack alerts" id="alerts" aria-labelledby="alerts-h"><div class="panelhead"><h2 id="alerts-h">Is the site all right?</h2><span class="small"><a href="/admin#alerts">Check again</a></span></div>');
+		expect(await health(deps)).toContain('<section class="stack alerts" id="alerts" aria-labelledby="alerts-h"><div class="panelhead"><h2 id="alerts-h">Is the site all right?</h2><span class="small"><a href="/admin">Check again</a></span></div>');
 	});
 
 	it("says all green when every check is", async () => {

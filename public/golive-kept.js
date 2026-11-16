@@ -21,6 +21,19 @@ export function forgetNotes(gameId) {
 }
 
 /**
+ * The site no longer has the noted recording open (saved or deleted, here or elsewhere), so nothing this phone kept of
+ * it can go up any more: the notes are forgotten at once (a new recording may take the game's note next), then every
+ * segment's kept footage is cleared.
+ */
+export async function dropKept(gameId) {
+	const state = load(stateKey(gameId));
+	forgetNotes(gameId);
+	if (!state?.videoId) return;
+	const store = await openStore();
+	for (let n = 1; n <= segmentOf(state); n++) await store?.clear(`${state.videoId}/${n}`);
+}
+
+/**
  * What this phone still holds for the recording in the game's note (`state`) and for its earlier segments. `bytes`: all
  * of it; `own`: the noted segment's share. `send(tell, movingOn)` sends it, earliest segment first, each part noted as
  * it lands; asked twice, it's sent once. `movingOn`: a new segment is about to take the game's note, so this one is

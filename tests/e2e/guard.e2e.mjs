@@ -6,7 +6,7 @@ import { SEL } from "./helpers.mjs";
 
 const ALL = ["android", "iphone", "firefox"];
 const RELOAD = "The site has been updated. Reload the page to carry on.";
-const MAINTENANCE = "We're upgrading the site. Back by 11:30am.";
+const MAINTENANCE = "We're upgrading the site. We'll be back soon."; // the maintenance page's own words
 const refusal = (code, message, status = 409) => ({ status, json: { ok: false, error: { code, message } } });
 
 /** A small photo the browser draws, as a JPEG file for the picker. */

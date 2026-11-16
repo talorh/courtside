@@ -129,8 +129,11 @@ describe("Help", () => {
 		const page = await (await makeClient(createTestDeps())("/help")).text();
 		expect(page).toContain('<details class="panel faq" id="about-me"><summary>What does the site keep about me?</summary>');
 		expect(page).toContain("Nothing is sold or shared, and there are no ads or trackers.");
-		// Which view the device uses: a cookie, and a line in the site's log when it's first seen or changes.
-		expect(page).toContain("the mobile one or the desktop one, is kept in a cookie for 30 days and noted once when it's");
+		// Which view the device uses: a line in the site's log when it's first seen or changes.
+		expect(page).toContain("the mobile one or the desktop one, is noted once when it's first seen or changes, and\nkept a month too.");
+		// What a person does on the team, and the admin Log's lines kept for good.
+		expect(page).toContain("is noted with the phone or\ncomputer it came from, and kept 90 days.");
+		expect(page).toContain("and the Log keeps its lines for good.");
 	});
 	it("points child safety to the standards body and the club's handbook and website, without restating them", async () => {
 		const page = await (await makeClient(createTestDeps())("/help")).text();
@@ -173,7 +176,7 @@ describe("Help", () => {
 		const res = await makeClient(createTestDeps())("/faq");
 		expect([res.status, res.headers.get("Location")]).toEqual([302, "/help"]);
 	});
-	it("says what the sweep of 24 Oct 2026 found missing: tests stay under a minute, an upright Go live, pulling to refresh, the download and Hide scores buttons by name", async () => {
+	it("says tests stay under a minute, an upright Go live, pulling to refresh, the download and Hide scores buttons by name", async () => {
 		const page = await (await makeClient(createTestDeps())("/help")).text();
 		expect(page).toContain("A minute or more is kept as the game's video, and the game can't be\nstreamed again.");
 		expect(page).toContain("tap <b>Go live</b> (still upright? It waits, and goes live as soon as you turn it).");

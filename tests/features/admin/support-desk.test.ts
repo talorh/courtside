@@ -127,6 +127,17 @@ describe("the support desk: a queue of tickets (a proper service desk)", () => {
 		expect(await (await jane(deps)("/support/1")).text()).toContain("Is it on Wi-Fi?");
 	});
 
+	it("never emails someone who asked as a team manager but isn't one now: the reply stays on the site, and isn't tried again", async () => {
+		const deps = await setup();
+		const logged = vi.spyOn(console, "log").mockImplementation(() => {});
+		await deps.db.prepare("UPDATE members SET role = 'coach' WHERE team_id = ? AND email = ?").bind(G14_5.id, JANE).run();
+		const res = await admin(deps)("/admin/support/1/message", form({ body: "Is it on Wi-Fi?", then: "reply" }));
+		expect(res.status).toBe(303);
+		expect(deps.email.sent).toEqual([]);
+		expect(await deps.db.prepare("SELECT COUNT(*) AS n FROM support_messages WHERE emailed_at IS NULL AND email_to IS NOT NULL").first("n")).toBe(0);
+		expect(logged.mock.calls.map((c) => String(c[0])).some((line) => line.includes("ticket_email_skipped"))).toBe(true);
+	});
+
 	it("the site's own tickets are open or resolved, never waiting for a reply; an old one can't reopen while a newer one about the same thing is open", async () => {
 		const deps = await setup();
 		await site(deps, "Photos are near Images' 100,000", "resolved");

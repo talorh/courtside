@@ -1,6 +1,6 @@
 // Game page, live player: what a family sees when the picture stops. The stream may have ended (the page moves on to
 // say so, and to the saved video later), or the filming phone's page died or lost its signal (a card over the last
-// frame says the stream will resume).
+// frame says the stream will resume). A picture the family paused isn't stopped: no card, and a tap plays it.
 
 /**
  * The live page doesn't reload itself (that would cut the picture and the sound), so this asks for the page again:
@@ -39,4 +39,30 @@ export function waitCard(card, frozenFor, over) {
 		asked = turn;
 		card.hidden = ms < 5000;
 	}, 1000);
+}
+
+/** How long the picture has been frozen, in ms (for waitCard): 0 before the first frame, and while the video is paused
+ * (a family pausing it isn't a freeze, and the card would cover the controls that play it again). Time spent paused
+ * is left out once it plays. A video that stopped because its stream ended (a connection closed to start over) isn't
+ * paused by anyone: it's still frozen. */
+export function frozenClock(video, now = () => Date.now()) {
+	let lastFrameAt = 0, pausedAt = null;
+	const held = () => video.paused && !video.ended;
+	const seen = () => { lastFrameAt = now(); if (typeof video.requestVideoFrameCallback === "function") video.requestVideoFrameCallback(seen); };
+	if (typeof video.requestVideoFrameCallback === "function") video.requestVideoFrameCallback(seen); else video.addEventListener("timeupdate", seen);
+	video.addEventListener("pause", () => { if (held()) pausedAt = now(); });
+	video.addEventListener("play", () => {
+		if (pausedAt !== null && lastFrameAt) lastFrameAt += now() - pausedAt;
+		pausedAt = null;
+	});
+	return () => (lastFrameAt && !held() ? now() - lastFrameAt : 0);
+}
+
+/** A tap on the paused player plays it. Looked at once the tap is over: where the browser's own controls played it,
+ * or the tap was one that paused it, it's left alone. */
+export function playOnTap(player, video, play) {
+	player.addEventListener("click", () => {
+		if (!video.paused) return;
+		setTimeout(() => { if (video.paused) play(); }, 0);
+	});
 }

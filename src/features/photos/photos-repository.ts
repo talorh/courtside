@@ -33,6 +33,8 @@ async function many(db: D1Database, where: string, ...params: unknown[]): Promis
 
 /** Marks a row whose image isn't in Images yet: unique, and no Images id looks like it. */
 const PENDING = "pending-";
+/** Matches a row still marked so (a LIKE's bound value). */
+const STILL_PENDING = `${PENDING}%`;
 
 /**
  * A new photo's row before Images has its image, so the photo has its number (and so its name) first. It's kept out of
@@ -53,14 +55,14 @@ export async function reservePhoto(
 /** The reserved row with its image, now on the page. False when the row has gone meanwhile. */
 export async function fillPhoto(db: D1Database, teamId: string, id: number, imageId: string): Promise<boolean> {
 	const result = await db
-		.prepare(`UPDATE photos SET image_id = ?, deleted_at = NULL WHERE team_id = ? AND id = ? AND image_id LIKE '${PENDING}%'`)
-		.bind(imageId, teamId, id).run();
+		.prepare("UPDATE photos SET image_id = ?, deleted_at = NULL WHERE team_id = ? AND id = ? AND image_id LIKE ?")
+		.bind(imageId, teamId, id, STILL_PENDING).run();
 	return result.meta.changes === 1;
 }
 
 /** A reserved row whose image never reached Images. */
 export const dropReservedPhoto = (db: D1Database, teamId: string, id: number) => db
-	.prepare(`DELETE FROM photos WHERE team_id = ? AND id = ? AND image_id LIKE '${PENDING}%'`).bind(teamId, id).run();
+	.prepare("DELETE FROM photos WHERE team_id = ? AND id = ? AND image_id LIKE ?").bind(teamId, id, STILL_PENDING).run();
 
 export async function getPhoto(db: D1Database, teamId: string, id: number): Promise<Photo | null> {
 	return (await many(db, `${ACTIVE} AND id = ?`, teamId, id))[0] ?? null;

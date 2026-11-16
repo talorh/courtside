@@ -13,12 +13,18 @@ const cfJson = (args) => parseCfJson(execFileSync("cf", args, { encoding: "utf8"
 export const buildsListArgs = (scriptId) => ["builds", "list", "--worker", scriptId, "--per-page", "10"];
 const list = (x) => (Array.isArray(x) ? x : (x.result ?? x.builds ?? []));
 
+/** git's push of `commit` (the full hash the release checked) to main. */
+export function pushArgs(remote, commit) {
+	if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error(`no commit to push ("${commit}")`);
+	return ["push", "--porcelain", remote, `${commit}:refs/heads/main`];
+}
+
 /**
- * Pushes HEAD to main with a write token that lasts 10 minutes and is revoked straight after. The token reaches git in
+ * Pushes `commit` to main with a write token that lasts 10 minutes and is revoked straight after. The token reaches git in
  * the environment, never on a command line or in .git/config. Returns false if main already had this commit; throws if
  * the push is refused (main on Cloudflare has a commit this one doesn't: never forced).
  */
-export function pushMain(accountId, name) {
+export function pushMain(accountId, name, commit) {
 	const remote = `https://${accountId}.artifacts.cloudflare.net/git/${name}/${name}.git`;
 	const create = () => cfJson(["artifacts", "namespaces", "tokens", "create", name, "--repo", name, "--scope", "write", "--ttl", "600"]);
 	// Cloudflare's Artifacts refuses every request now and then for minutes at a time (403 Access denied, with the login
@@ -39,7 +45,7 @@ export function pushMain(accountId, name) {
 	// No prompting: a refused token fails the push at once instead of waiting for a password.
 	const env = { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "http.extraHeader", GIT_CONFIG_VALUE_0: `Authorization: Bearer ${token.plaintext}` };
 	try {
-		const said = execFileSync("git", ["push", "--porcelain", remote, "HEAD:refs/heads/main"], { encoding: "utf8", env, stdio: ["ignore", "pipe", "pipe"] });
+		const said = execFileSync("git", pushArgs(remote, commit), { encoding: "utf8", env, stdio: ["ignore", "pipe", "pipe"] });
 		return !said.includes("[up to date]");
 	} finally {
 		try {

@@ -41,7 +41,8 @@ export function registerFixtureRoutes(router: Router): void {
 	router.post("/fixture", "manager", async ({ req, member, viewer, deps }) => {
 		const form = await parseForm(req, gameFormSchema);
 		const id = await addGame(deps, toGameInput(form), member.id, form.video);
-		const added = await getGame(deps.db, deps.team.id, id);
+		// A second tap finds the game already added: the same answer, logged once.
+		const added = id === null ? null : await getGame(deps.db, deps.team.id, id);
 		if (added) await logGameChange(deps, { email: viewer.email, memberId: member.id }, "game_added", gameName(added));
 		return redirect(`/fixture?done=${form.video === "none" ? "novideo" : "added"}`);
 	});

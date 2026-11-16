@@ -37,12 +37,12 @@ export async function mailTeamManager(deps: AppDeps, teamId: string, admin: stri
 		: { ...email, to: [manager.email], replyTo: admin });
 }
 
-/** A ticket's email to the team manager who asked, while they're still on the team's list, Reply-To the admin who wrote
- * it, while they're still an admin. On staging it goes to that admin instead, as with a welcome. "gone": either has gone
+/** A ticket's email to the team manager who asked, while they're still one of the team's team managers, Reply-To the
+ * admin who wrote it, while they're still an admin. On staging it goes to that admin instead, as with a welcome. "gone": either has gone
  * since (nothing sent, and nothing to try again: it's on the ticket, on the site). */
 export async function mailTicketManager(deps: AppDeps, ticket: { teamId: string; memberId: number }, admin: string, message: { subject: string; text: string }): Promise<"sent" | "gone"> {
 	if (!(await listAdmins(deps.db)).some((a) => a.email.toLowerCase() === admin.toLowerCase())) return "gone";
-	const manager = (await listActiveMembers(deps.db, ticket.teamId)).find((m) => m.id === ticket.memberId);
+	const manager = (await listActiveMembers(deps.db, ticket.teamId)).find((m) => m.id === ticket.memberId && m.role === "manager");
 	if (!manager) return "gone";
 	await deps.email.send(deps.config.staging
 		? { to: [admin], subject: `[Staging] ${message.subject}`, text: message.text, replyTo: admin }

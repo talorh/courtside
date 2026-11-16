@@ -1,15 +1,17 @@
 // "Are you sure" (src/ui/confirm.ts) on every page: Keep it closes the question; Yes posts once, however many taps.
-for (const keep of document.querySelectorAll(".confirm [data-keep]")) {
-	keep.addEventListener("click", () => { keep.closest("details").open = false; });
-}
-for (const form of document.querySelectorAll(".confirm form")) {
-	form.addEventListener("submit", (e) => {
-		if (form.dataset.sent) { e.preventDefault(); return; }
-		form.dataset.sent = "1";
-		// Greyed out once this tap's post has started, so the page shows it's on its way.
-		setTimeout(() => { for (const button of form.querySelectorAll("button:not([data-keep])")) button.disabled = true; });
-	});
-}
+// Heard on the document, so a question put on the page later (a photo swiped to, photo-swipe.js) works the same.
+document.addEventListener("click", (e) => {
+	const keep = e.target?.closest?.(".confirm [data-keep]");
+	if (keep) keep.closest("details").open = false;
+});
+document.addEventListener("submit", (e) => {
+	const form = e.target?.closest?.(".confirm form");
+	if (!form) return;
+	if (form.dataset.sent) { e.preventDefault(); return; }
+	form.dataset.sent = "1";
+	// Greyed out once this tap's post has started, so the page shows it's on its way.
+	setTimeout(() => { for (const button of form.querySelectorAll("button:not([data-keep])")) button.disabled = true; });
+});
 // Back to this page from the browser's cache (as signin.js): the questions work again.
 window.addEventListener("pageshow", (e) => {
 	if (!e.persisted) return;

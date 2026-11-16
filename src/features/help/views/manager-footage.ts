@@ -1,5 +1,5 @@
-// A team manager's questions on Help: videos and live streaming; and clips, photos and removal requests, which come at
-// the bottom of Help, just before child safety.
+// A team manager's questions on Help: videos and live streaming; and clips, photos and removal requests, which come
+// last in Running your team, just before the support form.
 import { html } from "../../../shared/html.ts";
 import { faqItem, type HelpFor } from "./faq-item.ts";
 
@@ -11,8 +11,8 @@ while its parts are joined into one video. <b>Notifications</b> shows where each
 ${faqItem("g-move", "A video on the wrong game", html`<p>Open the game, and under <b>Team manager</b> pick the right game and tap
 <b>Move video</b>. Nothing is uploaded again. Only games without a video are offered.</p>`)}
 ${faqItem("g-delete-video", "Replacing or deleting a video", html`<p>On the game's page, tap <b>Delete video</b>, then
-<b>Yes, delete it</b>. It's kept for 24 hours in case it was a mistake, then it's gone for good, and the game is free for
-a new upload.</p>`)}
+<b>Yes, delete it</b>. The game is free for a new upload straight away, and waits a week from the delete for it before
+it goes to <b>No video</b>. The deleted video is kept for 24 hours in case it was a mistake, then it's gone for good.</p>`)}
 ${faqItem("g-kept", "Downloads, and how long videos are kept", html`<p>Every download is logged. Videos, clips and photos are
 deleted at the end of <b>31 December ${h.season.end}</b> (the end of the year your ${h.season.label} season ends), so remind families to
 download the ones they want before then.</p>`)}

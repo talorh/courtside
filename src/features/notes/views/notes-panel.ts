@@ -14,27 +14,33 @@ const COURT = html`<svg class="cbcourt" viewBox="0 0 300 96" aria-hidden="true">
 <rect class="key" x="104" y="-4" width="92" height="66"/><path class="ln" d="M122 62A28 28 0 0 0 178 62"/><path class="ln dash" d="M122 62A28 28 0 0 1 178 62"/>
 <path class="rim" d="M138 6H162"/><circle class="rim" cx="150" cy="15" r="6"/></svg>`;
 
-function noteRow(n: CoachNote): SafeHtml {
+/** `seek`: the time jumps the game's player there (watch.js); with no game player on the page, it's plain text.
+ * `canDelete`: false on a closed team, whose notes are read-only. */
+function noteRow(n: CoachNote, seek: boolean, canDelete: boolean): SafeHtml {
 	const at = n.atSeconds === null
 		? html`<span class="notetime whole">Whole game</span>`
-		: html`<a class="notetime" href="#" data-seek="${n.atSeconds}" title="Jump to this moment"><span aria-hidden="true">▶</span> ${formatDuration(n.atSeconds)}</a>`;
-	return html`<li>${at}${confirmButton({ action: `/notes/${n.id}/delete`, label: "Delete", question: "Delete this note?", consequence: "It can't be brought back." })}
+		: seek ? html`<a class="notetime" href="#" data-seek="${n.atSeconds}" title="Jump to this moment"><span aria-hidden="true">▶</span> ${formatDuration(n.atSeconds)}</a>`
+		: html`<span class="notetime">${formatDuration(n.atSeconds)}</span>`;
+	const del = canDelete ? confirmButton({ action: `/notes/${n.id}/delete`, label: "Delete", question: "Delete this note?", consequence: "It can't be brought back." }) : "";
+	return html`<li>${at}${del}
 <div class="notebody"><p>${n.body}</p><span class="small">${n.authorName}</span></div></li>`;
 }
 
-/** Shown only to coaches. It says plainly who can't see the notes. */
-export function notesPanel(gameId: number, notes: CoachNote[], hasPlayer: boolean): SafeHtml {
-	const mark = hasPlayer ? html`<button class="btn mark" type="button" data-mark="note-at" hidden>Mark time</button>` : "";
-	return html`<section class="clipboard" id="notes" aria-labelledby="notes-title"><div class="cbsheet">${COURT}
-<div class="cbhead"><div class="cbtitle"><h2 id="notes-title">Coaches' notes</h2><span class="cbonly">${ICON_LOCK}Coaches only</span></div>
-<p class="small">Nobody else sees these: not Watch only, Watch and film or team managers.</p></div>
-<form method="post" action="/games/${gameId}/notes" class="noteform"><h3>Add a note</h3>
+/** Shown only to coaches. It says plainly who can't see the notes. `gamePlayer`: the game's own video is playing on the
+ * page (not a clip's), so times can be marked and jumped to. `canAdd`: false once the season's over (read-only). */
+export function notesPanel(gameId: number, notes: CoachNote[], { gamePlayer, canAdd }: { gamePlayer: boolean; canAdd: boolean }): SafeHtml {
+	const mark = gamePlayer ? html`<button class="btn mark" type="button" data-mark="note-at" hidden>Mark time</button>` : "";
+	const add = canAdd ? html`<form method="post" action="/games/${gameId}/notes" class="noteform"><h3>Add a note</h3>
 <label>Time in the video (optional)<span class="markrow"><input name="at" id="note-at" type="text" inputmode="numeric" placeholder="m:ss" pattern="[0-9:]{1,8}" aria-describedby="note-at-hint">${mark}</span>
 <span class="small cbhint" id="note-at-hint">Watching the video? Tap <b>Mark time</b> to use the moment it's up to. Or type a
 time, like 3:42. For a note about the whole game, leave this blank.</span></label>
 <label>Note<textarea name="body" rows="3" maxlength="1000" required placeholder="Box out or else…"></textarea></label>
-<button class="btn primary">Save note</button></form>
+<button class="btn primary">Save note</button></form>` : "";
+	return html`<section class="clipboard" id="notes" aria-labelledby="notes-title"><div class="cbsheet">${COURT}
+<div class="cbhead"><div class="cbtitle"><h2 id="notes-title">Coaches' notes</h2><span class="cbonly">${ICON_LOCK}Coaches only</span></div>
+<p class="small">Nobody else sees these: not Watch only, Watch and film or team managers.</p></div>
+${add}
 ${notes.length ? html`<div class="cbnoteshead"><h3>This game's notes</h3><a class="btn cbexport" href="/games/${gameId}/notes.xlsx">Download for Excel</a></div>
-<ol class="notelist">${notes.map(noteRow)}</ol>` : html`<p class="small cbempty">No notes yet for this game.</p>`}</div>
+<ol class="notelist">${notes.map((n) => noteRow(n, gamePlayer, canAdd))}</ol>` : html`<p class="small cbempty">No notes yet for this game.</p>`}</div>
 <div class="cbmark" aria-hidden="true">${clubWordmark()}</div></section>`;
 }

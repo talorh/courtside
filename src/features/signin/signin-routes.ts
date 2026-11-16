@@ -8,7 +8,7 @@ import { htmlResponse, jsonError, jsonOk, redirect } from "../../app/respond.ts"
 import { currentSession, clearedSessionCookie, endRequestSession, sessionCookie } from "../../auth/session.ts";
 import { recordSignInEvent } from "../../auth/sign-in-codes-repository.ts";
 import { isBounced } from "../../auth/sign-in-mail.ts";
-import { maskEmail, requestCode, verifyCode } from "../../auth/sign-in-service.ts";
+import { maskEmail, requestCode, storedEmail, verifyCode } from "../../auth/sign-in-service.ts";
 import { deviceLabel } from "../../shared/device.ts";
 import { logProblem } from "../admin/problem-log.ts";
 import { parseForm } from "../../shared/validation.ts";
@@ -38,12 +38,12 @@ async function sendCode(req: Request, url: URL, deps: AppDeps): Promise<Response
 	const check = await deps.turnstile.verify(token, ipOf(req), url.hostname);
 	if (check.result === "failed") {
 		console.log(JSON.stringify({ event: "signin_refused", teamId: null, email: maskEmail(email), why: "turnstile", detail: check.detail }));
-		await recordSignInEvent(deps.db, { kind: "robot", email: email.trim().toLowerCase(), ip: ipOf(req), at: deps.now().toISOString(), device: deps.device });
+		await recordSignInEvent(deps.db, { kind: "robot", email: storedEmail(email.trim().toLowerCase()), ip: ipOf(req), at: deps.now().toISOString(), device: deps.device });
 		return page(deps, "email", email, next, "robot", 400);
 	}
 	if (check.result === "unreachable") {
 		console.warn(JSON.stringify({ event: "turnstile_unreachable", teamId: null, detail: check.detail }));
-		await logProblem(deps, { kind: "site_problem", teamId: null, who: email.trim().toLowerCase(), what: "The sign-in page's robot check (Turnstile) didn't answer, so only the limits held", detail: check.detail });
+		await logProblem(deps, { kind: "site_problem", teamId: null, who: email.trim() && storedEmail(email.trim().toLowerCase()), what: "The sign-in page's robot check (Turnstile) didn't answer, so only the limits held", detail: check.detail });
 	}
 	let result: Awaited<ReturnType<typeof requestCode>>;
 	try {

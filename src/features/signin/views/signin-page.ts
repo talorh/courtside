@@ -48,6 +48,12 @@ function emailStep(p: SignInProps): SafeHtml {
 ${robotCheck(p.siteKey)}<button class="btn primary big">Send login code</button></form>`;
 }
 
+/** Send a new code, which signin.js holds back a minute; `now`: the code ran out or used its tries, so a new one is
+ * all that helps and it's ready at once. */
+const resendButton = (now: boolean) => (now
+	? html`<button class="btn quiet" data-resend data-resend-now>Send a new code</button>`
+	: html`<button class="btn quiet" data-resend>Send a new code</button>`);
+
 function codeStep(p: SignInProps): SafeHtml {
 	const again = html`<input type="hidden" name="email" value="${p.email}"><input type="hidden" name="next" value="${p.next}">`;
 	// autocomplete="one-time-code": the phone offers the code from the email; data-code: signin.js tidies what's pasted
@@ -56,7 +62,7 @@ function codeStep(p: SignInProps): SafeHtml {
 <form method="post" action="/signin/code">${again}
 <label>Login code<input type="text" name="code" placeholder="123 456" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" autofocus required data-code></label>
 <button class="btn primary big">Log in</button></form>
-<form method="post" action="/signin" class="inline">${again}${robotCheck(p.siteKey)}<button class="btn quiet" data-resend>Send a new code</button></form>
+<form method="post" action="/signin" class="inline">${again}${robotCheck(p.siteKey)}${resendButton(p.message === "expired")}</form>
 <p class="small"><a href="/signin?next=${encodeURIComponent(p.next)}">Use another email</a></p>`;
 }
 

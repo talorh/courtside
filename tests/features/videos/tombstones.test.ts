@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { listPlayhqFixtures, removePlayhqFixture } from "../../../src/features/games/playhq-repository.ts";
+import { checkPlayhqFixturesDue } from "../../../src/features/games/playhq-service.ts";
 import { clearTombstones, TOMBSTONE_DAYS } from "../../../src/features/videos/tombstones-service.ts";
 import { runSync } from "../../../src/jobs/sync-videos.ts";
+import { form, makeClient } from "../../helpers/app.ts";
 import { countingDb } from "../../helpers/counting-db.ts";
 import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 import { seedGame, seedVideo } from "../../helpers/seed.ts";
@@ -9,6 +12,7 @@ import { addTeam, G14_5 } from "../../helpers/two-teams.ts";
 // The test clock is 15 Oct 2026: a deletion 91 days before is a tombstone, 89 days before isn't yet.
 const DAYS_AGO = (n: number) => new Date(Date.UTC(2026, 9, 15) - n * 86_400_000).toISOString();
 const LONG_AGO = DAYS_AGO(91), LATELY = DAYS_AGO(89);
+const PLAYHQ_LINK = "https://www.playhq.com/basketball-victoria/org/x/y/teams/saints-b12.1-2026-1/8fab8b8c";
 
 const count = async (deps: TestDeps, table: string, where = "1=1") =>
 	(await deps.db.prepare(`SELECT count(*) AS n FROM ${table} WHERE ${where}`).first<number>("n")) ?? 0;
@@ -81,6 +85,30 @@ describe("tombstones: rows deleted over 90 days ago, their media gone, that noth
 		expect(await count(deps, "live_streams", `game_id = ${game}`)).toBe(0);
 		expect(await count(deps, "games", `id = ${kept.game}`)).toBe(1);
 		expect(await count(deps, "videos", `id = ${kept.id}`)).toBe(1);
+	});
+	it("a PlayHQ game deleted here stays deleted while its fixture is on the site, so the next check doesn't bring it back", async () => {
+		const deps = createTestDeps();
+		deps.playhq.teams.set("8fab8b8c", { name: "Saints U12 Boys 1", games: [
+			{ id: "p1", round: "Round 1", date: "2026-10-30", time: "18:40", opponent: "Lakeside U12 Boys 2", venue: "" },
+			{ id: "p2", round: "Round 2", date: "2026-11-06", time: "18:40", opponent: "Lakeside U12 Boys 3", venue: "" },
+		] });
+		await makeClient(deps)("/fixture/link", form({ url: PLAYHQ_LINK, competition: "VJBL" }));
+		const fixture = (await listPlayhqFixtures(deps.db, deps.team.id))[0]!;
+		const rows = async (pid: string) => (await deps.db.prepare("SELECT deleted_at IS NOT NULL AS gone FROM games WHERE playhq_game_id = ?").bind(pid).all<{ gone: number }>()).results.map((r) => r.gone);
+		await deps.db.prepare("UPDATE games SET deleted_at = ?").bind(LONG_AGO).run();
+		// A deleted game with no PlayHQ game still goes, as does one whose fixture is gone.
+		const hand = await seedGame(deps);
+		await deps.db.prepare("UPDATE games SET deleted_at = ? WHERE id = ?").bind(LONG_AGO, hand).run();
+		await deps.db.prepare("UPDATE games SET playhq_fixture_id = NULL WHERE playhq_game_id = 'p2'").run();
+		expect(await clearTombstones(deps)).toMatchObject({ tombstonesCleared: 2, errors: [] });
+		await deps.db.prepare("UPDATE playhq_fixtures SET checked_at = NULL WHERE id = ?").bind(fixture.id).run();
+		await checkPlayhqFixturesDue(deps);
+		expect(await rows("p1")).toEqual([1]);
+		expect(await count(deps, "games", `id = ${hand}`)).toBe(0);
+		// Once the fixture is removed, its deleted game goes like any other.
+		await removePlayhqFixture(deps.db, deps.team.id, fixture.id);
+		expect(await clearTombstones(deps)).toMatchObject({ tombstonesCleared: 1, errors: [] });
+		expect(await rows("p1")).toEqual([]);
 	});
 	it("a clip deleted from a video still on the site, and a photo, go too", async () => {
 		const deps = createTestDeps();

@@ -11,10 +11,12 @@ import { cancelSavedLive, finishLive, getLiveByRecording, getOpenLiveForGame } f
 import { CAUSE_WORDS, logLive, type StopCause, testWords } from "./live-log.ts";
 import { endLive, switchOff } from "./live-service.ts";
 import { cancelUnrecorded, recordedReason, streamSeconds } from "./live-test-rule.ts";
+import { listSegments } from "./recording-segments-repository.ts";
 
 /**
- * End game. Under a minute since Go live, or recorded (live-test-rule.ts), it was a test (say, at home): the
- * recording is thrown away before it's uploaded or processed, and the game is free to stream again (the page says why).
+ * End game. Under a minute since Go live, or recorded (live-test-rule.ts), and never carried on, it was a test (say,
+ * at home): the recording is thrown away before it's uploaded or processed, and the game is free to stream again (the
+ * page says why).
  * Nothing recorded at all (Go live opened, the camera never started) is the same, with nothing to throw away.
  * Otherwise the stream ends for good and the recording, still uploading, becomes the game video. All go in the Log.
  */
@@ -33,7 +35,9 @@ export async function stopBrowserLive(deps: TeamDeps, member: Member, gameId: nu
 	if (video && video.uploadedBy !== member.id && !hasRole(member.role, "coach")) {
 		throw forbidden("Only the parent streaming this game, a coach or a team manager can end it.");
 	}
-	const { seconds, recorded } = video ? await streamSeconds(deps, video, page.recordedSeconds) : { seconds: Infinity, recorded: false };
+	// A carried-on recording is never a test: the page counts only its own segment, and storage only segment 1.
+	const carriedOn = video ? (await listSegments(db, deps.team.id, video.id)).length > 0 : false;
+	const { seconds, recorded } = video && !carriedOn ? await streamSeconds(deps, video, page.recordedSeconds) : { seconds: Infinity, recorded: false };
 	if (video?.status !== "uploading" || seconds >= MIN_RECORDING_SECONDS) {
 		await endLive(deps, gameId);
 		if (!open.endRequestedAt) await logLive(deps, member.email, "live_ended", gameId, page.cause ? CAUSE_WORDS[page.cause] : "");

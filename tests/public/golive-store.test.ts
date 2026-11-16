@@ -62,18 +62,36 @@ describe("what the page keeps on the phone as it records", () => {
 		await settle();
 		// The next piece fills the part: the page keeps the piece, cuts the part, and starts the tail again, all at once.
 		k.chunk(bytes(2, 4));
-		k.part(1, bytes(9, 5));
-		k.cutTail(bytes(2, 2));
+		k.cut([{ n: 1, blob: bytes(9, 5) }], bytes(2, 2));
 		await settle();
 		expect(await kept("41/1")).toEqual({ parts: [[1, 5]], tail: [2, 2] });
 		k.chunk(bytes(3, 2));
 		await settle();
 		expect((await kept("41/1")).tail).toEqual([2, 2, 3, 3]);
 	});
+	it("the parts cut and the tail left over are written in one go, so a page that dies between them can't keep a part twice", async () => {
+		const idb = fakeIndexedDb();
+		vi.stubGlobal("indexedDB", idb);
+		const k = keeper(41, 1);
+		await settle();
+		const before = idb.transactions.length;
+		k.cut([{ n: 1, blob: bytes(9, 5) }, { n: 2, blob: bytes(8, 5) }], bytes(2, 2));
+		await settle();
+		expect(idb.transactions.slice(before)).toEqual([["parts", "tail"]]);
+		expect(await kept("41/1")).toEqual({ parts: [[1, 5], [2, 5]], tail: [2, 2] });
+	});
+	it("a last piece cut at End game leaves no tail behind", async () => {
+		vi.stubGlobal("indexedDB", fakeIndexedDb());
+		const k = keeper(41, 1);
+		k.chunk(bytes(1, 3));
+		k.cut([{ n: 1, blob: bytes(1, 3) }], bytes(0, 0));
+		await settle();
+		expect(await kept("41/1")).toEqual({ parts: [[1, 3]], tail: [] });
+	});
 	it("a part that reached storage is let go", async () => {
 		vi.stubGlobal("indexedDB", fakeIndexedDb());
 		const k = keeper(41, 1);
-		k.part(1, bytes(9, 5));
+		k.cut([{ n: 1, blob: bytes(9, 5) }], bytes(0, 0));
 		k.sent(1);
 		await settle();
 		expect((await kept("41/1")).parts).toEqual([]);

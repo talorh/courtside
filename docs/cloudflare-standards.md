@@ -33,19 +33,22 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  which runs the same sign-in as the live site.
 - Don't keep request state in module-level variables. Isolates are reused across requests. Build dependencies
  per request in `src/index.ts` and pass them down.
-- Keep requests small. The account has Workers Paid, but the request body limit is still 100 MB and the cron keeps its 45-call budget
- (`platform/fetch-budget.ts`). Big media never passes through the Worker: use pre-signed R2 URLs and Stream pulling
- from URLs. Photos are the exception, at 10 MB at most and a few MB in practice: they pass through to be checked on
+- Keep requests small. The account has Workers Paid, but the request body limit is still 100 MB and each cron run keeps
+ a budget of 200 outside calls (`CRON_FETCH_BUDGET` in `src/index.ts`, counted by `platform/fetch-budget.ts`). It
+ counts only the calls made through the Worker's `fetch` (Stream's API, PlayHQ, Cloudflare's figures and bill, the
+ exchange rate); D1, R2, Images and the other bindings are separate and aren't counted. Big media never passes through
+ the Worker: use pre-signed R2 URLs and Stream pulling from URLs. Photos are the exception, at 10 MB at most and a few MB in practice: they pass through to be checked on
  the way in and named on the way out.
-- `ctx.waitUntil` is for exactly two writes a page needn't wait for, a member's last seen and a server error's count
- (`deps.defer`, set in `src/index.ts`; `afterwards` in `app/handle-request.ts`): the page is answered first and the
- write finishes after it. Each catches its own failure and logs it, never throws. Nothing else runs past a request; the
+- `ctx.waitUntil` is for exactly three writes a page needn't wait for: a member's last seen, and a server error's
+ count and its Problems line (`deps.defer`, set in `src/index.ts`; `afterwards` in `app/deps.ts`): the page is
+ answered first and the write finishes after it. Each catches its own failure and logs it, never throws. Nothing else runs past a request; the
  jobs and the tests have no `defer`, so there the same writes are awaited.
 - Cron handlers must be idempotent and safe to re-run. A failed run throws, so it shows as failed (and six in a row
  raise a ticket for the admins).
 - Cron triggers are UTC, and Cloudflare numbers the day of the week from 1 = Sunday to 7 = Saturday, not the usual
- 0 = Sunday: a Thursday UTC trigger is written `… * * 5`. A job that must land on a local day checks the day in its
- handler too (`gameDayDue`), so a trigger a day out does nothing rather than run early.
+ 0 = Sunday: a Thursday UTC trigger is written `… * * 5`. A job that must land at a local time checks it in its
+ handler too (`dailyDue`: of the 3am job's triggers, `CLUB.dailyJobUtcHours`, any that isn't 3am in the club's time zone does
+ nothing).
 - **Deploys come from `main` only**: `npm run release` pushes it to the Artifacts repo `courtside/courtside`, and Workers
  Builds checks and deploys it (development standards §11). Never `cf deploy` by hand.
 - **Staging is a Worker Preview** of the same Worker (`npm run staging`), on its own database and bucket.
@@ -62,7 +65,7 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  Paid includes 25 GiB-hours of memory, 375 vCPU-minutes and 200 GB-hours of disk a month; the nightly self-test's ten
  awake minutes use about 20 of the 25 GiB-hours, and an awake hour beyond the allowance costs about US$0.04.
 - It holds no data, has no database, secrets, route or domain, and knows nothing of teams: the site hands it links good
- for an hour (the segments to read, one object to write) and nothing else. Staging shares it, as it shares Stream and
+ for two hours (the segments to read, one object to write; a join can wait behind another game's) and nothing else. Staging shares it, as it shares Stream and
  Images.
 - Nothing in operation depends on a developer's computer: joins, retries, the alert and the nightly self-test run in
  Cloudflare, and the Worker deploys from `main` through Workers Builds when `join/` changes, like the site and the
@@ -81,6 +84,12 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  alone or user-editable data.
 - The human-check WAF rule tells a signed-in visitor by the `courtside_session` cookie (`infra/zone-courtside-app/
  waf-custom-rules.json`); the rate limit on posts covers the sign-in's forms.
+- The robot check on the sign-in's forms (Turnstile, `platform/turnstile.ts`) fails open: when Cloudflare's check can't
+ be reached in 10 seconds or has its own error, the sign-in goes ahead on the database's limits alone, so nobody is
+ locked out by it (it's logged as `turnstile_unreachable`). Those limits (`auth/sign-in-limits.ts`): an address gets
+ 10 codes an hour (then a 15-minute hold), 20 a day and 15 wrong codes a day (then a day's hold); an IP address 30
+ codes in 15 minutes, 10 unknown addresses in 15 minutes and 30 wrong codes an hour; and the whole site 200 codes an
+ hour, which also raises a ticket for the admins. A token that Cloudflare says is bad is still refused.
 
 ## Edge security
 
@@ -147,8 +156,8 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
 
 ## Workers AI
 
-- Through the Worker's binding (`AI`), for Ask Virtual Team Manager and reading a fixture page. Questions are never stored,
- and each member gets 20 a day.
+- Through the Worker's binding (`AI`), for Ask Virtual Team Manager, the admin Documentation's AI assistant and reading
+ a fixture page. Questions are never stored; each member gets 20 a day, and each admin 50 on the Documentation.
 
 ## Secrets
 

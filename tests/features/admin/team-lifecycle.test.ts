@@ -52,6 +52,23 @@ describe("editing a team", () => {
 		expect(page).toContain("Its code and season stay as they are now it has games.");
 	});
 
+	it("keeps the season once the team has a photo, which goes with that season; its code can still be fixed", async () => {
+		const deps = await withG14();
+		const jane = await deps.db.prepare("SELECT id FROM members WHERE email = 'jane@example.com'").first<number>("id");
+		await deps.db.prepare("INSERT INTO photos (team_id, image_id, taken_at, width, height, bytes, uploaded_by, delete_after, created_at) VALUES (?, 'img-1', '2026-10-14T10:00:00', 800, 600, 1000, ?, ?, '2026-10-14T00:00:00.000Z')")
+			.bind(G, jane, SEASON_END).run();
+		const res = await admin(deps)(`/admin/teams/${G}`, form({ code: "g14.5", season: "2027", askName: "" }));
+		expect(res.status).toBe(409);
+		expect(await res.text()).toContain("Saints G14.5 has photos now, so its season stays as it is.");
+		expect(await team(deps)).toMatchObject({ season_start: 2026 });
+		const page = await (await admin(deps)(`/admin/teams/${G}/edit`)).text();
+		expect(page).toMatch(/name="season"[^>]*readonly/);
+		expect(page).not.toMatch(/name="code"[^>]*readonly/);
+		expect(page).toContain("Its season stays as it is now it has photos. Change the code only to fix a mistake: it can't change once the team has a game.");
+		expect((await admin(deps)(`/admin/teams/${G}`, form({ code: "g14.6", season: "2026", askName: "" }))).status).toBe(303);
+		expect(await team(deps)).toMatchObject({ code: "g14.6", season_start: 2026 });
+	});
+
 	it("never takes a code an open team has, and an edited team's old code can be onboarded again", async () => {
 		const deps = await withG14();
 		const clash = await admin(deps)(`/admin/teams/${G}`, form({ code: "b12.1", season: "2026", askName: "" }));
@@ -104,6 +121,42 @@ describe("closing a team", () => {
 			.bind(G, game, jane).run();
 		expect((await admin(deps)(`/admin/teams/${G}/close`, form({ when: "due", confirmCode: "" }))).status).toBe(409);
 		expect(await team(deps)).toMatchObject({ status: "active" });
+	});
+
+	it("is refused while a recording carried on after a closed page is still sending its newest part", async () => {
+		const deps = await withG14();
+		const game = (await addGame(deps)).meta.last_row_id;
+		const jane = await deps.db.prepare("SELECT id FROM members WHERE email = 'jane@example.com'").first<number>("id");
+		const video = (await deps.db.prepare("INSERT INTO videos (team_id, game_id, status, r2_key, r2_upload_id, uploaded_by, delete_after, created_at) VALUES (?, ?, 'uploading', 'originals/x/live.mp4', 'first', ?, ?, '2026-10-14T22:00:00.000Z')")
+			.bind(G, game, jane, SEASON_END).run()).meta.last_row_id;
+		deps.presigner.parts.set("first", [{ partNumber: 1, etag: "e", uploaded: "2026-10-14T22:30:00.000Z" }]);
+		await deps.db.prepare("INSERT INTO recording_segments (team_id, video_id, n, r2_key, r2_upload_id, created_at) VALUES (?, ?, 2, 'originals/x/live.2.mp4', 'second', '2026-10-14T23:00:00.000Z')")
+			.bind(G, video).run();
+		deps.presigner.parts.set("second", [{ partNumber: 1, etag: "e", uploaded: "2026-10-14T23:55:00.000Z" }]);
+		const busy = await admin(deps)(`/admin/teams/${G}/close`, form({ when: "due", confirmCode: "" }));
+		expect(busy.status).toBe(409);
+		expect(await busy.text()).toContain("Saints G14.5 has an upload or live stream going: close it once that&#39;s done.");
+		expect(await team(deps)).toMatchObject({ status: "active" });
+		deps.presigner.parts.set("second", [{ partNumber: 1, etag: "e", uploaded: "2026-10-14T23:10:00.000Z" }]);
+		expect((await admin(deps)(`/admin/teams/${G}/close`, form({ when: "due", confirmCode: "" }))).status).toBe(303);
+	});
+
+	it("once its season's date has passed, is deleted tonight and only with its code typed, never at once", async () => {
+		// 11am on Wed 5 Jan 2028 in the club's time: the 2026/27 season's footage was due on 31 Dec 2027.
+		const deps = createTestDeps(new Date("2028-01-05T00:00:00Z"));
+		await addTeam(deps.db, G14_5);
+		const page = await (await admin(deps)(`/admin/teams/${G}/close`)).text();
+		expect(page).not.toContain("When they&#39;re due");
+		expect(page).not.toContain('type="radio"');
+		expect(page).toContain('<input type="hidden" name="when" value="tonight">');
+		expect(page).toContain("Its videos and photos were due to be deleted on Fri 31 Dec 2027, so they're deleted tonight, at 3am. Until then the team can be reopened.");
+		const due = await admin(deps)(`/admin/teams/${G}/close`, form({ when: "due", confirmCode: "" }));
+		expect(due.status).toBe(400);
+		expect(await due.text()).toContain("Saints G14.5&#39;s videos and photos were due to be deleted on Fri 31 Dec 2027, so they&#39;d go tonight: type g14.5 to end its season.");
+		expect((await admin(deps)(`/admin/teams/${G}/close`, form({ when: "tonight", confirmCode: "" }))).status).toBe(400);
+		expect(await team(deps)).toMatchObject({ status: "active", delete_after: null });
+		expect((await admin(deps)(`/admin/teams/${G}/close`, form({ when: "tonight", confirmCode: "g14.5" }))).status).toBe(303);
+		expect(await team(deps)).toMatchObject({ status: "closed", delete_after: "2028-01-05T16:00:00.000Z" });
 	});
 
 	it("is refused for a team that's closed already", async () => {

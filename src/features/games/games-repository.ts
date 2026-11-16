@@ -109,6 +109,16 @@ export async function createGame(db: D1Database, teamId: string, input: GameInpu
 	return (await createGameWrite(db, teamId, input, createdBy, noVideoAt, liveStream).run()).meta.last_row_id;
 }
 
+/** Add game: the game's id, or null when the same game (time, competition and opponent) is already on the fixture, as a
+ * second tap of Add game finds it. One statement, so two taps at once still add it once. */
+export async function createGameOnce(db: D1Database, teamId: string, input: GameInput, createdBy: number, noVideoAt: string | null, liveStream: boolean): Promise<number | null> {
+	const result = await db.prepare(`INSERT INTO games (team_id, starts_at, competition, round_label, opponent, venue, phase, created_by, no_video_at, live_stream)
+		SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10 WHERE NOT EXISTS (SELECT 1 FROM games g WHERE g.team_id = ?1 AND g.starts_at = ?2 AND g.competition = ?3
+		AND g.opponent = ?5 AND g.deleted_at IS NULL)`)
+		.bind(teamId, input.startsAt, input.competition, input.roundLabel, input.opponent, input.venue, phaseFor(input), createdBy, noVideoAt, liveStream ? 1 : 0).run();
+	return result.meta.changes === 1 ? result.meta.last_row_id : null;
+}
+
 /** `liveStream` null leaves it as it is (a No video game). `noVideoAt`: No video since then (an earlier time is kept), or
  * null for Video (back to it at `nowIso`). */
 export async function updateGame(db: D1Database, teamId: string, id: number, input: GameInput, liveStream: boolean | null, noVideoAt: string | null, nowIso: string): Promise<void> {

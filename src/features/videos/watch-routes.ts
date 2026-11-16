@@ -19,6 +19,8 @@ import { playerUrl, whepUrl } from "../../platform/stream-tokens.ts";
 import { loadWatch, moveTargets, moveToGame, requireVideo } from "./watch-service.ts";
 import { gameName, logGameChange } from "../games/game-log.ts";
 import { getGame } from "../games/games-repository.ts";
+import { waitAgain } from "../games/no-video-repository.ts";
+import { refuseWhileStillComing } from "./upload-abort-service.ts";
 import { markOpened } from "./video-views-repository.ts";
 import { gamePhase } from "../games/game-format.ts";
 import { getScore } from "../scores/scores-repository.ts";
@@ -63,9 +65,10 @@ export function registerWatchRoutes(router: Router): void {
 		const processingSince = video?.status !== "processing" ? null
 			: (stream?.recordingVideoId === video.id ? stream.endRequestedAt : null) ?? await lastActivityAt(db, deps.team.id, game.id, "upload_finished") ?? video.createdAt;
 		const liveNote = last?.status === "cancelled" && last.cancelReason ? last.cancelReason : null;
-		// A closed season: nothing new on the page (notes, scores, moving the video); the banner says why.
+		// A closed season: nothing new on the page (notes, scores, moving the video, who's in a clip); the banner says why.
 		const open_ = deps.team.status === "active";
-		const coachNotes = isCoach(member, viewAs) && open_ ? notesPanel(game.id, await listNotes(db, deps.team.id, game.id), view.playerSrc !== null)
+		const notesFor = { gamePlayer: view.playerSrc !== null && !view.currentClip, canAdd: open_ };
+		const coachNotes = isCoach(member, viewAs) ? notesPanel(game.id, await listNotes(db, deps.team.id, game.id), notesFor)
 			: member.role === "coach" && viewAs ? html`<p class="small">Coaches' notes are the coaches' own, so View as leaves them out.</p>` : "";
 		const back = `/games/${game.id}${view.currentClip ? `?clip=${view.currentClip.id}` : ""}`;
 		const result = { score, inProgress: phase === "in_progress", hidden: member.hideScores, back };
@@ -77,13 +80,17 @@ export function registerWatchRoutes(router: Router): void {
 		const celebrate = view.playerSrc !== null && !view.currentClip && isWinToShow(score, member.hideScores)
 			&& await firstSightOfWin(db, { teamId: deps.team.id, gameId: game.id, memberId: member.id, nowIso: deps.now().toISOString() });
 		const win = celebrate ? winPop(game) : "";
-		return htmlResponse(watchPage({ frame, game, video, processingSince, moveTargets: targets, message, coachNotes, live, liveNote, upcoming: phase === "upcoming", result, scoreForm, blurb, stars, win, ...view }));
+		// No squad to tick once the season's over: who's in a clip stays as it is (Change players would be refused).
+		const players = open_ ? view.players : [];
+		return htmlResponse(watchPage({ frame, game, video, processingSince, moveTargets: targets, message, coachNotes, live, liveNote, upcoming: phase === "upcoming", result, scoreForm, blurb, stars, win, ...view, players }));
 	});
 
+	// The game a team manager's move or delete leaves without a video waits a week from then for its new one.
 	router.post("/videos/:id/move", "manager", async ({ req, params, member, viewer, deps }) => {
 		const { gameId } = await parseForm(req, moveSchema);
 		const video = await requireVideo(deps.db, deps.team.id, idParam(params.id, "Video"));
 		await moveToGame(deps, video.id, gameId);
+		await waitAgain(deps.db, deps.team.id, video.gameId, deps.now().toISOString());
 		const [from, to] = await Promise.all([getGame(deps.db, deps.team.id, video.gameId), getGame(deps.db, deps.team.id, gameId)]);
 		if (from && to) await logGameChange(deps, { email: viewer.email, memberId: member.id }, "video_moved", `from ${gameName(from)} to ${gameName(to)}`);
 		return redirect(`/games/${gameId}?done=moved`);
@@ -92,7 +99,9 @@ export function registerWatchRoutes(router: Router): void {
 	router.post("/videos/:id/delete", "manager", async ({ params, member, viewer, deps }) => {
 		const video = await requireVideo(deps.db, deps.team.id, idParam(params.id, "Video"));
 		const game = await getGame(deps.db, deps.team.id, video.gameId);
+		await refuseWhileStillComing(deps, video);
 		await deleteVideo(deps, video, "admin");
+		await waitAgain(deps.db, deps.team.id, video.gameId, deps.now().toISOString());
 		if (game) await logGameChange(deps, { email: viewer.email, memberId: member.id }, "video_deleted", gameName(game), game.id);
 		return redirect(`/games/${video.gameId}?done=deleted`);
 	}, { confirm: true });

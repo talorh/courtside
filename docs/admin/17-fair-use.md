@@ -13,7 +13,7 @@ The site is paid for by its owner and built for one thing: each team's own game 
 | Watching | Watch any game as often as you like: that's what it's for. Don't leave a video looping or playing to an empty room. | None; a team's viewing shows on its Costs page |
 | Downloads | The HD video and photos for your own household's keeping. Not for posting publicly or passing to anyone outside the team: these are children. | Every download is logged with who took it: a game's video, a clip or a photo, each photo in a zip too |
 | People | Your team's families and coaches, one account each with their own email. Remove people when they leave the team. | The team's list is checked on every request; codes go only to addresses on it, 10 an hour and 20 a day each |
-| Squad | Players' first names and numbers only. | 10 players |
+| Squad | Players' names (a first name or a full name, as the team manager likes) and numbers only. | 10 players |
 | Ask and Support | Ask Virtual Team Manager what you need, and raise a ticket when Help can't answer. | 20 questions a day; 5 tickets and 20 replies a day |
 
 ### Why it matters

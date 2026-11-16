@@ -26,6 +26,13 @@ describe("No video a week after the game", () => {
 		const log = await deps.db.prepare("SELECT admin_email, action, detail FROM admin_log").all<{ admin_email: string; action: string; detail: string }>();
 		expect(log.results).toEqual([{ admin_email: "site", action: "game_changed", detail: "Round 6 · vs Lakeside Rockets, Fri 13 Nov: No video, as nothing was uploaded or streamed in the week it waited for video" }]);
 	});
+	it("names a grading game's phase in its Log line, as the Fixture does", async () => {
+		const deps = at("2026-11-13T09:00:00Z");
+		await seedGame(deps, { startsAt: FRIDAY, opponent: "Lakeside Rockets", roundLabel: "6", phase: "grading2" });
+		later(deps, "2026-11-20T08:40:00Z");
+		await runSync(deps);
+		expect(await deps.db.prepare("SELECT detail FROM admin_log").first<string>("detail")).toBe("Grading phase 2, Round 6 · vs Lakeside Rockets, Fri 13 Nov: No video, as nothing was uploaded or streamed in the week it waited for video");
+	});
 	it("a team manager who sets it back to Video, to upload it, gets another week from then, then No video again", async () => {
 		const deps = at("2026-11-13T09:00:00Z");
 		const gameId = await seedGame(deps, { startsAt: FRIDAY });

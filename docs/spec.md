@@ -33,9 +33,9 @@ live: no apps, nothing typed, one phone.
 | Role | What they can do |
 | --- | --- |
 | Watch only | Watch, download the HD MP4, see, add and download photos, make highlight clips, star favourites, and ask for a video, clip or photo to be removed. For grandparents and anyone who watches rather than films |
-| Watch and film | Everything Watch only can, plus upload a game's video and Go live. The usual role for a parent, and the default for someone new |
-| Coach | Everything Watch and film can, plus export the roster and keep the coaches' notes. Coaches film too. They see the fixture and roster but don't change them |
-| Team manager | Everything, plus the fixture, the members, the players (the squad: first name and number, at most 10), the roster and its duties; moving or deleting any video; deleting photos; and removal requests. Only team managers change those |
+| Watch and film | Everything Watch only can, plus upload a game's video, Go live and export the roster. The usual role for a parent, and the default for someone new |
+| Coach | Everything Watch and film can, plus keep the coaches' notes. Coaches film too. They see the fixture and roster but don't change them |
+| Team manager | Everything, plus the fixture, the members, the players (the squad: name and number, at most 10), the roster and its duties; moving or deleting any video; deleting photos; and removal requests. Only team managers change those |
 
 The site says Watch only, Watch and film, Coach and Team manager; in the code and the database they're `watcher`,
 `filmer`, `coach` and `manager`.
@@ -145,7 +145,8 @@ is streaming), else the next one coming up.
 The page streams to families over WebRTC, about a second behind, and records the game on the phone at the same time,
 sending it as it goes, so the saved video is full quality whatever the signal did. A stream under a minute is a test:
 it's thrown away the moment End game is tapped (nothing uploaded or processed), with a note on the game page and Go
-live, and the game is free again. The minute is what was recorded, pauses left out. The phone switching the camera off
+live, and the game is free again. The minute is what was recorded, pauses left out. A game carried on with Carry on
+streaming is never a test, however soon End game is tapped after it. The phone switching the camera off
 (it locks, a call comes, another app takes it) ends nothing: while it's away families see the Game Break card and the
 recording waits. A camera that comes back carries on by itself; one the phone switched off for good comes back with
 **Resume camera** (one tap, the same on iPhone and Android), in the same video, the gap left out. The recording is always
@@ -252,8 +253,9 @@ Watch only, Watch and film or team managers, and the panel says so. Either coach
 
 ### Fixture
 
-Everyone sees the games (date, tip-off, venue, video status) without any controls. Team managers also add, edit and
-delete games, each with its video status (has video, processing, upload failed, waiting for video, upcoming, no video).
+Everyone sees the games (date, tip-off, venue, whether each is upcoming, in progress or complete, and Live stream,
+Recorded or No video) without any controls. Team managers also add, edit and delete games, and only they see each
+game's video status (has video, processing, upload failed, waiting for video, upcoming, no video).
 New games default to **the coming Friday, at the team's usual tip-off**: 6:40pm for U12, 7:40pm for
 U14, 8:40pm for U16 and 9:40pm for U18, boys and girls the same (an age between takes the younger group's). A PlayHQ
 game with no time yet, and a game a fixture page gives no time for, get it too.
@@ -264,9 +266,11 @@ game with no time yet, and a game a fixture page gives no time for, get it too.
  Record puts it back. It can't be chosen while the game has a video (a failed one doesn't count). A game is
  **Waiting for video** for a week after tip-off; with nothing uploaded or streamed by then, the 5-minute job sets it
  to No video, with a line in the Log by the site (a Go live that was only opened is closed). A team manager who sets
- the game back to Video, to upload it after all, gives it another week from then. A deleted video doesn't count (a
- recording that was lost and deleted doesn't keep the game waiting), and a week's or a PlayHQ fixture's Video switch
- leaves the site's No video as it is (Edit undoes it, one game at a time).
+ the game back to Video, to upload it after all, gives it another week from then, and so does a team manager's
+ Delete video or Move video, from the delete or move. A deleted video doesn't count (a recording that was lost and
+ deleted doesn't keep the game waiting). If PlayHQ moves a game the site set to No video to a later time, it goes back
+ to waiting for video. A week's or a PlayHQ fixture's Video switch leaves the site's No video as it is (Edit undoes
+ it, one game at a time).
 - **Add game**, by hand (a practice match, say). A league game has a **Phase**: a VJBL season runs as three rounds of
   grading phase 1, a crossover game, three rounds of grading phase 2, then the championship season (rounds and finals),
   each phase's rounds starting from 1 again. It's kept on the game (`games.phase`), shows as a tag beside the league on
@@ -316,7 +320,8 @@ families scoring, one on lollies and one on video. There's no video duty when ev
  the match day message and the spreadsheet say "No lollies" (or the duty's own name) for it.
 - **Generate roster:** the team manager adds families by surname, a row each like Add people, and taps **Generate roster**. Every week from next
  week on is shared out fairly: each slot to the family with the fewest of that duty, then the fewest overall, then the
- longest since their last duty, never two duties in a week. This week is kept, and so are duties set by hand. Every
+ longest since their last duty, never two duties in a week unless a weekend has more duties than families (then a
+ family may take a second game, never the same game twice). This week is kept, and so are duties set by hand. Every
  family's total, and each duty, end up within one of each other: each week goes to the families with the fewest duties,
  the duties are shared among them as evenly as possible (where it's as fair, not to a family that had the same duty
  the week before or after), then families swap duties (in the same week, or two weeks
@@ -332,7 +337,8 @@ families scoring, one on lollies and one on video. There's no video duty when ev
  cleared.
 - **Changes by hand**: **Change** on any week gives each duty a family picked by hand, or leaves it
  as **Roster's pick** (showing the family the roster chose). A family picked comes off any other duty that week, and a
- duty it leaves is filled fairly. Generate keeps duties set by hand and shares out the rest around them, and the week
+ duty it leaves is filled fairly, this week or later: saving an earlier week changes only the duties picked, and
+ nothing is shared out for it. Generate keeps duties set by hand and shares out the rest around them, and the week
  says "Set by hand: Video." for the team manager. **Save week** changes only the duties picked (and any a picked family
  leaves), so an earlier week stays as it was, even with a family since taken off. Generate gives a duty left with a
  family that's off the roster to one on it.
@@ -468,9 +474,9 @@ only while one of its questions matches). There are no section chips: there aren
  the site is for. Watch only people don't film, so they never get the video duty checklist;
 - Watch and film gets filming next: video duty, recording on an iPhone and on Android, uploading, and live
  streaming;
-- a coach gets no filming, but their notes;
-- a team manager gets their own questions next, then filming, then everyone's, with their clips, photos and removal
- requests, then child safety, last.
+- a coach gets filming too, as Watch and film does, and their notes;
+- a team manager gets their own questions first (Running your team, ending with their clips, photos and removal
+ requests, then the support form), then everyone's (getting started, filming and the rest), with child safety last.
 
 Help is plain and to the point: how to use the site, with no in-jokes, filler examples or the
 obvious spelt out, and the same words for boys' and girls' teams. The roster is "game day duties", whatever a team's
@@ -480,12 +486,12 @@ open any team to help, and how someone in two teams switches. Fiddly steps have 
 Save to Files and Choose File, Go live's Pause and Stop), and the questions about a page of the site show a screenshot of
 it (`public/help/`, taken on staging with test data): signing in, the home page's buttons, Watch
 games, making a highlight clip and the clip it makes, Upload, Go live, Photos, the Roster, and for a team manager Add a person, Waiting to sign in,
-Players, the Fixture and the roster's panels. Virtual Team Manager reads none of them. "What is the aim here?" is the last question; it ends by saying the code is open source (github.com/talorh/courtside) and that nobody aims to make money from it.
+Players, the Fixture and the roster's panels. Virtual Team Manager reads none of them. "What is the aim here?" is the last question (for a team manager, Child safety comes after it); it ends by saying the code is open source (github.com/talorh/courtside) and that nobody aims to make money from it.
 
 **A team manager's Help** is everything a team manager does, a question at a time: a first-week checklist (taking it
 that they have the team's WhatsApp group, with every family in it, and their emails), members and roles, players, the
 fixture and PlayHQ, the roster and its duties, videos, live streaming, notifications and scores, and the end of the
-season. Removal requests (with deleting clips and photos) come after everyone's questions, then child safety, then the support form at the bottom of the page. Every button it names is checked against the page it names, so it can't drift from the site.
+season. Removal requests (with deleting clips and photos) come last of these, then the support form (Contact support), which ends Running your team; everyone's questions follow, with child safety last. Every button it names is checked against the page it names, so it can't drift from the site.
 
 **Ask Virtual Team Manager** (named for the team's manager: Virtual Sam in B12.1) sits at the top of Help, for every member: "Ask anything about using the site." Workers AI (Google's Gemma 4, quick and cheap, its thinking off) answers in plain text from the asker's own
 Help page only (so it stays in step with it), declines anything off-topic, and says to ask the team's name to ask (or "your team
@@ -496,7 +502,7 @@ questions a member a day at most.
 ### Support, for team managers
 
 A team manager asks the site's admin for help with **Contact support** (the form at the
-bottom of their Help, and on **Support**),
+end of Running your team on their Help, and on **Support**),
 choosing what it's about and saying how to reach them. Each question is a ticket the admins answer on the site.
 **Your requests**, on Support, lists theirs with where each is at:
 
@@ -518,9 +524,9 @@ between the two types.
 
 ### The admin area
 
-For site admins only, on a computer or a phone: a bottle-green sidebar on a computer (Switch to mobile view, light or
+For site admins only, on a computer or a phone: a sidebar in the club's colour on a computer (Switch to mobile view, light or
 dark and sign out at its foot, as on the team pages), one row of sections that scrolls sideways on a phone, with
-Support's counts beside it (tickets waiting, and alerts that aren't ok). Anyone else gets "Page not found" there.
+counts beside Insights (alerts that aren't ok) and Support (tickets waiting). Anyone else gets "Page not found" there.
 
 - **Insights**, the landing page (`/admin`): first, is the site all right: "All green" when it is, else how
  many urgent and warnings, first; then what needs an admin (support tickets waiting, families' removal requests in
@@ -567,7 +573,7 @@ Support's counts beside it (tickets waiting, and alerts that aren't ok). Anyone 
  something goes wrong, where things are in the code; setting up a computer step by step by hand, including the clone
  from Artifacts and the courtside-staging worktree, and working with an AI coding agent, with its instructions,
  `docs/agent-setup.md`, to copy into an AI coding agent, another agent or similar) and Reference (a glossary of Cloudflare's words
- in plain English), with thirty-one diagrams; the **Documentation AI assistant** at its top, which answers an admin's question
+ in plain English), with thirty-two diagrams; the **Documentation AI assistant** at its top, which answers an admin's question
  from the sections it's about, names them with links, and takes 50 questions an admin a day; and carries the **fair use policy**: one video a game, a few clips, photos of the team's own games and events, downloads for the household only,
  the daily Ask and Support limits and the $200 season budget, each beside the limit the code enforces. Written for
  teams and to be shared with them later; admins only for now.
@@ -589,8 +595,10 @@ In a team they open, a strip says "Admin: you're seeing Saints G14.5 as its team
 
 **Onboarding a team** asks only for its code, its season (this or next), the team manager's name and email, and who
 members are told to ask. The site emails the team manager a welcome to get them started (Reply-To the admin), and the
-welcome page shows it, to copy or email again. **Ending a season** closes the team: read-only at once, and deleted
-when its season's footage is due (31 December of the year its season ends, as Help tells families) or at 3am that
+welcome page shows it, to copy or email again. A team's code and season can be fixed until its first game; its season
+only until its first photo too, since a photo is deleted with the season it was added in. **Ending a season** closes
+the team: read-only at once, and deleted when its season's footage is due (31 December of the year its season ends, as
+Help tells families) or at 3am that night, with its code typed. Once that date has passed, it can only be deleted that
 night, with its code typed. It can be reopened until deleting starts. Deleting takes every photo, video, clip, original
 and record of the team, except what the download log names (kept its two years).
 

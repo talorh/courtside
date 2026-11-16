@@ -23,6 +23,11 @@ describe("a request without a sign-in", () => {
 		expect(await res.json()).toEqual({ ok: false, error: { code: "unauthenticated", message: "Please sign in." } });
 		expect(res.headers.getSetCookie()).toEqual([]);
 	});
+	it("the Documentation AI assistant's call, a page script's too, gets 401 JSON", async () => {
+		const res = await call("/admin/docs/ask", { method: "POST", headers: { Origin: "https://saints.example", "Content-Type": "application/json" }, body: JSON.stringify({ question: "How often is PlayHQ checked?" }) });
+		expect(res.status).toBe(401);
+		expect(await res.json()).toEqual({ ok: false, error: { code: "unauthenticated", message: "Please sign in." } });
+	});
 	it("a form posted after the sign-in ran out gets the error page with Sign in again, pointing at the sign-in page", async () => {
 		const res = await call("/teams/switch", { method: "POST", headers: { Origin: "https://saints.example" }, body: new URLSearchParams({ team: "x" }) });
 		expect(res.status).toBe(401);

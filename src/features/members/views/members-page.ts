@@ -43,9 +43,12 @@ const sortChips = (sort: MemberSort) => html`<nav class="chips sortby" aria-labe
 
 function memberRow(m: Member, actor: Member, sort: MemberSort, team: string, open: boolean): SafeHtml {
 	const formId = `member-${m.id}`;
+	// A closed team's name and role can't change, so they're shown as text: a box there would post and be refused.
+	const name = open ? html`<input name="name" type="text" maxlength="80" value="${m.name}" placeholder="Name" aria-label="Name for ${m.email}" form="${formId}">` : m.name;
+	const role = open ? html`<form method="post" action="${withSort(`/members/${m.id}`, sort)}" id="${formId}"><select name="role" aria-label="Role for ${m.email}">${selectOptions(roleOptions, m.role)}</select></form>` : ROLE_LABELS[m.role];
 	return html`<tr><td class="m-email">${m.email}</td>
-<td class="m-name"><input name="name" type="text" maxlength="80" value="${m.name}" placeholder="Name" aria-label="Name for ${m.email}" form="${formId}"></td>
-<td class="m-role"><form method="post" action="${withSort(`/members/${m.id}`, sort)}" id="${formId}"><select name="role" aria-label="Role for ${m.email}">${selectOptions(roleOptions, m.role)}</select></form></td>
+<td class="m-name">${name}</td>
+<td class="m-role">${role}</td>
 <td class="m-seen">${lastSeen(m.lastSeenAt)}</td><td class="m-acts"><div>${open ? html`<button class="btn primary" form="${formId}" data-save>Save</button>` : ""}${m.id === actor.id ? "" : confirmButton({ action: withSort(`/members/${m.id}/remove`, sort), label: "Remove", question: `Remove ${m.name || m.email}?`, consequence: `They won't be able to sign in to ${team}.`, yes: "Yes, remove them" })}</div></td></tr>`;
 }
 

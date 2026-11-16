@@ -69,4 +69,31 @@ describe("the site's own No video", () => {
 		expect(page).not.toContain(waiting);
 		expect(page).toContain("No video for this game yet.");
 	});
+	it("PlayHQ moving a game later takes off the site's No video, so it waits for video again; a team manager's stays", async () => {
+		const deps = createTestDeps(new Date("2026-11-01T00:00:00Z"));
+		const link = "https://www.playhq.com/basketball-victoria/org/x/y/teams/saints-b12\.1-2026-1/aaaa1111";
+		const fixture = (lakeside: string, oakridge: string) => deps.playhq.teams.set("aaaa1111", { name: "VJBL", games: [
+			{ id: "k", round: "Round 1", date: lakeside, time: "18:40", opponent: "Lakeside", venue: "" },
+			{ id: "e", round: "Round 2", date: oakridge, time: "18:40", opponent: "Oakridge", venue: "" },
+		] });
+		fixture("2026-11-06", "2026-11-06");
+		const manager = makeClient(deps);
+		await manager("/fixture/link", form({ url: link, competition: "VJBL" }));
+		const id = async (opponent: string) => (await deps.db.prepare("SELECT id FROM games WHERE opponent = ?").bind(opponent).first<number>("id"))!;
+		const [lakeside, oakridge] = [await id("Lakeside"), await id("Oakridge")];
+		await deps.db.prepare("UPDATE games SET no_video_at = '2026-11-01T00:00:00.000Z' WHERE id = ?").bind(oakridge).run();
+		later(deps, "2026-11-14T00:00:00Z"); // a week on, nothing filmed: the site sets Lakeside's game to No video
+		await runSync(deps);
+		const auto = async () => (await deps.db.prepare("SELECT no_video_auto_at FROM games WHERE id = ?").bind(lakeside).first<string | null>("no_video_auto_at"));
+		expect([await noVideo(deps, lakeside), await auto()]).toEqual([true, "2026-11-14T00:00:00.000Z"]);
+		// A check that moves it earlier, or leaves its time, keeps the site's No video.
+		fixture("2026-11-05", "2026-11-05");
+		later(deps, "2026-11-14T09:00:00Z");
+		await runSync(deps);
+		expect(await noVideo(deps, lakeside)).toBe(true);
+		fixture("2026-11-27", "2026-11-27");
+		later(deps, "2026-11-14T18:00:00Z");
+		await runSync(deps);
+		expect([await noVideo(deps, lakeside), await auto(), await noVideo(deps, oakridge)]).toEqual([false, null, true]);
+	});
 });

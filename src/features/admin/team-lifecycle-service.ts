@@ -1,13 +1,16 @@
 // A team's life after onboarding: fixing its details, closing it at the end of its
 // season (read-only, deleted when its footage is due or tonight), reopening it, and when it's deleted. Each change is
 // made only from the state it applies to, then logged (a change someone else made first logs nothing).
-import type { AppDeps } from "../../app/deps.ts";
+import { type AppDeps, withTeam } from "../../app/deps.ts";
 import { badRequest, conflict } from "../../app/errors.ts";
 import { nextLocal3am, seasonEndDeadline, seasonLabel } from "../../shared/time.ts";
 import { hasGames } from "../games/games-repository.ts";
 import { listOpenLive } from "../live/live-repository.ts";
+import { lastPartAt } from "../live/recording-segments-service.ts";
+import { listPhotos } from "../photos/photos-repository.ts";
 import { teamLabel, teamNames } from "../teams/team-code.ts";
 import { isBeingDeleted, type Team } from "../teams/team.ts";
+import { dueDay } from "./views/team-close-page.ts";
 import { closeTeamWrite, findOpenTeam, reopenTeamWrite, setDeleteAfterWrite, updateTeam } from "../teams/teams-repository.ts";
 import { listVideosByStatus } from "../videos/videos-repository.ts";
 import { type AdminAction, adminLogStatement } from "./admin-log-repository.ts";
@@ -23,13 +26,17 @@ const unique = (err: unknown) => String(err).includes("UNIQUE constraint failed"
 
 export interface EditInput { code: string; season: string; askName: string }
 
-/** Who to ask, any time; the code and season (to fix a typo) only until the team's first game. */
+/** Who to ask, any time; the code and season (to fix a typo) only until the team's first game, and the season only
+ * until its first photo too: a photo is deleted with the season it was added in. */
 export async function editTeam(deps: AppDeps, adminEmail: string, team: Team, input: EditInput): Promise<void> {
 	if (isBeingDeleted(team, deps.now())) throw conflict(`${teamLabel(team)} is being deleted.`);
 	const code = parseCode(input.code).code;
 	const seasonStart = Number(input.season);
 	if ((code !== team.code || seasonStart !== team.seasonStart) && await hasGames(deps.db, team.id)) {
 		throw conflict(`${teamLabel(team)} has games now, so its code and season stay as they are.`);
+	}
+	if (seasonStart !== team.seasonStart && (await listPhotos(deps.db, team.id)).length) {
+		throw conflict(`${teamLabel(team)} has photos now, so its season stays as it is.`);
 	}
 	if (seasonStart !== team.seasonStart && !onboardSeasons(deps.now()).includes(seasonStart)) throw badRequest("Pick this season or next season.");
 	const open = code !== team.code && team.status === "active" ? await findOpenTeam(deps.db, code) : null;
@@ -49,26 +56,31 @@ export async function editTeam(deps: AppDeps, adminEmail: string, team: Team, in
 	await log(deps, adminEmail, team, "team_edited", changes.join(", "));
 }
 
-/** Something a phone is sending to the team right now: a live stream, or an upload or recording sending parts. Closing
- * then would refuse its next part, and the video would be lost. */
+/** Something a phone is sending to the team right now: a live stream, or an upload or recording sending parts (to any
+ * of its files, for a recording carried on after a closed page). Closing then would refuse its next part, and the video
+ * would be lost. */
 async function busy(deps: AppDeps, team: Team): Promise<boolean> {
 	const recent = (iso: string | null | undefined) => !!iso && deps.now().getTime() - Date.parse(iso) < QUIET_MS;
 	if ((await listOpenLive(deps.db, team.id)).some((l) => recent(l.lastLiveAt ?? l.createdAt))) return true;
 	for (const video of await listVideosByStatus(deps.db, team.id, "uploading")) {
-		const parts = video.r2Key && video.r2UploadId ? await deps.presigner.listParts(video.r2Key, video.r2UploadId) : null;
-		if (recent(parts?.map((p) => p.uploaded).sort().at(-1) ?? video.createdAt)) return true;
+		if (recent(video.r2Key ? await lastPartAt(withTeam(deps, team), video) : video.createdAt)) return true;
 	}
 	return false;
 }
 
-/** Read-only at once; deleted when its footage is due (what Help tells families), or tonight with its code typed. */
+/** Read-only at once; deleted when its footage is due (what Help tells families), or tonight with its code typed. Once
+ * that date has passed, waiting for it would delete the team at once, so only tonight, with its code, is left. */
 export async function closeTeam(deps: AppDeps, adminEmail: string, team: Team, input: { when: string; confirmCode: string }): Promise<void> {
 	if (team.status !== "active") throw conflict(`${teamLabel(team)}'s season is over already.`);
 	const tonight = input.when === "tonight";
 	if (tonight && input.confirmCode.trim().toLowerCase() !== team.code) throw badRequest(`Type ${team.code} to delete it tonight.`);
-	if (await busy(deps, team)) throw conflict(`${teamLabel(team)} has an upload or live stream going: close it once that's done.`);
 	const now = deps.now();
-	const deleteAfter = tonight ? nextLocal3am(now).toISOString() : seasonEndDeadline(team.seasonStart);
+	const due = seasonEndDeadline(team.seasonStart);
+	if (!tonight && due <= now.toISOString()) {
+		throw badRequest(`${teamLabel(team)}'s videos and photos were due to be deleted on ${dueDay(team)}, so they'd go tonight: type ${team.code} to end its season.`);
+	}
+	if (await busy(deps, team)) throw conflict(`${teamLabel(team)} has an upload or live stream going: close it once that's done.`);
+	const deleteAfter = tonight ? nextLocal3am(now).toISOString() : due;
 	if (!(await closeTeamWrite(deps.db, team.id, now.toISOString(), deleteAfter)).meta.changes) throw conflict(`${teamLabel(team)}'s season is over already.`);
 	await log(deps, adminEmail, team, "team_closed", tonight ? "deleted tonight" : "deleted at the season's end");
 }

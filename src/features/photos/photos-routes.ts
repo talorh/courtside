@@ -2,7 +2,7 @@ import { z } from "zod";
 import { badRequest, HttpError, notFound } from "../../app/errors.ts";
 import { fileResponse, htmlResponse, jsonOk, redirect } from "../../app/respond.ts";
 import type { Router } from "../../app/router.ts";
-import { doneMessage, idParam, parseForm } from "../../shared/validation.ts";
+import { doneMessage, idParam, parseForm, readUpTo } from "../../shared/validation.ts";
 import { logMediaDownloads } from "../videos/downloads-repository.ts";
 import { getActiveMember } from "../members/members-repository.ts";
 import { photoLinks } from "./photo-links.ts";
@@ -18,6 +18,17 @@ const noteSchema = z.object({ note: z.string().trim().max(500).default("") });
 // The form's own fields add a little to the photo.
 const FORM_ROOM = 64 * 1024;
 const tooBig = () => new HttpError(413, "too_big", "That photo is too big to add (10 MB at most).");
+
+/** The phone's form, refused by its Content-Length before any of it is read; one with none (sent in chunks) is read
+ * only up to the limit, so a body of any size is never read whole. One that says its size is read straight from the request. */
+async function photoForm(req: Request): Promise<FormData> {
+	const declared = req.headers.get("Content-Length");
+	const size = declared === null || declared.trim() === "" ? NaN : Number(declared);
+	if (size > MAX_PHOTO_BYTES + FORM_ROOM) throw tooBig();
+	if (Number.isInteger(size) && size >= 0) return req.formData();
+	const bytes = await readUpTo(req, MAX_PHOTO_BYTES + FORM_ROOM, tooBig);
+	return new Response(bytes, { headers: { "Content-Type": req.headers.get("Content-Type") ?? "" } }).formData();
+}
 
 const pageParam = (url: URL) => { const n = Number(url.searchParams.get("page") ?? "1"); return Number.isInteger(n) && n >= 1 ? n : 1; };
 
@@ -63,8 +74,7 @@ export function registerPhotoRoutes(router: Router): void {
 	// The phone sends each photo on its own (public/photos.js): the JPEG it made, and when the photo was taken. Anyone on
 	// the team can add them (families too).
 	router.post("/api/photos", "watcher", async ({ req, member, deps }) => {
-		if (Number(req.headers.get("Content-Length") ?? 0) > MAX_PHOTO_BYTES + FORM_ROOM) throw tooBig();
-		const form = await req.formData().catch((err: unknown) => { throw badRequest("Please send the photo from the Photos page.", err); });
+		const form = await photoForm(req).catch((err: unknown) => { throw err instanceof HttpError ? err : badRequest("Please send the photo from the Photos page.", err); });
 		const file = form.get("photo");
 		if (!(file instanceof File)) throw badRequest("Choose a photo to add.");
 		if (file.size > MAX_PHOTO_BYTES) throw tooBig();

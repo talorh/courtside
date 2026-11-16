@@ -85,4 +85,28 @@ describe("coaches' notes", () => {
 		const { gameId, andrew } = await setup();
 		expect(await (await andrew(`/games/${gameId}`)).text()).not.toContain("notes.xlsx");
 	});
+	it("on a clip's page the notes' times are plain text, with no Mark time: the player there plays the clip, not the game", async () => {
+		const { deps, gameId, andrew } = await setup();
+		await andrew(`/games/${gameId}/notes`, form({ at: "12:30", body: "Box out on free throws" }));
+		await deps.db.prepare("INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, stream_uid, status, created_by) VALUES (?, 1, 'Steal', 10, 20, 'c1', 'ready', 1)").bind(deps.team.id).run();
+		const page = await (await andrew(`/games/${gameId}?clip=1`)).text();
+		expect(page).toContain("<h1>Steal</h1>");
+		expect(page).toContain("Box out on free throws");
+		expect(page).toContain('<span class="notetime">12:30</span>');
+		expect(page).not.toContain("data-seek");
+		expect(page).not.toContain('data-mark="note-at"');
+	});
+	it("once the season's over, coaches still read their notes and download them, but add none", async () => {
+		const { deps, gameId, andrew } = await setup();
+		await andrew(`/games/${gameId}/notes`, form({ at: "12:30", body: "Box out on free throws" }));
+		await deps.db.prepare("UPDATE teams SET status = 'closed', closed_at = '2026-10-14T00:00:00.000Z', delete_after = '2027-12-31T13:00:00.000Z' WHERE id = ?").bind(deps.team.id).run();
+		const page = await (await andrew(`/games/${gameId}`)).text();
+		expect(page).toContain("Coaches' notes");
+		expect(page).toContain("Box out on free throws");
+		expect(page).toContain(`href="/games/${gameId}/notes.xlsx"`);
+		expect(page).not.toContain("Add a note");
+		expect(page).not.toContain("Save note");
+		expect(page).not.toContain("Delete this note?");
+		expect((await andrew(`/games/${gameId}/notes.xlsx`)).status).toBe(200);
+	});
 });

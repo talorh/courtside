@@ -1,5 +1,6 @@
-// A team manager asking the site's admin for help, or for something new (a feature request): the form, at the bottom of
-// their Help and on Support, and on Support their own requests with where each is at (tickets, answered on the site).
+// A team manager asking the site's admin for help, or for something new (a feature request): the form, at the end of
+// Running your team on their Help and on Support, and on Support their own requests with where each is at (tickets,
+// answered on the site).
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { formatGameDate, localTime } from "../../../shared/time.ts";
 import { notice, pageHead, selectOptions } from "../../../ui/components.ts";
@@ -17,7 +18,7 @@ const firstLine = (text: string) => { const line = text.split("\n")[0] ?? ""; re
 
 type Values = { topic: string; message: string; contact: string };
 
-/** The form itself: on Support, and at the bottom of a team manager's Help. Their email is there already. */
+/** The form itself: on Support, and at the end of Running your team on a team manager's Help. Their email is there already. */
 export function supportForm(frame: PageFrame, values?: Values, error?: string): SafeHtml {
 	const v = values ?? { topic: "other", message: "", contact: frame.member.email };
 	return html`<form class="panel stack" method="post" action="/support">

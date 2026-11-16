@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Router } from "../../../src/app/router.ts";
 import { checkDatabase, checkEmails, checkImages, checkSiteErrors, checkStreamStorage, recordDailyRun, recordSyncRun } from "../../../src/features/admin/usage-checks.ts";
 import { getAlert } from "../../../src/features/admin/alerts-repository.ts";
+import { FetchBudgetSpent } from "../../../src/platform/fetch-budget.ts";
 import { makeClient, MANAGER } from "../../helpers/app.ts";
 import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 import { addMember, addTeam, G14_5 } from "../../helpers/two-teams.ts";
@@ -42,6 +43,16 @@ describe("Stream storage, from the 5-minute job at most hourly", () => {
 		quiet();
 		await checkStreamStorage(deps);
 		expect(await level(deps, "stream_storage")).toBe("warn");
+	});
+
+	it("leaves it to the next run, logging nothing, when this run's outside calls are used up", async () => {
+		const { deps } = clocked();
+		const error = quiet();
+		deps.live.storage = () => Promise.reject(new FetchBudgetSpent());
+		await checkStreamStorage(deps);
+		expect(await level(deps, "stream_storage")).toBeNull();
+		expect((await deps.db.prepare("SELECT what FROM problems").all()).results).toEqual([]);
+		expect(error).not.toHaveBeenCalled();
 	});
 });
 
@@ -127,6 +138,27 @@ describe("the new checks (basic monitoring)", () => {
 		later(125);
 		await checkSiteErrors(deps);
 		expect(await level(deps, "site_errors")).toBe("ok");
+	});
+
+	it("server errors: once urgent it stays urgent, with no more emails, until they're under three", async () => {
+		const { deps, later } = clocked();
+		// Six an hour, steady: the last hour or two holds six to twelve.
+		const errors = (hour: string, n: number) => deps.db.prepare("INSERT INTO server_errors (hour, n) VALUES (?, ?)").bind(hour, n).run();
+		await errors("2026-10-14T23", 6);
+		await errors("2026-10-15T00", 6);
+		const levels: unknown[] = [];
+		const check = async () => { await checkSiteErrors(deps); levels.push(await level(deps, "site_errors")); };
+		await check();
+		for (const hour of ["2026-10-15T01", "2026-10-15T02"]) {
+			later(60);
+			await check();
+			await errors(hour, 6);
+			await check();
+		}
+		later(120);
+		await check();
+		expect(levels).toEqual(["urgent", "urgent", "urgent", "urgent", "urgent", "ok"]);
+		expect(deps.email.sent).toHaveLength(1);
 	});
 
 	it("emails: any waiting more than an hour is urgent, and none waiting clears it", async () => {

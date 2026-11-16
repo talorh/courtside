@@ -30,7 +30,7 @@ async function photo(page, width, height, app1 = []) {
 	const base64 = await page.evaluate(async ([w, h]) => {
 		const canvas = Object.assign(document.createElement("canvas"), { width: w, height: h });
 		const g = canvas.getContext("2d");
-		g.fillStyle = "#0A4A23";
+		g.fillStyle = "#14274E";
 		g.fillRect(0, 0, w, h);
 		g.fillStyle = "#fff";
 		g.fillRect(0, 0, w / 4, h / 4);
@@ -83,6 +83,37 @@ export const scenarios = [
 			t.check(!hasExif(first.jpeg), "the first sent with no EXIF and no location");
 			t.check(second.takenAt === "", `the screenshot sent with no date, so the site uses when it was added (sent "${second.takenAt}")`);
 			t.check(second.size?.width === 800 && second.size?.height === 600, `the screenshot kept its size (sent ${second.size?.width} x ${second.size?.height})`);
+		},
+	},
+	{
+		name: "photos: a picture with a see-through background (a PNG) is sent on white, not black",
+		phones: ["android", "iphone", "firefox"],
+		async run(t) {
+			t.harness.page("/photos", photosPage);
+			await t.page.goto(`${t.harness.url}/photos`);
+			// A blue square on nothing at all, as a sticker or a saved logo is.
+			const png = Buffer.from(await t.page.evaluate(async () => {
+				const canvas = Object.assign(document.createElement("canvas"), { width: 400, height: 300 });
+				const g = canvas.getContext("2d");
+				g.fillStyle = "#1F4FA8";
+				g.fillRect(150, 100, 100, 100);
+				const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+				let text = "";
+				for (const b of new Uint8Array(await blob.arrayBuffer())) text += String.fromCharCode(b);
+				return btoa(text);
+			}), "base64");
+			await t.page.setInputFiles("#photo-files", [{ name: "Sticker.png", mimeType: "image/png", buffer: png }]);
+			await t.until(() => t.page.url().includes("done=added"), "the Photos page once it's in", 30_000);
+			const [sent] = t.harness.calls("POST /api/photos").map((c) => fields(c.body));
+			const [corner, middle] = await t.page.evaluate(async (b64) => {
+				const bitmap = await createImageBitmap(new Blob([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], { type: "image/jpeg" }));
+				const canvas = Object.assign(document.createElement("canvas"), { width: bitmap.width, height: bitmap.height });
+				const g = canvas.getContext("2d");
+				g.drawImage(bitmap, 0, 0);
+				return [[10, 10], [200, 150]].map(([x, y]) => [...g.getImageData(x, y, 1, 1).data.slice(0, 3)]);
+			}, Buffer.from(sent.photo).toString("base64"));
+			t.check(corner.every((v) => v > 240), `the see-through part sent white (${corner})`);
+			t.check(middle[2] > middle[0] + 60 && middle[2] < 210, `the blue square still blue (${middle})`);
 		},
 	},
 	{
@@ -199,8 +230,14 @@ export const scenarios = [
 		phones: ["android", "iphone"],
 		async run(t) {
 			t.harness.page("/photo", () => photoPage({ newer: 9, older: 5 }));
-			t.harness.page("/photos/5", () => photoPage({ id: 5, newer: PHOTO.id }));
+			// Photo 5 was taken on another day, so its caption isn't photo 7's.
+			t.harness.page("/photos/5", () => photoPage({ id: 5, newer: PHOTO.id }).replace(/(class="small photo-when">)[^<]*/, "$1Tuesday 20 October, 8:30am"));
 			t.harness.page("/photos/9", () => photoPage({ id: 9, older: PHOTO.id }));
+			/** What the page says and links to: its caption, All photos, Download photo and Ask for this photo to be removed. */
+			const own = () => t.page.evaluate(() => ({
+				caption: document.querySelector(".photo-when").textContent, back: document.querySelector(".photoback").getAttribute("href"),
+				download: document.querySelector("[data-save-photo]").getAttribute("href"), removal: document.querySelector(".side form").getAttribute("action"),
+			}));
 			const swipe = (dx, dy, ms = 120) => t.page.evaluate(async ([dx, dy, ms]) => {
 				const at = document.querySelector(".photoview");
 				const fire = (type, x, y) => {
@@ -228,6 +265,8 @@ export const scenarios = [
 			await swipe(-20, 240); // a scroll, mostly down
 			await t.page.waitForTimeout(400);
 			t.check(t.page.url().endsWith("/photo"), "a scroll stays put");
+			const opened = await own();
+			t.check(opened.back === "/photos?page=1#p7" && opened.download === "/photos/7/download" && opened.removal === "/photos/7/removal-requests", `photo 7's own links (${JSON.stringify(opened)})`);
 			await swipe(-180, 10);
 			await t.page.waitForURL(/\/photos\/5$/, { timeout: 10_000 });
 			await t.until(() => t.page.evaluate(() => document.querySelector(".photoview")?.dataset.id === "5" && window.samePage === true), "the page to become photo 5's without a reload");
@@ -242,10 +281,26 @@ export const scenarios = [
 			t.check(shown.slides === 3 && shown.beyond === 0, `an empty slide beyond the oldest (${JSON.stringify(shown)})`);
 			t.check(shown.left === 0, `its slide over the figure (${JSON.stringify(shown)})`);
 			t.check(shown.back === "/photos?page=1#p5", `All photos going back to its place (${shown.back})`);
+			const five = await own();
+			t.check(five.caption === "Tuesday 20 October, 8:30am" && five.download === "/photos/5/download" && five.removal === "/photos/5/removal-requests", `photo 5's own caption and buttons (${JSON.stringify(five)})`);
 			t.check(await t.page.evaluate(() => history.length === window.pagesBefore), "no history added: Back still goes to All photos");
 			await swipe(180, -10);
 			await t.page.waitForURL(/\/photos\/7$/, { timeout: 10_000 });
 			t.check(await t.page.evaluate(() => window.samePage === true), "still no reload");
+			// Back on the opened photo: its own caption, links and buttons, not photo 5's (Delete would delete the wrong one).
+			await t.until(() => t.page.evaluate(() => document.querySelector(".photoview")?.dataset.id === "7"), "the page to be photo 7's again");
+			const back = await own();
+			t.check(JSON.stringify(back) === JSON.stringify(opened), `photo 7's own caption and links again (${JSON.stringify(back)}, opened ${JSON.stringify(opened)})`);
+			// The phone turned on its side: the photo's own slide still sits over the figure, not half of each neighbour.
+			const size = t.page.viewportSize();
+			await t.page.setViewportSize({ width: size.height, height: size.width });
+			await t.page.waitForTimeout(300);
+			const turned = await t.page.evaluate(() => {
+				const fig = document.querySelector(".photoview").getBoundingClientRect(), mid = document.querySelectorAll(".photoview .slide")[1].getBoundingClientRect();
+				return { left: Math.round(mid.left - fig.left), width: Math.round(mid.width - fig.width) };
+			});
+			await t.page.setViewportSize(size);
+			t.check(turned.left === 0 && turned.width === 0, `turned on its side, the photo's own slide over the figure (${JSON.stringify(turned)})`);
 		},
 	},
 	{

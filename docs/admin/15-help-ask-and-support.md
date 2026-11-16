@@ -24,7 +24,7 @@ Each team's helper is named for its team manager, from the team's own name to as
 
 *Every email is saved before it's sent, and the 5-minute job sends any that didn't go. Admins' private notes never reach the team manager.*
 
-A team manager asks the site's admins with **Contact support** (the bottom of their Help, and their Support page), choosing what it's about. Each question is a ticket, answered on the site: the team manager's Support page lists theirs and where each is at, and a ticket's page shows the conversation, never the admins' private notes. A ticket works for a closed team too. Five questions and twenty replies a team manager a day at most.
+A team manager asks the site's admins with **Contact support** (the end of Running your team on their Help, and their Support page), choosing what it's about. Each question is a ticket, answered on the site: the team manager's Support page lists theirs and where each is at, and a ticket's page shows the conversation, never the admins' private notes. A ticket works for a closed team too. Five questions and twenty replies a team manager a day at most.
 
 **Feature requests** are a ticket type of their own: Feature request in the form's dropdown. They have their own queue on Support (a tab beside Support questions), and a stage instead of a status: Under consideration, Planned, Shipped or Not planned, set on the ticket, each emailed to the team manager. Shipped and Not planned close it; a reply keeps its stage. A ticket can be moved to the other type (Type, beside it), which starts its stage again.
 

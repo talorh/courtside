@@ -1,6 +1,6 @@
 // The admin area's Documentation: one section at a time, chosen from the contents (the address's #part); the search box
 // (docs-search.js); "On this page" for the section's headings on a wide screen; on a phone the contents fold behind a
-// button. Without this script, or when printing, every section is on the page as it's drawn.
+// button. Without this script every section is on the page as it's drawn; printing prints the section on screen.
 import { search } from "./docs-search.js";
 
 const docs = document.querySelector(".docs");

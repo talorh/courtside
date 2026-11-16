@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { listSegments } from "../../../src/features/live/recording-segments-repository.ts";
 import { getActiveVideoForGame, getVideo } from "../../../src/features/videos/videos-repository.ts";
 import { jsonBody, makeClient } from "../../helpers/app.ts";
 import { createTestDeps } from "../../helpers/fakes.ts";
@@ -19,7 +20,7 @@ async function pausedSoon() {
 		({ partNumber: i + 1, etag: `"e${i + 1}"`, uploaded: now.toISOString() })));
 	const later = (seconds: number) => { now = new Date(now.getTime() + seconds * 1000); };
 	const end = (body: object) => client(`/api/live/${gameId}/end`, jsonBody(body));
-	return { deps, gameId, client, reached, later, end };
+	return { deps, gameId, videoId: start.videoId, client, reached, later, end };
 }
 
 describe("the test rule counts what was recorded, not the time since Go live", () => {
@@ -53,6 +54,24 @@ describe("the test rule counts what was recorded, not the time since Go live", (
 		deps.presigner.listParts = () => Promise.reject(new Error("R2 timed out"));
 		expect((await json(await end({ recordedSeconds: 30 }))).data).toEqual({ status: "ended" });
 		expect((await getActiveVideoForGame(deps.db, deps.team.id, gameId))?.status).toBe("uploading");
+	});
+	it("a carried-on game is never a test, though End game comes seconds after Carry on and segment 1 holds a single part", async () => {
+		const { deps, gameId, videoId, client, reached, later, end } = await pausedSoon();
+		const carryOn = () => client(`/api/live/${gameId}/continue`, jsonBody({ videoId, mimeType: "video/mp4" }));
+		later(30);
+		reached(1);
+		later(5 * 60);
+		expect((await carryOn()).status).toBe(201);
+		// Forty minutes of the game go into segment 2, then the page closes again and carries on into segment 3.
+		const [segment2] = await listSegments(deps.db, deps.team.id, videoId);
+		later(40 * 60);
+		deps.presigner.parts.set(segment2!.r2UploadId!, Array.from({ length: 170 }, (_, i) => ({ partNumber: i + 1, etag: `"s${i + 1}"`, uploaded: deps.now().toISOString() })));
+		later(5 * 60);
+		expect((await carryOn()).status).toBe(201);
+		later(20);
+		expect((await json(await end({ recordedSeconds: 20, cause: "tapped" }))).data).toEqual({ status: "ended" });
+		expect((await getActiveVideoForGame(deps.db, deps.team.id, gameId))?.status).toBe("uploading");
+		expect(deps.originals.aborted).toEqual([]);
 	});
 	it("refuses a count that isn't a number of seconds", async () => {
 		const { later, end } = await pausedSoon();

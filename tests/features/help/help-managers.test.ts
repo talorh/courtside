@@ -103,8 +103,9 @@ describe("Help for team managers (no separate guide, one Help page with each rol
 		expect(page).not.toMatch(/<details[^>]* open/);
 		expect(page).toContain(`name="contact" type="text" required maxlength="200" value="${MANAGER}"`);
 		expect(page).toContain("For anything Help doesn't answer, or an idea for the site (choose Feature request).");
-		// A team manager asks the site's admin, not themselves.
+		// A team manager asks the site's admin, not themselves, and Help says where the form is.
 		expect(page).not.toContain("Still stuck? Ask Sam.");
+		expect(page).toContain('ask with <a href="#ask-admin">Contact support</a>, at the end of\nRunning your team (or on your <a href="/support">Support</a> page)');
 	});
 
 	it("makes it plain that whoever films needs Watch and film: adding people, the roles, and video duty", async () => {

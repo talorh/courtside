@@ -1,20 +1,21 @@
 import { describe, expect, it, vi } from "vitest";
 import { checkComingGames, checkGames, gameDayReadiness } from "../../../src/features/admin/game-day-checks.ts";
 import { setAlert } from "../../../src/features/admin/alerts-service.ts";
+import { FetchBudgetSpent } from "../../../src/platform/fetch-budget.ts";
 import { makeClient } from "../../helpers/app.ts";
 import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 import { seedGame } from "../../helpers/seed.ts";
 
 /** Friday 13 Nov 2026 in the club's time zone (AEDT, UTC+11), a game at 6:40pm, the 5-minute job just run. `at`: local time. */
-async function gameDay(at = "10:00"): Promise<TestDeps & { clock: (time: string) => void }> {
+async function gameDay(at = "10:00"): Promise<TestDeps & { clock: (time: string, day?: number) => void }> {
 	let now = local(at);
 	const deps = createTestDeps(now);
 	(deps as { now: () => Date }).now = () => now;
 	await seedGame(deps, { startsAt: "2026-11-13T18:40", competition: "Practice match", opponent: "Hillcrest U12 Boys 2" });
 	await setAlert(deps, "sync_job", "ok", "The last run was fine");
-	return Object.assign(deps, { clock: (time: string) => { now = local(time); } });
+	return Object.assign(deps, { clock: (time: string, day = 13) => { now = local(time, day); } });
 }
-const local = (time: string) => new Date(Date.parse(`2026-11-13T${time}:00+11:00`));
+const local = (time: string, day = 13) => new Date(Date.parse(`2026-11-${day}T${time}:00+11:00`));
 const alert = (deps: TestDeps) => deps.db.prepare("SELECT level, detail, checked_at FROM platform_alerts WHERE kind = 'game_day'").first<{ level: string; detail: string; checked_at: string }>();
 const openInput = async (deps: TestDeps, gameId = 1) => {
 	const input = await deps.live.createInput("Game", deps.team.id);
@@ -82,6 +83,55 @@ describe("the game check: each live game, 8 hours before tip-off", () => {
 		expect((await alert(deps))!.detail).toMatch(/^1 live game in the next 8 hours/);
 	});
 
+	it("leaves the button's verdict on the week alone while it's ok, until a game's 8-hour check or the week is up", async () => {
+		const deps = await gameDay("09:00");
+		await checkGames(deps);
+		const week = (await alert(deps))!;
+		expect(week).toMatchObject({ level: "ok", detail: expect.stringMatching(/^1 live game in the next 7 days/) });
+		deps.clock("09:05");
+		await sync(deps);
+		expect(await alert(deps)).toEqual(week);
+		deps.clock("19:00");
+		await deps.db.prepare("UPDATE games SET no_video_at = '2026-11-13T00:00:00.000Z'").run();
+		await sync(deps);
+		expect(await alert(deps)).toEqual(week);
+		deps.clock("09:05", 20);
+		await sync(deps);
+		expect(await alert(deps)).toMatchObject({ level: "ok", detail: "No live games in the next 8 hours" });
+	});
+
+	it("checks the week's games again every hour while the button's verdict isn't ok, and clears it once it's fine", async () => {
+		const deps = await gameDay("09:00");
+		deps.joiner.down = true;
+		await checkGames(deps);
+		const first = (await alert(deps))!;
+		expect(first).toMatchObject({ level: "warn", detail: expect.stringMatching(/^1 live game in the next 7 days: .* Not ready: the joiner didn't answer/) });
+		deps.clock("09:05");
+		await sync(deps);
+		deps.joiner.down = false;
+		deps.clock("09:55");
+		await sync(deps);
+		expect(await alert(deps)).toEqual(first);
+		expect(await deps.db.prepare("SELECT status FROM support_requests WHERE id = 1").first<{ status: string }>()).toEqual({ status: "new" });
+		deps.clock("10:00");
+		await sync(deps);
+		expect(await alert(deps)).toMatchObject({ level: "ok", detail: expect.stringMatching(/^1 live game in the next 7 days: .*the joiner joined its test files/) });
+		expect(await deps.db.prepare("SELECT status FROM support_requests WHERE id = 1").first<{ status: string }>()).toEqual({ status: "resolved" });
+		expect(await deps.db.prepare("SELECT ready_checked_at FROM games WHERE id = 1").first()).toEqual({ ready_checked_at: null });
+		expect(deps.email.sent).toHaveLength(1);
+	});
+
+	it("clears the button's warning once the week has no live game left", async () => {
+		const deps = await gameDay("19:00");
+		deps.joiner.down = true;
+		await checkGames(deps);
+		expect(await alert(deps)).toMatchObject({ level: "warn", detail: expect.stringMatching(/^No live games in the next 7 days\. Not ready/) });
+		deps.clock("20:00");
+		await sync(deps);
+		expect(await alert(deps)).toMatchObject({ level: "ok", detail: "No live games in the next 8 hours" });
+		expect(await deps.db.prepare("SELECT status FROM support_requests WHERE id = 1").first<{ status: string }>()).toEqual({ status: "resolved" });
+	});
+
 	it("checks a game again when it's moved later than the check that looked at it", async () => {
 		const deps = await gameDay("10:40");
 		await sync(deps);
@@ -114,8 +164,8 @@ describe("the game check: each live game, 8 hours before tip-off", () => {
 		expect((await alert(deps))!.checked_at).toBe(cleared);
 	});
 
-	it("doesn't count long-lived alerts that don't touch a game (budgets, AI models) as already up", () => {
-		const alerts = (["budget", "ai_models"] as const).map((kind) => ({ kind, level: "warn" as const, detail: "", since: null, failures: 0, checkedAt: "", ticketId: null }));
+	it("doesn't count alerts that don't touch a game (budgets, AI models, the 3am job's night) as already up", () => {
+		const alerts = (["budget", "ai_models", "daily_job"] as const).map((kind) => ({ kind, level: "urgent" as const, detail: "", since: null, failures: 0, checkedAt: "", ticketId: null }));
 		const verdict = gameDayReadiness({ games: [], storage: { usedMinutes: 65, limitMinutes: 1100 }, joiner: { ok: true, bytes: 1, seconds: 3 }, syncCheckedAt: null, alerts, now: local("11:00"), within: "8 hours", staging: true });
 		expect(verdict.level).toBe("ok");
 		expect(verdict.detail).not.toContain("alerts already up");
@@ -163,6 +213,28 @@ describe("the game check: each live game, 8 hours before tip-off", () => {
 		await deps.db.prepare("DELETE FROM platform_alerts WHERE kind = 'sync_job'").run();
 		await checkGames({ ...deps, config: { ...deps.config, staging: true } });
 		expect(await alert(deps)).toMatchObject({ level: "ok", detail: expect.stringContaining("staging has no 5-minute job") });
+	});
+
+	it("leaves the check to the next run when this run's outside calls are used up, judging and marking nothing", async () => {
+		const deps = await gameDay("10:40");
+		await openInput(deps);
+		const { storage, getInput } = deps.live;
+		const untouched = async () => {
+			await sync(deps);
+			expect(await alert(deps)).toBeNull();
+			expect(await deps.db.prepare("SELECT ready_checked_at FROM games WHERE id = 1").first()).toEqual({ ready_checked_at: null });
+			expect((await deps.db.prepare("SELECT what FROM problems").all()).results).toEqual([]);
+		};
+		deps.live.storage = () => Promise.reject(new FetchBudgetSpent());
+		await untouched();
+		deps.live.storage = storage;
+		deps.live.getInput = () => Promise.reject(new FetchBudgetSpent());
+		await untouched();
+		deps.live.getInput = getInput;
+		deps.clock("10:45");
+		await sync(deps);
+		expect(await alert(deps)).toMatchObject({ level: "ok", detail: expect.stringContaining("the Go live input is there") });
+		expect(await deps.db.prepare("SELECT ready_checked_at FROM games WHERE id = 1").first()).toEqual({ ready_checked_at: "2026-11-12T23:45:00.000Z" });
 	});
 
 	it("never throws: a database that can't be read is logged as a problem", async () => {

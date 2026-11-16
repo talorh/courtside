@@ -48,4 +48,18 @@ export const scenarios = [
 			await t.until(async () => !(await waiting()), "the picture to be back, and the card gone", 20_000);
 		},
 	},
+	{
+		name: "a family's paused player isn't a frozen picture: no card over its controls, and a tap plays it",
+		phones: ["android", "iphone", "firefox"],
+		async run(t) {
+			t.harness.page("/game", () => livePlayerPage(`${t.harness.url}/whep/${GAME_ID}`));
+			await t.page.goto(`${t.harness.url}/game`);
+			await t.until(() => t.page.evaluate(() => document.querySelector("video[data-whep]").currentTime > 1), "the live picture to play", 20_000);
+			await t.page.evaluate(() => document.querySelector("video[data-whep]").pause());
+			await t.page.waitForTimeout(8000);
+			t.check(await t.page.evaluate(() => document.querySelector("[data-live-wait]").hidden), "no \"will resume shortly\" card over a paused picture");
+			await t.page.click("video[data-whep]");
+			await t.until(() => t.page.evaluate(() => !document.querySelector("video[data-whep]").paused), "the tap to play it again", 5000);
+		},
+	},
 ];

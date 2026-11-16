@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 // @ts-expect-error: a browser script (plain JS), tested here on its own.
-import { upload } from "../../public/upload-run.js";
+import { failedWords, upload } from "../../public/upload-run.js";
+// @ts-expect-error: a browser script (plain JS), tested here on its own.
+import { HttpError } from "../../public/upload-net.js";
 
 const real = { fetch: globalThis.fetch, timeout: AbortSignal.timeout };
 afterEach(() => {
@@ -110,5 +112,39 @@ describe("uploading a file through a dropped signal", () => {
 		await vi.advanceTimersByTimeAsync(60_000);
 		expect(await done).toEqual({ status: "processing", parts: 10 });
 		expect(Object.fromEntries(puts)).toEqual({ 1: 2, 2: 2, 3: 2, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1 });
+	});
+});
+
+describe("an upload on a signal that keeps dropping", () => {
+	it("carries on for as long as pieces keep getting through, however many tries that takes", async () => {
+		page();
+		// 60 pieces, and every other piece sent is dropped: far more failed tries than an upload has, but each one sends a piece.
+		let sent = 0;
+		globalThis.fetch = (async (url: string, init: RequestInit) => {
+			if (init.method === "PUT") {
+				if (++sent % 2) throw new TypeError("Load failed");
+				return new Response(null, { headers: { ETag: `"e${sent}"` } });
+			}
+			const body = JSON.parse(String(init.body));
+			if (url === "/api/uploads") return Response.json({ ok: true, data: { videoId: 1, partSize: 1, totalParts: 60 } });
+			if (url.endsWith("/part-urls")) {
+				return Response.json({ ok: true, data: { urls: Object.fromEntries(body.partNumbers.map((n: number) => [n, `https://r2.test/p${n}`])) } });
+			}
+			return Response.json({ ok: true, data: { status: "processing", parts: body.parts.length } });
+		}) as typeof fetch;
+		const done = upload(new File([new Uint8Array(60)], "game.mov", { type: "video/quicktime" }), 7, undefined, { hint: () => {}, show: () => {} }).catch((err: Error) => err);
+		await vi.advanceTimersByTimeAsync(60 * 60_000);
+		expect(await done).toEqual({ status: "processing", parts: 60 });
+	});
+	it("when it does give up, says so in plain words: what's sent is kept, and choosing the same video carries on", () => {
+		const gaveUp = "The connection kept dropping, so the upload has stopped. What's been sent is kept: choose the same video again to carry on from there.";
+		for (const err of [new TypeError("Load failed"), new DOMException("The operation timed out.", "TimeoutError"), new HttpError("The site didn't answer (HTTP 524). Try again.", 524), new HttpError("storage returned HTTP 403", 403)]) {
+			expect(failedWords(err)).toBe(gaveUp);
+		}
+		// The site's own refusal says what it says.
+		expect(failedWords(new HttpError("This game already has its video. Ask the team manager if it needs replacing.", 409))).toBe("This game already has its video. Ask the team manager if it needs replacing.");
+		// Maintenance answers 503 with when it'll be back: that, not the connection words.
+		expect(failedWords(new HttpError("The site is down for maintenance until 9pm.", 503, "maintenance"))).toBe("The site is down for maintenance until 9pm.");
+		expect(failedWords(new HttpError("You've been signed out. Reload the page and sign in, then choose the same video", 401))).toBe("You've been signed out. Reload the page and sign in, then choose the same video.");
 	});
 });

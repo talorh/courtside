@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { Router } from "../../src/app/router.ts";
-import { MAX_FORM_BYTES, writeTeam } from "../../src/app/team-guard.ts";
+import { writeTeam } from "../../src/app/team-guard.ts";
+import { MAX_BODY_BYTES } from "../../src/shared/validation.ts";
 import { handleRequest } from "../../src/app/handle-request.ts";
 import { buildAdminRouter } from "../../src/features/admin/admin-routes.ts";
-import { ORIGIN, MANAGER } from "../helpers/app.ts";
+import { buildRouter } from "../../src/app/routes.ts";
+import { jsonBody, makeClient, ORIGIN, MANAGER } from "../helpers/app.ts";
 import { createTestDeps, type TestDeps } from "../helpers/fakes.ts";
 import { addMember, addTeam, G14_5 } from "../helpers/two-teams.ts";
 
@@ -52,7 +54,7 @@ describe("what a write says its team is", () => {
 	it("refuses a form too big for any page's form (413) by its Content-Length, before reading any of it", async () => {
 		let pulls = 0;
 		const body = new ReadableStream({ pull(c) { if (++pulls > 48) c.close(); else c.enqueue(new Uint8Array(65_536)); } });
-		const req = new Request(`${ORIGIN}/notes`, { method: "POST", headers: { "Content-Type": "multipart/form-data; boundary=x", "Content-Length": String(MAX_FORM_BYTES + 1) }, body, duplex: "half" } as RequestInit);
+		const req = new Request(`${ORIGIN}/notes`, { method: "POST", headers: { "Content-Type": "multipart/form-data; boundary=x", "Content-Length": String(MAX_BODY_BYTES + 1) }, body, duplex: "half" } as RequestInit);
 		await expect(writeTeam(req)).rejects.toMatchObject({ status: 413, code: "too_big" });
 		expect(pulls).toBeLessThanOrEqual(1);
 	});
@@ -61,7 +63,7 @@ describe("what a write says its team is", () => {
 		const body = new ReadableStream({ pull(c) { if (sent >= 6_000_000) return c.close(); sent += 65_536; c.enqueue(new Uint8Array(65_536)); } });
 		const req = new Request(`${ORIGIN}/notes`, { method: "POST", headers: { "Content-Type": "multipart/form-data; boundary=x" }, body, duplex: "half" } as RequestInit);
 		await expect(writeTeam(req)).rejects.toMatchObject({ status: 413, code: "too_big" });
-		expect(sent).toBeLessThan(MAX_FORM_BYTES + 4 * 65_536);
+		expect(sent).toBeLessThan(MAX_BODY_BYTES + 4 * 65_536);
 	});
 	it("still reads the biggest form a page sends: a spreadsheet at its own limit, with no Content-Length too", async () => {
 		const form = () => { const f = new FormData(); f.set("_team", B12); f.set("file", new File(["x".repeat(320_000)], "games.csv")); return f; };
@@ -124,9 +126,26 @@ describe("the guard on every write", () => {
 
 	it("answers a form too big for any page with the error page (413), and the handler never runs", async () => {
 		const deps = await twoTeams();
-		const res = await post(deps, "/notes", { body: "x", headers: { "Content-Type": "multipart/form-data; boundary=x", "Content-Length": String(MAX_FORM_BYTES + 1) } });
+		const res = await post(deps, "/notes", { body: "x", headers: { "Content-Type": "multipart/form-data; boundary=x", "Content-Length": String(MAX_BODY_BYTES + 1) } });
 		expect(res.status).toBe(413);
 		expect(await res.text()).toContain("too big to send. Choose a smaller file.");
+	});
+
+	it("refuses a page script's JSON over the cap (413, as JSON): the guard never reads it, the route's parser does", async () => {
+		const deps = createTestDeps();
+		const parts = Array.from({ length: 10_000 }, (_, i) => ({ partNumber: i + 1, etag: "x".repeat(200) }));
+		const res = await makeClient(deps)("/api/uploads/1/complete", jsonBody({ parts, padding: "x".repeat(MAX_BODY_BYTES) }));
+		expect(res.status).toBe(413);
+		expect(await res.json()).toEqual({ ok: false, error: { code: "too_big", message: "That's too big to send. Choose a smaller file." } });
+	});
+
+	it("refuses a sign-in form over the cap (413) before anyone is signed in, and sends no code", async () => {
+		const deps = createTestDeps();
+		const body = new URLSearchParams({ email: MANAGER, "cf-turnstile-response": "tok", padding: "x".repeat(MAX_BODY_BYTES) });
+		const res = await handleRequest(new Request(`${ORIGIN}/signin`, { method: "POST", headers: { Origin: ORIGIN }, body }), deps,
+			async () => { throw new Error("not signed in"); }, buildRouter(), buildAdminRouter());
+		expect(res.status).toBe(413);
+		expect(deps.email.sent).toEqual([]);
 	});
 
 	it("still refuses a cross-site post before reading anything", async () => {

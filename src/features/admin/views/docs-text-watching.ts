@@ -60,8 +60,9 @@ query: a window at least 1024px wide, a pointer as fine as a mouse, and real hov
 and keeps the phone's view to the pixel, and so does a narrow window on a computer. The page's HTML is the same either
 way; the top bar becomes a sidebar and Go live is left out, as nobody streams from a desktop.</li>
 <li><b>Switch to mobile view</b> on a computer turns the desktop view off at any width, and Switch to desktop view
-turns it back on. The choice is kept on that device in a cookie for 30 days (${code("public/view.js")}), which also tells
-the site which view each device uses: the Log notes it when it's first seen or changes, and Insights counts them.</li>
+turns it back on. The choice is kept on that device in its browser's storage until it's switched back
+(${code("public/view.js")}); a cookie, renewed for 30 days on every page, tells the site which view each device uses:
+the Log notes it when it's first seen or changes, and Insights counts them.</li>
 <li><b>On a phone's Home Screen</b> the site opens full screen like an app, on a green launch screen. A page can be
 pulled down to refresh, except mid Go live, mid upload or while photos are being added. Go live opens in Safari or
 Chrome instead, as a phone locked for a moment in the Home Screen app can lose its microphone for good.</li></ul>

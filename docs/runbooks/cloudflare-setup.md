@@ -22,7 +22,7 @@ cf auth whoami                            # your email, this account
 | --- | --- | --- |
 | Account | The club's own, Workers Paid, with the Images and Stream bundle | Nothing to do with the site lives anywhere else |
 | Domain | `CLUB.domain` (`src/club.ts`) in the zone `CLUB.zone`. Recommended, a domain of its own (the two the same): registered through Cloudflare Registrar or an existing zone, auto-renew, DNSSEC on. Or a subdomain of the club's own domain, a zone already in this account that the club's website shares (On a subdomain, below) | `cf zones get -z $z` |
-| Worker | `DEPLOY.worker` (`courtside` unless renamed): the custom domain only, workers.dev off, Preview URLs on (staging), crons `*/5 * * * *`, one an hour for the 3am job (`CLUB.dailyJobUtcHours`), placed in `DEPLOY.region`, observability and Issues on | `cloudflare.config.ts` |
+| Worker | `DEPLOY.worker` (`courtside` unless renamed): the custom domain only, workers.dev off, Preview URLs on (staging), crons `*/5 * * * *`, one an hour for the 3am job (`CLUB.dailyJobUtcHours`), placement by region, `DEPLOY.region` (not Smart Placement), observability and Issues on | `cloudflare.config.ts` |
 | D1 | `<worker>` (live) and `<worker>-staging`, in the region nearest the club | `cf d1 list`; migrations in `migrations/` |
 | R2 | `<worker>-originals`: uploaded videos and the nightly backups; `<worker>-staging` | `infra/r2-cors.json`, `r2-lifecycle.json`, `r2-lock.json`; `infra/staging/` |
 | Stream | The account's: playback copies, clips, HD MP4s and a live input a streamed game; the customer code in `deploy.config.ts`; a signing key for playback links | Reached by REST with `STREAM_API_TOKEN` |
@@ -44,7 +44,7 @@ cf auth whoami                            # your email, this account
 | `STREAM_API_TOKEN` | Every Stream call | A user token with Stream Edit, this account only |
 | `STREAM_KEY_ID`, `STREAM_KEY_JWK` | Signing playback links without a call each time | `cf stream keys create` |
 | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Pre-signed upload links for the originals bucket | A user token with Workers R2 Storage Bucket Item Write on that bucket only: the access key id is the token's id, the secret is the SHA-256 of its value |
-| `CF_INSIGHTS_TOKEN` | Platform's and Costs' Cloudflare figures, Cloudflare's bill on Costs, Support's Alerts' Worker errors (read only) | An account token: Account Analytics Read, the zone's Analytics Read, Security Center Insights Read, Billing Read |
+| `CF_INSIGHTS_TOKEN` | Platform's and Costs' Cloudflare figures, Cloudflare's bill on Costs, the Worker errors in Insights' Alerts (read only) | An account token: Account Analytics Read, the zone's Analytics Read, Security Center Insights Read, Billing Read |
 | `TURNSTILE_SECRET` | Checking the sign-in page's Turnstile tokens | The widget's secret (staging's own in `.secrets.staging.json`) |
 
 Values live in the git-ignored `.secrets.production.json` and `.secrets.staging.json`. Set with `cf workers secrets
@@ -139,7 +139,8 @@ take a Time Travel bookmark (§5) before a migration that rewrites rows.
 A zone-level ruleset update replaces every rule in that phase, so merge with the file first (in a zone the site
 shares, the club's own rules stay as they are: On a subdomain, above). The zone-wide settings above (`bot-management`,
 `security_header`, `browser_cache_ttl`) are for a domain of the site's own only. The nightly backups'
-lock means nothing can delete or overwrite one in its first 14 days; the lifecycle rule deletes each at 14 days.
+lock means nothing can delete or overwrite one in its first 14 days; the lifecycle rule deletes each at 14 days. So
+one backup is kept a day: a second run the same day finds the day's file stored intact and counts as done.
 
 Onboarding a new team needs nothing here: Stream, Images, D1 and R2 are shared by every team.
 

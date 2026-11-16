@@ -8,7 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { cfToken, profileArgs } from "./deploy-config.mjs";
 import { firstAdminEmails } from "./first-admin.mjs";
-import { siteFromConfig, STAGING_REF } from "./release-checks.mjs";
+import { headMoved, siteFromConfig, STAGING_REF } from "./release-checks.mjs";
 import { deployPlan, parseArgs, previewSecrets, setupCalls, stagingFromConfig } from "./staging-steps.mjs";
 
 const say = (text) => console.log(`staging: ${text}`);
@@ -54,7 +54,10 @@ if (execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim())
 // from its feature/ or fix/ branch, then put here, then main is fast-forwarded to it for the release.
 const branch = execFileSync("git", ["branch", "--show-current"], { encoding: "utf8" }).trim();
 if (branch !== "staging") fail(`Staging deploys the staging branch, not "${branch}": merge the change into staging first.`);
-const commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
+const head = () => execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+// The commit being deployed, taken before the deploy: it's the one recorded, and only while HEAD is still on it.
+const deployed = head();
+const commit = deployed.slice(0, 7);
 const staging = stagingFromConfig(config);
 let firstAdmins;
 try {
@@ -71,5 +74,7 @@ if (args.dryRun) {
 	process.exit(0);
 }
 // What's on staging now, for npm run release's staging check (a ref the worktree and main share; no push sends it).
-execFileSync("git", ["update-ref", STAGING_REF, execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim()]);
+const movedOn = headMoved(deployed, head());
+if (movedOn) fail(`${movedOn}. Nothing is recorded as on staging, as it may run either commit's code.`);
+execFileSync("git", ["update-ref", STAGING_REF, deployed]);
 say(`${commit} is on staging: https://staging-${site.name}.<your workers.dev subdomain> (test data). Try it there, then release it.`);

@@ -30,7 +30,7 @@ name to ask (or "your team manager") when Help doesn't cover it, and for a team 
 never stored. If Workers AI isn't answering, it says the helper can't answer just now.</li></ul>
 <h3>Support, for team managers</h3>
 ${ticketDiagram()}
-<p>A team manager asks the site's admins with <b>Contact support</b> (the bottom of their Help, and their Support
+<p>A team manager asks the site's admins with <b>Contact support</b> (the end of Running your team on their Help, and their Support
 page), choosing what it's about. Each question is a ticket, answered on the site: the team manager's Support page
 lists theirs and where each is at, and a ticket's page shows the conversation, never the admins' private notes. A
 ticket works for a closed team too. Five questions and twenty replies a team manager a day at most.</p>

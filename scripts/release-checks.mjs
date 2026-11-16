@@ -10,7 +10,7 @@ export const QUIET_MINUTES = 15;
 // already on its way to R2 (they go straight there) is waited for.
 export const MAINTENANCE_QUIET_MINUTES = 2;
 
-// What the quiet check reads, in every team (other teams are coming; one team's filter would let a
+// What the quiet check reads, in every team (several teams use the site; one team's filter would let a
 // release go out in the middle of another team's game). A stopped stream (its input switched off) is left out: Stream
 // can go on calling it connected, and its recording's upload is what's left, which the uploads check watches.
 export const OPEN_STREAMS_SQL = "SELECT game_id AS gameId, last_live_at AS lastLiveAt, created_at AS createdAt FROM live_streams WHERE status = 'open' AND end_requested_at IS NULL";
@@ -86,9 +86,20 @@ export const busyComputer = (load, cores) => (load > cores
 export const STAGING_REF = "refs/courtside/staging";
 
 // What changes nothing the site runs, so needn't go to staging again (AGENTS.md): docs and notes, tests, provisioning
-// bodies, and the maintenance Worker (deployed by its own script). The changelog does: the site shows it.
+// bodies, and the maintenance Worker (deployed by its own script). The changelog does: the site shows it. The agent's
+// instructions (docs/agent-setup.md) reach the site through src/features/admin/views/agent-setup-text.ts (npm run docs).
 const SKIPS_STAGING = [/^docs\//, /^tests\//, /^infra\//, /^maintenance\//, /^(README|AGENTS|INSTALL|LICENSE|todo)(\.md)?$/];
 export const skipsStaging = (path) => SKIPS_STAGING.some((re) => re.test(path));
+
+/** Why the commit that was checked (or deployed) can't be the one recorded or pushed, or null: HEAD has moved since. */
+export const headMoved = (checked, head) => (checked === head ? null
+	: `HEAD moved from ${checked.slice(0, 7)} to ${head.slice(0, 7)} while this ran: run it again for the commit that's there now`);
+
+/** The release's browser suite runs every phone: a PHONES left in the shell (npm run e2e's way to pick some) is dropped. */
+export const e2eEnv = (env) => {
+	const { PHONES: _, ...rest } = env;
+	return rest;
+};
 
 /** What changed since staging's commit: a file moved is listed under both names, as the site lost the old one. */
 export const stagingDiffArgs = (staged, commit) => ["diff", "--name-only", "--no-renames", staged, commit];

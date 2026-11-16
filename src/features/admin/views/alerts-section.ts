@@ -36,6 +36,6 @@ export function alertsSection(p: { now: Date; checks: Check[]; needs: Attention[
 	const needs = p.needs.length ? html`<section class="panel stack"><h2>Needs you</h2>${attentionList(p.needs)}</section>` : "";
 	const now = html`<section class="panel nowstrip" aria-label="Right now"><p><b>${p.counts.liveNow}</b> ${p.counts.liveNow === 1 ? "live stream" : "live streams"} open</p>
 <p><b>${p.counts.uploadingNow}</b> ${p.counts.uploadingNow === 1 ? "upload" : "uploads"} under way</p><p><b>${p.sessions}</b> ${p.sessions === 1 ? "device" : "devices"} signed in</p></section>`;
-	return html`<section class="stack alerts" id="alerts" aria-labelledby="alerts-h"><div class="panelhead"><h2 id="alerts-h">Is the site all right?</h2><span class="small"><a href="/admin#alerts">Check again</a></span></div>
+	return html`<section class="stack alerts" id="alerts" aria-labelledby="alerts-h"><div class="panelhead"><h2 id="alerts-h">Is the site all right?</h2><span class="small"><a href="/admin">Check again</a></span></div>
 ${banner(p.checks, p.needs, p.now)}${needs}<section class="panel stack"><h2>Checks</h2><ul class="checks">${sorted.map(check)}</ul></section>${now}</section>`;
 }

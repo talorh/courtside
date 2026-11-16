@@ -32,8 +32,9 @@ ${faqItem("g-video", "Live stream, recorded or no video", html`<ul class="steps"
 <li><b>No video:</b> a game that can't be filmed. Nobody's rostered on video for it.</li></ul>
 <p class="small">A game shows <b>Waiting for video</b> for a week after tip-off. If nothing's been uploaded or streamed by
 then, it goes to <b>No video</b> by itself. Footage turned up later? <b>Edit</b> the game, set its Video back to <b>Record
-and upload after</b>, and upload it: it waits another week from then. (Switching a week or a PlayHQ fixture back to Video leaves these
-games as they are: Edit each one.)</p>`)}
+and upload after</b>, and upload it: it waits another week from then. If PlayHQ moves the game to a later time, it
+goes back to waiting for video by itself. (Switching a week or a PlayHQ fixture back to Video leaves these games as they
+are: Edit each one.)</p>`)}
 ${faqItem("g-edit", "Changing or deleting a game", html`<p>Tap <b>Edit</b> next to a game to change it, then <b>Save game</b>.
 <b>Delete</b> takes a game off the Fixture (it asks first: <b>Yes, delete it</b>). A game that has its video offers
 <b>Delete game and video</b> instead.</p>

@@ -94,7 +94,7 @@ describe("orphan sweep (daily)", () => {
 		expect(gameId).toBeGreaterThan(0);
 	});
 
-	it("Go live opened on several games (each sets up an input, closed after a day) is tidied up, not refused (22 Oct)", async () => {
+	it("Go live opened on several games (each sets up an input, closed after a day) is tidied up, not refused", async () => {
 		let now = new Date("2026-10-15T00:00:00Z");
 		const deps = createTestDeps();
 		(deps as { now: () => Date }).now = () => now;

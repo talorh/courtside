@@ -2,7 +2,7 @@
 // newest first for the local days asked for (the newest 5,000 of each), each run of photo lines made one
 // (log-photos.ts).
 import { listSignInEvents } from "../../auth/sign-in-codes-repository.ts";
-import { addDays, isRealDate, type LogRange, localDate, localMidnight } from "../../shared/time.ts";
+import { isRealDate, type LogRange, localDate, localMidnight } from "../../shared/time.ts";
 import { listActivityLog } from "./activity-admin-repository.ts";
 import { listAdminLog } from "./admin-log-repository.ts";
 import { groupPhotos } from "./log-photos.ts";
@@ -15,9 +15,12 @@ export const LOG_MOST = 5000;
 /** local days, first and last ('YYYY-MM-DD'). */
 export interface LogDays { from: string; to: string }
 
-/** The quick choices, from today: the default is the last 7 days. */
+/** A date `days` on ('YYYY-MM-DD'): counted in dates, so a day the clocks change is still one day. */
+const shift = (date: string, days: number) => new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+
+/** The quick choices, from today in the club's time: the default is the last 7 days. */
 export function quickDays(now: Date): Record<"today" | "yesterday" | "week" | "month", LogDays> {
-	const day = (n: number) => localDate(addDays(now, -n)), today = day(0);
+	const today = localDate(now), day = (n: number) => shift(today, -n);
 	return { today: { from: today, to: today }, yesterday: { from: day(1), to: day(1) }, week: { from: day(6), to: today }, month: { from: day(30), to: today } };
 }
 
@@ -28,8 +31,7 @@ export function askedDays(url: URL, now: Date): LogDays {
 	return from <= to ? { from, to } : { from: to, to: from };
 }
 
-const nextDay = (date: string) => new Date(Date.parse(`${date}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
-export const rangeOf = (d: LogDays): LogRange => ({ from: localMidnight(d.from).toISOString(), to: localMidnight(nextDay(d.to)).toISOString() });
+export const rangeOf = (d: LogDays): LogRange => ({ from: localMidnight(d.from).toISOString(), to: localMidnight(shift(d.to, 1)).toISOString() });
 
 /** Every line of the days, newest first: the filters work on these (log-filter.ts). `cut`: a source had more lines
  * than it gave, so the oldest of the days are missing. */

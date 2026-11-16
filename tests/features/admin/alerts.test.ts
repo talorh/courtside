@@ -74,6 +74,25 @@ The ticket: https://saints.example/admin/support/1` }]);
 		expect((await tickets(deps)).map((t) => [t.id, t.status, t.title])).toEqual([[1, "resolved", "Photos are near Images' 100,000"], [2, "new", "Photos are nearly at Images' 100,000"]]);
 	});
 
+	it("opens its ticket at the next check when it couldn't be opened as the alert started", async () => {
+		const { deps, at } = clocked();
+		const prepare = deps.db.prepare.bind(deps.db);
+		let fail = true;
+		vi.spyOn(deps.db, "prepare").mockImplementation((sql: string) => {
+			if (fail && sql.startsWith("INSERT INTO support_requests")) { fail = false; throw new Error("D1 is busy"); }
+			return prepare(sql);
+		});
+		await expect(setAlert(deps, "images", "warn", "81,000 photos stored")).rejects.toThrow("D1 is busy");
+		at("2026-10-16T00:00:00.000Z");
+		await setAlert(deps, "images", "warn", "82,000 photos stored");
+		expect(await tickets(deps)).toMatchObject([{ id: 1, title: "Photos are near Images' 100,000", status: "new" }]);
+		expect(await deps.db.prepare("SELECT message FROM support_requests WHERE id = 1").first("message")).toContain("Since Thu 15 Oct 2026, 11:00am.");
+		expect(await alertRow(deps, "images")).toMatchObject({ ticket_id: 1 });
+		expect(subjects(deps)).toEqual(["Courtside: Photos are near Images' 100,000 (#1)"]);
+		await setAlert(deps, "images", "warn", "83,000 photos stored");
+		expect(await tickets(deps)).toHaveLength(1);
+	});
+
 	it("puts the ticket's name right and moves it up the queue when it gets worse", async () => {
 		const { deps, at } = clocked();
 		await setAlert(deps, "stream_storage", "warn", "150 minutes left");

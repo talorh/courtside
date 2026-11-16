@@ -47,7 +47,7 @@ export async function runDaily(deps: AppDeps): Promise<void> {
 	// The Workers AI models' planned retirements (ai-model-checks.ts).
 	await checkAiModels(deps).catch((err: unknown) => void errors.push(err));
 	// The video joiner's nightly try (joiner-checks.ts).
-	await checkJoiner(deps);
+	await checkJoiner(deps).catch((err: unknown) => void errors.push(err));
 	await forgetServerErrors(deps.db, addDays(deps.now(), -2)).catch((err: unknown) => void errors.push(err));
 	// Cloudflare's bill, read every night (Costs puts its own figures right by it); then the budgets, by the bill.
 	await loadBill(deps, { force: true }).then((b) => { if (b.read === "failed") throw new Error("Cloudflare's bill couldn't be read (Costs shows the copy saved)"); })
@@ -56,7 +56,7 @@ export async function runDaily(deps: AppDeps): Promise<void> {
 	await logJobProblems(deps, "daily", [], errors);
 	await recordDailyRun(deps, errors);
 	// And the 5-minute job's heartbeat: it can't say it has stopped running (usage-checks.ts).
-	await checkJobRan(deps, "sync_job");
+	await checkJobRan(deps, "sync_job").catch((err: unknown) => void errors.push(err));
 	if (errors.length > 0) throw new AggregateError(errors, `daily: ${errors.length} problem(s)`);
 }
 

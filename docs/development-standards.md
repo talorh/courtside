@@ -15,7 +15,7 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
  `<name>-repository.ts` and `views/<name>-page.ts`. A feature has only the layers it needs (`players/` is one
  repository).
 - File names are `kebab-case.ts`. Types and interfaces are `PascalCase`; functions and variables `camelCase`;
- module constants `UPPER_SNAKE_CASE` (`MAX_MEMBERS` in `members-service.ts`, `LIVE_PART_SIZE` in
+ module constants `UPPER_SNAKE_CASE` (`JOIN_TRIES` in `live/join-service.ts`, `LIVE_PART_SIZE` in
  `browser-live-service.ts`, `STORAGE_CACHE_MS` in `platform/storage-cache.ts`).
 - Source files in `src/`, `public/`, `maintenance/` and `join/` (the video joiner's plain Node `.mjs` too) are 140 lines
  at most, 160 as a hard cap (`scripts/check-loc.mjs`, run by `npm run check`; the folders are `LOC_ROOTS` in
@@ -42,13 +42,16 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 - The time is always `deps.now`. Code under `src/` never calls `new Date` for "now" except `buildDeps`.
 - Module-level state is limited to three caches, each commented with why: the Stream storage answer, plain Stream
  tokens and photos' signed links (`src/index.ts` → `platform/storage-cache.ts`, `platform/stream-tokens.ts`,
- `platform/hosted-images.ts`). Nothing else holds state between requests.
+ `platform/hosted-images.ts`). They're deliberate, and hold nothing about a request or the person making it: only
+ answers that are the same for anyone allowed to ask (Stream's storage figure, a video's plain token, a photo's signed
+ link). Nothing else holds state between requests.
 - Repository functions take `db: D1Database` and `teamId: string` as their first two parameters
  (`notes-repository.ts`, `games-repository.ts`). Services take `deps: AppDeps` (or `db`, `teamId` when they only
  touch D1, as `games-service.ts` `pickerGames`).
 - Config is read once in `src/app/config.ts`: every required value is in the `REQUIRED` map and a missing one
  throws `ConfigError`. Code never reads `env` outside `src/index.ts`, `config.ts` and `deps.ts`.
-- Runtime dependencies are `zod`, `jose` and `aws4fetch` only (`package.json`). A new one needs the site owner's yes.
+- Runtime dependencies are `zod`, `jose`, `aws4fetch` and `@cloudflare/containers` (the video joiner's) only
+ (`package.json`). A new one needs the site owner's yes.
  Versions are release numbers (a range in `package.json`, the exact one in `package-lock.json`, which `npm ci`
  installs), never a dist-tag like `latest`.
 - **Software ages out, so every plan checks.** When planning any change, find out whether anything the site uses is
@@ -298,9 +301,10 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 - Non-GET requests must come from the same origin (`handle-request.ts` `assertSameOrigin`).
 - Outside pages are fetched over HTTPS only, redirects included (`fixture-link.ts` `fetchHttps`); uploads are
  checked against their declared size before anything is read or signed (`import-routes.ts`, `upload-service.ts`,
- and a photo's `Content-Length` in `photos-routes.ts`). A form with no `X-Courtside-Team` is read once before its route,
- for its `_team` (`app/team-guard.ts`), so any form over `MAX_FORM_BYTES` (2 MB) is refused there first (413), by its
- `Content-Length` or, with none, once that much has been read; the routes' own smaller limits then give their words.
+ and a photo's `Content-Length` in `photos-routes.ts`, a photo with none read only up to its 10 MB limit). Every form
+ or JSON body is read up to `MAX_BODY_BYTES` (2 MB, `shared/validation.ts`) and refused (413) by its `Content-Length`
+ or once that much has been read. A form with no `X-Courtside-Team` is read the same way before its route, for its
+ `_team` (`app/team-guard.ts`); the routes' own smaller limits then give their words.
 - Photos leave the phone already redrawn (no EXIF, so no location: `public/photos.js`), and the Worker checks each
  is a whole JPEG and strips any metadata left (`photos/jpeg.ts`) before it's stored.
 - The R2 bucket's CORS allows only `https://saints.example` (`infra/r2-cors.json`).
@@ -360,11 +364,13 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
  1. the code is committed, on `main`;
  2. staging ran this commit, or one that differs from it only in docs, tests, notes, provisioning bodies or the
  maintenance Worker (`npm run staging` records what it put there as the git ref `refs/courtside/staging`, which the
- worktree and `main` share and no push sends; the changelog counts as the site's, as the site shows it);
+ worktree and `main` share and no push sends, only once HEAD is still the commit it deployed; the changelog counts as
+ the site's, as the site shows it, and `docs/agent-setup.md` reaches the site through its generated
+ `src/features/admin/views/agent-setup-text.ts`);
  3. the computer is quiet (the 1-minute load average no higher than its cores, read before the release's own work),
  as the browser suite's camera timings slip when something else is running: nothing else runs during a release;
  4. `npm run check`;
- 5. the browser suite;
+ 5. the browser suite, on every phone (a `PHONES` left in the shell is dropped);
  6. every migration applied to every database the config names (`cf d1 migrations list`);
  7. nothing uploading or streaming on the live site, in any team, for 15 minutes (D1's open streams and uploading
  videos, and R2's own list of each upload's parts);
@@ -373,15 +379,16 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
  10. on a new install, `deploy.config.ts` `firstAdmins` made the live site's first admins, only while it has never had
  one (`scripts/first-admin.mjs`).
 
- Then it pushes the commit to `main` in the site's Cloudflare Artifacts repo (`courtside/courtside`), where Workers Builds
+ Then it pushes the commit it checked to `main` in the site's Cloudflare Artifacts repo (`courtside/courtside`), where Workers Builds
  runs `npm ci && npm run check` and deploys it (`npm run deploy:builds`) with that line as `--message` and the commit
- as `--tag`, and release follows that build until it has deployed. A push to
- `main` is a deploy, so only release pushes it, and only from `main`.
+ as `--tag`, and release follows that build until it has deployed. If HEAD moved while it ran, it refuses before the
+ push, to be run again for the commit that's there now. A push to `main` is a deploy, so only release pushes it, and only from `main`.
 
  `--maintenance` is the one variation: a release behind the maintenance page (`docs/runbooks/maintenance.md`). It
  refuses unless the page is on, and waits 2 quiet minutes rather than 15, as nobody can start an upload or a stream
- behind it; every other step runs. The maintenance Worker itself (`maintenance/`) deploys only through
- `npm run maintenance`, its tests and a dry run first. There have been no exceptions since the move
+ behind it; every other step runs. The maintenance Worker itself (`maintenance/`) deploys through its own Workers
+ Builds trigger on `main` when `maintenance/` changes, so a release deploys it; `npm run maintenance` turns the page on
+ and off, and `-- deploy` deploys it by hand, its tests and a dry run first. There have been no exceptions since the move
  to Courtside; the move's own steps (the rehearsals, retiring the original copy, the first deploy
  there) were the only ones, each after `npm run check` and `npm run e2e`.
 - **The browser suite must pass before any deploy** (`npm run e2e`, `tests/e2e/`). It runs the real

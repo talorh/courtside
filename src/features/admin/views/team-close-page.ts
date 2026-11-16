@@ -22,14 +22,18 @@ export function closePage(p: { frame: AdminFrame; team: Team; now: Date; values?
 	const page = (body: SafeHtml) => adminLayout({ title: `End ${label}'s season`, current: "teams", frame: p.frame, back: TEAMS }, body);
 	if (p.team.status !== "active") return page(said(`${label}'s season is over already.`));
 	const tonight = p.values?.when === "tonight";
+	// Its date gone by, waiting for it would delete the team at once: only tonight, with its code typed, is offered.
+	const passed = seasonEndDeadline(p.team.seasonStart) <= p.now.toISOString();
 	const choice = (value: string, checked: boolean, title: string, note: string) =>
 		html`<label class="option"><input type="radio" name="when" value="${value}"${checked ? html` checked` : ""}><span>${title}<span class="small">${note}</span></span></label>`;
 	return page(html`<form class="panel stack" method="post" action="/admin/teams/${p.team.id}/close">
 <p>Ending the season closes the team's site: it's read-only straight away. Families can still watch, download and ask for things to be removed, but nothing new can be added. It moves to Past seasons on Teams.</p>
 ${error(p.error)}
-<fieldset class="deletewhen"><legend>When should its videos and photos be deleted?</legend>
+${passed ? html`<input type="hidden" name="when" value="tonight">
+<p>Its videos and photos were due to be deleted on ${dueDay(p.team)}, so they're deleted tonight, at 3am. Until then the team can be reopened.</p>`
+		: html`<fieldset class="deletewhen"><legend>When should its videos and photos be deleted?</legend>
 ${choice("due", !tonight, `When they're due: ${dueDay(p.team)}`, "What Help has told families: the end of the year the season ends. Recommended.")}
-${choice("tonight", tonight, "Tonight, at 3am", "Can be cancelled until then. Type the team's code to confirm.")}</fieldset>
+${choice("tonight", tonight, "Tonight, at 3am", "Can be cancelled until then. Type the team's code to confirm.")}</fieldset>`}
 <label>Type ${p.team.code} to delete it tonight<input name="confirmCode" type="text" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="${p.team.code}" value="${p.values?.confirmCode ?? ""}"></label>
 <p class="note warn">A season can't end while anything is uploading or streaming in the team. Its people can still sign in and watch while it's closed; once it's deleted, anyone on no other team can't sign in.</p>
 <div class="row-actions"><button class="btn danger">End the season and close ${label}</button><a class="btn" href="/admin/teams">Not yet</a></div></form>`);

@@ -1,7 +1,7 @@
 // The sign-in page's script: Send a new code waits a minute (the first one is usually seconds away, and an address that
-// asks for 10 in an hour waits), counting down on the button; a tap on either button posts once; the field being
-// typed in is kept above a phone's keyboard; and the code field takes a code typed, pasted or filled in by the phone
-// from the email (autocomplete="one-time-code") and logs in by itself at six digits. The forms that send a code carry
+// asks for 10 in an hour waits), counting down on the button, unless the code has run out; a tap on either button posts
+// once; the field being typed in is kept above a phone's keyboard; and the code field takes a code typed, pasted or
+// filled in by the phone from the email (autocomplete="one-time-code") and logs in by itself at six digits. The forms that send a code carry
 // Cloudflare's Turnstile widget (platform/turnstile.ts): its script is loaded here, and a form waits for its token.
 
 export const WAIT_S = 60;
@@ -47,7 +47,8 @@ function postWhenChecked(form) {
 const resend = document.querySelector("[data-resend]");
 let resendReady = false;
 if (resend) {
-	let left = WAIT_S;
+	// The code ran out or used its tries (the page marks the button): a new one is all that helps, so no wait.
+	let left = resend.dataset.resendNow === undefined ? WAIT_S : 0;
 	const tick = () => {
 		resend.disabled = left > 0;
 		resend.textContent = left > 0 ? `Send a new code (ready in ${left}s)` : "Send a new code";

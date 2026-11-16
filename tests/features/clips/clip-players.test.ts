@@ -60,4 +60,21 @@ describe("who's in a highlight clip", () => {
 		await admin("/clips/1/players", formOf([]));
 		expect((await playersByClip(deps.db, deps.team.id, [1])).size).toBe(0);
 	});
+	it("saving who's in a clip keeps a player since taken off the squad, who can't be ticked any more", async () => {
+		const { deps, videoId, id, admin } = await setup();
+		await admin(`/videos/${videoId}/clips`, formOf([["start", "0:10"], ["end", "0:20"], ["players", id("Magic")], ["players", id("Bird")]]));
+		await deps.db.prepare("UPDATE players SET removed_at = '2026-10-15T00:00:00.000Z' WHERE id = ?").bind(Number(id("Magic"))).run();
+		expect((await admin("/clips/1/players", formOf([["players", id("Stockton")]]))).status).toBe(303);
+		expect((await playersByClip(deps.db, deps.team.id, [1])).get(1)!.map((p) => p.name)).toEqual(["Stockton", "Magic"]);
+	});
+	it("once the season's over, nobody is offered Change players or Add players (the site would refuse it)", async () => {
+		const { deps, gameId, videoId, id, admin } = await setup();
+		await admin(`/videos/${videoId}/clips`, formOf([["start", "0:10"], ["end", "0:20"], ["players", id("Magic")]]));
+		await admin(`/videos/${videoId}/clips`, formOf([["start", "0:30"], ["end", "0:40"]]));
+		expect(await (await admin(`/games/${gameId}`)).text()).toContain("Change players");
+		await deps.db.prepare("UPDATE teams SET status = 'closed', closed_at = '2026-10-14T00:00:00.000Z', delete_after = '2027-12-31T13:00:00.000Z' WHERE id = ?").bind(deps.team.id).run();
+		const page = await (await admin(`/games/${gameId}`)).text();
+		expect(page).toContain('<span class="t src">#15 Magic</span>');
+		for (const offered of ["Change players", "Add players", "Save players", "/clips/1/players"]) expect(page).not.toContain(offered);
+	});
 });

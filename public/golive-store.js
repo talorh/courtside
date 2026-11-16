@@ -40,13 +40,25 @@ export async function openStore() {
 			const bytes = await blob.arrayBuffer();
 			await done(db.transaction(name, "readwrite").objectStore(name).put({ ...record, bytes, type: blob.type }));
 		});
+		const partRow = (key, n, bytes, type) => ({ k: `${key}/${n}`, key, n, bytes, type });
+		const tailRow = (key, seq, bytes, type) => ({ k: `${key}/${String(seq).padStart(6, "0")}`, key, seq, bytes, type });
 		return {
-			putPart: (key, n, blob) => put(PARTS, { k: `${key}/${n}`, key, n }, blob),
+			putPart: (key, n, blob) => put(PARTS, partRow(key, n), blob),
 			delPart: (key, n) => tx(PARTS, "readwrite", (s) => s.delete(`${key}/${n}`)),
 			/** The parts kept for the segment, lowest number first. */
 			listParts: async (key) => (await list(PARTS, key)).sort((a, b) => a.n - b.n).map(({ n, bytes, type }) => ({ n, blob: asBlob(bytes, type) })),
-			putTail: (key, seq, blob) => put(TAIL, { k: `${key}/${String(seq).padStart(6, "0")}`, key, seq }, blob),
-			clearTail: (key) => clearOf(TAIL, key),
+			putTail: (key, seq, blob) => put(TAIL, tailRow(key, seq), blob),
+			/** Parts cut from the tail (`[{ n, blob }]`), and the tail started again as `rest`, in one transaction: a page that
+			 * dies part way keeps the bytes either as the tail or as parts, never as both. */
+			cutParts: (key, parts, rest) => next(async () => {
+				const bytes = await Promise.all([...parts.map((p) => p.blob), rest].map((b) => b.arrayBuffer()));
+				const t = db.transaction([PARTS, TAIL], "readwrite"), tail = t.objectStore(TAIL);
+				const old = done(tail.index("key").getAllKeys(key)); // asked first, so it answers before the writes below
+				const asked = parts.map((p, i) => done(t.objectStore(PARTS).put(partRow(key, p.n, bytes[i], p.blob.type))));
+				for (const k of await old) asked.push(done(tail.delete(k)));
+				if (rest.size > 0) asked.push(done(tail.put(tailRow(key, 0, bytes[bytes.length - 1], rest.type))));
+				await Promise.all(asked);
+			}),
 			/** The tail's pieces in order: together, what came after the last part cut. */
 			listTail: async (key) => (await list(TAIL, key)).sort((a, b) => a.seq - b.seq).map(({ bytes, type }) => asBlob(bytes, type)),
 			clear: (key) => Promise.all([clearOf(PARTS, key), clearOf(TAIL, key)]),
@@ -68,12 +80,10 @@ export function keeper(videoId, segment) {
 	const quiet = (job) => ready.then(() => store && job()).catch((err) => console.warn(`recording store: ${err}`));
 	return {
 		chunk: (blob) => quiet(() => store.putTail(key, seq++, blob)),
-		part: (n, blob) => quiet(() => store.putPart(key, n, blob)),
-		/** After a cut: the tail starts again from what's left over. */
-		cutTail(rest) {
-			seq = 0;
-			const first = seq++;
-			return quiet(async () => { await store.clearTail(key); if (rest.size > 0) await store.putTail(key, first, rest); });
+		/** Parts cut from the recording (`[{ n, blob }]`): kept, and the tail starts again from what's left over. */
+		cut(parts, rest) {
+			seq = 1; // what's left over is the tail's piece 0
+			return quiet(() => store.cutParts(key, parts, rest));
 		},
 		sent: (n) => quiet(() => store.delPart(key, n)),
 		clear: () => quiet(() => store.clear(key)),

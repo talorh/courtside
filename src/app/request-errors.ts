@@ -11,8 +11,11 @@ import { HttpError } from "./errors.ts";
 import type { Found } from "./handle-request.ts";
 import { htmlResponse, jsonError, redirect } from "./respond.ts";
 
+/** Page scripts' calls outside /api/: the admin Documentation's AI assistant (public/docs-ask.js) shows why from JSON. */
+const SCRIPT_CALLS = new Set(["/admin/docs/ask"]);
+
 export async function failedResponse(req: Request, url: URL, deps: AppDeps, err: unknown, found: Found): Promise<Response> {
-	const api = url.pathname.startsWith("/api/");
+	const api = url.pathname.startsWith("/api/") || SCRIPT_CALLS.has(url.pathname);
 	// Signed out (no session, or one that's over): a page goes to the sign-in page, which comes back here after the
 	// code; a page script's call gets 401 JSON, which it shows as its own sign-in note.
 	if (!api && err instanceof HttpError && err.status === 401 && (req.method === "GET" || req.method === "HEAD")) {

@@ -25,6 +25,25 @@ describe("fixture routes", () => {
 		expect(await (await client("/fixture")).text()).toContain("Round 10 · vs Lakeside Rockets");
 		expect((await client(`/fixture/${saved!.id}/delete`, form({ confirm: "yes" }))).status).toBe(303);
 	});
+	it("Add game tapped twice adds the game once, logged once; a different game at the same time is still added", async () => {
+		const deps = createTestDeps();
+		const client = makeClient(deps);
+		const lakeside = { ...game, opponent: "Lakeside Rockets" };
+		const taps = [await client("/fixture", form(lakeside)), await client("/fixture", form(lakeside))];
+		expect(taps.map((r) => r.headers.get("Location"))).toEqual(["/fixture?done=added", "/fixture?done=added"]);
+		const opponents = async () => (await listGamesWithVideoStatus(deps.db, deps.team.id)).map((r) => r.game.opponent).sort();
+		expect(await opponents()).toEqual(["Lakeside Rockets"]);
+		expect(await deps.db.prepare("SELECT count(*) AS n FROM admin_log WHERE team_id = ? AND action = 'game_added'").bind(deps.team.id).first<number>("n")).toBe(1);
+		await client("/fixture", form({ ...lakeside, opponent: "Oakridge Owls" }));
+		await client("/fixture", form({ ...lakeside, competition: "Practice match" }));
+		expect(await opponents()).toEqual(["Lakeside Rockets", "Lakeside Rockets", "Oakridge Owls"]);
+		// Deleted, it can be added again.
+		const first = (await listGamesWithVideoStatus(deps.db, deps.team.id)).find((r) => r.game.opponent === "Lakeside Rockets" && r.game.competition === "VJBL")!.game;
+		await client(`/fixture/${first.id}/delete`, form({ confirm: "yes" }));
+		expect(await opponents()).toEqual(["Lakeside Rockets", "Oakridge Owls"]);
+		await client("/fixture", form(lakeside));
+		expect(await opponents()).toEqual(["Lakeside Rockets", "Lakeside Rockets", "Oakridge Owls"]);
+	});
 	it("defaults a new game to 6:40pm on the coming Friday", async () => {
 		const page = await (await makeClient(createTestDeps())("/fixture")).text();
 		expect(page).toContain('name="date" type="date" required value="2026-10-16"');
@@ -98,6 +117,15 @@ describe("fixture routes", () => {
 		expect(await status("2026-10-23T19:30", "pat@x.com")).toBe("Complete");
 		expect(await status("2026-10-23T19:00")).toBe("In progress");
 		expect(await status("2026-10-23T19:30")).toBe("Waiting for video");
+	});
+	it("a game scored before its hour is up is Complete, with no Live stream beside it", async () => {
+		const deps = createTestDeps(new Date("2026-10-23T19:00:00+11:00"));
+		await deps.db.prepare("INSERT INTO members (team_id, email, role) VALUES (?, 'pat@x.com', 'watcher')").bind(deps.team.id).run();
+		const gameId = await seedGame(deps, { startsAt: "2026-10-23T18:30", opponent: "Westside 2" });
+		const cell = async () => /<td class="f-status">(.*?)<\/td>/.exec(await (await makeClient(deps, "pat@x.com")("/fixture")).text())?.[1];
+		expect(await cell()).toBe('<span class="role">In progress</span> <span class="t src">Live stream</span>');
+		await deps.db.prepare("INSERT INTO game_scores (team_id, game_id, ours, opponent, source, entered_at) VALUES (?, ?, 40, 30, 'manual', ?)").bind(deps.team.id, gameId, "2026-10-23T08:00:00Z").run();
+		expect(await cell()).toBe('<span class="role c">Complete</span>');
 	});
 	it("everyone else sees the fixture, but can't change it", async () => {
 		const deps = createTestDeps();

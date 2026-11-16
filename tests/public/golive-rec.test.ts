@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeIndexedDb } from "../helpers/fake-indexeddb.ts";
 // @ts-expect-error plain browser module, no types
 import { record } from "../../public/golive-rec.js";
+// @ts-expect-error plain browser module, no types
+import { recoveryPlan } from "../../public/golive-store.js";
 
 // The phone's recorder, as far as the page uses it: the test hands over the pieces itself.
 class FakeRecorder {
@@ -74,3 +76,51 @@ describe("Go live's recording: how long since the phone handed any over", () => 
 		expect(rec.state()).toBe("paused");
 	});
 });
+
+describe("Go live's recording at End game: the last piece is kept as a part of its own", () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it("once every part has landed, the phone keeps nothing that a later page would send again as one more part", async () => {
+		const idb = fakeIndexedDb();
+		const stored = new Map<string, string>();
+		vi.stubGlobal("MediaRecorder", StoppingRecorder);
+		vi.stubGlobal("indexedDB", idb);
+		vi.stubGlobal("localStorage", { getItem: (k: string) => stored.get(k) ?? null, setItem: (k: string, v: string) => stored.set(k, v), removeItem: (k: string) => stored.delete(k) });
+		vi.stubGlobal("document", { documentElement: { dataset: {} }, visibilityState: "visible", addEventListener() {}, removeEventListener() {} });
+		const sizes: Record<number, number> = {};
+		vi.stubGlobal("fetch", async (url: string, init: { body: Blob | string }) => {
+			if (url.endsWith("/part-urls")) { const n = JSON.parse(init.body as string).partNumbers[0]; return Response.json({ ok: true, data: { urls: { [n]: `https://r2.test/part/${n}` } } }); }
+			if (url.startsWith("https://r2.test/part/")) { sizes[Number(url.split("/").pop())] = (init.body as Blob).size; return new Response(null, { headers: { ETag: `"e${url.split("/").pop()}"` } }); }
+			if (url.endsWith("/complete")) return new Promise(() => {}); // the signal goes: Complete never answers, and the page dies
+			throw new Error(`unexpected ${url}`);
+		});
+		const rec = record({}, { videoId: 41, partSize: 1000, mime: "video/mp4", gameId: 7 }, { onProgress: () => {}, hint: () => {}, onFatal: (e: unknown) => { throw e; } });
+		await new Promise((r) => setTimeout(r, 20));
+		const phone = StoppingRecorder.made;
+		phone.hand(1000); phone.hand(1000); phone.hand(400); // two whole parts and a last piece of 400 bytes
+		void rec.stop(() => {});
+		await new Promise((r) => setTimeout(r, 200));
+		expect(sizes).toEqual({ 1: 1000, 2: 1000, 3: 400 });
+		const note = JSON.parse(stored.get("courtside-live:7")!);
+		const parts = idb.rows("parts").map((r) => ({ n: r.n as number, blob: new Blob([r.bytes as ArrayBuffer]) }));
+		const tail = idb.rows("tail").map((r) => new Blob([r.bytes as ArrayBuffer]));
+		expect(Object.keys(note.etags)).toEqual(["1", "2", "3"]);
+		expect(recoveryPlan({ parts, tail }, note.etags, "video/mp4")).toEqual({ parts: [], tail: null, bytes: 0 });
+	});
+});
+
+// A recorder that stops when asked, and says so a moment later, as a phone's does.
+class StoppingRecorder {
+	static made: StoppingRecorder;
+	state = "inactive";
+	ondataavailable: ((e: { data: Blob }) => void) | null = null;
+	private stops: Array<() => void> = [];
+	constructor() { StoppingRecorder.made = this; }
+	addEventListener(type: string, fn: () => void) { if (type === "stop") this.stops.push(fn); }
+	start() { this.state = "recording"; }
+	pause() {}
+	resume() {}
+	requestData() {}
+	stop() { this.state = "inactive"; queueMicrotask(() => this.stops.forEach((fn) => fn())); }
+	hand(bytes: number) { this.ondataavailable?.({ data: new Blob([new Uint8Array(bytes)], { type: "video/mp4" }) }); }
+}

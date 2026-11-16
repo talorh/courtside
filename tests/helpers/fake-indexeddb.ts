@@ -22,12 +22,17 @@ function objectStore(rows: Map<string, Row>) {
 	};
 }
 
-/** `rows(name)`: what an object store holds now, in key order. */
+/** `rows(name)`: what an object store holds now, in key order. `transactions`: the stores each transaction was opened
+ * over, in order. */
 export function fakeIndexedDb() {
 	const stores = new Map<string, Map<string, Row>>();
+	const transactions: string[][] = [];
 	const db = {
 		createObjectStore: (name: string) => { stores.set(name, new Map()); return objectStore(stores.get(name)!); },
-		transaction: (name: string) => ({ objectStore: () => objectStore(stores.get(name)!) }),
+		transaction: (names: string | string[]) => {
+			transactions.push([names].flat());
+			return { objectStore: (name: string) => objectStore(stores.get(name)!) };
+		},
 	};
 	return {
 		open() {
@@ -35,6 +40,7 @@ export function fakeIndexedDb() {
 			if (stores.size === 0) queueMicrotask(() => req.onupgradeneeded?.());
 			return req;
 		},
+		transactions,
 		rows: (name: string) => [...(stores.get(name)?.values() ?? [])].sort((a, b) => a.k.localeCompare(b.k)),
 	};
 }

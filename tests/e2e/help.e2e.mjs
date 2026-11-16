@@ -14,7 +14,7 @@ export const scenarios = [
 			t.harness.page("/help", helpManagerPage);
 			await t.page.goto(`${t.harness.url}/help`);
 			await t.page.fill("#help-search", "download photo");
-			const shown = ["Ask Virtual Sam", "Running your team", "People", "Videos", "End of the season", "Contact support", "For everyone on the team", "Watching", "Photos"];
+			const shown = ["Ask Virtual Sam", "Running your team", "People", "Videos", "End of the season", "Contact support", "For everyone on the team", "Getting started", "Watching", "Photos"];
 			await t.until(async () => (await headings(t)).join("|") === shown.join("|"), `only these headings: ${shown.join(", ")} (saw ${(await headings(t)).join(", ")})`);
 			// A part's name goes too when nothing in it matches: AirPlay is only in watching, for everyone.
 			await t.page.fill("#help-search", "airplay");

@@ -12,9 +12,9 @@ import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 const refuse = async (): Promise<string> => { throw new Error("not signed in"); };
 const call = (deps: TestDeps, path: string, init?: RequestInit) =>
 	handleRequest(new Request(`https://saints.example${path}`, init), deps, refuse, buildRouter(), buildAdminRouter());
-const askForCode = (deps: TestDeps, token = "tok") => call(deps, "/signin", {
+const askForCode = (deps: TestDeps, token = "tok", email = MANAGER) => call(deps, "/signin", {
 	method: "POST", headers: { Origin: "https://saints.example", "CF-Connecting-IP": "1.2.3.4" },
-	body: new URLSearchParams({ email: MANAGER, next: "/", "cf-turnstile-response": token }),
+	body: new URLSearchParams({ email, next: "/", "cf-turnstile-response": token }),
 });
 
 describe("Turnstile on the sign-in page", () => {
@@ -26,6 +26,20 @@ describe("Turnstile on the sign-in page", () => {
 		vi.spyOn(console, "log").mockImplementation(() => {});
 		const code = await (await askForCode(deps)).text();
 		expect(code).toContain(`${widget}<button class="btn quiet" data-resend>Send a new code</button>`);
+	});
+	it("marks Send a new code ready at once when the code has run out or used its tries, and only then", async () => {
+		const deps = createTestDeps();
+		vi.spyOn(console, "log").mockImplementation(() => {});
+		await askForCode(deps);
+		const tryCode = async (code: string) => (await call(deps, "/signin/code", {
+			method: "POST", headers: { Origin: "https://saints.example", "CF-Connecting-IP": "1.2.3.4" }, body: new URLSearchParams({ email: MANAGER, next: "/", code }),
+		})).text();
+		const wrong = await tryCode("000000");
+		expect(wrong).toContain('<button class="btn quiet" data-resend>Send a new code</button>');
+		await deps.db.prepare("UPDATE sign_in_codes SET tries = 5").run();
+		const expired = await tryCode("000000");
+		expect(expired).toContain(SIGN_IN_MESSAGES.expired);
+		expect(expired).toContain('<button class="btn quiet" data-resend data-resend-now>Send a new code</button>');
 	});
 	it("lets the sign-in pages, and only them, load Turnstile's script and frame", async () => {
 		const deps = createTestDeps();
@@ -51,6 +65,20 @@ describe("Turnstile on the sign-in page", () => {
 		expect(await res.text()).toContain(SIGN_IN_MESSAGES.robot.replaceAll("'", "&#39;"));
 		expect(deps.email.sent).toEqual([]);
 		expect(log.mock.calls.map(([line]) => JSON.parse(String(line)))).toEqual([{ event: "signin_refused", teamId: null, email: "s…@saints.example", why: "turnstile", detail: "fake" }]);
+	});
+	it("keeps what was typed masked when it isn't an address, in the robot check's sign-in event and its problem line", async () => {
+		const deps = createTestDeps();
+		vi.spyOn(console, "log").mockImplementation(() => {});
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		deps.turnstile.result = "failed";
+		await askForCode(deps, "", "Magic Johnson 0400 000 000");
+		await askForCode(deps, "", "Magic@Example.com");
+		const events = await deps.db.prepare("SELECT kind, email FROM sign_in_events ORDER BY id").all();
+		expect(events.results).toEqual([{ kind: "robot", email: "m…" }, { kind: "robot", email: "magic@example.com" }]);
+		deps.turnstile.result = "unreachable";
+		await askForCode(deps, "tok", "Magic Johnson 0400 000 000");
+		const problems = await deps.db.prepare("SELECT who FROM problems ORDER BY id").all();
+		expect(problems.results).toEqual([{ who: "m…" }]);
 	});
 	it("still sends the code when Cloudflare can't be reached, and logs that it couldn't check", async () => {
 		const deps = createTestDeps();

@@ -16,5 +16,5 @@ to be removed, but nothing new is added.</li>
 <li>Before then, the <b>end-of-season pack</b> at the bottom of <b>Manage team</b> has everything to keep: every game's HD
 video to download (tap <b>Get every HD copy ready</b> first, and they're all ready about 15 minutes later), each player's
 highlight clips under their name, and where to save the photos and the roster.</li>
-<li>Next season's team is a new team on the site: contact support, with the form at the bottom of this page, and
-they'll set it up.</li></ul>`)}`;
+<li>Next season's team is a new team on the site: ask with <a href="#ask-admin">Contact support</a>, at the end of
+Running your team (or on your <a href="/support">Support</a> page), and they'll set it up.</li></ul>`)}`;

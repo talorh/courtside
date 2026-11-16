@@ -37,7 +37,8 @@ ${releaseDiagram()}
 is built on its own branch, ${code("feature/<name>")} or ${code("fix/<name>")}, off ${code("staging")}, its tests
 written first. When it's ready it's merged into ${code("staging")}, the staging environment's branch, and
 ${code("npm run staging")} puts that branch on the staging site: it checks the code, applies staging's migrations,
-makes ${code("firstAdmins")} (${code("deploy.config.ts")}) admins while staging has never had one, deploys the preview and records the commit it deployed as ${code("refs/courtside/staging")}. ${code("main")} is production.
+makes ${code("firstAdmins")} (${code("deploy.config.ts")}) admins while staging has never had one, deploys the preview and records the commit it deployed as ${code("refs/courtside/staging")} (nothing, if HEAD moved
+meanwhile). ${code("main")} is production.
 Nothing is committed on it directly: it's only ever fast-forwarded to ${code("staging")} for a release, so what goes
 live is exactly what was tried. A merged branch is deleted.</p>
 ${branchesDiagram()}
@@ -75,16 +76,18 @@ check one branch out in both folders, which keeps ${code("main")} out of the wor
 it's released, or at least merged into ${code("staging")}, before a computer is retired.</li></ul>
 <h3>Releases</h3>
 <p>${code("npm run release")} runs every check in turn and stops at the first that fails: the code is committed on
-${code("main")}, staging ran this commit (or one that differs only in docs, tests or notes), the type checks and unit
-tests pass, the browser tests pass on Android, iPhone and Firefox, every migration is on every database, nobody has
+${code("main")}, staging ran this commit (or one that differs only in docs, tests or notes), the computer is quiet
+(nothing else busy, as the browser tests' camera timings need it), the type checks and unit tests pass, the browser
+tests pass on Android, iPhone and Firefox (every phone, whatever ${code("PHONES")} says), every migration is on every database, nobody has
 uploaded or streamed on the live site for 15 minutes, the changelog's newest line isn't what the site already runs,
 and a dry-run deploy works. No release lands on a day a team plays unless it fixes something broken.</p>
 <h3>Builds</h3>
-<p>Nothing is built on a computer and uploaded. The release pushes ${code("main")} to the site's own repository on
-Cloudflare Artifacts, ${code("courtside/courtside")}, with a write token that lasts ten minutes. Workers Builds watches that
+<p>Nothing is built on a computer and uploaded. The release pushes the commit it checked, as ${code("main")}, to the
+site's own repository on Cloudflare Artifacts, ${code("courtside/courtside")}, with a write token that lasts ten minutes. Workers Builds watches that
 repository's main branch only: for each push it runs ${code("npm ci && npm run check")} on Cloudflare, then
 ${code("npm run deploy:builds")}, which deploys with the newest changelog line as the deployment's message and the
 commit as its tag, so the Cloudflare dashboard and the admin area's Changelog say the same thing. The release follows
 the build to the end and won't call it done unless the live deployment carries that line. Builds can't run the browser
-tests (they need phones and cameras), which is why the release runs them before it pushes. A deploy sends no secrets:
+tests (they need phones and cameras), which is why the release runs them before it pushes. If HEAD moved while the
+release ran, it refuses before the push. A deploy sends no secrets:
 they stay on the Worker. Staging is deployed from the computer by ${code("npm run staging")}, not by Builds.</p>`});

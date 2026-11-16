@@ -63,7 +63,7 @@ export function healthChecks(p: HealthInputs): Check[] {
 		nightly("Nightly clean-up", s?.custom.at, s?.custom.at && s.custom.ok !== "yes" ? `didn't finish (${s.custom.problem})` : undefined, p),
 		{ name: "Stream answering", level: p.storage ? "ok" : "warn", figure: p.storage ? "Answered just now" : "Didn't answer in 3 seconds", href: "/admin/platform" },
 		{ name: "Videos processing", level: c.stuck ? "warn" : "ok", figure: c.stuck ? `${plural(c.stuck, "video")} processing for over ${STUCK_HOURS} hours` : "None stuck", href: "/admin/log?show=videos" },
-		{ name: "Uploads failed", level: c.failed ? "warn" : "ok", figure: c.failed ? `${plural(c.failed, "upload")} failed in the last 7 days` : "None in the last 7 days", href: "/admin/log?show=videos&event=video_failed" },
+		{ name: "Uploads failed", level: c.failed ? "warn" : "ok", figure: c.failed ? `${plural(c.failed, "upload")} failed in the last 7 days` : "None in the last 7 days", href: "/admin/log?event=video_failed" },
 		{
 			name: "Worker errors", href: "/admin/platform",
 			level: !p.cloudflare || !d ? "idle" : share >= ERRORS.urgent ? "urgent" : share >= ERRORS.warn ? "warn" : "ok",

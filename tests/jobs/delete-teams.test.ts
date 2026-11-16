@@ -2,8 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { currentTeam } from "../../src/app/current-team.ts";
 import { adminLogStatement, listAdminLog } from "../../src/features/admin/admin-log-repository.ts";
 import { loadViewer } from "../../src/auth/viewer.ts";
+import { deleteTeamsDue } from "../../src/jobs/delete-teams.ts";
 import { sweepOrphans } from "../../src/jobs/sweep-orphans.ts";
 import { runSync } from "../../src/jobs/sync-videos.ts";
+import { FetchBudgetSpent } from "../../src/platform/fetch-budget.ts";
 import { makeClient, MANAGER } from "../helpers/app.ts";
 import { B12_1, createTestDeps, type TestDeps } from "../helpers/fakes.ts";
 import { addMember, addTeam, G14_5, seedTeam, teamSnapshot } from "../helpers/two-teams.ts";
@@ -67,7 +69,7 @@ const GONE = ["clip_players", "favourites", "video_views", "win_seen", "coach_no
 const KEPT = ["admin_log", "cost_views", "downloads", "games", "media_downloads", "members", "videos"];
 
 describe("deleting a closed team once its date has passed", () => {
-	it("has a say over every table with a team's rows: a new one goes in GONE or KEPT (roster_weeks was missed)", async () => {
+	it("has a say over every table with a team's rows: a new one goes in GONE or KEPT", async () => {
 		const deps = createTestDeps();
 		const { results } = await deps.db.prepare("SELECT m.name FROM sqlite_master m WHERE m.type = 'table' AND EXISTS (SELECT 1 FROM pragma_table_info(m.name) c WHERE c.name = 'team_id') ORDER BY m.name").all<{ name: string }>();
 		expect(results.map((r) => r.name)).toEqual([...GONE, ...KEPT].sort());
@@ -148,6 +150,69 @@ describe("deleting a closed team once its date has passed", () => {
 		deps.stream.deleteFails.clear();
 		await untilDeleted(deps);
 		expect(deps.images.deleted).toEqual(["img-g"]);
+	});
+
+	it("carries on past one thing that can't be deleted to the rest of the team's, and still fails the run", async () => {
+		const { deps } = await closedG14();
+		quiet();
+		deps.stream.deleteFails.add("clip-g");
+		const run = await deleteTeamsDue(deps);
+		expect(run.errors.map(String)).toEqual(["Error: Stream DELETE clip-g failed (503): no details"]);
+		expect(deps.stream.deleted).toEqual(["stream-g"]);
+		expect(deps.originals.aborted).toEqual(["originals/g14.5-2026/u1/game.mov"]);
+		expect(deps.originals.removed).toEqual(["originals/g14.5-2026/u2/stray.mov"]);
+		// Its rows stay until everything of it is gone.
+		expect(await status(deps)).toMatchObject({ status: "closed" });
+		expect(await count(deps, "clips")).toBe(1);
+		deps.stream.deleteFails.clear();
+		await untilDeleted(deps);
+	});
+
+	/** A second closed team, due a day before G14.5, so its turn comes first. */
+	async function withEarlierTeam() {
+		const { deps } = await closedG14();
+		const earlier = await addTeam(deps.db, { ...G14_5, id: "b10.1-2026", code: "b10.1", name: "Saints U10 Boys 10.1" });
+		await seedTeam(deps, earlier, "e");
+		await deps.db.prepare("UPDATE teams SET status = 'closed', closed_at = '2026-10-11T00:00:00.000Z', delete_after = '2026-10-13T16:00:00.000Z' WHERE id = ?").bind(earlier.id).run();
+		return { deps, earlier };
+	}
+
+	it("gives the next team its turn when one team's deleting fails, and says every failure", async () => {
+		const { deps, earlier } = await withEarlierTeam();
+		quiet();
+		deps.stream.deleteFails.add("stream-e").add("clip-e");
+		const run = await deleteTeamsDue(deps);
+		expect(run.errors.map(String)).toEqual(["Error: Stream DELETE clip-e failed (503): no details", "Error: Stream DELETE stream-e failed (503): no details"]);
+		expect(deps.images.deleted).toEqual(["img-e", "img-g"]);
+		expect(run.deleted).toBe(1);
+		expect(await status(deps)).toMatchObject({ status: "deleted" });
+		expect(await deps.db.prepare("SELECT status FROM teams WHERE id = ?").bind(earlier.id).first("status")).toBe("closed");
+	});
+
+	it("gives the next team its turn when one team's folder can't be listed", async () => {
+		const { deps, earlier } = await withEarlierTeam();
+		quiet();
+		const list = deps.originals.list.bind(deps.originals);
+		deps.originals.list = async (prefix) => {
+			if (prefix.includes(earlier.id)) throw new Error("R2 list failed (503)");
+			return list(prefix);
+		};
+		const run = await deleteTeamsDue(deps);
+		expect(run.errors.map(String)).toEqual(["Error: R2 list failed (503)"]);
+		expect(run.deleted).toBe(1);
+		expect(await status(deps)).toMatchObject({ status: "deleted" });
+		expect(await deps.db.prepare("SELECT status FROM teams WHERE id = ?").bind(earlier.id).first("status")).toBe("closed");
+	});
+
+	it("stops deleting for the run, with no failure, once the run's outside calls are used up", async () => {
+		const { deps, earlier } = await withEarlierTeam();
+		quiet();
+		deps.stream.deleteVideo = async () => { throw new FetchBudgetSpent(); };
+		expect(await deleteTeamsDue(deps)).toEqual({ deleted: 0, errors: [] });
+		// The earlier team's photo went before Stream refused; the later team waits for the next run.
+		expect(deps.images.deleted).toEqual(["img-e"]);
+		expect(deps.originals.removed).toEqual([]);
+		expect(await deps.db.prepare("SELECT status FROM teams WHERE id = ?").bind(earlier.id).first("status")).toBe("closed");
 	});
 
 	it("counts something already gone from Images or Stream as deleted", async () => {

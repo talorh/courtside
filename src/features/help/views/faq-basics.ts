@@ -29,10 +29,12 @@ with their own email. The site's admins can also open any team, to help when som
 export const faqKeptAboutMe = (h: HelpFor) => faqItem("about-me", "What does the site keep about me?", html`<p>Your email, to sign
 you in, and the name ${h.c.ask} gives you. For each phone or computer you sign in on, what it is (say, iPhone, Safari),
 until its 30 days are up. Each sign-in attempt, and the internet address it came from, is kept a month to stop misuse. Which
-view each phone or computer uses, the mobile one or the desktop one, is kept in a cookie for 30 days and noted once when it's
-first seen or changes.</p>
+view each phone or computer uses, the mobile one or the desktop one, is noted once when it's first seen or changes, and
+kept a month too.</p>
 <p>It also notes which videos you open, for a month (that's how it shows what's new), and which you download, for two
-years. Nothing is sold or shared, and there are no ads or trackers.</p>
+years. What you do on the team (an upload, a live stream, a photo, a removal request) is noted with the phone or
+computer it came from, and kept 90 days. Live streams and photos also go in the site's admin Log, as a team manager's
+changes do, and the Log keeps its lines for good. Nothing is sold or shared, and there are no ads or trackers.</p>
 <p class="small">Want something changed or taken off? Ask ${h.c.ask}.</p>`);
 
 /** The desktop view: a sidebar on a computer, and the switch to the phone's layout and back. */
@@ -40,7 +42,7 @@ export const faqComputer = () => faqItem("computer", "On a computer", html`<p>On
 phone's layout? Click <b>Switch to mobile view</b> at the bottom of the bar; <b>Switch to desktop view</b>, at the top,
 brings the bar back.</p>`);
 
-export const faqButtons = (h: HelpFor) => faqItem("buttons", "Why can't I see the Upload video or Go live buttons?", html`<p>Only people set to <b>Watch and film</b> and the team manager see them.
+export const faqButtons = (h: HelpFor) => faqItem("buttons", "Why can't I see the Upload video or Go live buttons?", html`<p>Only people set to <b>Watch and film</b>, coaches and the team manager see them.
 Want to film? Ask ${h.c.ask} to set you up.</p>
 ${shot("home", "The top of the home page as someone set to Watch and film sees it: Upload video, Watch games and Go live buttons, then Roster, Fixture and Photos", 390, 560)}`);
 
@@ -52,7 +54,8 @@ export const faqWatch = (h: HelpFor) => html`${faqItem("watch", "How do I watch,
 along the top of the site's other pages. No sound? Tap the page.</li>
 <li><b>Picture stopped?</b> A Game Break screen means the filmer has paused for a break, or their camera stopped for a
 moment. "Live stream will resume shortly" means the filming phone has dropped out: it comes back by itself, and if it
-hasn't after 5 minutes, refresh the page. A Full time screen means the game's over and its video is on its way.</li>
+hasn't after 5 minutes, refresh the page. A Full time screen means the game's over and its video is on its way. Paused
+it yourself? That's not a stop, so no screen comes up: tap the picture to play it again.</li>
 <li><b>Favourites:</b> tap <b>☆ Favourite</b> on a game or a clip to keep it at the top of <b>Watch games</b>. Tap it again
 to take it off.</li>
 <li><b>No spoilers:</b> tap <b>Hide scores</b>, at the top of Watch games or on a game's page. Scores stay hidden wherever
@@ -64,7 +67,7 @@ minutes. A whole game is 1 to 3 GB, so use Wi-Fi. On an iPhone it goes to Files:
 Share, then Save Video.</li>
 <li><b>Remove:</b> on the game's page, tap <b>Ask for this video to be removed</b>.</li>
 <li><b>On the wrong game?</b> Let ${h.c.ask} know: it can be moved without uploading it again.</li></ul>
-${shot("watch-games", "Watch games: the season's games as cards, newest first, each with its label (Upcoming, Live stream) and date")}`)}
+${shot("watch-games", "Watch games: the season's games as cards, oldest first, each with its label (Upcoming, Live stream) and date")}`)}
 ${faqItem("tv", "How do I watch on the TV?", html`<ul class="steps">
 <li><b>iPhone or iPad with an Apple TV or AirPlay TV:</b> play the game, tap the player's full-screen button, then tap
 <b>AirPlay</b>${I_AIRPLAY} (a screen with a triangle) and pick the TV. No AirPlay button? Swipe down from the top-right corner, tap

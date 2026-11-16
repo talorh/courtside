@@ -1,8 +1,7 @@
 // The upload itself: start or resume a multipart upload, send the missing pieces, then complete it.
 // `ui` carries the page's hint() and show() so this file has no DOM lookups of its own.
-import { api, needsReload, putPart, withRetries } from "./upload-net.js";
+import { api, isNetworkTrouble, needsReload, putPart, withRetries } from "./upload-net.js";
 import { forget, keyFor, load, progress, save, startSession } from "./upload-state.js";
-import { askName } from "./team.js";
 
 // Up to 6 pieces in flight fills a good connection. On a weak one (e.g. patchy 5G) every drop fails all pieces in
 // flight, so after a failed round we halve it (6 → 3 → 2 → 1) and step back up after each batch that succeeds.
@@ -53,7 +52,8 @@ export async function upload(file, gameId, signal, ui) {
 	const sendAndComplete = async () => {
 		startSession(state);
 		ui.show(progress(state, file.size));
-		await withRetries(() => sendMissingParts(file, key, state, signal, ui), ui.hint, signal);
+		// Each piece that gets through starts its tries again: only a signal that sends nothing at all gives up.
+		await withRetries(() => sendMissingParts(file, key, state, signal, ui), ui.hint, signal, undefined, () => Object.keys(state.etags).length);
 		const parts = Object.entries(state.etags).map(([n, etag]) => ({ partNumber: Number(n), etag }));
 		return withRetries(() => api(`/api/uploads/${state.videoId}/complete`, { parts }, signal), ui.hint, signal);
 	};
@@ -73,6 +73,12 @@ export async function upload(file, gameId, signal, ui) {
 	return result;
 }
 
+/** What the page says when an upload stops: the site's own refusal, or, when it gave up on the connection (or storage),
+ * that the pieces sent are kept for choosing the same video again (upload-state.js), never the browser's "Load failed". */
+export const failedWords = (err) => (err?.code !== "maintenance" && (isNetworkTrouble(err) || /^storage /.test(String(err?.message)))
+	? "The connection kept dropping, so the upload has stopped. What's been sent is kept: choose the same video again to carry on from there."
+	: String(err.message).replace(/\.?$/, ".")); // the site's messages end in a full stop already
+
 /** Tells the server to delete the partial upload so the game is free again. */
 export async function cancelOnServer(file, gameId) {
 	const state = load(keyFor(file, gameId));
@@ -83,6 +89,6 @@ export async function cancelOnServer(file, gameId) {
 		return "Upload cancelled. You can choose a video again.";
 	} catch (err) {
 		console.error("Cancel on server failed", err);
-		return `Upload stopped, but the site couldn't tidy it up yet. It clears itself within a day; ask ${askName()} if you need to upload again sooner.`;
+		return "Upload stopped, but the site couldn't tidy it up yet. You can choose a video again now: a new upload from you replaces this one.";
 	}
 }

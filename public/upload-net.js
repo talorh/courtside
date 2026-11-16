@@ -81,8 +81,7 @@ export async function putPart(url, blob, signal, timeoutMs) {
 	return etag;
 }
 
-// Waits until the phone is back online, the page is visible again (phone unlocked), the upload is cancelled,
-// or a backoff delay passes.
+// Waits until the phone is back online, the page is visible again (phone unlocked), it's cancelled, or a backoff passes.
 function waitToRetry(round, signal) {
 	const delay = Math.min(30000, 2000 * round);
 	return new Promise((resolve) => {
@@ -101,16 +100,20 @@ function waitToRetry(round, signal) {
 	});
 }
 
-/**
- * Runs step until it succeeds, pausing through connection problems. Errors `retryable` turns down (by default: not a
- * network failure, server error, throttling or expired part link) are rethrown at once.
- */
-export async function withRetries(step, hint, signal, retryable = isRetryable) {
-	for (let round = 1; ; round++) {
+/** Runs step until it succeeds, pausing through connection problems. Errors `retryable` turns down (by default: not a
+ * network failure, server error, throttling or expired part link) are rethrown at once. It gives up after MAX_ROUNDS
+ * tries online with nothing through: a try offline isn't counted, and `progress()` moving on (pieces sent) starts again. */
+export async function withRetries(step, hint, signal, retryable = isRetryable, progress = () => 0) {
+	let round = 0, spent = 0, seen = progress();
+	for (;;) {
 		try {
 			return await step();
 		} catch (err) {
-			if (signal?.aborted || !retryable(err) || round >= MAX_ROUNDS) throw err;
+			const now = progress();
+			if (now !== seen) { seen = now; round = spent = 0; }
+			round++;
+			if (navigator.onLine !== false) spent++;
+			if (signal?.aborted || !retryable(err) || spent >= MAX_ROUNDS) throw err;
 			// The maintenance page answers the site's API with when it'll be back (docs/runbooks/maintenance.md).
 			hint(err?.code === "maintenance" ? `${String(err.message).replace(/\.?$/, ".")} It carries on by itself after that: keep this page open.`
 				: navigator.onLine === false

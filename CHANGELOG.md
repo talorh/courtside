@@ -12,6 +12,19 @@ Builds) sends the top line, in plain words, as its message.
 
 - [Enhancement] **Fixture:** A finals game now has a subtle gold border wherever it's listed: on Watch games, Home and the Fixture.
 - [Feature] **Watch games:** The first time you open a game the club won, once its video is ready, a win pop-up with confetti in the club's colours shows for about a second. It never says the score, and never shows to anyone who hides scores.
+- [Fix] **Photos:** Fixed an issue where swiping to another photo and back showed the other photo's caption and buttons, so Delete photo could delete the wrong photo; Keep it works again after a swipe, the photo stays centred when the phone is turned, and see-through pictures are added on white.
+- [Fix] **Go live:** Fixed an issue where End game soon after Carry on streaming could throw the game away as a test, and where a page closed while End game saved could leave the recording unable to be saved; footage kept on the phone is cleared once its recording is saved.
+- [Fix] **Watching live:** Pausing the live player no longer brings up "will resume shortly", and a tap on the picture plays it again.
+- [Fix] **Upload:** An upload now keeps going through a long signal drop, and says in plain words if it stops; deleting or moving a video gives the game another week for its new upload instead of setting it to No video.
+- [Fix] **Roster:** Saving an earlier week no longer makes up duties for it.
+- [Fix] **Fixture:** A double tap on Add game adds the game once, a scored game no longer shows Live stream beside Complete, a PlayHQ game deleted here stays deleted, and a game PlayHQ moves later waits for its video again.
+- [Fix] **Coaches' notes:** On a closed team coaches still see their notes and their Excel download; on a clip's page note times are plain text.
+- [Fix] **Platform:** Fixed an issue where Run the game check now's answer was wiped after 5 minutes; a steady trickle of server errors no longer emails every hour, and an alert whose ticket couldn't be saved opens it on the next check.
+- [Fix] **Insights:** Uploads failed opens the right Log lines, Check again checks again, and the teams table leaves test runs out.
+- [Fix] **Teams:** A team past its season's date is deleted only tonight with its code typed, never at once; its season stays once it has photos, and a ticket's emails go only to a current team manager.
+- [Fix] **Sign-in:** Send a new code is ready at once when your code has run out, and a closed team's People list can't be edited by mistake.
+- [Fix] **Backups:** A note with a line like a row no longer stops the nightly backup, and a second run the same day counts as done; one team's deletion failing no longer holds up another's.
+- [Enhancement] **Behind the scenes:** Every post is capped at 2 MB, the Documentation assistant says why it refused a question, the release pushes the commit it checked, and the docs and Help brought up to date.
 - [Enhancement] **New install:** The first deploy makes the admins named in deploy.config.ts (firstAdmins) the site's first admins, and until the first team is onboarded every page opens the admin area, where Insights says how to get started.
 
 ## 15 Nov 2026

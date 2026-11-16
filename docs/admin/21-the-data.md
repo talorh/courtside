@@ -12,7 +12,7 @@ D1 holds everything but the media itself. Times are kept in UTC, apart from a ga
 | --- | --- |
 | Videos, clips and photos | Until the end of 31 December of the year the team's season ends |
 | A deleted video | Gone from the site at once; its copies are kept one more day, in case it was a mistake |
-| A deleted video, clip, game or photo's row | 90 days, unless the download log or a removal request names it |
+| A deleted video, clip, game or photo's row | 90 days, unless the download log or a removal request names it. A deleted game from PlayHQ stays while its PlayHQ fixture is on the site, so the next check doesn't add it again |
 | Uploaded originals in R2 | 30 days (unfinished uploads 7 days) |
 | Download log | Two years |
 | Notifications' activity | 90 days |

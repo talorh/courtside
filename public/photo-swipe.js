@@ -4,28 +4,13 @@
 // small thumbnail at once, blurred, until its full picture has come; the pages either side are read in advance, so
 // the photos beyond them are loading before a swipe. Newer and Older stay as links.
 import { setUpSave } from "./photo-save.js";
+import { facts, forget, known, opened, pageFor, show } from "./photo-pages.js";
 
 // A swipe: at least this far across, more across than up or down (a scroll), or a quick flick.
 const LEAST_PX = 50;
 const FLICK_PX_PER_MS = 0.5;
 const SNAP_MS = 220;
 
-/** A page's facts: which photo it is, its pictures, and its neighbours' ids and pictures. */
-function facts(doc) {
-	const f = doc.querySelector(".photoview");
-	if (!f) return null;
-	const side = (which) => (f.dataset[which] ? { id: f.dataset[which], src: f.dataset[`${which}Src`], thumb: f.dataset[`${which}Thumb`] ?? "" } : null);
-	return { id: f.dataset.id, src: f.querySelector("img")?.getAttribute("src") ?? "", thumb: f.dataset.thumb ?? "", newer: side("newer"), older: side("older"), doc };
-}
-const pages = new Map(); // a photo's page's facts, by id, read in advance or on arrival
-async function pageFor(id) {
-	if (pages.has(id)) return pages.get(id);
-	const res = await fetch(`/photos/${id}`, { headers: { Accept: "text/html" } }).catch(() => null);
-	const text = res?.ok ? await res.text().catch(() => null) : null;
-	const f = text ? facts(new DOMParser().parseFromString(text, "text/html")) : null;
-	if (f) pages.set(id, f);
-	return f;
-}
 const img = (src, cls) => Object.assign(document.createElement("img"), { src, alt: "", className: cls });
 /** A slide: the blurred thumbnail at once (or "Loading…" when the page had none), the full picture faded in when it has
  * loaded. A picture that fails to load is asked for once more with a fresh link, from the photo's page. */
@@ -42,7 +27,7 @@ function slide(side, big = side?.src ? img(side.src, "big") : null) {
 		big.addEventListener("error", async () => {
 			if (!side?.id || big.dataset.retried) return;
 			big.dataset.retried = "1";
-			pages.delete(side.id);
+			forget(side.id);
 			const fresh = await pageFor(side.id);
 			if (fresh?.src) big.src = fresh.src;
 		}, { once: true });
@@ -53,8 +38,8 @@ const warm = (side) => { if (side) { for (const src of [side.thumb, side.src]) i
 const idle = (job) => ("requestIdleCallback" in window ? requestIdleCallback(job) : setTimeout(job, 300));
 
 function setUp(figure) {
-	let cur = facts(document);
-	pages.set(cur.id, cur);
+	// The opened page's facts, from a copy taken before anything here changes, so a swipe back puts its own parts back.
+	let cur = opened(document);
 	const width = () => figure.clientWidth;
 	const track = document.createElement("div");
 	track.className = "track";
@@ -62,8 +47,9 @@ function setUp(figure) {
 	picture.alt = "";
 	track.append(slide(cur.newer), slide({ thumb: cur.thumb }, picture), slide(cur.older));
 	figure.replaceChildren(track);
-	// Without a snap the style is settled first (a snap still running is cut short, not carried on to its end).
-	const at = (x, snap) => { track.classList.toggle("snap", snap); if (!snap) void track.offsetWidth; track.style.transform = `translateX(${x - width()}px)`; };
+	// Without a snap the style is settled first (a snap still running is cut short, not carried on to its end). The middle
+	// slide's place is a third of the track, not a width in pixels, so it stays in place when the phone is turned.
+	const at = (x, snap) => { track.classList.toggle("snap", snap); if (!snap) void track.offsetWidth; track.style.transform = `translateX(calc(-100% / 3 + ${x}px))`; };
 	/** Once the snap has ended: its transitionend, or a little after its time when none comes (reduced motion). */
 	const snapped = () => new Promise((resolve) => {
 		const done = () => { track.removeEventListener("transitionend", done); clearTimeout(timer); resolve(); };
@@ -85,11 +71,7 @@ function setUp(figure) {
 			if (f[which]) { figure.dataset[which] = f[which].id; figure.dataset[`${which}Src`] = f[which].src; figure.dataset[`${which}Thumb`] = f[which].thumb; }
 			else for (const key of [which, `${which}Src`, `${which}Thumb`]) delete figure.dataset[key];
 		}
-		for (const sel of [".photo-when", ".photonav", ".photoback", ".side"]) {
-			const mine = document.querySelector(sel), theirs = f.doc.querySelector(sel);
-			if (mine && theirs) mine.replaceWith(theirs.cloneNode(true));
-		}
-		document.title = f.doc.title;
+		show(f);
 		setUpSave();
 		lookAhead();
 	}
@@ -103,7 +85,7 @@ function setUp(figure) {
 		history.replaceState(history.state, "", `/photos/${next.id}`);
 		const [left, centre, right] = [...track.children];
 		const was = { id: cur.id, src: cur.src, thumb: cur.thumb };
-		let f = pages.get(next.id);
+		let f = known(next.id);
 		const far = f ? f[which] : null;
 		track.replaceChildren(which === "older" ? centre : slide(far), which === "older" ? right : left, which === "older" ? slide(far) : centre);
 		at(0, false);

@@ -165,3 +165,53 @@ describe("answers that need the person, not a retry", () => {
 		vi.unstubAllGlobals();
 	});
 });
+
+describe("how long an upload keeps trying", () => {
+	const onPage = (onLine: boolean) => {
+		vi.useFakeTimers();
+		const listeners = { addEventListener: () => {}, removeEventListener: () => {} };
+		vi.stubGlobal("window", listeners);
+		vi.stubGlobal("document", { ...listeners, visibilityState: "visible" });
+		const net = { onLine };
+		vi.stubGlobal("navigator", net);
+		return net;
+	};
+	afterEach(() => vi.unstubAllGlobals());
+	/** Fails `times` times with a dropped connection, then works. */
+	const failing = (times: number) => {
+		let tries = 0;
+		return { step: async () => { if (++tries <= times) throw new TypeError("Load failed"); return "done"; }, tries: () => tries };
+	};
+
+	it("gives up on a signal that says it's online but never gets anything through, after 40 tries", async () => {
+		onPage(true);
+		const { step, tries } = failing(Infinity);
+		const result = withRetries(step, () => {}).catch((err: Error) => err);
+		await vi.advanceTimersByTimeAsync(60 * 60_000);
+		expect(await result).toMatchObject({ name: "TypeError" });
+		expect(tries()).toBe(40);
+	});
+	it("an hour offline spends none of its tries: back online, it still has all 40", async () => {
+		const net = onPage(false);
+		const { step, tries } = failing(Infinity);
+		let settled = false;
+		const result = withRetries(step, () => {}).catch((err: Error) => err).finally(() => { settled = true; });
+		await vi.advanceTimersByTimeAsync(60 * 60_000);
+		expect(settled).toBe(false);
+		expect(tries()).toBeGreaterThan(40);
+		const offline = tries();
+		net.onLine = true;
+		await vi.advanceTimersByTimeAsync(60 * 60_000);
+		expect(await result).toMatchObject({ name: "TypeError" });
+		expect(tries() - offline).toBe(40);
+	});
+	it("starts its tries again whenever something got through, so a weak signal that keeps creeping along never gives up", async () => {
+		onPage(true);
+		const { step, tries } = failing(100);
+		let sent = 0;
+		const result = withRetries(async () => { sent++; return step(); }, () => {}, undefined, undefined, () => sent).catch((err: Error) => err);
+		await vi.advanceTimersByTimeAsync(60 * 60_000);
+		expect(await result).toBe("done");
+		expect(tries()).toBe(101);
+	});
+});

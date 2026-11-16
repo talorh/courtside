@@ -5,7 +5,7 @@ import { runEach } from "../../shared/run-each.ts";
 import { formatDuration, streamDeletionDate } from "../../shared/time.ts";
 import { record } from "../activity/activity-service.ts";
 import type { Member } from "../members/members-repository.ts";
-import { listPlayers, setClipPlayers } from "../players/players-repository.ts";
+import { listPlayers, playersByClip, setClipPlayers } from "../players/players-repository.ts";
 import { requestHd } from "../videos/processing-service.ts";
 import type { Video } from "../videos/videos-repository.ts";
 import { resolveRequestsForClipWrite } from "./clip-removals-repository.ts";
@@ -33,8 +33,12 @@ async function checkPlayers(deps: TeamDeps, playerIds: number[]): Promise<number
 	return ids;
 }
 
+/** Who's in the clip now, from the current squad; a player since taken off it can't be ticked, so stays in. */
 export async function saveClipPlayers(deps: TeamDeps, clipId: number, playerIds: number[]): Promise<void> {
-	await setClipPlayers(deps.db, deps.team.id, clipId, await checkPlayers(deps, playerIds));
+	const ticked = await checkPlayers(deps, playerIds);
+	const squad = new Set((await listPlayers(deps.db, deps.team.id)).map((p) => p.id));
+	const gone = ((await playersByClip(deps.db, deps.team.id, [clipId])).get(clipId) ?? []).filter((p) => !squad.has(p.id)).map((p) => p.id);
+	await setClipPlayers(deps.db, deps.team.id, clipId, [...ticked, ...gone]);
 }
 
 /** "1:02:03", "12:34" or "75" → seconds. */

@@ -97,8 +97,9 @@ export async function askDocs(deps: AppDeps, email: string, question: string): P
 	const sources = sections.map(({ id, n, title }) => ({ id, n, title }));
 	if (!sections.length) return { answer: "The documentation doesn't cover that. Try other words, or the search above the contents.", sources };
 	try {
-		// The model sometimes adds bold or dashes anyway.
-		const answer = (await deps.ai.explain(system(sections), question)).replace(/\*\*/g, "").replace(/\s*[—–]\s*/g, ", ");
+		// The model sometimes adds bold or dashes anyway. A dash between two numbers is a range ("20 to 25 minutes").
+		const answer = (await deps.ai.explain(system(sections), question)).replace(/\*\*/g, "")
+			.replace(/(\d)\s*[—–]\s*(?=\d)/g, "$1 to ").replace(/\s*[—–]\s*/g, ", ");
 		return { answer, sources };
 	} catch (err) {
 		console.error(JSON.stringify({ event: "docs_ask_failed", teamId: null, error: String(err) }));

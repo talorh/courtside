@@ -6,7 +6,7 @@ import { keepAwake } from "./awake.js";
 import { enableDrop } from "./upload-drop.js";
 import { needsReload } from "./upload-net.js";
 import { reportProblem } from "./problems.js";
-import { cancelOnServer, upload } from "./upload-run.js";
+import { cancelOnServer, failedWords, upload } from "./upload-run.js";
 import { forget, gb, keyFor } from "./upload-state.js";
 import { tapAgain } from "./tap-again.js";
 
@@ -81,7 +81,7 @@ function main() {
 			} else {
 				// The game has a video already, or the upload's gone: forget it. Not when the site only asks for a reload.
 				if (err.status === 409 && !needsReload(err)) forget(keyFor(file, gameId));
-				hint(String(err.message).replace(/\.?$/, ".")); // server messages end in a full stop already
+				hint(failedWords(err));
 				// The site logs its own failures (5xx); signed out isn't one.
 				if (!(err.status >= 500) && err.status !== 401) reportProblem("upload", { gameId, message: err.message, status: err.status });
 			}

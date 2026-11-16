@@ -25,13 +25,36 @@ export function parentsFirst<T extends { name: string; sql: string }>(tables: T[
 
 /** Statements per request when restoring: well inside one D1 request's limits. */
 export const RESTORE_CHUNK = 40;
+/** Bytes per request too: D1 takes a statement up to 100 KB, and `cf d1 query --sql` passes the request as one
+ * command-line argument, which Linux caps at 128 KB. A single row bigger than this goes in a request of its own. */
+export const RESTORE_CHUNK_BYTES = 60_000;
+
+/** Statements joined into requests of at most RESTORE_CHUNK statements and RESTORE_CHUNK_BYTES bytes each. */
+function chunked(statements: string[]): string[] {
+	const out: string[] = [];
+	let chunk: string[] = [];
+	let bytes = 0;
+	for (const s of statements) {
+		const size = new TextEncoder().encode(s).byteLength + 1;
+		if (chunk.length && (chunk.length >= RESTORE_CHUNK || bytes + size > RESTORE_CHUNK_BYTES)) {
+			out.push(chunk.join("\n"));
+			chunk = [];
+			bytes = 0;
+		}
+		chunk.push(s);
+		bytes += size;
+	}
+	if (chunk.length) out.push(chunk.join("\n"));
+	return out;
+}
 
 const tableOf = (s: string) => /^CREATE TABLE\s+(?:IF NOT EXISTS\s+)?"?([^"\s(]+)"?/i.exec(s)?.[1];
-const rowsOf = (s: string) => /^INSERT INTO "((?:[^"]|"")+)"/.exec(s)?.[1]?.replaceAll('""', '"');
+/** The table an INSERT statement puts a row in (undefined for any other statement). */
+export const rowsOf = (s: string) => /^INSERT INTO "((?:[^"]|"")+)"/.exec(s)?.[1]?.replaceAll('""', '"');
 
 /**
  * A backup file as the requests that restore it, in order, each its own transaction on D1: every table, then each
- * table's rows (parents first, so older files, which listed members after games, restore too) in
+ * table's rows (parents first, so a file that lists a table's rows before the rows they point at restores too) in
  * chunks, then the indexes. `rows`: how many each table should end up with.
  */
 export function restorePlan(sql: string): { requests: string[]; rows: Record<string, number> } {
@@ -43,7 +66,7 @@ export function restorePlan(sql: string): { requests: string[]; rows: Record<str
 	for (const t of tables) {
 		const inserts = statements.filter((s) => rowsOf(s) === t.name);
 		rows[t.name] = inserts.length;
-		for (let i = 0; i < inserts.length; i += RESTORE_CHUNK) requests.push(inserts.slice(i, i + RESTORE_CHUNK).join("\n"));
+		requests.push(...chunked(inserts));
 	}
 	const rest = statements.filter((s) => !tableOf(s) && !rowsOf(s) && !/^PRAGMA\b/i.test(s));
 	if (rest.length) requests.push(rest.join("\n"));

@@ -33,7 +33,8 @@ export async function playersByClip(db: D1Database, teamId: string, clipIds: num
 	return byClip;
 }
 
-/** Replaces who's in the clip. `playerIds` must already be checked against listPlayers. */
+/** Replaces who's in the clip. `playerIds` are checked against listPlayers, apart from players since taken off the squad
+ * that the clip had already (kept, as they can't be ticked again). */
 export async function setClipPlayers(db: D1Database, teamId: string, clipId: number, playerIds: number[]): Promise<void> {
 	await db.batch([
 		db.prepare("DELETE FROM clip_players WHERE team_id = ? AND clip_id = ?").bind(teamId, clipId),

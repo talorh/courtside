@@ -58,8 +58,8 @@ type Part = keyof typeof PARTS;
 /** Each role's sections (only the help that's relevant to that person): Getting started first for
  * everyone, then a team manager's own, then filming for those who film, what everyone watches, a
  * coach's notes, photos, the roster for the families on it, child safety and the site's aim; a team manager's clips,
- * photos and removal requests come after the aim, then their child safety. Watch only people don't film, so they never get
- * the video duty checklist. */
+ * photos and removal requests end their own part, and their child safety comes after the aim. Watch only people don't
+ * film, so they never get the video duty checklist. */
 function groups(h: HelpFor, role: Role): HelpGroup[] {
 	const manager = role === "manager", part: Part | undefined = manager ? "all" : undefined;
 	const safety: HelpGroup = { id: "h-safety", title: "Child safety", body: faqSafety(), part };
@@ -107,8 +107,8 @@ const DESK_OUTLINE = html`<aside class="helpoutline" aria-label="On this page"><
 
 /**
  * Help: plain-English help, each person only what they do, found by a search box that narrows the questions
- * (help-search.js), and for a team manager everything they do, ending in the form to ask the
- * site's admin.
+ * (help-search.js), and for a team manager everything they do first (Running your team), ending in the form to ask
+ * the site's admin.
  */
 export function helpPage(frame: PageFrame, h: HelpFor): SafeHtml {
 	const role = frame.member.role;

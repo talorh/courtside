@@ -1,7 +1,8 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 // @ts-expect-error: a plain JS script (scripts/), tested here on its own.
-import { buildFor, buildsDeployArgs, busyComputer, busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, rebuildHint, sameAsLive, SEGMENTS_SQL, siteFromConfig, skipsStaging, STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL, withLastParts } from "../../scripts/release-checks.mjs";
+import { buildFor, buildsDeployArgs, busyComputer, e2eEnv, headMoved, busyOnSite, databasesFromConfig, MAINTENANCE_QUIET_MINUTES, OPEN_STREAMS_SQL, rebuildHint, sameAsLive, SEGMENTS_SQL, siteFromConfig, skipsStaging, STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL, withLastParts } from "../../scripts/release-checks.mjs";
 import { createTestDb } from "../helpers/d1-sqlite.ts";
 
 const now = new Date("2026-10-30T08:00:00Z"); // 7pm local, game night
@@ -137,11 +138,29 @@ describe("staging first, then live (everything is tried on staging before it goe
 		for (const path of ["docs/runbooks/staging.md", "tests/e2e/help.e2e.mjs", "AGENTS.md", "todo.md", "README.md", "INSTALL.md"]) expect(skipsStaging(path), path).toBe(true);
 		expect(skipsStaging("public/AGENTS.md")).toBe(false);
 	});
+	it("counts every file the site's code takes in whole (`?raw`) as the site's, wherever it lives", () => {
+		const files = readdirSync("src", { recursive: true, encoding: "utf8" }).filter((f) => f.endsWith(".ts")).flatMap((f) =>
+			[...readFileSync(join("src", f), "utf8").matchAll(/from "([^"]+)\?raw"/g)].map((m) => relative(".", join("src", dirname(f), m[1]!))));
+		expect(files).toContain("CHANGELOG.md");
+		for (const path of files) expect(skipsStaging(path), path).toBe(false);
+	});
+	it("refuses once HEAD has moved from the commit that was checked", () => {
+		const checked = "c".repeat(40);
+		expect(headMoved(checked, checked)).toBeNull();
+		expect(headMoved(checked, "d".repeat(40))).toBe("HEAD moved from ccccccc to ddddddd while this ran: run it again for the commit that's there now");
+	});
 	it("lists a file moved out of the site under its old name too, so moving src/ into docs/ still needs staging", () => {
 		expect(stagingDiffArgs("abc", "def")).toEqual(["diff", "--name-only", "--no-renames", "abc", "def"]);
 	});
 	it("says how to build main again with this cf: by the Worker's tag", () => {
 		expect(rebuildHint("ef10")).toBe("cf builds create ef10 --branch main");
+	});
+});
+
+describe("the release's own browser suite", () => {
+	it("runs every phone, whatever PHONES the shell has", () => {
+		expect(e2eEnv({ PATH: "/usr/bin", PHONES: "iphone" })).toEqual({ PATH: "/usr/bin" });
+		expect(e2eEnv({ PATH: "/usr/bin" })).toEqual({ PATH: "/usr/bin" });
 	});
 });
 

@@ -6,6 +6,12 @@ import { assertChanged } from "../../shared/d1.ts";
  * is no longer the site's. In an UPDATE's SET, so `no_video_at` is the row's value before it. */
 export const BACK_TO_VIDEO = "waiting_since = CASE WHEN no_video_at IS NOT NULL THEN ?2 ELSE waiting_since END, no_video_auto_at = NULL, no_video_at = NULL";
 
+/** A game a team manager's Delete video or Move video left without one: like a game set back to Video, it waits a week
+ * from `nowIso` for its new upload. A game set to No video stays so. */
+export async function waitAgain(db: D1Database, teamId: string, id: number, nowIso: string): Promise<void> {
+	await db.prepare("UPDATE games SET waiting_since = ? WHERE team_id = ? AND id = ? AND deleted_at IS NULL AND no_video_at IS NULL").bind(nowIso, teamId, id).run();
+}
+
 /** A team manager's No video, from `atIso` (a week's switch: roster-week-settings.ts). */
 export async function setNoVideo(db: D1Database, teamId: string, id: number, atIso: string): Promise<void> {
 	const result = await db

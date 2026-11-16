@@ -1,11 +1,13 @@
 // The game check: are the coming games good to go. The 5-minute job checks each live game once as it comes within 8
 // hours of tip-off (again if it's moved later, and every hour after while the alert isn't ok); Platform's button checks
-// the week's without counting as any game's 8-hour check. The site is asked what they'll need: Stream answering with
+// the week's without counting as any game's 8-hour check, and its verdict stands until a game's 8-hour check (or the
+// week is up), checked again every hour while it isn't ok. The site is asked what they'll need: Stream answering with
 // minutes to spare, each game's Go live input still there, the video joiner joining its test files, the 5-minute job
 // running, and no other alert up that would touch a game. One alert, game_day: ok says what was found, warn or urgent
-// raises a ticket for the admins (alerts-service.ts), and a fine check, or no live game left in the next 8 hours,
-// clears it. Never throws.
+// raises a ticket for the admins (alerts-service.ts), and a fine check, or no live game left in the next 8 hours (the
+// week, for the button's), clears it. A run whose outside calls are used up leaves it all to the next run. Never throws.
 import type { AppDeps } from "../../app/deps.ts";
+import { FetchBudgetSpent } from "../../platform/fetch-budget.ts";
 import type { JoinResult } from "../../platform/joiner.ts";
 import { addDays, formatGameDate, localTime } from "../../shared/time.ts";
 import { KINDS } from "./alert-kinds.ts";
@@ -22,9 +24,11 @@ const SYNC_LATE_MS = 15 * 60_000;
 export const HOURS_AHEAD = 8;
 const RECHECK_MS = 60 * 60_000;
 const HOUR_MS = 3_600_000;
-/** Long-lived alerts that don't stop a game being filmed or streamed. */
-const NOT_A_GAME: ReadonlyArray<string> = ["game_day", "budget", "ai_models"];
+/** Alerts that don't stop a game being filmed or streamed: long-lived ones, and the 3am job's night (backup, clean-up). */
+const NOT_A_GAME: ReadonlyArray<string> = ["game_day", "budget", "ai_models", "daily_job"];
 const NO_GAMES = `No live games in the next ${HOURS_AHEAD} hours`;
+/** How far ahead Platform's button looks. */
+const WEEK = "7 days", WEEK_MS = 7 * 24 * HOUR_MS;
 
 export interface GameToCheck { team: string; startsAt: string; opponent: string; input: "there" | "gone" | null }
 type JoinerAnswer = JoinResult | { ok: false; down: string } | null;
@@ -78,12 +82,14 @@ function minutesAgo(iso: string, now: Date): string {
  * this is the games' 8-hour check. */
 async function judge(deps: AppDeps, rows: LiveGame[], within: string, stamp: boolean): Promise<void> {
 	const now = deps.now();
+	// Calls refused for the run's budget aren't a finding: they throw, so nothing's judged or marked until the next run.
+	const or = <T>(fallback: T) => (err: unknown): T => { if (err instanceof FetchBudgetSpent) throw err; return fallback; };
 	const [storage, joiner, sync, alerts, inputs] = await Promise.all([
-		deps.live.storage().catch(() => null),
+		deps.live.storage().catch(or(null)),
 		deps.joiner ? deps.joiner.selfTest().catch((err: unknown) => ({ ok: false as const, down: err instanceof Error ? err.message : String(err) })) : null,
 		getAlert(deps.db, "sync_job"), listAlerts(deps.db),
 		// Stream not answering is its own finding above: an input it can't be asked about isn't counted gone.
-		Promise.all(rows.map((g) => (g.liveInputUid ? deps.live.getInput(g.liveInputUid).then((i) => (i ? "there" as const : "gone" as const), () => null) : null))),
+		Promise.all(rows.map((g) => (g.liveInputUid ? deps.live.getInput(g.liveInputUid).then((i) => (i ? "there" as const : "gone" as const), or(null)) : null))),
 	]);
 	const games = rows.map((g, i) => ({ team: g.team, startsAt: g.startsAt, opponent: g.opponent, input: inputs[i] ?? null }));
 	const verdict = gameDayReadiness({ games, storage, joiner, syncCheckedAt: sync?.checkedAt ?? null, alerts, now, within, staging: deps.config.staging });
@@ -95,29 +101,37 @@ async function judge(deps: AppDeps, rows: LiveGame[], within: string, stamp: boo
 /** Platform's button: every live game in the next 7 days, now. A failure is logged as a problem, never thrown. */
 export async function checkGames(deps: AppDeps): Promise<void> {
 	try {
-		const now = deps.now();
-		await judge(deps, await liveGamesBetween(deps.db, localTime(now), localTime(addDays(now, 7))), "7 days", false);
+		await judge(deps, await weekGames(deps, deps.now()), WEEK, false);
 	} catch (err) {
 		await alertFailed(deps, "game_day", err);
 	}
 }
 
+const weekGames = (deps: AppDeps, now: Date) => liveGamesBetween(deps.db, localTime(now), localTime(addDays(now, 7)));
+
 /** The 5-minute job's: the live games in the next 8 hours, once any of them hasn't had its 8-hour check, and again
- * every hour while the alert isn't ok. With none, a game check alert left over is set to ok, once. A failure is logged
- * as a problem, never thrown. */
+ * every hour while the alert isn't ok. With none, the button's verdict on the week stands for the week while it's ok,
+ * and its games are checked again every hour while it isn't; any other game check alert left over, or the button's
+ * once the week has no live game or is up, is set to ok, once. A failure is logged as a problem, never thrown. */
 export async function checkComingGames(deps: AppDeps): Promise<void> {
 	try {
 		const now = deps.now();
 		const rows = await liveGamesBetween(deps.db, localTime(now), localTime(new Date(now.getTime() + HOURS_AHEAD * HOUR_MS)));
 		const was = await getAlert(deps.db, "game_day");
 		if (!rows.length) {
+			const age = was ? now.getTime() - Date.parse(was.checkedAt) : 0;
+			if (was && was.detail.split(/[.:]/)[0]!.endsWith(`in the next ${WEEK}`) && age < WEEK_MS) {
+				if (was.level === "ok" || age < RECHECK_MS) return;
+				const week = await weekGames(deps, now);
+				if (week.length) return await judge(deps, week, WEEK, false);
+			}
 			if (was && (was.level !== "ok" || was.detail !== NO_GAMES)) await setAlert(deps, "game_day", "ok", NO_GAMES);
 			return;
 		}
 		const again = was !== null && was.level !== "ok" && now.getTime() - Date.parse(was.checkedAt) >= RECHECK_MS;
 		if (rows.some((g) => due(g)) || again) await judge(deps, rows, `${HOURS_AHEAD} hours`, true);
 	} catch (err) {
-		await alertFailed(deps, "game_day", err);
+		if (!(err instanceof FetchBudgetSpent)) await alertFailed(deps, "game_day", err);
 	}
 }
 

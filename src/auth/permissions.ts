@@ -18,6 +18,6 @@ export function isRole(value: unknown): value is Role {
 /** Who films games (Upload video and Go live): everyone but Watch only. */
 export const films = (role: Role): boolean => role !== "watcher";
 
-/** Who can ask the site's admin (Support, and the link at the bottom of Help): team managers only. The routes say
+/** Who can ask the site's admin (Support, and the form that ends Running your team on Help): team managers only. The routes say
  * "manager" as their least role, which is the same. */
 export const asksAdmin = (role: Role): boolean => hasRole(role, "manager");

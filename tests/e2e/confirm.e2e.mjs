@@ -41,4 +41,30 @@ export const scenarios = [
 			t.check(new URLSearchParams(t.harness.calls(DELETE)[0].body.toString()).get("confirm") === "yes", "sent with confirm=yes");
 		},
 	},
+	{
+		name: "confirm: a question put on the page after it loaded (a photo swiped to) asks, closes and posts once the same",
+		phones: ALL,
+		async run(t) {
+			t.harness.page("/photo", () => photoPageManager());
+			t.harness.page("/photos", () => "<!doctype html><h1>Photos</h1>");
+			t.harness.answer(DELETE, () => ({ delayMs: 1500, then: { status: 303, location: "/photos" } }));
+			await t.page.goto(`${t.harness.url}/photo`);
+			// As a swipe does: the side panel, Delete photo and all, replaced by a fresh copy.
+			await t.page.evaluate(() => { const side = document.querySelector(".side"); side.replaceWith(side.cloneNode(true)); });
+			await t.page.click("details.confirm > summary");
+			await t.until(() => t.page.locator(".confirmpanel").isVisible(), "the question");
+			await t.page.click(".confirmpanel [data-keep]");
+			await t.until(async () => !(await t.page.locator(".confirmpanel").isVisible()), "Keep it to close the question");
+			t.check(t.harness.calls(DELETE).length === 0, "nothing posted");
+			await t.page.click("details.confirm > summary");
+			await t.page.evaluate(async () => {
+				const yes = document.querySelector(".confirmpanel .btn.danger");
+				yes.click();
+				await new Promise((resolve) => setTimeout(resolve, 200));
+				yes.click();
+			});
+			await t.until(async () => (await t.text("h1")) === "Photos", "the Photos page after the delete");
+			t.check(t.harness.calls(DELETE).length === 1, `one post (${t.harness.calls(DELETE).length})`);
+		},
+	},
 ];

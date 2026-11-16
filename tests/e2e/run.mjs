@@ -1,6 +1,7 @@
 // Runs the browser tests (started in the podman Playwright image by scripts/e2e.mjs): each scenario on each phone it
 // names, against the harness. Chromium plays an Android phone, WebKit an iPhone (no element full screen, as on game
-// night), Firefox itself. Prints one line per run; a failure saves a screenshot to /out and the exit code is 1.
+// night), Firefox itself. Prints one line per run; a failure saves a screenshot to /out and the exit code is 1, as it is
+// when no scenario ran.
 // `node run.mjs [words]` runs only scenarios whose name has those words; PHONES=iphone,android picks phones.
 import { chromium, devices, firefox, webkit } from "playwright";
 import { mkdirSync } from "node:fs";
@@ -26,7 +27,7 @@ import { scenarios as videos } from "./videos.e2e.mjs";
 import { scenarios as viewer } from "./viewer.e2e.mjs";
 import { scenarios as win } from "./win.e2e.mjs";
 
-// An iPhone has no element full screen (game night, 23 Oct 2026: the phone logged fs=undefined), so it's taken away if
+// An iPhone has no element full screen (its Safari reports none), so it's taken away if
 // the WebKit build has it. WebKit here has no camera or recorder either: fake-camera.mjs and fake-recorder.mjs stand in.
 const noElementFullScreen = () => {
 	delete Element.prototype.requestFullscreen;
@@ -100,4 +101,6 @@ await bridge.close();
 await harness.close();
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed} passed, ${failed} failed`);
-process.exit(failed && 1);
+// A run that tried nothing proves nothing: a filter or PHONES that matches no scenario fails.
+if (!results.length) console.log(`no scenario ran (${filter ? `words "${filter}"` : "every scenario"}, phones ${only.join(", ")})`);
+process.exit(failed || !results.length ? 1 : 0);

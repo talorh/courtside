@@ -11,7 +11,7 @@ import type { Video } from "../videos-repository.ts";
 export function managerActions(v: Video, moveTargets: Game[]): SafeHtml {
 	const targets = moveTargets.map((g) => ({ value: String(g.id), label: `${formatGameDate(g.startsAt)} · ${gameTitle(g)}` }));
 	const failure = v.status === "failed"
-		? html`<p class="small">Stream said: ${v.failureReason ?? "unknown error"}. Delete it so the game can be uploaded again.</p>` : "";
+		? html`<p class="small">Stream said: ${v.failureReason ?? "unknown error"}. Upload the game again: the new video replaces this one.</p>` : "";
 	// A carried-on stream whose parts the joiner gave up on (live/join-service.ts): the first part can stand as the video.
 	const unjoined = v.joinFailedAt
 		? html`<p class="small">This game was streamed in parts (the page closed mid-game) and the parts couldn't be joined. Keep the first part as the game's video, or delete it and upload the game instead.</p>

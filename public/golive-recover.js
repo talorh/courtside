@@ -2,7 +2,7 @@
 // closed pages kept on the phone (golive-kept.js: the parts storage never got, and the tail) is sent first, so nothing
 // recorded is lost.
 import { keepAwake } from "./awake.js";
-import { forgetNotes, keptOnPhone, minutesOf } from "./golive-kept.js";
+import { dropKept, forgetNotes, keptOnPhone, minutesOf } from "./golive-kept.js";
 import { stateKey } from "./golive-rec.js";
 import { buttonRunner } from "./golive-run.js";
 import { api } from "./upload-net.js";
@@ -65,8 +65,8 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 	const ended = card.dataset.ended === "1";
 	const remembered = load(stateKey(gameId));
 	const here = Boolean(recording) && String(remembered?.videoId) === recording;
-	// Nothing on its way: a note left on this phone is from a recording that has been saved since.
-	if (!recording) forgetNotes(gameId);
+	// Nothing on its way: a note left on this phone, and what it kept, are from a recording saved or deleted since.
+	if (!recording) dropKept(gameId).catch((err) => console.warn(`recording store: ${err}`));
 	if (here || (recording && card.dataset.mine === "1")) {
 		const panel = card.querySelector("[data-recover]"), note = panel.querySelector("[data-recover-msg]");
 		const tell = (text) => { note.textContent = text; };
@@ -117,7 +117,7 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 				others(false);
 				awake.release();
 			}
-			forgetNotes(gameId);
+			dropKept(gameId).catch((err) => console.warn(`recording store: ${err}`));
 			ask.hidden = btn("save").hidden = btn("discard").hidden = btn("continue").hidden = true;
 			tell(status === "saved" ? "Saved. What was recorded will be in Watch games in about 20 to 25 minutes."
 				: "Nothing had reached the site yet, so there was nothing to save. Reload the page to go live again.");

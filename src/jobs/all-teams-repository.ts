@@ -49,7 +49,7 @@ export async function everyTeamsRecords(db: D1Database, nowIso: string): Promise
 }
 
 /** A game with nothing filmed (features/games/no-video-after.ts), with its team. */
-export interface UnfilmedGame { teamId: string; id: number; startsAt: string; competition: Game["competition"]; roundLabel: string; opponent: string }
+export interface UnfilmedGame { teamId: string; id: number; startsAt: string; competition: Game["competition"]; roundLabel: string; opponent: string; phase: Game["phase"] }
 
 /**
  * Every active team's games that started before `before` (local, 'YYYY-MM-DDTHH:MM') with nothing filmed, in one
@@ -58,7 +58,7 @@ export interface UnfilmedGame { teamId: string; id: number; startsAt: string; co
  * no live stream that was used (only opened is fine).
  */
 export async function unfilmedGames(db: D1Database, before: string, beforeIso: string): Promise<UnfilmedGame[]> {
-	const { results } = await db.prepare(`SELECT g.team_id AS teamId, g.id, g.starts_at AS startsAt, g.competition, g.round_label AS roundLabel, g.opponent
+	const { results } = await db.prepare(`SELECT g.team_id AS teamId, g.id, g.starts_at AS startsAt, g.competition, g.round_label AS roundLabel, g.opponent, g.phase
 		FROM games g JOIN teams t ON t.id = g.team_id AND t.status = 'active'
 		WHERE g.deleted_at IS NULL AND g.no_video_at IS NULL AND g.starts_at < ?1 AND (g.waiting_since IS NULL OR g.waiting_since < ?2)
 		AND NOT EXISTS (SELECT 1 FROM videos v WHERE v.team_id = g.team_id AND v.game_id = g.id AND v.deleted_at IS NULL)

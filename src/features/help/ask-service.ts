@@ -38,8 +38,8 @@ function whoYouAre(team: Team): string {
 	return team.askName ? `${intro} The real ${team.askName} is the team manager, and you answer for them.` : `${intro} You answer for the team manager.`;
 }
 
-/** Each question goes with the Help page the person asking sees: a team manager's has their own questions, and ends in
- * the form to ask the site's admin. */
+/** Each question goes with the Help page the person asking sees: a team manager's has their own questions, and a team
+ * manager is pointed to the form to ask the site's admin (Contact support). */
 const system = (team: Team, help: HelpFor, device: string | null, role: Role) => `${whoYouAre(team)}
 
 Rules:
@@ -47,7 +47,7 @@ Rules:
 - Give the Help page's own steps for a problem, in its order. Never add fixes of your own, such as restarting the phone.
 - When the steps differ between iPhone and Android, give the ones for the asker's device unless they ask about another.
 ${asksAdmin(role)
-	? "- If the Help page doesn't cover it, say you're not sure and suggest the support form at the bottom of the Help page."
+	? "- If the Help page doesn't cover it, say you're not sure and suggest the support form: Contact support, at the end of Running your team on the Help page, or on the Support page."
 	: `- If the Help page doesn't cover it, say you're not sure and suggest asking ${team.askName ? `the real ${team.askName}` : "the team manager"} at training.`}
 - Plain English for parents who aren't technical. Short: under 120 words. Use a short numbered list for steps.
 - Plain text only: no markdown, no bold, no headings, no links.
@@ -65,9 +65,10 @@ export async function askHelper(deps: TeamDeps, member: Member, question: string
 		throw new HttpError(429, "too_many_questions", "That's a lot of questions for one day. Have a look through the questions below, or ask again tomorrow.");
 	}
 	try {
-		// Belt and braces: the model sometimes adds bold or dashes anyway.
+		// Belt and braces: the model sometimes adds bold or dashes anyway. A dash between two numbers is a range ("20 to 25 minutes").
 		const help = helpFor(deps.team, await getRosterDuties(deps.db, deps.team.id));
-		return (await deps.ai.answer(system(deps.team, help, deviceOf(userAgent), member.role), question)).replace(/\*\*/g, "").replace(/\s*[—–]\s*/g, ", ");
+		return (await deps.ai.answer(system(deps.team, help, deviceOf(userAgent), member.role), question)).replace(/\*\*/g, "")
+			.replace(/(\d)\s*[—–]\s*(?=\d)/g, "$1 to ").replace(/\s*[—–]\s*/g, ", ");
 	} catch (err) {
 		// The AI being unavailable (or out of its daily allowance) isn't the parent's problem: say so kindly, and log it.
 		console.error(JSON.stringify({ event: "ask_failed", teamId: deps.team.id, error: String(err) }));

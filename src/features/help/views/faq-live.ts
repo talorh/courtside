@@ -66,11 +66,11 @@ sent when the page closed is kept on the phone and goes up by itself.
 comes back, finds the recording and offers Carry on streaming. If the warning goes away by itself, the recording has carried on: keep filming.</li>
 <li><b>End game tapped too early?</b> It can't be restarted, so keep filming: open the <b>Camera</b> app and record the
 rest of the game. Afterwards, send that video to ${h.c.ask} (Google Drive, Dropbox or AirDrop) and ${h.c.ask} will add
-it. Can't get back to Go live to save? What reached the site saves itself a day later.</li>
+it. Can't get back to Go live to save? What reached the site saves itself half an hour later.</li>
 <li><b>Asked for a new code when you open Go live?</b> That's so your sign-in can't run out part way through the game.</li>
 <li><b>Try it at home first, for under a minute.</b> Anything that short is a test: it's thrown away when you tap End
-game, and the game can still be streamed for real. A paused stretch doesn't count.
-A minute or more is kept as the game's video, and the game can't be
+game, and the game can still be streamed for real. A paused stretch doesn't count. A game carried on with <b>Carry on
+streaming</b> is never a test, however soon End game is tapped after it. A minute or more is kept as the game's video, and the game can't be
 streamed again.</li>
 <li><b>Camera or microphone blocked?</b> iPhone: tap <b>aA</b> next to the web address → <b>Website Settings</b> → Allow
 both. Android: tap the icon next to the web address → <b>Permissions</b> → allow both. Then reload the page.</li></ul>`);

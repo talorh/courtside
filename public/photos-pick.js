@@ -75,7 +75,7 @@ function setUp() {
 				readyFor = key;
 			}
 			const result = await share(ready);
-			say(result === "tap again" ? "They're ready now: tap Download again." : "");
+			say(result === "tap again" ? "They're ready now: tap Save to Photos again." : "");
 		} catch (err) {
 			console.warn(`save photos: ${err}`);
 			say(err.show ? err.message : "Couldn't get the photos just now. Check your connection and try again.");
