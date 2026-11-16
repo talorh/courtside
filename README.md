@@ -12,7 +12,7 @@
 <p align="center">
   <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-2F6FDB"></a>
   <img alt="Runs on Cloudflare" src="https://img.shields.io/badge/runs%20on-Cloudflare-14274E">
-  <img alt="1,999 unit tests passing" src="https://img.shields.io/badge/unit%20tests-1%2C999%20passing-2F6FDB">
+  <img alt="2,000 unit tests passing" src="https://img.shields.io/badge/unit%20tests-2%2C000%20passing-2F6FDB">
   <img alt="217 browser tests passing" src="https://img.shields.io/badge/browser%20tests-217%20passing-2F6FDB">
   <img alt="Node 26" src="https://img.shields.io/badge/node-26-14274E">
 </p>
@@ -188,7 +188,7 @@ team and by player, with a budget for each team.
 Everything runs in your club's own Cloudflare account. Phones talk to one Worker, behind Cloudflare's edge protection,
 and send video straight to storage on short-lived signed links.
 
-![How the site fits together: phones and computers reach one Worker through Cloudflare's edge protection. The Worker uses D1, Workers AI, Email Sending, R2, Stream and Images, and hands a game's parts to the joiner, a container with ffmpeg run by a Durable Object](docs/admin/diagrams/02-1.svg)
+![How the site fits together: phones and computers reach the Worker through Cloudflare's edge protection, with Turnstile on the sign-in and Cron Triggers running its jobs. The Worker uses D1, R2, Stream, Images, Workers AI and Email Sending, and hands a game's parts to a Durable Object that runs a Container with ffmpeg. Workers Logs, GraphQL Analytics, the Billing API, Workers Builds, Previews and DNS run and ship it](docs/admin/diagrams/02-1.svg)
 
 <br>
 
@@ -213,7 +213,7 @@ Good places to start:
 - [Why it's built this way](docs/admin/30-technology-decisions.md)
 - [AGENTS.md](AGENTS.md), the rules every change follows
 
-Every change has to pass all 1,999 unit tests and 217 browser tests before it ships. The unit tests include two teams
+Every change has to pass all 2,000 unit tests and 217 browser tests before it ships. The unit tests include two teams
 going through every page to prove neither can see the other's. The browser tests run Go live on Android, iPhone and
 Firefox.
 
