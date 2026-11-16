@@ -73,7 +73,8 @@ the game.
 
 **Coaches and team managers**
 
-- The season's fixture from a PlayHQ link, a spreadsheet, or typed in. Final scores fill themselves in.
+- The season's fixture pulled directly from PlayHQ, with final scores filling themselves in. Or from a spreadsheet, or
+  typed in.
 - Any other fixture page works too. Paste the link and Workers AI reads the games off it.
 - A game-day roster that shares out scoring and the other duties fairly between families, follows the fixture as it
   changes, and writes the WhatsApp message for you
