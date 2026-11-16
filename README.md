@@ -186,7 +186,7 @@ game day unless it fixes something.
 
 ## Contributing
 
-Courtside is used every Friday night, so every change gets a real test.
+Courtside is in use every Friday night with multiple teams, so every change gets a real test.
 
 Bug reports, ideas and pull requests are all welcome. For anything bigger than a small fix, open an issue first so we
 can talk it through.
