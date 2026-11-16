@@ -54,25 +54,6 @@ it's usually done. It's now generic, so any club can run it.
 
 <br>
 
-## How filming works
-
-Pick whichever suits you.
-
-**A phone on a tripod.** Any phone on a cheap phone tripod at the side of the court. Open the website, tap Go
-live, and families are watching about a second later. Nothing to install.
-
-**An AI camera that follows the ball.** If your camera's app can stream to an RTMPS address (some apps just call it
-RTMP), it works. The site gives you the two details to paste into the app.
-
-**Upload it later.** Filmed on a phone without streaming? Upload the video when you get home. If the signal drops,
-it carries on where it left off.
-
-The phone also keeps its own recording while it streams, so a patchy signal at the stadium doesn't cost you any of
-the game. If the phone drops out, locks or the page closes mid-game, carry on from the same phone. Cloudflare
-Containers and Durable Objects join the pieces back into one video afterwards.
-
-<br>
-
 ## What everyone gets
 
 **Families**
@@ -102,6 +83,25 @@ Containers and Durable Objects join the pieces back into one video afterwards.
 
 - A Help page with a chat assistant, named after your team manager, that answers questions about using the site.
   It runs on Workers AI and only answers from the Help page.
+
+<br>
+
+## How filming works
+
+Pick whichever suits you.
+
+**A phone on a tripod.** Any phone on a cheap phone tripod at the side of the court. Open the website, tap Go
+live, and families are watching about a second later. Nothing to install.
+
+**An AI camera that follows the ball.** If your camera's app can stream to an RTMPS address (some apps just call it
+RTMP), it works. The site gives you the two details to paste into the app.
+
+**Upload it later.** Filmed on a phone without streaming? Upload the video when you get home. If the signal drops,
+it carries on where it left off.
+
+The phone also keeps its own recording while it streams, so a patchy signal at the stadium doesn't cost you any of
+the game. If the phone drops out, locks or the page closes mid-game, carry on from the same phone. Cloudflare
+Containers and Durable Objects join the pieces back into one video afterwards.
 
 <br>
 
