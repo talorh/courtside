@@ -15,7 +15,7 @@ import type { TeamCosts } from "../costs-estimate.ts";
 import type { Bill } from "../costs-bill.ts";
 import { BASELINE, monthOf, seasonMonths } from "../costs-prices.ts";
 import type { Rate } from "../costs-rate.ts";
-import { monthBars, shownMonths } from "../costs-summary.ts";
+import { monthBars, seasonStanding, shownMonths } from "../costs-summary.ts";
 import type { Viewing } from "../costs-viewing.ts";
 import { adminLayout } from "./admin-layout.ts";
 import { budgetUse, burnUp, kindBars, monthSpark } from "./costs-burnup.ts";
@@ -46,12 +46,12 @@ function teamRow(c: TeamCosts, thisMonth: string, cur: Currency): SafeHtml {
  * the one plain /admin/costs shows. */
 export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: Viewing; minutesBought: number | null; now: Date; season: number; seasons: number[]; thisSeason: number; cur: Currency; rate: Rate; bill: Bill }): SafeHtml {
 	const months = shownMonths(p.costs, p.season), nowMonth = monthOf(p.now.toISOString());
-	// A past season's months are all spent: its last month (September, or the last its footage was kept in) stands where
-	// this month does, and every team's budget counts.
-	const past = nowMonth > seasonMonths(p.season)[11]!, thisMonth = past ? months.at(-1)! : nowMonth;
+	// A past season's months are all spent, its footage's kept months too: its last month stands where this month does.
+	const { over, past, thisMonth } = seasonStanding(months, p.season, nowMonth);
 	const bars = monthBars(p.costs, months, thisMonth);
-	// The running teams' budgets, against their own costs (a team closed mid-season has no budget to keep to).
-	const budgeted = past ? p.costs : p.costs.filter((c) => c.team.status === "active");
+	// The running teams' budgets, against their own costs (a team closed mid-season has no budget to keep to); every
+	// team's once the season's own months are over.
+	const budgeted = over ? p.costs : p.costs.filter((c) => c.team.status === "active");
 	const budget = budgeted.length ? sum(budgeted, (c) => c.team.budget) : null;
 	const board = costTiles({ costs: p.costs, budgeted, bars, thisMonth, past, cur: p.cur, minutesBought: p.minutesBought, billed: p.bill.rows.length > 0 });
 	const report = `/admin/costs/report.xlsx?season=${p.season}${p.cur === "usd" ? "&cur=usd" : ""}`;
@@ -64,7 +64,7 @@ export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: V
 		html`${seasons}${tiles(board)}<div class="costdash"><div class="cd-main">${monthsChart("Every team, month by month", bars, thisMonth, null, p.cur)}</div>
 <div class="cd-side">${kindBars(bars, p.cur, thisMonth)}${usedThisMonth(p.costs, thisMonth, past ? `Used in ${shortMonth(thisMonth)}` : "Used this month")}</div>
 <div class="cd-full">${billWidget(p.bill, { cur: p.cur, localPerUsd: p.rate.localPerUsd, bought: p.minutesBought })}</div>
-<div class="cd-half">${burnUp(past ? "The teams against their budgets" : "The running teams against their budgets", monthBars(budgeted, months, thisMonth), budget, p.cur, seasonMonths(p.season))}</div>
+<div class="cd-half">${burnUp(over ? "The teams against their budgets" : "The running teams against their budgets", monthBars(budgeted, months, thisMonth), budget, p.cur, seasonMonths(p.season))}</div>
 <div class="cd-half">${teamSeasons(p.costs, p.cur)}</div>
 <div class="cd-full">${teamMonths(p.costs, bars, thisMonth, p.cur)}</div></div>${teams}${workings(p.viewing, p.minutesBought, p.rate)}`);
 }

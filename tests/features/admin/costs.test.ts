@@ -216,7 +216,27 @@ describe("the admin Costs page", () => {
 		expect(team).toMatch(/<tr><td>Nov 2027<\/td>\s*<td>\$5\.00<span class="sub">47 min<\/span><\/td><td>\$0\.00<span[^]*?<td>\$0\.00<\/td><td><b>\$5\.00<\/b><\/td>/);
 		expect(team).toMatch(/<tr><td>Oct 2027<\/td>\s*<td>\$0\.00<span class="sub">47 min<\/span>/);
 		const past = await (await client("/admin/costs?season=2026")).text();
-		expect(past).toContain("<span>Nov 2027, its last month</span>");
+		// November is under way and December, its footage's last month, still to come (estimated).
+		expect(past).toContain("<span>This month, every team</span>");
+		expect(past).toMatch(/<title>Dec 2027 \(estimated\): \$/);
+		// Once its footage has gone with the year, the season is all spent: December stands as its last month.
+		await deps.db.prepare("UPDATE videos SET deleted_at = '2027-12-31T13:00:00.000Z'").run();
+		const after = await (await makeClient({ ...deps, now: () => new Date("2028-01-15T00:00:00.000Z") })("/admin/costs?season=2026")).text();
+		expect(after).toContain("<span>Dec 2027, its last month</span>");
+	});
+
+	it("estimates the rest of last season's kept footage for a team still running, and calls the month under way this month", async () => {
+		// 15 Nov 2027: the 2026/27 season's twelve months are over, its footage kept (and the team running) to 31 Dec.
+		const deps = { ...createTestDeps(), now: () => new Date("2027-11-15T00:00:00.000Z") };
+		await deps.db.prepare("UPDATE teams SET created_at = '2026-10-01T00:00:00.000Z'").run();
+		await seedVideo(deps, { gameId: await seedGame(deps, { startsAt: "2027-03-01T10:00" }), streamUid: "uid-kept", createdAt: "2027-03-01T03:00:00.000Z" });
+		const page = await (await makeClient(deps)("/admin/costs?season=2026&cur=usd")).text();
+		expect(page).toMatch(/<title>Dec 2027 \(estimated\): \$/);
+		expect(page).toContain("<span>This month, every team</span>");
+		expect(page).not.toContain("its last month");
+		expect(page).toContain("<span>The season, estimated</span>");
+		const team = await (await makeClient(deps)(`/admin/costs/${deps.team.id}?cur=usd`)).text();
+		expect(team).toMatch(/Dec 2027/);
 	});
 
 	it("counts a clip as gone with its video, when the video goes first", async () => {

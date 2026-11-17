@@ -1,5 +1,6 @@
 // Each team's season: its months so far (costs-model.ts), then an estimate of the months left; and, spent, any month
-// outside its season it has something in (footage kept after it, an upload before it). A running team's games
+// outside its season it has something in (footage kept after it, an upload before it), and, once its season's over, the
+// kept months still to come at what it stores now (nothing new, its watching not guessed at). A running team's games
 // left (30 a season, less those with a video) are spread evenly over its months left, each adding its video and three
 // clips to what it stores, its minutes watched and its original in R2. The team's own figures stand in for the baseline
 // once it has three games with a video (one short test isn't a season): its videos' and clips' length, its originals'
@@ -90,9 +91,9 @@ const used = (m: MonthCost) => m.total > 0 || m.use.stored > 0 || m.use.gbMonths
 
 export function teamCosts(p: CostsInput): TeamCosts[] {
 	const thisMonth = monthOf(p.now.toISOString());
-	const months = [...new Set(p.teams.flatMap((t) => seasonMonths(t.seasonStart)))].sort();
-	// Spent: every season's months so far, and the months after a season while its footage is kept.
-	const past = [...new Set([...months, ...p.teams.flatMap((t) => keptMonths(t.seasonStart))])].filter((m) => m <= thisMonth).sort();
+	// Every season's months, and the months after a season while its footage is kept: spent to this month, estimated after.
+	const months = [...new Set(p.teams.flatMap((t) => [...seasonMonths(t.seasonStart), ...keptMonths(t.seasonStart)]))].sort();
+	const past = months.filter((m) => m <= thisMonth);
 	const freeMinutes = p.bill?.freeMinutes ?? 0;
 	const actual = spentMonths(p, past, thisMonth);
 	const owns = new Map(p.teams.map((t) => [t.id, ownFigures(t, p.items, p.views, seasonMonths(t.seasonStart), thisMonth)]));
@@ -108,12 +109,14 @@ export function teamCosts(p: CostsInput): TeamCosts[] {
 		const uses = new Map<string, Usage>();
 		for (const t of p.teams) {
 			const a = ahead.get(t.id)!, b = basis.get(t.id)!.perGame;
+			// Its season over, its footage kept to December: stored as it is now, with nothing added.
+			if (!a.left.length && keptMonths(t.seasonStart).includes(month)) uses.set(t.id, { stored: a.stored, watched: 0, gbMonths: 0 });
 			const n = a.left.indexOf(month) + 1;
 			if (!n) continue;
 			uses.set(t.id, { stored: a.stored + a.games * n * (b.minutes + BASELINE.clipsAGame * b.clipMinutes), watched: a.games * b.watched, gbMonths: a.games * b.gb });
 		}
-		// A month to come is a whole month for every team running now.
-		const running = new Map(p.teams.filter((t) => t.status === "active" && uses.has(t.id) && runningShare(thisMonth, t) > 0).map((t) => [t.id, 1] as const));
+		// A month to come is a whole month for every team running now in its own season.
+		const running = new Map(p.teams.filter((t) => t.status === "active" && ahead.get(t.id)!.left.includes(month) && runningShare(thisMonth, t) > 0).map((t) => [t.id, 1] as const));
 		// Storage bought is billed until it's lowered: at least that much, more once the minutes need it.
 		const needed = [...uses.values()].reduce((s, u) => s + u.stored, 0);
 		const minutesBought = p.minutesBoughtNow === null ? null : Math.max(p.minutesBoughtNow, needed);

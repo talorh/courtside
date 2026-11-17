@@ -13,7 +13,7 @@ import type { TeamCosts } from "./costs-estimate.ts";
 import type { MonthCost } from "./costs-model.ts";
 import { monthName, monthOf, seasonMonths } from "./costs-prices.ts";
 import type { Rate } from "./costs-rate.ts";
-import { shownMonths } from "./costs-summary.ts";
+import { seasonStanding, shownMonths } from "./costs-summary.ts";
 
 export interface ReportInput { costs: TeamCosts[]; season: number; cur: Currency; rate: Rate; bill: Bill; now: Date }
 
@@ -35,9 +35,9 @@ function lines(p: ReportInput): string[] {
 		"Actual: Cloudflare's own bill. Estimated: the site's estimate, for the months to come. A team's own storage, watching and uploads are its own; the site's fixed costs are shared by the days each team ran in the month."];
 }
 
-function summary(p: ReportInput, past: boolean, thisMonth: string): Sheet {
+function summary(p: ReportInput, { over, past, thisMonth }: ReturnType<typeof seasonStanding>): Sheet {
 	const billed = p.bill.rows.length > 0, spent = billed ? "Actual" : "Spent, not billed";
-	const budgeted = past ? p.costs : p.costs.filter((c) => c.team.status === "active");
+	const budgeted = over ? p.costs : p.costs.filter((c) => c.team.status === "active");
 	const squads = budgeted.filter((c) => c.team.players > 0), players = sum(squads, (c) => c.team.players);
 	const squadsSeason = sum(squads, (c) => (past ? c.soFar : c.estimate)), budget = sum(budgeted, (c) => c.team.budget);
 	const each = (n: number) => (players ? n / players : Number.NaN);
@@ -46,7 +46,7 @@ function summary(p: ReportInput, past: boolean, thisMonth: string): Sheet {
 		[past ? `${monthName(thisMonth)}, its last month` : "This month, every team", month, spent, ""],
 		[past ? "The season" : "This season so far", sum(p.costs, (c) => c.soFar), spent, ""],
 		...(past ? [] : [["The season, estimated", estimate, "Estimated", "What's spent so far and the estimate of the months to come"] as [string, number, string, string]]),
-		[`Budgets, ${budgeted.length} ${budgeted.length === 1 ? "team" : "teams"}`, budget, "Set", past ? "Every team's" : "The running teams'"],
+		[`Budgets, ${budgeted.length} ${budgeted.length === 1 ? "team" : "teams"}`, budget, "Set", over ? "Every team's" : "The running teams'"],
 		["Against the budgets", sum(budgeted, (c) => c.estimate) - budget, past ? spent : "Estimated", "Over the budgets when more than nothing, under when less"],
 		[past ? "A player, the season" : "A player a season", each(squadsSeason), past ? spent : "Estimated", `${players} players in the teams with a squad`],
 		["A player a month", each(squadsSeason / 12), past ? spent : "Estimated", "A twelfth of a player's season"],
@@ -99,6 +99,6 @@ function bill(p: ReportInput): Sheet {
 /** The workbook's sheets, in order. */
 export function costReport(p: ReportInput): Sheet[] {
 	const nowMonth = monthOf(p.now.toISOString());
-	const past = nowMonth > seasonMonths(p.season)[11]!, thisMonth = past ? shownMonths(p.costs, p.season).at(-1)! : nowMonth;
-	return [summary(p, past, thisMonth), teams(p, thisMonth), months(p), grid(p, thisMonth), bill(p)];
+	const standing = seasonStanding(shownMonths(p.costs, p.season), p.season, nowMonth), { thisMonth } = standing;
+	return [summary(p, standing), teams(p, thisMonth), months(p), grid(p, thisMonth), bill(p)];
 }

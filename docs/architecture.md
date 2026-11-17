@@ -964,7 +964,10 @@ section and keeps one More menu open at a time.
  what the teams used this month, the running teams' total against their budgets beside every team's season on one
  scale, Team by team (`views/costs-team-months.ts`: every team month by month in one grid, shaded by cost, with every
  team's total), and each team's months, budget used and cost a player a season and a month (over the players in its squad). A team onboarded
- this month or partway through last says it's its first, or first full, month. The widgets sit in a grid (admin.css,
+ this month or partway through last says it's its first, or first full, month. A season is past (`seasonStanding`,
+ `costs-summary.ts`: its last month stands as this month) only once its footage's kept months are over too; until
+ then the month under way is this month, and a team whose season is over has its kept months to come estimated at what
+ it stores now (`costs-estimate.ts`). Every team's budget counts once the season's own twelve months are. The widgets sit in a grid (admin.css,
  `.costdash`) so no chart is drawn much bigger than it's made. Each team has its own page (`/admin/costs/:id`), laid
  out the same way (its months against a twelfth of its budget, dashed), with what a player and a game cost, its budget
  (set there) beside its running total, and its months as a table. Download for Excel (`/admin/costs/report.xlsx`,

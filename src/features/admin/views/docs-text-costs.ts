@@ -32,7 +32,8 @@ amber from 80% and red past it); then the season's running total against the bud
 beside each team's season on one scale (spent, the rest estimated, its budget a tick); then Team by team, every team
 month by month in one grid (each cell its dollars, the darker the dearer, the months to come lighter, every team's
 total under them); then each team as a row. A
-past season leaves out the estimate and Stream's storage, which are about now. A team's own page is laid out the same
+past season, once its footage's kept months are over too (until then the month under way is this month and December
+estimated), leaves out the estimate and Stream's storage, which are about now. A team's own page is laid out the same
 way, with its budget beside its running total.</p>
 <h3>Actual and estimated</h3>
 <p>Every night at 3am, and whenever Costs opens and its copy is 20 hours old, the site reads Cloudflare's billable usage:
@@ -65,7 +66,8 @@ that failed; the next night tries again.</li>
 few times a day and kept if the rate can't be read.</li>
 <li><b>The estimate</b> for a season uses the team's own figures once it has three games; before that, the other teams'
 figures averaged game for game, and only while no team has any, 30 games of an hour, three clips a game and nine
-families each watching twice.</li>
+families each watching twice. Once a season's twelve months are over, its footage's kept months still to come (to
+December) are estimated at the minutes it stores now, with nothing added and no watching guessed at.</li>
 <li><b>The budget</b> is $200 a season until one is set on the team's Costs page. Over budget so far is urgent, and
 estimated to go over is a warning: the Team budgets alert, checked each night. A team onboarded for next season is
 left out of it until its season's first month (until then its estimate has it carrying a whole season's fixed costs

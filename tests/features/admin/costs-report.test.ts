@@ -65,13 +65,21 @@ describe("Costs' report for Excel", () => {
 		expect(rows.find((r) => r[0] === "Saints B12.1" && r[1] === "Sep 2027")?.[2]).toBe("Estimated");
 	});
 
-	it("a past season is all spent, in US dollars when asked", async () => {
-		const res = await (await client("2027-11-15T00:00:00.000Z"))("/admin/costs/report.xlsx?season=2026&cur=usd");
+	it("a past season is all spent, its kept footage's months too, in US dollars when asked", async () => {
+		const res = await (await client("2028-01-15T00:00:00.000Z"))("/admin/costs/report.xlsx?season=2026&cur=usd");
 		expect(res.headers.get("Content-Disposition")).toBe('attachment; filename="site-costs-2026-27-usd.xlsx"');
 		const summary = values(sheetCells(new Uint8Array(await res.arrayBuffer()), 1));
 		expect(String(summary[1]![0])).toMatch(/^In US dollars/);
 		expect(summary.some((r) => r[0] === "The season, estimated")).toBe(false);
 		expect(summary.find((r) => r[0] === "A player, the season")).toBeDefined();
+	});
+
+	it("while its footage is kept after the season, the month under way is this month and the rest estimated; every team's budget counts", async () => {
+		const res = await (await client("2027-11-15T00:00:00.000Z"))("/admin/costs/report.xlsx?season=2026&cur=usd");
+		const summary = values(sheetCells(new Uint8Array(await res.arrayBuffer()), 1));
+		expect(summary.find((r) => r[0] === "This month, every team")).toBeDefined();
+		expect(summary.find((r) => r[0] === "The season, estimated")).toBeDefined();
+		expect(summary.find((r) => String(r[0]).startsWith("Budgets,"))?.[3]).toBe("Every team's");
 	});
 
 	it("is for site admins only", async () => {

@@ -181,6 +181,9 @@ describe("every month's shares add up to the month's bill", () => {
 		expect(month(a!, "2026-10").shared).toBeCloseTo(fixedAMonth(), 6);
 		// What it's cost since its season counts in last season's team's spend.
 		expect(l!.soFar).toBeCloseTo(l!.months.filter((m) => !m.estimate).reduce((s, m) => s + m.total, 0), 6);
-		expect(l!.months.map((m) => m.month).slice(-2)).toEqual(["2026-10", "2026-11"]);
+		expect(l!.months.map((m) => m.month).slice(-3)).toEqual(["2026-10", "2026-11", "2026-12"]);
+		// December, its last kept month, is still to come: estimated at what it stores now, and in its season's estimate.
+		expect(month(l!, "2026-12")).toMatchObject({ shared: 0, estimate: true, use: { stored: 900, watched: 0, gbMonths: 0 } });
+		expect(l!.estimate).toBeGreaterThan(l!.soFar);
 	});
 });

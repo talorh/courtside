@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Costs:** Fixed an issue where, once a season's twelve months were over, the month under way while its footage is still kept (October to December) was shown as its last finished month, and the kept months still to come had no estimate: they're now estimated at the minutes the team stores now, and the month under way is this month.
 - [Fix] **Roster:** Fixed an issue where taking a family off removed them from the duties of a game already played that week, rewriting its scorers: only games still to come lose them now, and opening the roster no longer fills an empty duty at a game that's started.
 - [Fix] **PlayHQ:** Fixed an issue where a closed team's pages kept the "PlayHQ couldn't be read" banner for good after a last failed check.
 - [Fix] **Photos:** Fixed an issue where, while a swipe on a weak signal waited for the next photo's page, the last photo's caption and buttons could still be tapped, so Save or Delete acted on the photo swiped away from: they're greyed out and can't be used until the next photo's own come.

@@ -20,6 +20,14 @@ const bar = (m: MonthCost): MonthBar => ({ month: m.month, estimate: m.estimate,
 export const shownMonths = (costs: TeamCosts[], season: number): string[] =>
 	[...new Set([...seasonMonths(season), ...costs.flatMap((c) => c.months.map((m) => m.month))])].sort();
 
+/** Where a season stands on its pages. `over`: its own twelve months are (every team's budget counts then). `past`: every
+ * month it has is too, footage kept after it included, so its last month stands where this month does; until then the
+ * month under way is this month, and the months after it are estimated. */
+export function seasonStanding(months: string[], season: number, nowMonth: string): { over: boolean; past: boolean; thisMonth: string } {
+	const past = nowMonth > months.at(-1)!;
+	return { over: nowMonth > seasonMonths(season)[11]!, past, thisMonth: past ? months.at(-1)! : nowMonth };
+}
+
 /** One team's months, or every team's added up, in `months` order (a month no team has is nothing). */
 export function monthBars(costs: TeamCosts[], months: string[], thisMonth: string): MonthBar[] {
 	return months.map((month) => {
