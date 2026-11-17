@@ -476,6 +476,16 @@ describe("roster", () => {
 		await manager("/roster");
 		expect((await slotsOf(deps)).filter((s) => s.g === friday).map((s) => s.duty)).toEqual(["lollies", "scoring", "scoring", "video"]);
 	});
+	it("adding families already on the roster (any case) changes nothing, and sends the database no empty batch", async () => {
+		const { deps, manager } = await generated();
+		const batch = deps.db.batch.bind(deps.db);
+		const sizes: number[] = [];
+		deps.db.batch = ((statements: D1PreparedStatement[]) => { sizes.push(statements.length); return batch(statements); }) as typeof deps.db.batch;
+		const res = await manager("/roster/families", familiesForm("smith\nBRUCE"));
+		expect(res.status).toBe(303);
+		expect(sizes).not.toContain(0);
+		expect((await deps.db.prepare("SELECT count(*) AS n FROM roster_families").first<number>("n"))).toBe(6);
+	});
 	it("the database itself refuses a second slot for a family on the same game, whichever duty", async () => {
 		const { deps } = await generated();
 		const slots = await slotsOf(deps);

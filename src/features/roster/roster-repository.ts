@@ -29,7 +29,10 @@ export async function addFamilies(db: D1Database, teamId: string, surnames: stri
 	const { results: gone } = await db.prepare("SELECT id, surname, removed_at AS removedAt, away FROM roster_families WHERE team_id = ? AND removed_at IS NOT NULL ORDER BY id DESC")
 		.bind(teamId).all<{ id: number; surname: string; removedAt: string; away: string }>();
 	const on = new Set((await listFamilies(db, teamId)).map((f) => f.surname.toLowerCase()));
-	await db.batch(surnames.filter((s) => !on.has(s.toLowerCase())).map((s) => {
+	const adding = surnames.filter((s) => !on.has(s.toLowerCase()));
+	// Every one already on: nothing to write, so no batch (an empty one is an error to D1, not a no-op).
+	if (!adding.length) return;
+	await db.batch(adding.map((s) => {
 		const back = gone.find((g) => g.surname.toLowerCase() === s.toLowerCase());
 		if (!back) return db.prepare("INSERT OR IGNORE INTO roster_families (team_id, surname, created_at) VALUES (?, ?, ?)").bind(teamId, s, nowIso);
 		const away = closeAway(JSON.parse(back.away) as AwayPeriods, weekOf(localDate(new Date(back.removedAt))), week);
