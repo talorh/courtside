@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Insights:** Fixed an issue where a live stream's recording was counted both as a live stream and as an upload under way in the Alerts section.
 - [Fix] **Alerts:** Fixed an issue where two checks of one kind at the same moment could open a spurious problem or say Worse twice, with two emails.
 - [Enhancement] **Sign-in:** When Cloudflare refuses the site's own Turnstile key (a wrong or revoked secret), sign-ins are still refused, but the admins now get a Site problem in the Log and a log line saying so, rather than nothing.
 - [Fix] **Support:** Fixed an issue where a ticket's email could go twice when its page and the 5-minute job sent it at the same moment.

@@ -943,7 +943,7 @@ section and keeps one More menu open at a time.
  hours; Stream answering; videos processing over 4 hours since their processing began (`processing_at`, so a recording
  the site saved late isn't stuck the moment it starts); uploads failed
  in 7 days; the Worker's errors in the last 24 hours, 1% warns and 5% is urgent; over 100 sign-ins refused in a day),
- then what's going on now (live streams open, uploads under way, devices signed in). Grey for what hasn't been checked
+ then what's going on now (live streams open, uploads under way (a live stream's own recording counts as live, not an upload), devices signed in). Grey for what hasn't been checked
  yet (staging's jobs). Insights' menu link counts the alerts that aren't ok.
 - **Platform** (`/admin/platform`): the site's health, each thing once. A row for each thing watched, with its figure
  against its limit and its alert: Stream's minutes, the sign-ins (devices signed in, and the last 24 hours' codes), photos against Images'
