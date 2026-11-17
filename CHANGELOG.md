@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Documentation:** Fixed an issue where the Documentation said a join never encodes anything again: the parts are copied as they are, and encoded again only as a fallback when they don't line up. The request diagram now starts with the check that a request came to the site's own address.
 - [Enhancement] **Video joiner:** Building the joiner's image (npm run join -- image) now runs it with no network before pushing it, and pushes it only once its ffmpeg is the pinned version and its own self-test joins.
 - [Fix] **Staging:** Fixed an issue where staging's emails (support tickets, admin changes, Platform's test email) and its match day message linked to the live site: they now link to the address the site is on.
 - [Enhancement] **Documentation:** Beside Cloudflare's money alerts, the Documentation, the setup runbook and the install guide now describe a Workers spending limit (US$20 a billing period, say), which stops a runaway Workers bill but takes the site down until the next period if it's reached.

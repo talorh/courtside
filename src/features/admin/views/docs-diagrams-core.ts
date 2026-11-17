@@ -79,11 +79,12 @@ ${r.no ? html`${d.box({ ...r.no, x: 420, y: y(i), w: 220, h: 58 })}${d.arrow([[3
 
 export const requestDiagram = (): SafeHtml => steps("request", {
 	title: "What happens to a request",
-	desc: "A request passes the edge, then the Worker checks the sign-in, works out who is asking and their team, checks a write names its team, and finally the route checks the role.",
+	desc: "A request passes the edge, then the Worker checks it came to the site's own address, checks the sign-in, works out who is asking and their team, checks a write names its team, and finally the route checks the role.",
 	caption: "Each check happens in order; the first one that says no answers the request. A page's own route then checks the person's role.",
 }, [
 	{ step: { title: "A request arrives", sub: "a page, a form or a page script", kind: "person" } },
 	{ step: { title: "Edge protection", sub: "DDoS, WAF, allowed methods, rate limits", kind: "edge" }, no: { title: "Blocked", sub: "at Cloudflare's edge", kind: "stop" } },
+	{ step: { title: "Its own address?", sub: "the site's hostname, nothing else", kind: "worker" }, no: { title: "Not found", sub: "a bare 404", kind: "stop" } },
 	{ step: { title: "Signed in?", sub: "the session cookie, looked up in D1", kind: "worker" }, no: { title: "To the sign-in page", sub: "and back after the code", kind: "stop" } },
 	{ step: { title: "Who, and which team", sub: "the teams' lists and the team cookie", kind: "step" }, no: { title: "Admin pages", sub: "site admins only", kind: "step" } },
 	{ step: { title: "Team guard", sub: "a write names its team; closed is read-only", kind: "step" }, no: { title: "Refused", sub: "reload, or read only", kind: "stop" } },

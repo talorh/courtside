@@ -80,11 +80,12 @@ file far smaller than its parts is refused rather than saved.</li>
 tries the site stops: the team manager gets <b>Keep the first part</b> on the game's page, the Log's Problems has a
 line, and the admins get the Video joiner alert as urgent. Keep the first part, or deleting the video, clears it once
 no team's game is still waiting (the alert is one for the whole site).</li>
-<li><b>The picture isn't touched.</b> ffmpeg copies each part as it is into one transport stream (a cut-off last frame
-dropped, each part's own decoder settings carried along, one clock), then wraps that as the MP4. Nothing is encoded
-again, so the video is exactly what the phone recorded. (Parts that aren't H.264, which only a test browser records,
-are joined one after the other instead, still as they are. WebM parts whose picture is H.264, as some Android browsers
-record, are joined as they are into a Matroska file, which Stream reads the same way.)</li>
+<li><b>The parts are copied as they are.</b> ffmpeg copies each part into one transport stream (a cut-off last frame
+dropped, each part's own decoder settings carried along, one clock), then wraps that as the MP4, so the video is what
+the phone recorded. Parts that aren't H.264 (a browser that records VP8, as Firefox on Android can) are joined one after
+the other instead, still copied. WebM parts whose picture is H.264, as some Android browsers record, are copied into a
+Matroska file, which Stream reads the same way. Only when the parts don't line up for a copy (a different size or
+codec partway through, say) is the video encoded again, as a fallback, so the join still makes one video.</li>
 <li><b>Every team gets its turn.</b> The joiner runs one join at a time for every team. Those waiting take turns by
 team, so one team's games can't hold up another's, and each starts with the newest links the site sent.</li>
 <li><b>Each part is read only as video.</b> ffmpeg reads every part as the recording's own kind of file (MP4 or WebM),

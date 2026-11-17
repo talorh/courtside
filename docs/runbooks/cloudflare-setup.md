@@ -242,9 +242,10 @@ once), the container's `jobs.mjs` runs it (one at a time, those waiting one team
 later run finds that file and makes it the video. The file in R2 is the only proof the site trusts; a join that
 failed or was lost (the container restarted) is begun again ten minutes after the last began, six times at most. The
 container sleeps ten minutes after the last ask, and the site asks every run while a video waits, so it stays awake
-through a join. The admin Log says `video_joined` for each (parts, size, minutes). The container's own lines
-(`join_done`, `join_failed`) go to its standard output, which isn't in Workers Logs: the Cloudflare dashboard's
-Containers page shows them.
+through a join. The admin Log says `video_joined` for each (parts, size, minutes). The container's own lines go to its
+standard output and standard error: `join_done` (with `took`, the seconds to read, join and store) to standard output,
+and `join_failed` (its reason's signed links cut to their address) to standard error. Neither is in Workers Logs: the
+Cloudflare dashboard's Containers page shows both.
 
 **A join that failed:** Platform's "The video joiner" row and the `joiner` alert say so (urgent: a game's join gave up
 after six tries; warn: the nightly self-test failed). The Log has `join_failed` with the reason, Problems a

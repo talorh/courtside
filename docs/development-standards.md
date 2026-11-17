@@ -64,7 +64,8 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 
 ## 3. Requests, routes and responses
 
-- Every request goes through `handleRequest` (`src/app/handle-request.ts`) in this order: the same-origin check on any
+- Every request goes through `handleRequest` (`src/app/handle-request.ts`) in this order: the host check (only the site's
+ own hostname, `SITE_HOST`; any other gets a bare 404 before anything else runs), the same-origin check on any
  method other than GET/HEAD, the launch spinner and the sign-in's own pages and files (before any sign-in:
  `features/signin/`, `app/static-files.ts`), the session cookie (`auth/session.ts`), static files (the `ASSETS`
  binding), who's asking (`auth/viewer.ts`: memberships and admin in one trip), the current team (`app/current-team.ts`), the admin
