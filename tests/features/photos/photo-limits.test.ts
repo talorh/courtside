@@ -96,3 +96,28 @@ describe("2,000 photos a day for each team", () => {
 		expect(await res.json()).toMatchObject({ ok: false, error: { code: "photo_limit", message: expect.stringContaining("The team has added 2,000 photos") } });
 	});
 });
+
+describe("photos sent together", () => {
+	/** Images takes a moment to store each photo, so the three are all in flight at once. */
+	function slowImages(deps: TestDeps) {
+		const upload = deps.images.upload.bind(deps.images);
+		deps.images.upload = async (...args) => { await new Promise((r) => setTimeout(r, 20)); return upload(...args); };
+	}
+	const outcomes = (sent: Array<Promise<unknown>>) => Promise.all(sent.map((p) => refusal(p).then((r) => r?.code ?? "added")));
+	it("hold to a person's 500: at 499, one of three is added and two refused", async () => {
+		const { deps, fran } = await setup();
+		await added(deps, fran.id, ago(HOUR), 499);
+		slowImages(deps);
+		const results = await outcomes([0, 1, 2].map(() => addPhoto(deps, fran, testJpeg(), "")));
+		expect(results.sort()).toEqual(["added", "photo_limit", "photo_limit"]);
+		expect(deps.images.stored.size).toBe(1);
+	});
+	it("hold to the team's 2,000: at 1,999, one of three is added and two refused, whoever sent them", async () => {
+		const { deps, fran, gus } = await setup();
+		await added(deps, 1, ago(HOUR), 1999);
+		slowImages(deps);
+		const results = await outcomes([fran, gus, fran].map((m) => addPhoto(deps, m, testJpeg(), "")));
+		expect(results.sort()).toEqual(["added", "photo_limit", "photo_limit"]);
+		expect(deps.images.stored.size).toBe(1);
+	});
+});
