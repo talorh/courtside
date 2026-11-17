@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dropReservedPhoto, fillPhoto, getPhoto, photoByKey, reservePhoto } from "../../../src/features/photos/photos-repository.ts";
+import { photoLimits } from "../../../src/features/photos/photo-limits.ts";
 import { createTestDeps } from "../../helpers/fakes.ts";
 
 const NOW = "2026-10-24T08:00:00.000Z";
@@ -8,7 +9,7 @@ async function setup() {
 	const deps = createTestDeps(new Date(NOW));
 	const reserveKeyed = (uploadKey: string | null) => reservePhoto(deps.db, {
 		teamId: deps.team.id, takenAt: "2026-10-23T19:05:12", width: 800, height: 600, bytes: 1000, uploadedBy: 1, deleteAfter: "2027-12-31T13:00:00.000Z", createdAt: NOW, uploadKey,
-	});
+	}, photoLimits(new Date(NOW)));
 	const reserve = async () => (await reserveKeyed(null))!;
 	const imageOf = async (id: number) => (await deps.db.prepare("SELECT image_id FROM photos WHERE team_id = ? AND id = ?").bind(deps.team.id, id).first<{ image_id: string }>())?.image_id ?? null;
 	return { deps, reserve, reserveKeyed, imageOf };

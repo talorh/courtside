@@ -525,15 +525,20 @@ too; everyone sees and downloads them. They aren't linked to games.
  turns it upright) drawn on a canvas at most 2560 px along its longer side and saved as a JPEG (quality 0.88), which
  leaves off all the camera's metadata, its location included. `POST /api/photos` sends the JPEG, `takenAt` and `key`
  (a UUID made on the phone for that photo, `newId`, the same each time it's sent) as a form (`apiForm`). Only trouble
- reaching the site is tried again (`isNetworkTrouble`); a refusal skips that photo and
- lists it, and being signed out or not allowed stops the rest. The screen stays on and the page busy until they've
+ reaching the site is tried again (`isNetworkTrouble`; the site's own 429, with its code, is a refusal); a refusal
+ skips that photo and lists it, and being signed out or not allowed, or the day's limit, stops the rest
+ (`stopsTheRest` in `photo-queue.js`). The screen stays on and the page busy until they've
  all gone.
 2. **In the Worker** (`photos-service.ts`, `addPhoto`): the body must be 10 MB or less (Images' limit), and is checked
  as a whole JPEG, with its size read and any metadata segments taken out (`jpeg.ts`: APP1 to APP15 except the ICC
  colour profile, and comments). `taken_at` is the phone's date if it's a real one and not still to come, otherwise
  now. The photo goes with its team's season, whenever it was taken (`footageDue`), and once the team's photos are
  gone no more are taken. Then its row, reserved out of sight (`reservePhoto`: a `pending-` image id and `deleted_at`
- set, and the phone's key in `upload_key`, one a key in each team) so the photo has its number. A key the team has
+ set, and the phone's key in `upload_key`, one a key in each team) so the photo has its number. The same
+ `INSERT … SELECT … WHERE` reserves it only while the member has added fewer than 500 photos in the last 24 hours and
+ the team fewer than 2,000 (`photo-limits.ts`; rows by `created_at`, deleted and waiting ones too), so photos sent
+ together can't pass them: Images' allowance (100,000) is shared by every team. Refused for a limit, the answer is
+ 429 `photo_limit`, naming it and when the oldest photo counted turns a day old. A key the team has
  already is that photo sent again after its answer was lost: its id is the answer, and nothing more is added or sent
  to Images. A key whose row is still waiting (an earlier try that stopped) has that row dropped for this one; should
  the earlier try still finish, its row has gone, so its image is deleted, and the photo is added once. A post with no

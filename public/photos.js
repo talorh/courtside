@@ -3,15 +3,16 @@
 // JPEG), which leaves off everything else the camera wrote, where it was taken too. Drawn from an <img> of the file,
 // it's the right way up. They're drawn one at a time and sent one at a time, or a few at once when the first went up
 // quickly (photo-queue.js). Trouble reaching the site is waited out and tried again; a photo the site turns down is
-// skipped and listed. The screen is kept on (and the page marked busy) until they're all sent; a page left before then
+// skipped and listed, unless the rest would be turned down too (signed out, the day's photos all added), which stops
+// there and says why. The screen is kept on (and the page marked busy) until they're all sent; a page left before then
 // says so next time (photo-unsent.js).
 import { keepAwake } from "./awake.js";
 import { takenAt } from "./photo-date.js";
-import { oneAtATime, sendPhotos, uploadLanes } from "./photo-queue.js";
+import { oneAtATime, sendPhotos, stopsTheRest, uploadLanes } from "./photo-queue.js";
 import { leftWords, unsentNote } from "./photo-unsent.js";
 import { reportProblem } from "./problems.js";
 import { enableDrop } from "./upload-drop.js";
-import { apiForm, isNetworkTrouble, needsReload, newId, withRetries } from "./upload-net.js";
+import { apiForm, isNetworkTrouble, newId, withRetries } from "./upload-net.js";
 
 const LONGEST = 2560, QUALITY = 0.88;
 const $ = (id) => document.getElementById(id);
@@ -67,9 +68,6 @@ async function send(file, hint, lanes) {
 	lanes.sent(Date.now() - started);
 }
 
-// Signed out, no longer allowed to add photos, or the site asks for a reload: the rest would be turned down too.
-const stops = (err) => err.status === 401 || err.status === 403 || needsReload(err);
-
 function main() {
 	const input = $("photo-files");
 	if (!input) return;
@@ -114,7 +112,7 @@ function main() {
 		const lanes = uploadLanes();
 		let sent = 0;
 		const sendOne = (file) => send(file, hint, lanes).then(() => { note.added(++sent); hint(KEEP_OPEN); });
-		const { added, skipped, stopped } = await sendPhotos(files, sendOne, count, stops);
+		const { added, skipped, stopped } = await sendPhotos(files, sendOne, count, stopsTheRest);
 		note.finished();
 		window.removeEventListener("beforeunload", warn);
 		awake?.release();

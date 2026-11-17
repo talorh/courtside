@@ -7,6 +7,7 @@ import { isRealDate, localTimeSeconds } from "../../shared/time.ts";
 import type { Member } from "../members/members-repository.ts";
 import { footageDue } from "../teams/team-code.ts";
 import { cleanJpeg } from "./jpeg.ts";
+import { photoLimits, photoRefusal } from "./photo-limits.ts";
 import { photoFileName } from "./photo-name.ts";
 import { resolveRequestsForPhotoWrite } from "./photo-removals-repository.ts";
 import { dropReservedPhoto, fillPhoto, getPhoto, listExpiredPhotos, type Photo, type PhotoDeleteReason, photoByKey, reservePhoto, softDeletePhotoWrite } from "./photos-repository.ts";
@@ -42,7 +43,7 @@ export async function addPhoto(deps: TeamDeps, member: Member, file: Uint8Array,
 	const jpeg = cleanJpeg(file);
 	if (!jpeg) throw badRequest("That isn't a photo the site can take. Choose a photo and try again.");
 	const teamId = deps.team.id;
-	const reserved = await reserve(db, {
+	const reserved = await reserve(deps, member, {
 		teamId, takenAt: taken, width: jpeg.width, height: jpeg.height, bytes: jpeg.bytes.length, uploadedBy: member.id, deleteAfter, createdAt: now.toISOString(),
 		uploadKey: key !== null && UPLOAD_KEY.test(key) ? key : null,
 	});
@@ -69,17 +70,20 @@ export async function addPhoto(deps: TeamDeps, member: Member, file: Uint8Array,
 }
 
 /**
- * The new photo's row, or the photo already added with its key (`had`). A row an earlier try with the key left waiting
- * for Images is dropped for this one: should that try still finish, its row has gone, so it deletes its own image
- * (addPhoto) and the photo is added once. Busy (tried again by the phone) in the rare case the rows keep changing.
+ * The new photo's row, or the photo already added with its key (`had`), which a day's limit never refuses. A row an
+ * earlier try with the key left waiting for Images is dropped for this one: should that try still finish, its row has
+ * gone, so it deletes its own image (addPhoto) and the photo is added once. Over a day's limit, the refusal says which.
+ * Busy (tried again by the phone) in the rare case the rows keep changing.
  */
-async function reserve(db: D1Database, row: Parameters<typeof reservePhoto>[1]): Promise<{ id: number; had: boolean }> {
+async function reserve(deps: TeamDeps, member: Member, row: Parameters<typeof reservePhoto>[1]): Promise<{ id: number; had: boolean }> {
+	const { db } = deps, limits = photoLimits(deps.now());
 	for (let tries = 0; tries < 3; tries++) {
-		const id = await reservePhoto(db, row);
+		const id = await reservePhoto(db, row, limits);
 		if (id !== null) return { id, had: false };
 		const had = row.uploadKey ? await photoByKey(db, row.teamId, row.uploadKey) : null;
 		if (had && !had.waiting) return { id: had.id, had: true };
 		if (had) await dropReservedPhoto(db, row.teamId, had.id);
+		else { const refused = await photoRefusal(deps, member, limits); if (refused) throw refused; }
 	}
 	throw new HttpError(503, "photo_busy", SAVE_FAILED);
 }

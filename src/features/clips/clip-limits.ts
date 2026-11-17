@@ -3,7 +3,8 @@
 // team five hours. A clip's place is taken, against all three, before Stream is asked for it (clip-limits-repository.ts).
 import type { TeamDeps } from "../../app/deps.ts";
 import { conflict, HttpError } from "../../app/errors.ts";
-import { addDays, formatClock, localDate, localTime } from "../../shared/time.ts";
+import { addDays } from "../../shared/time.ts";
+import { whenAgain } from "../../shared/when-again.ts";
 import type { Member } from "../members/members-repository.ts";
 import { clipsMadeSince, countVideoClips, dropStaleReservedClips, type NewClip, reserveClip } from "./clip-limits-repository.ts";
 
@@ -21,9 +22,6 @@ export function lengthWords(seconds: number): string {
 	const hours = h ? `${h} ${h === 1 ? "hour" : "hours"}` : "", minutes = m ? `${m} ${m === 1 ? "minute" : "minutes"}` : "";
 	return [hours, minutes].filter(Boolean).join(" ");
 }
-
-/** '9:00pm', or '5:00pm tomorrow'. */
-const whenWords = (at: Date, now: Date) => `${formatClock(localTime(at).slice(11))}${localDate(at) === localDate(now) ? "" : " tomorrow"}`;
 
 /** When a clip `seconds` long fits under `limit`, as the oldest of `made` (seconds and when, oldest first) turn a day old. */
 function fitsAt(made: Array<{ seconds: number; createdAt: string }>, limit: number, seconds: number): Date {
@@ -47,7 +45,7 @@ async function refusal(deps: TeamDeps, member: Member, c: NewClip, since: string
 		const room = most - used;
 		const shorter = room >= MIN_SHORTER ? `, or one up to ${lengthWords(room)} long now` : "";
 		return new HttpError(429, "clip_limit", `${rule}, and ${who} made ${lengthWords(used)} of clips in the last 24 hours. `
-			+ `This one can be made from ${whenWords(fitsAt(made, most, seconds), now)}${shorter}.`);
+			+ `This one can be made from ${whenAgain(fitsAt(made, most, seconds), now)}${shorter}.`);
 	};
 	return limit(mine, MEMBER_CLIP_SECONDS_A_DAY, "Clips are up to an hour a day for each person", "you've")
 		?? limit(all, TEAM_CLIP_SECONDS_A_DAY, "Clips are up to 5 hours a day for each team, to keep video storage free for games", "the team has")

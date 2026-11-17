@@ -72,7 +72,9 @@ describe("Go live and upload network helpers", () => {
 		for (const err of [new TypeError("Failed to fetch"), new DOMException("timed out", "TimeoutError"), new HttpError("busy", 502), new HttpError("slow down", 429)]) {
 			expect(isNetworkTrouble(err)).toBe(true);
 		}
-		for (const err of [new HttpError("not allowed", 403), new HttpError("not a photo", 400), new HttpError("season over", 409), new DOMException("x", "AbortError")]) {
+		// The site's own 429 (with its code) is a limit reached, not the zone slowing things down: trying again can't help.
+		for (const err of [new HttpError("not allowed", 403), new HttpError("not a photo", 400), new HttpError("season over", 409), new DOMException("x", "AbortError"),
+			new HttpError("You've added 500 photos in the last 24 hours", 429, "photo_limit")]) {
 			expect(isNetworkTrouble(err)).toBe(false);
 		}
 		const hints: string[] = [];

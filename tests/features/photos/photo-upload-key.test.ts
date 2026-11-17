@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { getActiveMember } from "../../../src/features/members/members-repository.ts";
 import { reservePhoto } from "../../../src/features/photos/photos-repository.ts";
 import { addPhoto } from "../../../src/features/photos/photos-service.ts";
+import { photoLimits } from "../../../src/features/photos/photo-limits.ts";
 import { makeClient } from "../../helpers/app.ts";
 import { B12_1, createTestDeps } from "../../helpers/fakes.ts";
 import { testJpeg } from "../../helpers/jpeg.ts";
@@ -77,7 +78,7 @@ describe("a photo sent again with its key", () => {
 		const { deps, filmer, count } = await setup();
 		await reservePhoto(deps.db, {
 			teamId: deps.team.id, takenAt: "2026-10-23T19:05:12", width: 1, height: 1, bytes: 1, uploadedBy: 2, deleteAfter: "2027-12-31T13:00:00.000Z", createdAt: NOW.toISOString(), uploadKey: KEY,
-		});
+		}, photoLimits(NOW));
 		const id = await addPhoto(deps, filmer, testJpeg(), "2026-10-23T19:05:12", KEY);
 		expect(await count()).toBe(1);
 		expect(await deps.db.prepare("SELECT image_id, upload_key, deleted_at FROM photos WHERE id = ?").bind(id).first()).toEqual({ image_id: "img-1", upload_key: KEY, deleted_at: null });

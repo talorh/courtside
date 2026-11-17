@@ -36,8 +36,10 @@ export const needsReload = (err) => err?.code === "site_updated" || err?.code ==
 const isRetryable = (err) =>
 	err?.name !== "AbortError" && (!(err instanceof HttpError) || err.status >= 500 || err.status === 429 || err.status === 403);
 
-/** For a photo (photos.js): only trouble reaching the site is tried again; a refusal (any 4xx but 429) isn't. */
-export const isNetworkTrouble = (err) => err?.name !== "AbortError" && (!(err instanceof HttpError) || err.status >= 500 || err.status === 429);
+/** For a photo (photos.js): only trouble reaching the site is tried again; a refusal (any 4xx but 429) isn't. A 429 with
+ * the site's own code is a day's limit reached, not the zone slowing things down, so it's a refusal too. */
+export const isNetworkTrouble = (err) => err?.name !== "AbortError"
+	&& (!(err instanceof HttpError) || err.status >= 500 || (err.status === 429 && !err.code));
 
 /** The API's answer: its data, or an HttpError with the site's message. `signedOut`: what to say when the sign-in ran out. */
 async function answer(res, signedOut) {

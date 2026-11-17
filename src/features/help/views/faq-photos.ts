@@ -10,7 +10,9 @@ export const faqPhotos = (h: HelpFor) => faqItem("photos", "How do photos work?"
 <li><b>Adding:</b> anyone on the team can add photos. Tap <b>Photos</b>, then <b>Choose photos</b>, and
 pick as many as you like. On a computer you can drag them onto the <b>Add photos</b> box instead. Keep the page open
 until it says <b>Photos added</b>: on a weak signal they go up one by one, so it takes longer (Wi-Fi is quicker). If
-the page is closed part way, it says how many weren't added next time you open Photos: choose those again.</li>
+the page is closed part way, it says how many weren't added next time you open Photos: choose those again. Each
+person can add up to 500 photos a day and each team up to 2,000, to keep room for every team's photos; past that, the
+page says when you can add more.</li>
 <li><b>Privacy:</b> a photo's location is removed when it's added.</li>
 ${shot("photos", "The Photos page with Add photos at the top and a green Choose photos button, before any photos are added")}
 <li><b>Looking:</b> the newest are first. Tap one to see it bigger, then swipe left or right to flick through (or tap <b>Newer</b> and <b>Older</b>). Pinch to zoom in. <b>Select photos</b> on the Photos page downloads or deletes several at once.</li>

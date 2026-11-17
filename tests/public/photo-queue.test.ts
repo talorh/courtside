@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error: a browser script (plain JS), tested here on its own.
-import { AT_ONCE, oneAtATime, QUICK_MS, sendPhotos, uploadLanes } from "../../public/photo-queue.js";
+import { AT_ONCE, oneAtATime, QUICK_MS, sendPhotos, stopsTheRest, uploadLanes } from "../../public/photo-queue.js";
+// @ts-expect-error: a browser script (plain JS), tested here on its own.
+import { HttpError } from "../../public/upload-net.js";
 
 const STOP = Object.assign(new Error("Signed out."), { status: 401 });
 const isStop = (err: { status?: number }) => err.status === 401;
@@ -150,5 +152,13 @@ describe("how many go up at once", () => {
 		const lanes = uploadLanes();
 		const results = await Promise.allSettled([lanes.run(async () => { throw new Error("dropped"); }), lanes.run(async () => "in")]);
 		expect(results.map((r) => r.status)).toEqual(["rejected", "fulfilled"]);
+	});
+});
+
+describe("what stops the rest being sent", () => {
+	it("being signed out or not allowed, a reload asked for, or the day's photos all added; one photo turned down doesn't", () => {
+		for (const err of [new HttpError("Signed out", 401), new HttpError("Not allowed", 403), new HttpError("Reload", 409, "site_updated"),
+			new HttpError("You've added 500 photos in the last 24 hours", 429, "photo_limit")]) expect(stopsTheRest(err)).toBe(true);
+		for (const err of [new HttpError("Not a photo", 400), new HttpError("Too big", 413), new Error("it couldn't be opened")]) expect(stopsTheRest(err)).toBe(false);
 	});
 });

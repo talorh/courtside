@@ -1,9 +1,15 @@
 // Sending the chosen photos. The first goes on its own: a refusal that would turn down the rest too (signed out, no
-// longer allowed, the site asks for a reload) stops there, before any more are sent. Then up to AT_ONCE are drawn and
-// readied together, and go up as uploadLanes allows.
+// longer allowed, the day's photos all added, the site asks for a reload) stops there, before any more are sent. Then
+// up to AT_ONCE are drawn and readied together, and go up as uploadLanes allows.
+import { needsReload } from "./upload-net.js";
+
 export const AT_ONCE = 3;
 /** The first photo has to be in within this for several to go up at once. */
 export const QUICK_MS = 5000;
+
+/** A refusal that would turn down the rest too: signed out, no longer allowed to add photos, the day's photos all
+ * added (photo_limit), or the site asks for a reload. */
+export const stopsTheRest = (err) => err?.status === 401 || err?.status === 403 || err?.code === "photo_limit" || needsReload(err);
 
 /** Sends every file with `send`; `onDone(n)` after each finishes. Skipped ones come back in the order they were chosen. */
 export async function sendPhotos(files, send, onDone, isStop) {

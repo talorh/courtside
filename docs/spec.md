@@ -388,6 +388,11 @@ lost answer (a weak signal) is added once, never twice; a page left part way say
 Photos is opened). Everyone sees and downloads
 them.
 
+- **Limits:** each photo is an image in Cloudflare Images, whose allowance (100,000 images) every team shares, so each
+ person adds at most 500 photos in any 24 hours and each team at most 2,000 (deleted ones count; a photo sent again
+ with its key is the same photo, so it's never refused and counts once). Past a limit the photo is refused (429) with
+ which limit and when there's room again, and the page stops there, saying so, rather than sending the rest.
+
 - **Not linked to games**: newest first by when each was taken, under a heading for
  each day, three across on a phone, 60 a page (**Newer photos**, **Older photos**). The date is the photo's own (EXIF
  DateTimeOriginal, read on the phone before it's made smaller); a photo with none (a screenshot), or a date still to

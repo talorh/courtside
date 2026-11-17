@@ -86,13 +86,19 @@ camera saved, where it was taken included. They're drawn one at a time, as a pho
 and sent after the first goes alone, so a refusal that would stop them all (signed out, say) stops at the first. Then
 three at once if the first was in within 5 seconds, or else one at a time, and one at a time for the rest after any
 dropped connection: on a weak signal three at once share it, and none may be in before it drops. A dropped connection
-is waited out and tried again; one the site turns down is listed and the rest carry on. A page left before they're all
+is waited out and tried again; one the site turns down is listed and the rest carry on, unless it's the day's limit
+(below), which stops them there and says when there's room again. A page left before they're all
 sent says how many weren't, the next time Photos is opened on that phone (kept in its browser for a day).</li>
 <li><b>In the Worker:</b> 10 MB at most, checked as a whole JPEG with any metadata left taken out. Its row is saved
 first, out of sight, so the photo has its number; then Images keeps it privately, named as it downloads
 (${code("saints-b12-1-<date>-photo-<id>.jpg")}), and the row is filled in. A photo with no date, or one still to come,
 gets the time it was added. Each photo comes with a key made on the phone, so one sent again after a lost answer is
 that photo, not a second.</li>
+<li><b>Limits:</b> each photo is an image in Cloudflare Images, whose allowance (100,000) every team shares, so a member
+adds at most 500 photos in any 24 hours and a team 2,000 (deleted ones count; one Images refused doesn't). The row
+is reserved only when both have room, in the same statement, so photos sent together can't pass them. A photo sent
+again with its key is still answered with the photo it added, at the limit too, and counts once. Past a limit the
+answer is 429 (${code("photo_limit")}), saying which limit and when there's room again.</li>
 <li><b>Looking:</b> newest taken first under each day, 60 a page, through signed links that last six hours. A photo's
 page has Newer and Older (on a phone a swipe slides between photos in place, the neighbours' pictures already on the page: public/photo-swipe.js) and Download photo.
 Each page reads only the photos it shows. A pinch zooms a photo, and while it's zoomed a finger moves around it instead
