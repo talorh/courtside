@@ -26,8 +26,8 @@ ${clipDiagram()}
 label. Stream's clip API isn't on the Worker's binding, so the Worker asks Stream's REST
 API, with a token that can only use Stream (${code("STREAM_API_TOKEN")}).</li>
 <li><b>Limits:</b> each clip is a video of its own in Stream, whose storage every team shares, so a game has
-50 clips at most, a member makes up to an hour of clips in any 24 hours and a team up to 5 hours (deleted clips count; an
-external app's other parts don't), and a team keeps up to 5 hours of clips however long ago they were made (deleted and
+50 clips at most, a member makes up to an hour of clips in any 24 hours and a team up to 5 hours (deleted clips count;
+clips Stream couldn't make and an external app's other parts don't), and a team keeps up to 5 hours of clips however long ago they were made (deleted and
 failed clips, and a deleted video's, don't count). The clip's place is taken against all four in one database statement
 before Stream is asked, so posts sent together can't pass them, and given back if Stream refuses. A refusal says which
 limit and when there's room again: for the 5 hours kept, once a team manager deletes some clips. A place Stream's clip never filled (the Worker stopped) is given back by the next

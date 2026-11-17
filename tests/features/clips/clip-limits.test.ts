@@ -145,6 +145,50 @@ describe("five hours of clips a day for each team", () => {
 	});
 });
 
+describe("clips Stream couldn't make", () => {
+	const fail = (deps: TestDeps, n: number) => deps.db.prepare(`UPDATE clips SET status = 'failed' WHERE team_id = ? AND id IN
+		(SELECT id FROM clips WHERE team_id = ? ORDER BY id DESC LIMIT ?)`).bind(deps.team.id, deps.team.id, n).run();
+	it("don't count against a person's hour or the team's five hours", async () => {
+		const { deps, videoId, p, watcher } = await setup();
+		await made(deps, videoId, p, ago(HOUR), 300, 12);
+		await fail(deps, 1);
+		expect((await watcher(`/videos/${videoId}/clips`, clip("1:00", "6:00"))).status).toBe(303);
+	});
+	it("aren't counted in the refusal's words", async () => {
+		const { deps, videoId, p, watcher } = await setup();
+		await made(deps, videoId, p, ago(HOUR), 300, 1);
+		await fail(deps, 1);
+		await made(deps, videoId, p, ago(HOUR), 300, 11);
+		await made(deps, videoId, p, ago(HOUR), 120);
+		const res = await watcher(`/videos/${videoId}/clips`, clip("1:00", "6:00"));
+		expect(res.status).toBe(429);
+		expect(await res.text()).toContain("you&#39;ve made 57 minutes of clips in the last 24 hours.");
+	});
+	it("don't count toward a game's 50", async () => {
+		const { deps, videoId, q, watcher } = await setup();
+		await made(deps, videoId, q, ago(48 * HOUR), 10, 50);
+		await fail(deps, 1);
+		expect((await watcher(`/videos/${videoId}/clips`, clip("0:10", "0:20"))).status).toBe(303);
+	});
+});
+
+describe("posts that overlap", () => {
+	it("hold to a person's hour: each one's place is taken before Stream is asked", async () => {
+		const { deps, videoId, p, watcher } = await setup();
+		await made(deps, videoId, p, ago(HOUR), 300, 10);
+		const real = deps.clipper.clip.bind(deps.clipper);
+		const gates: Array<() => void> = [];
+		deps.clipper.clip = async (r) => { await new Promise<void>((go) => gates.push(go)); return real(r); };
+		const sent = [0, 1, 2].map((i) => watcher(`/videos/${videoId}/clips`, clip(`${i * 10}:00`, `${i * 10 + 5}:00`)));
+		while (gates.length < 2) await new Promise((ok) => setTimeout(ok, 1));
+		for (const go of gates) go();
+		const statuses = (await Promise.all(sent)).map((r) => r.status).sort();
+		expect(statuses).toEqual([303, 303, 429]);
+		expect(deps.clipper.requests).toHaveLength(2);
+		expect(await rows(deps)).toBe(12);
+	});
+});
+
 describe("5 hours of clips kept for each team", () => {
 	/** Two more games' videos holding `perVideo` clips each, all 5 minutes long and made two days ago. */
 	async function kept(deps: TestDeps, by: number, perVideo: number) {
@@ -193,6 +237,25 @@ describe("a clip's place, taken before Stream is asked", () => {
 		expect((await watcher(`/videos/${videoId}/clips`, clip("0:10", "0:20"))).status).toBe(500);
 		expect(deps.stream.deleted).toEqual(["clip-1"]);
 		expect(await rows(deps)).toBe(0);
+	});
+	it("is given back, and Stream's clip deleted, when the place went while Stream made it", async () => {
+		const { deps, videoId, watcher } = await setup();
+		const real = deps.clipper.clip.bind(deps.clipper);
+		deps.clipper.clip = async (r) => {
+			await deps.db.prepare("DELETE FROM clips WHERE team_id = ? AND stream_uid IS NULL").bind(deps.team.id).run();
+			return real(r);
+		};
+		expect((await watcher(`/videos/${videoId}/clips`, clip("0:10", "0:20"))).status).toBe(500);
+		expect(deps.stream.deleted).toEqual(["clip-1"]);
+		expect(await rows(deps)).toBe(0);
+	});
+	it("asks to try again when it couldn't be taken but no limit is passed now", async () => {
+		const { deps, videoId, watcher } = await setup();
+		await deps.db.prepare("CREATE TRIGGER no_place BEFORE INSERT ON clips BEGIN SELECT RAISE(IGNORE); END").run();
+		const res = await watcher(`/videos/${videoId}/clips`, clip("0:10", "0:20"));
+		expect(res.status).toBe(503);
+		expect(await res.text()).toContain("Couldn&#39;t make the clip just now. Please try again.");
+		expect(deps.clipper.requests).toEqual([]);
 	});
 	it("isn't shown or checked with Stream while it waits, and goes if Stream was never asked within ten minutes", async () => {
 		const { deps, gameId, videoId, watcher } = await setup();

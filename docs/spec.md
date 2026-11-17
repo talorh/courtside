@@ -249,7 +249,8 @@ as an MP4.
  Manage team. Clips are deleted with their game's video.
 - **Limits:** each clip is a video of its own in Stream, whose storage every team shares (when it's full, no team can
  upload or go live). So a game has at most 50 clips, each person makes at most an hour of clips in any 24 hours and
- each team at most 5 hours (deleted clips count; an external app's other parts, which the site makes, don't), and a
+ each team at most 5 hours (deleted clips count; clips Stream couldn't make, and an external app's other parts, which
+ the site makes, don't), and a
  team keeps at most 5 hours of clips however long ago they were made (deleted and failed clips, and a deleted video's,
  don't count). A clip past a limit is refused (the 50 with 409, a day's minutes or the 5 hours kept with 429) with
  which limit it is and when there's room again (for the 5 hours kept, once a team manager deletes some clips), or how
