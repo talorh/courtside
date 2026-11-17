@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Enhancement] **Video joiner:** Building the joiner's image (npm run join -- image) now runs it with no network before pushing it, and pushes it only once its ffmpeg is the pinned version and its own self-test joins.
 - [Fix] **Staging:** Fixed an issue where staging's emails (support tickets, admin changes, Platform's test email) and its match day message linked to the live site: they now link to the address the site is on.
 - [Enhancement] **Documentation:** Beside Cloudflare's money alerts, the Documentation, the setup runbook and the install guide now describe a Workers spending limit (US$20 a billing period, say), which stops a runaway Workers bill but takes the site down until the next period if it's reached.
 - [Fix] **Roster:** Fixed an issue where adding only families already on the roster showed an error page.

@@ -1,13 +1,14 @@
 // npm run join -- image | deploy | dry-run   (docs/runbooks/cloudflare-setup.md §7, the joiner)
 // The video joiner Worker (join/) and its container. `image` builds the container image (podman standing in for Docker,
-// scripts/podman-as-docker.sh), pushes it to Cloudflare's registry under a tag from its files' content, and writes the tag
-// to join/image-tag.txt for the config to reference, so a deploy needs no Docker anywhere. `deploy` runs the joiner's
+// scripts/podman-as-docker.sh) under a tag from its files' content, runs it with no network to check its ffmpeg is the
+// pinned one and its own self-test joins, then pushes it to Cloudflare's registry and writes the tag to
+// join/image-tag.txt for the config to reference, so a deploy needs no Docker anywhere. `deploy` runs the joiner's
 // tests, cf deploy --dry-run, then cf deploy; both need the site owner's yes (AGENTS.md: Cloudflare changes).
 import { execFileSync, spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { existsSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { deployConfig, profileArgs } from "./deploy-config.mjs";
+import { ffmpegIsPinned, imagePlan, imageTag, pinnedFfmpeg, selfTestPassed } from "./join-steps.mjs";
 
 const say = (text) => console.log(`join: ${text} (${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })})`);
 const NAME = `${deployConfig().worker}-join`;
@@ -28,12 +29,18 @@ say("the joiner's tests");
 if (spawnSync("npx", ["vitest", "run", "tests/join"], { stdio: "inherit" }).status !== 0) fail("The joiner's tests failed: nothing deployed.");
 
 if (command === "image") {
-	// The tag names the image's files as they are now (the tag file itself left out), so the same files give the same tag.
-	const files = ["Dockerfile", "server.mjs", "jobs.mjs", "join.mjs", "pipeline.mjs", "test-a.mp4", "test-b.mp4"].map((f) => `join/${f}`);
-	const tag = createHash("sha1").update(execFileSync("git", ["hash-object", ...files], { encoding: "utf8" })).digest("hex").slice(0, 12);
-	say(`building and pushing ${NAME}:${tag} (podman as docker)`);
-	const built = spawnSync("npx", ["cf", "containers", "build", "join", "--tag", `${NAME}:${tag}`, "--push", "--path-to-docker", resolve("scripts/podman-as-docker.sh"), ...profileArgs()], { stdio: "inherit" });
-	if (built.status !== 0) fail("The image didn't build or push.");
+	const tag = imageTag();
+	const version = pinnedFfmpeg(readFileSync("join/Dockerfile", "utf8"));
+	if (!version) fail("join/Dockerfile pins no ffmpeg version (ffmpeg=<version>-r<n>).");
+	// Nothing is pushed until the built image itself, with no network, has the pinned ffmpeg and passes its own self-test.
+	for (const step of imagePlan({ name: NAME, tag, docker: resolve("scripts/podman-as-docker.sh") })) {
+		say(step.what);
+		const ran = spawnSync(step.cmd, step.args, step.check ? { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] } : { stdio: "inherit" });
+		if (step.check) process.stdout.write(ran.stdout ?? "");
+		const passed = ran.status === 0 && (step.check === "ffmpeg" ? ffmpegIsPinned(ran.stdout, version)
+			: step.check === "self-test" ? selfTestPassed(ran.stdout) : true);
+		if (!passed) fail(`${step.what}: ${step.check === "ffmpeg" ? `not ffmpeg ${version}` : "didn't pass"}. The image wasn't pushed.`);
+	}
 	writeFileSync("join/image-tag.txt", `${tag}\n`);
 	say(`join/image-tag.txt now names ${tag}: commit it, then npm run join -- deploy`);
 	process.exit(0);
