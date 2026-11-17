@@ -6,10 +6,11 @@ import { listPlayhqFixtures } from "./playhq-repository.ts";
 
 /**
  * For team managers, on every page: a PlayHQ fixture whose last check failed (PlayHQ down, changed, or turning
- * Cloudflare away), so the 8-hourly checks don't fail unnoticed. Never breaks a page: a failure here shows nothing.
+ * Cloudflare away), so the 8-hourly checks don't fail unnoticed. Never breaks a page: a failure here shows nothing. A
+ * closed team's fixtures aren't checked any more, so it gets none.
  */
 export async function playhqAlert(deps: TeamDeps, member: Member): Promise<SafeHtml | ""> {
-	if (member.role !== "manager") return "";
+	if (member.role !== "manager" || deps.team.status !== "active") return "";
 	try {
 		const failing = (await listPlayhqFixtures(deps.db, deps.team.id)).filter((f) => f.lastError);
 		if (!failing.length) return "";

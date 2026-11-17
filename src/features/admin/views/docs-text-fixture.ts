@@ -71,7 +71,8 @@ included, so a game a team manager deleted stays deleted. A game PlayHQ no longe
 <li><b>Check now</b> on the Fixture reads it at once. <b>Remove</b> stops the checks and keeps the games, no longer
 linked. The Fixture says when each was last checked and the day its checks stop.</li>
 <li><b>A failed read</b> (PlayHQ down, changed, or turning Cloudflare away) is saved on the fixture with its reason, and
-every team manager sees "PlayHQ couldn't be read" at the top of every page until a check works. A fixture that keeps
+every team manager sees "PlayHQ couldn't be read" at the top of every page until a check works (not once the team is
+closed: its fixtures aren't checked any more). A fixture that keeps
 failing stops on the same days as one that works.</li></ul>
 <h3>From any fixture page, read by AI</h3>
 ${aiReadDiagram()}

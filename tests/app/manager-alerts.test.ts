@@ -22,4 +22,12 @@ describe("the alert at the top of a team manager's pages", () => {
 		expect(await (await makeClient(deps)("/games")).text()).toContain("<b>PlayHQ couldn't be read</b> for Saints U12");
 		expect(await (await makeClient(deps, "c@x.com")("/games")).text()).not.toContain("PlayHQ couldn");
 	});
+	it("says nothing about PlayHQ on a closed team's pages: its season is over and nothing is checked", async () => {
+		const deps = createTestDeps();
+		await deps.db.prepare("INSERT INTO playhq_fixtures (team_id, competition, playhq_team_id, url, name, last_error) VALUES (?, 'VJBL', 'abc12345', 'https://www.playhq.com/x', 'Saints U12', 'PlayHQ said 503')").bind(deps.team.id).run();
+		await deps.db.prepare("UPDATE teams SET status = 'closed', closed_at = '2026-10-14T00:00:00.000Z', delete_after = '2027-10-14T00:00:00.000Z' WHERE id = ?").bind(deps.team.id).run();
+		const page = await (await makeClient(deps)("/games")).text();
+		expect(page).toContain("Saints");
+		expect(page).not.toContain("PlayHQ couldn");
+	});
 });

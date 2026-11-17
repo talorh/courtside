@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **PlayHQ:** Fixed an issue where a closed team's pages kept the "PlayHQ couldn't be read" banner for good after a last failed check.
 - [Fix] **Photos:** Fixed an issue where, while a swipe on a weak signal waited for the next photo's page, the last photo's caption and buttons could still be tapped, so Save or Delete acted on the photo swiped away from: they're greyed out and can't be used until the next photo's own come.
 - [Fix] **Game check:** Fixed an issue where photos in Images near their limit made a coming game not ready, though Go live and uploads don't use Images.
 - [Enhancement] **Log:** A person's phone reports (an upload or photos that stopped) are capped at 30 an hour, so a page gone wrong can't fill the Log's Problems.

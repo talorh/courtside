@@ -49,7 +49,7 @@ A VJBL season (the example league; the labels are the club's, `seasonPhases` in 
 
 - **Each check** is one call to the feed, from the 5-minute job's share of 200 outside calls a run; a check that finds the calls used up waits for the next run, which isn't a failure. Matching is by PlayHQ's game id, deleted games included, so a game a team manager deleted stays deleted. A game PlayHQ no longer lists (a grading game, say) is marked "Not on PlayHQ any more" and never deleted. An empty answer (a fixture not out yet) marks nothing.
 - **Check now** on the Fixture reads it at once. **Remove** stops the checks and keeps the games, no longer linked. The Fixture says when each was last checked and the day its checks stop.
-- **A failed read** (PlayHQ down, changed, or turning Cloudflare away) is saved on the fixture with its reason, and every team manager sees "PlayHQ couldn't be read" at the top of every page until a check works. A fixture that keeps failing stops on the same days as one that works.
+- **A failed read** (PlayHQ down, changed, or turning Cloudflare away) is saved on the fixture with its reason, and every team manager sees "PlayHQ couldn't be read" at the top of every page until a check works (not once the team is closed: its fixtures aren't checked any more). A fixture that keeps failing stops on the same days as one that works.
 
 ### From any fixture page, read by AI
 
