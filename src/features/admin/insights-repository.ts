@@ -28,7 +28,7 @@ export async function teamCounts(db: D1Database, p: { since30: string; nowLocal:
 		(SELECT COUNT(*) FROM videos v WHERE v.team_id = t.id AND v.deleted_at IS NULL AND v.status = 'ready') AS videos,
 		(SELECT COALESCE(SUM(v.duration_seconds), 0) FROM videos v WHERE v.team_id = t.id AND v.deleted_at IS NULL AND v.status = 'ready') AS video_seconds,
 		(SELECT MAX(v.created_at) FROM videos v WHERE v.team_id = t.id AND v.status <> 'failed' AND NOT (${TEST_RUN("v")})) AS last_upload,
-		(SELECT COUNT(*) FROM clips c WHERE c.team_id = t.id AND c.deleted_at IS NULL AND c.status = 'ready') AS clips,
+		(SELECT COUNT(*) FROM clips c WHERE c.team_id = t.id AND c.deleted_at IS NULL AND c.status = 'ready' AND c.part = 0) AS clips,
 		(SELECT COUNT(*) FROM photos f WHERE f.team_id = t.id AND f.deleted_at IS NULL) AS photos,
 		(SELECT COUNT(*) FROM video_views w WHERE w.team_id = t.id AND w.opened_at >= ?1 AND ${NOT_A_TEST("w.video_id", "w.team_id")}) AS watchers_30,
 		(SELECT COUNT(*) FROM downloads d WHERE d.team_id = t.id AND d.created_at >= ?1)
@@ -88,7 +88,7 @@ const HOURLY: Record<Series, string> = {
 	uploads: `SELECT strftime('%Y-%m-%dT%H', v.created_at) AS h, COUNT(*) AS n FROM videos v WHERE v.created_at >= ?1 AND v.status <> 'failed' AND NOT (${TEST_RUN("v")}) GROUP BY h`,
 	streams: `SELECT strftime('%Y-%m-%dT%H', s.created_at) AS h, COUNT(*) AS n FROM live_streams s WHERE s.created_at >= ?1 AND s.status = 'saved'
 		AND (s.recording_video_id IS NULL OR ${NOT_A_TEST("s.recording_video_id", "s.team_id")}) GROUP BY h`,
-	clips: `SELECT strftime('%Y-%m-%dT%H', c.created_at) AS h, COUNT(*) AS n FROM clips c WHERE c.created_at >= ?1 AND c.status <> 'failed' AND ${NOT_A_TEST("c.video_id", "c.team_id")} GROUP BY h`,
+	clips: `SELECT strftime('%Y-%m-%dT%H', c.created_at) AS h, COUNT(*) AS n FROM clips c WHERE c.created_at >= ?1 AND c.status <> 'failed' AND c.part = 0 AND c.stream_uid IS NOT NULL AND ${NOT_A_TEST("c.video_id", "c.team_id")} GROUP BY h`,
 	photos: "SELECT strftime('%Y-%m-%dT%H', created_at) AS h, COUNT(*) AS n FROM photos WHERE created_at >= ?1 GROUP BY h",
 	downloads: `SELECT strftime('%Y-%m-%dT%H', created_at) AS h, COUNT(*) AS n FROM (SELECT created_at FROM downloads WHERE created_at >= ?1
 		UNION ALL SELECT created_at FROM media_downloads WHERE created_at >= ?1) GROUP BY h`,

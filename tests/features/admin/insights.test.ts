@@ -30,7 +30,7 @@ async function site() {
 	await run(deps, "INSERT INTO downloads (team_id, video_id, member_id, kind, created_at) VALUES (?, ?, ?, 'hd', '2026-10-12T00:00:00.000Z')", b, video, sam);
 	// A photo downloaded too: a download is a download, whatever it is.
 	await run(deps, "INSERT INTO media_downloads (team_id, member_id, kind, item_id, name, created_at) VALUES (?, ?, 'photo', 1, 'p.jpg', '2026-10-12T01:00:00.000Z')", b, sam);
-	await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, created_at) VALUES (?, ?, 'Jordan scores', 10, 20, 'ready', '2026-10-12T02:00:00.000Z')", b, video);
+	await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, stream_uid, created_at) VALUES (?, ?, 'Jordan scores', 10, 20, 'ready', 'c-1', '2026-10-12T02:00:00.000Z')", b, video);
 	for (const [id, deleted] of [["img-1", null], ["img-2", "2026-10-13T00:00:00.000Z"]] as const) {
 		await run(deps, `INSERT INTO photos (team_id, image_id, taken_at, width, height, bytes, uploaded_by, delete_after, created_at, deleted_at)
 			VALUES (?, ?, '2026-10-10T18:00:00', 800, 600, 1000, ?, '2027-12-31T13:00:00.000Z', '2026-10-13T00:00:00.000Z', ?)`, b, id, sam, deleted);
@@ -234,6 +234,19 @@ describe("Insights, the admin area's landing page (graphical, what needs attenti
 		expect(html).toContain("<b>1</b><span>live stream saved</span>");
 	});
 
+	it("counts only the highlights people make as clips: not the site's own parts of an app's stream, nor a clip still being reserved", async () => {
+		const deps = await site();
+		const b = B12_1.id;
+		await run(deps, `INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, stream_uid, part, created_at)
+			VALUES (?, 1, 'Live stream, more from 7:10pm', 0, 1800, 'ready', 'part-2', 1, '2026-10-13T02:00:00.000Z')`, b);
+		await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, created_at) VALUES (?, 1, 'Reserved', 1, 5, 'processing', '2026-10-13T03:00:00.000Z')", b);
+		await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, stream_uid, created_at) VALUES (?, 1, 'Steph from deep', 1, 5, 'ready', 'c-2', '2026-10-13T04:00:00.000Z')", b);
+		const b12 = (await teamCounts(deps.db, { since30: "2026-09-15T00:00:00.000Z", nowLocal: "2026-10-15T11:00", day30: "2026-09-15" })).find((c) => c.team.id === b)!;
+		expect(b12.clips).toBe(2);
+		const weeks = await hourlyActivity(deps.db, "2026-10-12T13:00:00.000Z");
+		expect(weeks.clips.filter((r) => r.h.startsWith("2026-10-13"))).toEqual([{ h: "2026-10-13T04", n: 1 }]);
+	});
+
 	it("leaves test runs out of the weeks: a video deleted within a day of being made, or thrown away as a test or replaced", async () => {
 		const deps = await site();
 		const game = (await run(deps, "INSERT INTO games (team_id, starts_at, competition, round_label, opponent) VALUES (?, '2026-10-12T18:40', 'Practice match', '', 'Test')", B12_1.id)).meta.last_row_id;
@@ -242,7 +255,7 @@ describe("Insights, the admin area's landing page (graphical, what needs attenti
 				VALUES (?, ?, 'ready', ?, 120, '2027-12-31T13:00:00.000Z', ?, ?, ?)`, B12_1.id, game, uid, created, deleted, reason)).meta.last_row_id;
 			await run(deps, "INSERT INTO live_streams (team_id, game_id, live_input_uid, status, created_at, recording_video_id) VALUES (?, ?, ?, 'saved', ?, ?)", B12_1.id, game, `in-${uid}`, created, id);
 			await run(deps, "INSERT INTO video_views (team_id, video_id, member_id, opened_at) VALUES (?, ?, 1, ?)", B12_1.id, id, created);
-			await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, created_at) VALUES (?, ?, 'Try', 1, 5, 'ready', ?)", B12_1.id, id, created);
+			await run(deps, "INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, stream_uid, created_at) VALUES (?, ?, 'Try', 1, 5, 'ready', ?, ?)", B12_1.id, id, `c-${uid}`, created);
 		};
 		// Three test runs, and a real game's video a team manager deleted a week later: that one still happened.
 		await add("t1", "2026-10-13T02:00:00.000Z", "2026-10-13T02:20:00.000Z", "admin");

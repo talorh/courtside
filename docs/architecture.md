@@ -916,7 +916,8 @@ section and keeps one More menu open at a time.
  removal requests in any team, a running team with no team manager), worst first. Then a scoreboard of the whole site
  with each figure's last 12 weeks, first views week by week, when families watch (a heatmap of days and hours,
  local time), the rest as small charts (`insights-chart.ts`), the teams side by side, and what stands out. Every
- team's figures come from one query; the weeks come from hourly counts put into the club's weeks in code. With no
+ team's figures come from one query; the weeks come from hourly counts put into the club's weeks in code. Clips count
+ only the ones people make (`part = 0`, with a Stream video), never an app stream's further parts (migration 0014). With no
  team on the site (a new install), Get started takes the numbers' place.
  `/admin/insights` redirects here.
 - **Teams** (`/admin/teams`): every team that isn't deleted, running ones first (season as its label, 2026/27, as on
