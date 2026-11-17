@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Clips and photos:** Fixed an issue where a limit's "room again at" time was a minute early when it fell part way through a minute: it's now the minute after.
 - [Fix] **Sign-in:** Fixed an issue where a code refused over a limit could have its count taken back twice when noting the refusal failed, letting one more code through.
 - [Fix] **Insights:** Fixed an issue where an external app stream's further parts, which the site saves as clips, were counted as highlight clips in the teams' figures and the weeks.
 - [Fix] **Sign-in:** Fixed an issue where a held address's taps on Send code counted against its network's limit, which could turn away other families signing in from the same gym's or phone company's address.
