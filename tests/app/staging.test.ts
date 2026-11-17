@@ -5,7 +5,7 @@ import { form, makeClient } from "../helpers/app.ts";
 import { createTestDeps, type TestDeps } from "../helpers/fakes.ts";
 import { seedGame, seedVideo } from "../helpers/seed.ts";
 
-const staging = (deps: TestDeps): TestDeps => ({ ...deps, config: { ...deps.config, staging: true } });
+const staging = (deps: TestDeps): TestDeps => ({ ...deps, config: { ...deps.config, staging: true, siteHost: "staging-courtside.saints-club.workers.dev" } });
 const STRIP = '<div class="stagingstrip" role="note"><b>Staging:</b> test data, not the live site.</div>';
 
 describe("staging", () => {

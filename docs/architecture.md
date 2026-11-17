@@ -75,8 +75,11 @@ flowchart TD
 1. **The edge.** DDoS protection, the WAF's managed rules, a list of allowed methods, a human check (Turnstile's
  managed challenge on page loads until someone's signed in, told by the `courtside_session` cookie; never on `/api/*`,
  static files or WhatsApp's link previews, which get the sign-in page's preview card), and rate limiting.
-2. **The Worker's first checks.** A write (anything but GET or HEAD) from another site is refused before anything
- else. The spinner (below), `security.txt` (`app/security-txt.ts`: where to report a security problem, the one page
+2. **The Worker's first checks.** The Worker answers only on its own address (`siteHost` in `app/config.ts`, from
+ `SITE_HOST`: the club's domain, staging's on staging, localhost in `cf dev`): any other name that reaches it, such
+ as a version's workers.dev preview URL, is outside the zone's WAF, rate limit, human check and maintenance page, so
+ it gets a bare 404 with no page and no cookie. Then a write (anything but GET or HEAD) from another site is refused
+ before anything else. The spinner (below), `security.txt` (`app/security-txt.ts`: where to report a security problem, the one page
  anyone can read), the sign-in's own pages (`/signin`, `/signin/code`, `/signout`, `/signin/whoami`:
  `features/signin/`) and the few files they need (`app/static-files.ts`) are answered without a sign-in. Then the
  session cookie is hashed and looked up (`auth/session.ts`), and the email read from its row; without a live session

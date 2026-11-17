@@ -37,7 +37,9 @@ export function makeClient(deps: TestDeps, who: string | ClientOptions = MANAGER
 	return (path: string, init: RequestInit = {}) => {
 		const write = !["GET", "HEAD"].includes((init.method ?? "GET").toUpperCase());
 		const sent = write && says ? sayTeam(init, says) : init;
-		return handleRequest(new Request(`${ORIGIN}${path}`, { ...sent, headers: { Origin: ORIGIN, ...(cookie ? { Cookie: cookie } : {}), ...sent.headers } }), deps, async () => email, router, buildAdminRouter());
+		// The site's own address, as the Worker answers on no other (staging's, when the deps are staging's).
+		const origin = `https://${deps.config.siteHost}`;
+		return handleRequest(new Request(`${origin}${path}`, { ...sent, headers: { Origin: origin, ...(cookie ? { Cookie: cookie } : {}), ...sent.headers } }), deps, async () => email, router, buildAdminRouter());
 	};
 }
 

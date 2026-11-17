@@ -19,7 +19,7 @@ import type { JoinAnswer, JoinerPort, JoinRequest, JoinResult } from "../../src/
 export const TEST_CONFIG: AppConfig = {
 	accountId: "acct", streamCustomerCode: "cust",
 	r2Bucket: "courtside-originals", streamKeyId: "k", streamKeyJwk: "j",
-	r2AccessKeyId: "a", r2SecretAccessKey: "s", streamApiToken: "t", turnstileSiteKey: "0xSITEKEY", turnstileSecret: "ts", devAuthEmail: null, staging: false, workerName: "courtside", cloudflareInsights: null,
+	r2AccessKeyId: "a", r2SecretAccessKey: "s", streamApiToken: "t", turnstileSiteKey: "0xSITEKEY", turnstileSecret: "ts", siteHost: "saints.example", devAuthEmail: null, staging: false, workerName: "courtside", cloudflareInsights: null,
 };
 
 export class FakeStream implements StreamPort {

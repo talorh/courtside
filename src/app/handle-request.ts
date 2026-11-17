@@ -31,6 +31,8 @@ import { teamForWrite, writeTeam } from "./team-guard.ts";
 
 export async function handleRequest(req: Request, deps: AppDeps, authenticate: Authenticate, router: Router, admin: AdminRouter): Promise<Response> {
 	const url = new URL(req.url);
+	// Only the site's own address: anything else is outside the zone's protections (app/config.ts `siteHost`).
+	if (url.hostname !== deps.config.siteHost) return elsewhere();
 	const found: Found = { teamId: null, email: null, setCookies: [] };
 	let response: Response;
 	try {
@@ -45,6 +47,9 @@ export async function handleRequest(req: Request, deps: AppDeps, authenticate: A
 	response.headers.set("Content-Security-Policy", contentSecurityPolicy(deps.config, { launch: isLaunch(req, url), turnstile: isSignInPage(url.pathname) }));
 	return response;
 }
+
+/** Another address's answer: no page, no cookie, nothing cached. */
+const elsewhere = () => new Response("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
 
 /** What the request found out before anything failed: its team, who's asking, and cookies to put right. */
 export interface Found { teamId: string | null; email: string | null; memberId?: number; setCookies: string[] }

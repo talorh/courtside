@@ -25,6 +25,10 @@ export const DEPLOY = {
 	firstAdmins: "REPLACE_WITH_THE_ADMINS_EMAILS",
 	/** Who `cf dev` signs in as on this computer. */
 	devEmail: "you@example.com",
-	/** Staging (docs/runbooks/staging.md): its own database, bucket and Turnstile widget, in the same account. */
-	staging: { d1Name: "courtside-staging", d1Id: "REPLACE_WITH_STAGING_D1_ID", bucket: "courtside-staging", turnstileSiteKey: "REPLACE_WITH_STAGING_TURNSTILE_SITE_KEY" },
+	/** Staging (docs/runbooks/staging.md): its own database, bucket and Turnstile widget, in the same account, and its
+	 * address, staging-<worker> on the account's workers.dev subdomain: the only hostname staging answers on. */
+	staging: {
+		d1Name: "courtside-staging", d1Id: "REPLACE_WITH_STAGING_D1_ID", bucket: "courtside-staging", turnstileSiteKey: "REPLACE_WITH_STAGING_TURNSTILE_SITE_KEY",
+		host: "staging-courtside.REPLACE_WITH_WORKERS_SUBDOMAIN.workers.dev",
+	},
 };

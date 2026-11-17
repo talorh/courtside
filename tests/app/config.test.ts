@@ -6,7 +6,7 @@ const full = {
 	ACCOUNT_ID: "a", STREAM_CUSTOMER_CODE: "c",
 	R2_BUCKET: "b", STREAM_KEY_ID: "k", STREAM_KEY_JWK: "j",
 	R2_ACCESS_KEY_ID: "r", R2_SECRET_ACCESS_KEY: "s", STREAM_API_TOKEN: "t", DEV_AUTH_EMAIL: "",
-	TURNSTILE_SITE_KEY: "0x4", TURNSTILE_SECRET: "ts",
+	TURNSTILE_SITE_KEY: "0x4", TURNSTILE_SECRET: "ts", SITE_HOST: "saints.example",
 };
 
 describe("loadConfig", () => {

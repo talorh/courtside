@@ -8,7 +8,7 @@ Every page, form and page script call goes through the same checks, in the same 
 
 *Each check happens in order; the first one that says no answers the request. A page's own route then checks the person's role.*
 
-- **Before the sign-in:** a write from another website is refused, and only the sign-in pages, their few files, the opening spinner and security.txt answer without a session. Even the site's static files need one.
+- **Before the sign-in:** the Worker answers only on its own address (saints.example, or staging's); any other name that reaches it, such as a workers.dev address, gets a bare "Not found", as it would miss the zone's protections. A write from another website is refused, and only the sign-in pages, their few files, the opening spinner and security.txt answer without a session. Even the site's static files need one.
 - **The current team** comes from a cookie, so every team shares the same addresses. Someone in one team just has it; someone in several picks with Switch team.
 - **Every write names its team.** Each form and page script says which team it was made for, so a page left open on one team can never save into another. Every form or JSON body over 2 MB, far more than any page sends, is refused, before or as it's read, and a form's team is read the same way before anything else. A closed team is read-only.
 - **Errors** come back as a plain page (or a JSON answer for the API), are logged with their team, and every server error is counted by the hour for Platform's alert.

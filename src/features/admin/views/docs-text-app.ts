@@ -1,4 +1,5 @@
 // The Documentation page's sections on how the site works: requests, signing in, teams and roles, and photos.
+import { CLUB } from "../../../club.ts";
 import { html } from "../../../shared/html.ts";
 import { code, type DocSection, table } from "./docs-blocks.ts";
 import { requestDiagram, signInDiagram } from "./docs-diagrams-core.ts";
@@ -10,7 +11,9 @@ runs. The pages are plain HTML drawn on the server, with small scripts for the p
 Photos, Ask) and no framework.</p>
 ${requestDiagram()}
 <ul class="docs-points">
-<li><b>Before the sign-in:</b> a write from another website is refused, and only the sign-in pages, their few files,
+<li><b>Before the sign-in:</b> the Worker answers only on its own address (${CLUB.domain}, or staging's); any other
+name that reaches it, such as a workers.dev address, gets a bare "Not found", as it would miss the zone's protections. A
+write from another website is refused, and only the sign-in pages, their few files,
 the opening spinner and security.txt answer without a session. Even the site's static files need one.</li>
 <li><b>The current team</b> comes from a cookie, so every team shares the same addresses. Someone in one team just
 has it; someone in several picks with Switch team.</li>

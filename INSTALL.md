@@ -136,6 +136,8 @@ a dry run first, then for real after your yes. Read-only commands need no yes.
 5. **Stream** (§1): a signing key for playback links, and a token with Stream Edit for uploads, clips and live inputs;
    records the account's customer code in `deploy.config.ts`.
 6. **Turnstile** (§1): a widget for the site and one for staging's address; the site keys go in `deploy.config.ts`.
+   Staging's address, `staging-<worker>.<the account's workers.dev subdomain>.workers.dev` (Workers & Pages in the
+   dashboard shows the subdomain), goes in `deploy.config.ts` `staging.host`: it's the only address staging answers on.
 7. **Email** (§1; on a subdomain, section 8): Email Sending onboarded for the domain (its DNS records added), the sender `alerts@<domain>`;
    Email Routing forwarding `security@<domain>` to you; the SPF and DMARC records from `infra/zone/`.
 8. **The zone's protections** (§3; on a subdomain, section 8): the WAF rules, rate limit, redirects, security headers and bot settings from

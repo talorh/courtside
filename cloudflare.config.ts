@@ -88,6 +88,8 @@ export default defineConfig(({ mode, isPreview }) => {
 				JOINER: isDev ? undefined : bindings.durableObject({ worker: `${DEPLOY.worker}-join`, exportName: "Joiner" }),
 				ZONE_ID: bindings.text(DEPLOY.zoneId),
 				D1_ID: bindings.text(isPreview ? DEPLOY.staging.d1Id : DEPLOY.d1Id),
+				// The one hostname the Worker answers on; any other (a version's workers.dev preview URL) gets a bare 404.
+				SITE_HOST: bindings.text(isDev ? "localhost" : isPreview ? DEPLOY.staging.host : club.domain),
 			},
 		},
 	};

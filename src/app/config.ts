@@ -10,6 +10,10 @@ const REQUIRED = {
 	/** The sign-in page's Turnstile widget (platform/turnstile.ts): its site key, shown on the page, and its secret. */
 	turnstileSiteKey: "TURNSTILE_SITE_KEY",
 	turnstileSecret: "TURNSTILE_SECRET",
+	/** The one hostname the Worker answers on (app/handle-request.ts): the club's domain live, staging's own address on
+	 * staging, localhost in cf dev. Anything else that reaches the Worker (a version's workers.dev preview URL, say)
+	 * misses the zone's WAF, rate limit, human check and maintenance page, so it gets a bare 404. */
+	siteHost: "SITE_HOST",
 } as const;
 
 export type AppConfig = { readonly [K in keyof typeof REQUIRED]: string } & {

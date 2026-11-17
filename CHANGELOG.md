@@ -8,6 +8,10 @@ was wrong), the area in bold, then a plain sentence saying what changed for the 
 where ..."). Every deploy adds its lines at the top of today's date, and the deploy (`npm run release`, then Workers
 Builds) sends the top line, in plain words, as its message.
 
+## 18 Nov 2026
+
+- [Fix] **Security:** The site now answers only on its own address (the club's domain, and staging on its own): any other address that reaches the Worker, such as a version's workers.dev preview address, gets a bare "Not found", as it would miss the zone's protections.
+
 ## 17 Nov 2026
 
 - [Enhancement] **Documentation:** The AI coding agent now fetches Cloudflare's skills (security audit and Workers best practices among them) at the start of each session, and checks every change against them before it's committed.

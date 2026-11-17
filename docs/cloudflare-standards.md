@@ -33,6 +33,10 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  counts as one of the Worker's failures. A service that didn't answer is a warning where the site carries on.
 - Keep `workersDev` off, as a `*.workers.dev` address would be a second way in. Preview URLs are on only for staging,
  which runs the same sign-in as the live site.
+- The Worker answers only on its own hostname (`SITE_HOST`, read as `siteHost` in `src/app/config.ts`; checked first in
+ `app/handle-request.ts`): the club's domain, staging's address on staging, localhost in `cf dev`. Any other name that
+ reaches it (a version's workers.dev preview URL) would miss the zone's WAF, rate limit, human check and maintenance
+ page, so it gets a bare 404 with no page and no cookie.
 - Don't keep request state in module-level variables. Isolates are reused across requests. Build dependencies
  per request in `src/index.ts` and pass them down.
 - Keep requests small. The account has Workers Paid, but the request body limit is still 100 MB and each cron run keeps
