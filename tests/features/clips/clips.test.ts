@@ -134,12 +134,6 @@ describe("highlight clips", () => {
 		expect((await watcher(`/games/${gameId}?clip=1`)).status).toBe(200);
 		expect(await (await watcher(`/games/${gameId}?clip=1`)).text()).not.toContain("tok-clip-1");
 	});
-	it("if saving the clip fails, the clip Stream made is deleted too", async () => {
-		const { deps, videoId, coach } = await setup();
-		await deps.db.prepare("CREATE TRIGGER no_clips BEFORE INSERT ON clips BEGIN SELECT RAISE(ABORT, 'disk full'); END").run();
-		expect((await coach(`/videos/${videoId}/clips`, form({ start: "0:10", end: "0:20" }))).status).toBe(500);
-		expect(deps.stream.deleted).toEqual(["clip-1"]);
-	});
 });
 
 describe("clips on the game page", () => {

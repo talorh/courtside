@@ -482,6 +482,29 @@ Phone streaming apps (Moblin, Streamlabs, IRL Pro) were tried first, with the sa
 window and wait. Those went when the page's camera became the way to stream; the external app is the same machinery
 back, for the one case the page's camera can't cover.
 
+## Highlight clips
+
+`src/features/clips/`, `src/platform/stream-clips.ts`. `POST /videos/:id/clips` (any member) checks the times (3 seconds
+to 5 minutes, inside the video) and the players ticked, then:
+
+1. **Takes the clip's place** (`clip-limits.ts`, `takeClipPlace`; `clip-limits-repository.ts`, `reserveClip`): one
+ `INSERT … SELECT … WHERE … RETURNING id` that adds the row, with no `stream_uid` yet, only when the video has fewer
+ than 50 clips (places being made count), the member's clips made in the last 24 hours plus this one come to an hour
+ at most, and the team's to 5 hours at most. Each clip is a Stream video of its own, and Stream's storage is shared by
+ every team, so this keeps one member or team from filling it; being one statement, posts sent together can't all
+ pass a count read before any is saved. Clips made count by `created_at`, deleted ones too; an external app's other
+ parts (`part = 1`, made by the site) don't. Refused, it reads why: 409 "This game already has 50 clips.", or 429
+ (`clip_limit`) naming the hour or the 5 hours, what's been made, when the oldest clips turning a day old make room,
+ and how long a clip fits now.
+2. **Asks Stream** for the clip (`clipper.clip`, REST, with the team in its metadata). If Stream refuses, the place is
+ given back (the row deleted) and the page says so (`stream_storage_full` 503, or `clip_failed` 502).
+3. **Fills the place** (`fillClip`): the Stream uid and who's in it, in one batch. If that fails, the row goes and
+ Stream's clip is deleted.
+
+A place has no `stream_uid`, so every clip read leaves it out (`clips-repository.ts`'s `ACTIVE`): it isn't on the game
+page and the 5-minute run doesn't ask Stream about it. One the Worker stopped before filling is given back by the run's
+Clips step after ten minutes. The run then takes clips from processing to ready or failed (`advanceClips`).
+
 ## Photos
 
 `src/features/photos/`, `src/platform/hosted-images.ts`, `public/photos.js`. Everyone on a team adds them, Watch only
@@ -584,7 +607,8 @@ the videos, games and people only that log named.
  Notifications; none means ask Stream again (which covers a failed request in step 3). Stream saying it can't make
  it sets `hd_failed_at`, which takes the video out of this step (and out of "busy" and Right now), writes one
  Problems line and asks Stream once more; the game page's Download HD video still asks Stream itself.
-5. **Clips.** Processing clips become ready (and get their MP4 started) or failed.
+5. **Clips.** Processing clips become ready (and get their MP4 started) or failed. A clip's place taken over ten minutes
+ ago and never filled (the Worker stopped between taking it and saving Stream's clip) is given back (deleted).
 6. **Retention and clean-up.** Delete videos past `delete_after` (the Stream copy, the R2 original if R2's 30-day rule
  hasn't already, then the row, softly). Cancel uploads abandoned for 7 days. Delete download log rows older than 2
  years, activity older than 90 days and `video_views` older than 30 days. A video a person deleted (a team manager,
@@ -1055,7 +1079,7 @@ erDiagram
 | roster_duties | team_id (one row), lollies (on or off), lollies_label (the extra duty's name), lollies_family_id, video, video_family_id (a family who does that duty every week, and no other) | The team's duties beyond its two scorers, set on the Roster page; no row means Lollies and video, shared out |
 | players | team_id, number (one current player each, 0 to 99), name, removed_at | The squad (at most 10), kept on Manage team; shown on Home and in the clip picker; a removed player stays on clips already tagged |
 | clip_players | team_id, clip_id, player_id | Who's in each clip |
-| clips | team_id, video_id, label, start_seconds, end_seconds, status (processing/ready/failed), stream_uid, created_by, deleted_at | Deleted with their video (the Stream copy first); the row goes 90 days after, unless a removal request or a favourite names it |
+| clips | team_id, video_id, label, start_seconds, end_seconds, status (processing/ready/failed), stream_uid (none while its place waits for Stream), created_by, created_at, part (1: an external app's other part, which the site makes), deleted_at | Deleted with their video (the Stream copy first); the row goes 90 days after, unless a removal request or a favourite names it |
 | clip_removal_requests | team_id, clip_id, member_id, reason, status (open/clip_deleted/kept), note, resolved_by, resolved_at | Kept |
 | coach_notes | team_id, game_id, at_seconds, body, created_by, deleted_at | Coaches only; soft-deleted with the game |
 | activity | team_id, kind, game_id, member_id, detail, device (the browser it came from, "" for the site's own), created_at | Notifications' feed, and the admin Log's Videos and Photos lines: uploads, live streams, processing, clips, removal requests, and a video or game deleted (with who); hard-deleted after 90 days |

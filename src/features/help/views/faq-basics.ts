@@ -90,7 +90,10 @@ ${shot("clip-make", "Make a highlight clip, filled in: Start 1:42 and End 1:52 w
 Video</b>.
 ${shot("clip-make-done", "The game's Highlight clips: Q3 Jordan's steal and layup, 10 seconds long, tagged #9 Jordan, with Watch, Download and Favourite", 358, 302)}</li></ol>
 <p class="small">Forgot to tick someone? Whoever made the clip (or ${h.c.ask}) can tap <b>Add players</b> or <b>Change
-players</b> on it.</p>`)}
+players</b> on it.</p>
+<p class="small">A game can have 50 clips. Each clip is stored as a video of its own, so to keep room for every team's
+games, each person can make up to an hour of clips a day and each team up to 5 hours. Past that, the site says when
+there's room again.</p>`)}
 ${faqItem("labels", "What do Ready to watch, Processing and the other labels mean?", html`<ul class="steps">
 <li>${label("ready", "Ready to watch")} (green): tap the game to play it. <span class="t new">New</span> means you haven't opened it yet.</li>
 <li><b>Live now</b> or ${label("live", "Live stream")} (red): someone is streaming the game right now. Tap it to watch.</li>

@@ -23,8 +23,14 @@ site at once, but its media is kept a day in case that was a mistake.</li></ul>
 ${clipDiagram()}
 <ul class="docs-points">
 <li><b>Making one:</b> any member marks a start and an end while watching, 3 seconds to 5 minutes apart, and gives it a
-label; a game has 50 clips at most. Stream's clip API isn't on the Worker's binding, so the Worker asks Stream's REST
+label. Stream's clip API isn't on the Worker's binding, so the Worker asks Stream's REST
 API, with a token that can only use Stream (${code("STREAM_API_TOKEN")}).</li>
+<li><b>Limits:</b> each clip is a video of its own in Stream, whose storage every team shares, so a game has
+50 clips at most, a member makes up to an hour of clips in any 24 hours and a team up to 5 hours (deleted clips count; an
+external app's other parts don't). The clip's place is taken against all three in one database statement before
+Stream is asked, so posts sent together can't pass them, and given back if Stream refuses. A refusal says which limit
+and when there's room again. A place Stream's clip never filled (the Worker stopped) is given back by the next
+5-minute run after ten minutes.</li>
 <li><b>Ready:</b> each 5-minute run asks Stream how processing clips are going; a ready one has its MP4 started, so it
 can be downloaded, and a failed one is marked failed.</li>
 <li><b>Who's in it:</b> players ticked when it's made, or later by its maker or a team manager. At the season's end
@@ -36,7 +42,7 @@ Deleting takes Stream's copy first, so a failure leaves the clip to try again, a
 and the panel says so. A note can be at a time in the video, or about the whole game. Either coach can delete any
 coach's note, and a game's notes export to Excel, in the order the page shows them.</p>
 ${table(["Table", "Holds"], [
-		[code("clips"), "Each clip: its video, start and end, label, Stream copy, state and maker"],
+		[code("clips"), "Each clip: its video, start and end, label, Stream copy (none while its place waits for Stream), state, maker, when it was made, and whether it's an external app's other part"],
 		[code("favourites"), "Each member's starred games and clips"],
 		[code("downloads"), "Every game's video downloaded, with who took it: kept two years"],
 		[code("media_downloads"), "Every clip and photo downloaded (each photo in a zip too), with who took it and the file it came as: kept two years"],

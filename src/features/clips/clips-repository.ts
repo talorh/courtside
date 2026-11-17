@@ -17,7 +17,8 @@ interface ClipRow {
 }
 
 const COLUMNS = "id, video_id, label, start_seconds, end_seconds, status, stream_uid, created_by";
-const ACTIVE = "team_id = ? AND deleted_at IS NULL";
+// A clip whose place is taken but Stream hasn't made it yet has no Stream uid (clip-limits-repository.ts): not one yet.
+const ACTIVE = "team_id = ? AND deleted_at IS NULL AND stream_uid IS NOT NULL";
 
 const toClip = (r: ClipRow): Clip => ({
 	id: r.id, videoId: r.video_id, label: r.label, startSeconds: r.start_seconds, endSeconds: r.end_seconds,
@@ -39,31 +40,21 @@ export async function getClip(db: D1Database, teamId: string, id: number): Promi
 export const listClipsForVideo = (db: D1Database, teamId: string, videoId: number) =>
 	many(db, `${ACTIVE} AND video_id = ? ORDER BY start_seconds, id`, teamId, videoId);
 
-export const listClipsByStatus = (db: D1Database, teamId: string, status: ClipStatus) =>
-	many(db, `${ACTIVE} AND status = ? ORDER BY id`, teamId, status);
-
-/** The clip and who's in it, in one batch. `playerIds` must already be checked against listPlayers. */
-export async function insertClip(
-	db: D1Database,
-	teamId: string,
-	c: { videoId: number; label: string; startSeconds: number; endSeconds: number; streamUid: string; createdBy: number | null },
-	playerIds: number[],
-): Promise<number> {
-	const [clip] = await db.batch([
-		db.prepare(`INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, stream_uid, created_by)
-			VALUES (?, ?, ?, ?, ?, 'processing', ?, ?)`)
-			.bind(teamId, c.videoId, c.label, c.startSeconds, c.endSeconds, c.streamUid, c.createdBy),
-		...playerIds.map((id) => db.prepare(`INSERT INTO clip_players (team_id, clip_id, player_id)
-			SELECT team_id, id, ? FROM clips WHERE team_id = ? AND stream_uid = ?`).bind(id, teamId, c.streamUid)),
-	]);
-	return clip!.meta.last_row_id;
+/** Clips Stream is still making, and places taken for clips Stream hasn't made yet (with when each was taken), in one read. */
+export async function listProcessing(db: D1Database, teamId: string): Promise<{ clips: Clip[]; places: Array<{ id: number; createdAt: string }> }> {
+	const { results } = await db.prepare(`SELECT ${COLUMNS}, created_at FROM clips WHERE team_id = ? AND deleted_at IS NULL AND status = 'processing' ORDER BY id`)
+		.bind(teamId).all<ClipRow & { created_at: string }>();
+	return {
+		clips: results.filter((r) => r.stream_uid !== null).map(toClip),
+		places: results.filter((r) => r.stream_uid === null).map((r) => ({ id: r.id, createdAt: r.created_at })),
+	};
 }
 
 /** Another part of an external app's stream (it restarted after a long gap), already a Stream video: a clip of the game
  * video whose own Stream video is `videoStreamUid`. To batch with that video's insert. */
 export function insertPartClipWrite(db: D1Database, teamId: string, c: { videoStreamUid: string; label: string; endSeconds: number; streamUid: string; createdBy: number | null }) {
-	return db.prepare(`INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, stream_uid, created_by)
-		SELECT v.team_id, v.id, ?, 0, ?, 'processing', ?, ? FROM videos v WHERE v.team_id = ? AND v.stream_uid = ? AND v.deleted_at IS NULL`)
+	return db.prepare(`INSERT INTO clips (team_id, video_id, label, start_seconds, end_seconds, status, stream_uid, created_by, part)
+		SELECT v.team_id, v.id, ?, 0, ?, 'processing', ?, ?, 1 FROM videos v WHERE v.team_id = ? AND v.stream_uid = ? AND v.deleted_at IS NULL`)
 		.bind(c.label, c.endSeconds, c.streamUid, c.createdBy, teamId, c.videoStreamUid);
 }
 

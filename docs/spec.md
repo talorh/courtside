@@ -247,6 +247,11 @@ as an MP4.
 - **Removing:** only a team manager deletes a clip; anyone
  else, its maker and coaches included, asks for it to be removed, and the team manager deletes or keeps it on
  Manage team. Clips are deleted with their game's video.
+- **Limits:** each clip is a video of its own in Stream, whose storage every team shares (when it's full, no team can
+ upload or go live). So a game has at most 50 clips, each person makes at most an hour of clips in any 24 hours and
+ each team at most 5 hours (deleted clips count; an external app's other parts, which the site makes, don't). A clip
+ past a limit is refused (the 50 with 409, a day's minutes with 429) with which limit it is and when there's room
+ again, or how long a clip fits now.
 
 ### Coaches' notes
 

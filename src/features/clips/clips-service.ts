@@ -9,12 +9,13 @@ import { listPlayers, playersByClip, setClipPlayers } from "../players/players-r
 import { requestHd } from "../videos/processing-service.ts";
 import type { Video } from "../videos/videos-repository.ts";
 import { resolveRequestsForClipWrite } from "./clip-removals-repository.ts";
-import { type Clip, getClip, insertClip, listClipsByStatus, listClipsForVideo, setClipStatus, softDeleteClipWrite } from "./clips-repository.ts";
+import { dropReservedClip, fillClip } from "./clip-limits-repository.ts";
+import { giveBackStalePlaces, takeClipPlace } from "./clip-limits.ts";
+import { type Clip, getClip, listClipsForVideo, listProcessing, setClipStatus, softDeleteClipWrite } from "./clips-repository.ts";
 import { teamCopy } from "../teams/team-copy.ts";
 
 export const MIN_CLIP_SECONDS = 3;
 export const MAX_CLIP_SECONDS = 300;
-const MAX_CLIPS_PER_VIDEO = 50;
 const BATCH = 5;
 
 export const clipFormSchema = z.object({
@@ -53,32 +54,32 @@ export function parseClock(value: string, what: string): number {
 
 export async function createClip(deps: TeamDeps, member: Member, video: Video, form: z.infer<typeof clipFormSchema>): Promise<number> {
 	if (video.status !== "ready" || !video.streamUid) throw conflict("The game video isn't ready yet.");
-	const start = parseClock(form.start, "Start");
-	const end = parseClock(form.end, "End");
+	const start = parseClock(form.start, "Start"), end = parseClock(form.end, "End");
 	if (end <= start) throw badRequest("The end has to be after the start.");
 	if (end - start < MIN_CLIP_SECONDS) throw badRequest(`A clip needs to be at least ${MIN_CLIP_SECONDS} seconds long.`);
 	if (end - start > MAX_CLIP_SECONDS) throw badRequest("A clip can be at most 5 minutes long.");
 	if (video.durationSeconds && end > video.durationSeconds) throw badRequest(`The game video is only ${formatDuration(video.durationSeconds)} long.`);
 	const { db } = deps;
-	if ((await listClipsForVideo(db, deps.team.id, video.id)).length >= MAX_CLIPS_PER_VIDEO) throw conflict("This game already has 50 clips.");
 	const players = await checkPlayers(deps, form.players);
 	const label = form.label || `Highlight at ${formatDuration(start)}`;
+	const id = await takeClipPlace(deps, member, { videoId: video.id, label, startSeconds: start, endSeconds: end });
 	// Stream refuses a scheduled deletion under 30 days away; retention deletes clips with their video anyway.
 	const keepDate = streamDeletionDate(video.deleteAfter, deps.now());
 	let uid: string;
 	try {
 		uid = await deps.clipper.clip({ sourceUid: video.streamUid, startSeconds: start, endSeconds: end, name: label, teamId: deps.team.id, scheduledDeletion: keepDate });
 	} catch (err) {
+		await dropReservedClip(db, deps.team.id, id);
 		if (/storage capacity exceeded|quota/i.test(String(err))) {
 			throw new HttpError(503, "stream_storage_full", `Video storage is full, so clips can't be made right now. ${teamCopy(deps.team).Ask} is sorting it out.`, { cause: err });
 		}
 		throw new HttpError(502, "clip_failed", "Couldn't make the clip. Please try again.", { cause: err });
 	}
-	let id: number;
 	try {
-		id = await insertClip(db, deps.team.id, { videoId: video.id, label, startSeconds: start, endSeconds: end, streamUid: uid, createdBy: member.id }, players);
+		if (!(await fillClip(db, deps.team.id, id, uid, players))) throw new Error(`The clip's place ${id} went before its Stream clip was saved`);
 	} catch (err) {
 		// Nothing was saved, so don't leave Stream holding a clip nobody can see or delete.
+		await dropReservedClip(db, deps.team.id, id);
 		await deps.stream.deleteVideo(uid);
 		throw err;
 	}
@@ -117,8 +118,9 @@ export async function deleteClipsForVideo(deps: TeamDeps, videoId: number): Prom
 /** Cron: processing clips become ready (and get their MP4 started) or failed. */
 export async function advanceClips(deps: TeamDeps) {
 	const counts = { clipsReady: 0, clipsFailed: 0 };
-	const processing = (await listClipsByStatus(deps.db, deps.team.id, "processing")).slice(0, BATCH);
-	const result = await runEach(processing, async (clip) => {
+	const { clips, places } = await listProcessing(deps.db, deps.team.id);
+	await giveBackStalePlaces(deps, places);
+	const result = await runEach(clips.slice(0, BATCH), async (clip) => {
 		const uid = clip.streamUid as string;
 		const state = await deps.stream.details(uid);
 		if (!state) {

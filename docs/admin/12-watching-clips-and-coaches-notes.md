@@ -15,7 +15,8 @@
 
 *A clip is its own video in Stream, deleted with the game's video or by a team manager. Its maker or a team manager can change who's in it.*
 
-- **Making one:** any member marks a start and an end while watching, 3 seconds to 5 minutes apart, and gives it a label; a game has 50 clips at most. Stream's clip API isn't on the Worker's binding, so the Worker asks Stream's REST API, with a token that can only use Stream (`STREAM_API_TOKEN`).
+- **Making one:** any member marks a start and an end while watching, 3 seconds to 5 minutes apart, and gives it a label. Stream's clip API isn't on the Worker's binding, so the Worker asks Stream's REST API, with a token that can only use Stream (`STREAM_API_TOKEN`).
+- **Limits:** each clip is a video of its own in Stream, whose storage every team shares, so a game has 50 clips at most, a member makes up to an hour of clips in any 24 hours and a team up to 5 hours (deleted clips count; an external app's other parts don't). The clip's place is taken against all three in one database statement before Stream is asked, so posts sent together can't pass them, and given back if Stream refuses. A refusal says which limit and when there's room again. A place Stream's clip never filled (the Worker stopped) is given back by the next 5-minute run after ten minutes.
 - **Ready:** each 5-minute run asks Stream how processing clips are going; a ready one has its MP4 started, so it can be downloaded, and a failed one is marked failed.
 - **Who's in it:** players ticked when it's made, or later by its maker or a team manager. At the season's end the pack lists each player's clips under their name.
 - **Removing:** only a team manager deletes a clip; anyone else, its maker included, asks for it to be removed. Deleting takes Stream's copy first, so a failure leaves the clip to try again, and a game's clips go with its video.
@@ -26,7 +27,7 @@ Private notes on a game, for members whose role is exactly Coach: not Watch only
 
 | Table | Holds |
 | --- | --- |
-| `clips` | Each clip: its video, start and end, label, Stream copy, state and maker |
+| `clips` | Each clip: its video, start and end, label, Stream copy (none while its place waits for Stream), state, maker, when it was made, and whether it's an external app's other part |
 | `favourites` | Each member's starred games and clips |
 | `downloads` | Every game's video downloaded, with who took it: kept two years |
 | `media_downloads` | Every clip and photo downloaded (each photo in a zip too), with who took it and the file it came as: kept two years |
