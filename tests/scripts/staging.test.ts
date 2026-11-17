@@ -66,7 +66,8 @@ describe("npm run staging (docs/runbooks/staging.md)", () => {
 			"PATCH /accounts/acct/workers/scripts/staging-courtside/secrets-bulk"]);
 		expect(calls[0]?.what).toMatch(/live Worker's workers.dev and preview URLs off/);
 		expect(calls[0]?.body).toEqual({ enabled: false, previews_enabled: false });
-		expect(calls[0]?.ifMissing).toBeUndefined();
+		// A new install's live Worker isn't made until its first release, with them off already.
+		expect(calls[0]?.ifMissing).toMatch(/isn't there yet/);
 		expect(calls[1]?.body).toBeUndefined();
 		expect(calls[1]?.ifMissing).toMatch(/already gone/);
 		expect(calls[2]?.ifMissing).toMatch(/first npm run staging/);
@@ -90,6 +91,10 @@ describe("npm run staging (docs/runbooks/staging.md)", () => {
 			.toMatch(/still has a Preview, staging.*npm run staging -- setup/);
 		expect(switchRefusal(null, [])).toMatch(/couldn't read/);
 		expect(switchRefusal(off, null)).toMatch(/couldn't read/);
+	});
+
+	it("deploys on a new install, whose live Worker isn't made until its first release (so it has no preview to hold the address)", () => {
+		expect(switchRefusal("missing", null)).toBeNull();
 	});
 
 	it("records staging only once staging's Worker has a deployment from this deploy", () => {

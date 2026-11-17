@@ -73,7 +73,8 @@ one that differs from it only in docs, tests or notes.
  subdomain>.workers.dev` (Workers & Pages in the dashboard shows the subdomain).
 4. `npm run staging -- setup` (`--dry-run` first; the owner's yes, as it changes the live Worker), before staging's first
  deploy, in this order: turns the live Worker's workers.dev and preview URLs off (`enabled: false`,
- `previews_enabled: false`); deletes its old Preview, `staging`, if there is one (staging was a Preview of the live
+ `previews_enabled: false`; on a new install the live Worker isn't there until its first release, which makes it
+ with both off, so it says so and carries on); deletes its old Preview, `staging`, if there is one (staging was a Preview of the live
  Worker before it was a Worker of its own, and that Preview holds staging's address: `DELETE
  /accounts/<id>/workers/workers/<worker>/previews/staging`, as `cf previews delete staging --worker <worker>` does);
  then puts staging's keys on `staging-courtside` at once, without a deploy, through the API and never printed (on the
@@ -81,7 +82,7 @@ one that differs from it only in docs, tests or notes.
  of those keys changes (or just `npm run staging`, which sends them too): a Preview already gone is passed over.
 5. `npm run staging`: its first deploy creates the `staging-courtside` Worker. It refuses (read only, a dry run too)
  while the live Worker has workers.dev or preview URLs on or still has any Preview, so staging's address can only be
- its own Worker's. Staging's keys go with every deploy (`cf deploy --secrets-file`, a file only you can read, written
+ its own Worker's (a new install, with no live Worker yet, has neither). Staging's keys go with every deploy (`cf deploy --secrets-file`, a file only you can read, written
  from the two secrets files just before the deploy and removed as soon as it's done, or when the command ends or is
  stopped with Ctrl-C; the steps run with those seven names taken out of the environment, so a shell's export can't
  send another value), as a Worker that doesn't exist yet can't be given secrets any other way: the live site's Stream

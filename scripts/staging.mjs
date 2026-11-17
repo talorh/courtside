@@ -76,7 +76,7 @@ if (branch !== "staging") fail(`Staging deploys the staging branch, not "${branc
 // Staging's address is its own only once the live Worker has no preview URLs and no Preview (read only; a dry run too).
 const checks = liveWorkerChecks(site.accountId, staging.liveWorker);
 const [subdomain, previews] = await Promise.all([api("GET", checks.subdomain), api("GET", checks.previews)]);
-const refusal = switchRefusal(subdomain.ok ? subdomain.result : null, previews.ok ? previews.result : null);
+const refusal = switchRefusal(subdomain.status === 404 ? "missing" : subdomain.ok ? subdomain.result : null, previews.ok ? previews.result : null);
 if (refusal) fail(refusal);
 const head = () => execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 // The commit being deployed, taken before the deploy: it's the one recorded, and only while HEAD is still on it.

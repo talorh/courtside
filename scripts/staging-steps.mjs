@@ -78,14 +78,15 @@ export const OLD_PREVIEW = "staging";
  * The Cloudflare API calls setup makes, in this order: the live Worker's workers.dev and preview URLs off (so no version
  * of it answers on a workers.dev address), its old staging Preview deleted (it holds staging's address), then staging's
  * keys onto staging's own Worker at once, without a deploy (after a key changes). A call with `ifMissing` is done when
- * Cloudflare answers 404: the Preview already gone (or never made), or staging's Worker not made yet (its first deploy
- * sends the keys).
+ * Cloudflare answers 404: the live Worker not made yet (a new install), the Preview already gone (or never made), or
+ * staging's Worker not made yet (its first deploy sends the keys).
  */
 export function setupCalls(accountId, liveWorker, stagingWorker, keys) {
 	const secrets = Object.fromEntries(Object.entries(keys).map(([name, text]) => [name, { type: "secret_text", text }]));
 	return [
 		{ what: "the live Worker's workers.dev and preview URLs off", method: "POST", path: `/accounts/${accountId}/workers/scripts/${liveWorker}/subdomain`,
-			contentType: "application/json", body: { enabled: false, previews_enabled: false } },
+			contentType: "application/json", body: { enabled: false, previews_enabled: false },
+			ifMissing: `${liveWorker} isn't there yet (a new install): its first release makes it with them off` },
 		{ what: `the live Worker's old Preview, ${OLD_PREVIEW}, deleted`, method: "DELETE",
 			path: `/accounts/${accountId}/workers/workers/${liveWorker}/previews/${OLD_PREVIEW}`, ifMissing: "already gone" },
 		{ what: `staging's keys on ${stagingWorker}`, method: "PATCH", path: `/accounts/${accountId}/workers/scripts/${stagingWorker}/secrets-bulk`,
@@ -101,9 +102,11 @@ export function liveWorkerChecks(accountId, liveWorker) {
 
 /**
  * Why a deploy mustn't go yet, or null. While the live Worker's previews are on, or its old Preview still holds staging's
- * address, a live version would answer beside staging's own Worker.
+ * address, a live version would answer beside staging's own Worker. `subdomain` is "missing" when there's no live Worker
+ * yet (a new install, before its first release): nothing of it can answer anywhere.
  */
 export function switchRefusal(subdomain, previews) {
+	if (subdomain === "missing") return null;
 	const setup = "Run npm run staging -- setup first (docs/runbooks/staging.md).";
 	if (!subdomain || !Array.isArray(previews)) return `couldn't read the live Worker's settings and Previews. ${setup}`;
 	if (subdomain.enabled) return `The live Worker answers on workers.dev. ${setup}`;
