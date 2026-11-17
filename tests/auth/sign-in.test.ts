@@ -156,6 +156,25 @@ describe("asking for a code", () => {
 	});
 });
 
+describe("a refused code's count taken back", () => {
+	it("is taken back once, even when noting the refusal fails", async () => {
+		const { deps } = clocked();
+		for (let i = 0; i < LIMITS.emailPerHour; i++) expect(await requestCode(deps, MANAGER, "1.2.3.4")).toBe("sent");
+		const real = deps.db.prepare.bind(deps.db);
+		let takenBack = 0;
+		deps.db.prepare = ((sql: string) => {
+			const statement = real(sql);
+			if (sql.startsWith("DELETE FROM sign_in_events WHERE id")) {
+				return { bind: (...args: unknown[]) => { const bound = statement.bind(...args); return { run: async () => { takenBack++; return bound.run(); } }; } };
+			}
+			if (!sql.startsWith("INSERT INTO sign_in_events")) return statement;
+			return { bind: (...args: unknown[]) => args[0] === "limited" ? { first: async () => { throw new Error("D1 busy"); } } : statement.bind(...args) };
+		}) as typeof deps.db.prepare;
+		await expect(requestCode(deps, MANAGER, "1.2.3.4")).rejects.toThrow("D1 busy");
+		expect(takenBack).toBe(1);
+	});
+});
+
 describe("checking a code", () => {
 	it("signs the device in for 30 days: a token for the cookie, its hash in the database, with the device's label", async () => {
 		const { deps } = clocked();

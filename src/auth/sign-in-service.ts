@@ -40,41 +40,39 @@ export async function requestCode(deps: AppDeps, rawEmail: string, ip: string): 
 	const email = rawEmail.trim().toLowerCase();
 	const at = deps.now().toISOString();
 	const note = (kind: SignInEvent) => recordSignInEvent(deps.db, { kind, email: storedEmail(email), ip, at, device: deps.device });
-	// An IP address trying address after address (none on a list) is slowed like one asking for code after code.
-	if (await countSignInEvents(deps.db, "unknown_email", since(deps.now(), 15 * MINUTE), { ip }) >= LIMITS.unknownPerIp15m) {
+	const limited = async () => {
 		await note("limited");
 		log("signin_refused", email, { why: "limited" });
-		return "limited";
-	}
+		return "limited" as const;
+	};
+	// An IP address trying address after address (none on a list) is slowed like one asking for code after code.
+	if (await countSignInEvents(deps.db, "unknown_email", since(deps.now(), 15 * MINUTE), { ip }) >= LIMITS.unknownPerIp15m) return limited();
 	if (!isEmail(email) || !(await isKnown(deps, email))) {
 		await note("unknown_email");
 		log("signin_refused", email, { why: "unknown" });
 		return "unknown";
 	}
 	// A held address is refused before its request is counted, so its taps never count against others from its IP address.
-	if (await isHeld(deps.db, email, deps.now())) {
-		await note("limited");
-		log("signin_refused", email, { why: "limited" });
-		return "limited";
-	}
+	if (await isHeld(deps.db, email, deps.now())) return limited();
 	// Counted before the limits are looked at, so requests sent together each count the ones before them, and taken back
-	// if it's refused or its email doesn't go, so a code the email service dropped doesn't count toward the address's hold.
+	// (once) if it's refused or its email doesn't go, so a code the email service dropped doesn't count toward the address's hold.
 	const codeId = await note("code_sent");
-	const forget = () => forgetSignInEvent(deps.db, codeId);
+	let over: boolean;
 	try {
-		if (await overCodeLimit(deps, email, ip, codeId)) {
-			await forget();
-			await note("limited");
-			log("signin_refused", email, { why: "limited" });
-			return "limited";
+		over = await overCodeLimit(deps, email, ip, codeId);
+		if (!over) {
+			const code = sixDigitCode();
+			await voidCodes(deps.db, email, at);
+			await insertCode(deps.db, { email, codeHash: await hashOf(email, code), ip, createdAt: at, expiresAt: new Date(deps.now().getTime() + CODE_MINUTES * MINUTE).toISOString() });
+			await sendCodeEmail(deps, email, code);
 		}
-		const code = sixDigitCode();
-		await voidCodes(deps.db, email, at);
-		await insertCode(deps.db, { email, codeHash: await hashOf(email, code), ip, createdAt: at, expiresAt: new Date(deps.now().getTime() + CODE_MINUTES * MINUTE).toISOString() });
-		await sendCodeEmail(deps, email, code);
 	} catch (err) {
-		await forget();
+		await forgetSignInEvent(deps.db, codeId);
 		throw err;
+	}
+	if (over) {
+		await forgetSignInEvent(deps.db, codeId);
+		return limited();
 	}
 	log("signin_code_sent", email, {});
 	return "sent";
