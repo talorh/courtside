@@ -50,6 +50,7 @@ The parts are joined by the **video joiner**: a second small Worker, `courtside-
 - **Nothing is deleted on trust.** The parts go only once the joined file has been read back from R2, and a joined file far smaller than its parts is refused rather than saved.
 - **A join that fails**, or is lost because the container restarted, is tried again every ten minutes. After six tries the site stops: the team manager gets **Keep the first part** on the game's page, the Log's Problems has a line, and the admins get the Video joiner alert as urgent. Keep the first part, or deleting the video, clears it once no team's game is still waiting (the alert is one for the whole site).
 - **The picture isn't touched.** ffmpeg copies each part as it is into one transport stream (a cut-off last frame dropped, each part's own decoder settings carried along, one clock), then wraps that as the MP4. Nothing is encoded again, so the video is exactly what the phone recorded. (Parts that aren't H.264, which only a test browser records, are joined one after the other instead, still as they are.)
+- **Each part is read only as video.** ffmpeg reads every part as the recording's own kind of file (MP4 or WebM), never as whatever its contents claim to be, so a part holding a list of other links or files fails the join instead of fetching them.
 - **Tested every night.** The 3am job has the joiner join two small test files that ship in its image, so a broken joiner is known before a game needs it (Background jobs).
 
 ### From an external app (RTMPS)

@@ -24,8 +24,9 @@ export function parseJoinRequest(body, { allowFiles = false } = {}) {
 
 export const tooBig = (sizes) => sizes.reduce((a, b) => a + b, 0) > MOST_BYTES;
 
-/** The concat demuxer's list: one line a segment (a link holds no quotes; a file: segment is its path). */
-export const listFile = (segments) => segments.map((s) => `file '${s.replace(/^file:/, "")}'`).join("\n") + "\n";
+/** The concat demuxer's list: a segment's line (a link holds no quotes; a file: segment is its path), then the only
+ * format it may be opened as (each segment is opened with its own options, not the joiner's). */
+export const listFile = (segments, format) => segments.map((s) => `file '${s.replace(/^file:/, "")}'\noption format_whitelist ${format}`).join("\n") + "\n";
 
 /** Seconds to a tenth, for how long a step took. */
 export const tenths = (ms) => Math.round(ms / 100) / 10;
@@ -60,7 +61,7 @@ export async function sizes(segments, signal = undefined) {
 	}));
 }
 
-export async function writeList(path, segments) { await writeFile(path, listFile(segments)); }
+export async function writeList(path, segments, format) { await writeFile(path, listFile(segments, format)); }
 
 /** PUTs the file to the link, streamed with its length (a game is gigabytes, never held in memory): null, or why not. */
 export async function putFile(path, url, type, size, signal = undefined) {

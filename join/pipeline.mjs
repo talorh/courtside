@@ -16,6 +16,9 @@ const LEAST_OF_INPUT = 0.85;
 const COMMON = ["-hide_banner", "-loglevel", "error", "-y", "-protocol_whitelist", "file,https,tls,tcp,pipe", "-fflags", "+discardcorrupt"];
 // A link that sends nothing for this long (microseconds) is given up: the join fails and is tried again.
 const READ_TIMEOUT = ["-rw_timeout", "120000000"];
+// The demuxer each recording's segments are read with, never one chosen from their bytes: a filmer uploads a segment,
+// and one holding a manifest or a concat list (DASH, HLS, ffconcat) would have ffmpeg open the links and files it names.
+const DEMUXER = { mp4: "mov", webm: "matroska" };
 // ffmpeg's words for segments whose streams don't line up for a copy: then it's re-encoded.
 const NEEDS_REENCODE = /codec|parameters|timebase|time base|resolution|stream #|non-monotonic|Non-monotonous|incompatible|during demuxing|filter failed/i;
 // ffmpeg's words for a picture the H.264 re-wrap can't take: it isn't H.264.
@@ -28,9 +31,9 @@ export const runFailed = (run) => run.code !== 0 || /Error during demuxing|filte
 /** A copied file far smaller than what went in: a segment was left out, whatever ffmpeg said. */
 export const tooSmall = (outBytes, inputBytes) => outBytes < inputBytes * LEAST_OF_INPUT;
 
-/** One segment (a link, or a file: path) to a transport stream on stdout. */
+/** One MP4 segment (a link, or a file: path), read only as MP4, to a transport stream on stdout. */
 export const tsArgs = (segment) => [
-	...COMMON, ...(segment.startsWith("file:") ? [] : READ_TIMEOUT), "-i", segment.replace(/^file:/, ""),
+	...COMMON, ...(segment.startsWith("file:") ? [] : READ_TIMEOUT), "-f", DEMUXER.mp4, "-i", segment.replace(/^file:/, ""),
 	"-c", "copy", "-bsf:v", "h264_mp4toannexb", "-f", "mpegts", "pipe:1",
 ];
 
@@ -41,11 +44,12 @@ export const muxArgs = (tsPath, outPath, reencode) => [
 	"-movflags", "+faststart", outPath,
 ];
 
-/** The concat demuxer over the list of links, stream copy or a re-encode: into a WebM, or an MP4 (its index at the front). */
+/** The concat demuxer over the list of links, stream copy or a re-encode: into a WebM, or an MP4 (its index at the front).
+ * Only the list and the recording's own container may be opened; the list names that container for each segment too. */
 export const concatArgs = (listPath, outPath, reencode) => {
 	const mp4 = outPath.endsWith(".mp4");
 	const encode = mp4 ? ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac"] : ["-c:v", "libvpx-vp9", "-c:a", "libopus"];
-	return [...COMMON, "-safe", "0", "-f", "concat", "-i", listPath, ...(reencode ? encode : ["-c", "copy"]), ...(mp4 ? ["-movflags", "+faststart"] : []), outPath];
+	return [...COMMON, "-format_whitelist", `concat,${DEMUXER[mp4 ? "mp4" : "webm"]}`, "-safe", "0", "-f", "concat", "-i", listPath, ...(reencode ? encode : ["-c", "copy"]), ...(mp4 ? ["-movflags", "+faststart"] : []), outPath];
 };
 
 /** Why a run failed: ffmpeg's last lines, with a signed link (an input's or the output's) cut to its address, as the
@@ -87,7 +91,7 @@ export async function joinSegments(segments, outPath, container, inputBytes, dir
 	};
 	const byConcat = async () => {
 		const list = joinPath(dir, "list.txt");
-		await writeList(list, segments);
+		await writeList(list, segments, DEMUXER[container]);
 		let run = await runFfmpeg(concatArgs(list, outPath, false), null, signal);
 		if (runFailed(run) && NEEDS_REENCODE.test(run.err)) return runFailed(run = await runFfmpeg(concatArgs(list, outPath, true), null, signal)) ? { ok: false, reason: why(run) } : finish(true);
 		return runFailed(run) ? { ok: false, reason: why(run) } : finish(false);

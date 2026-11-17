@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Video joiner:** Each part of a carried-on recording is now read only as the recording's own kind of file (MP4 or WebM): a part that holds a list of links or files fails the join instead of having the joiner open what it names. Rebuild the joiner's image (npm run join -- image) to pick it up.
 - [Fix] **Security:** The site now answers only on its own address (the club's domain, and staging on its own): any other address that reaches the Worker, such as a version's workers.dev preview address, gets a bare "Not found", as it would miss the zone's protections.
 
 ## 17 Nov 2026

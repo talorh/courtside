@@ -84,6 +84,9 @@ no team's game is still waiting (the alert is one for the whole site).</li>
 dropped, each part's own decoder settings carried along, one clock), then wraps that as the MP4. Nothing is encoded
 again, so the video is exactly what the phone recorded. (Parts that aren't H.264, which only a test browser records,
 are joined one after the other instead, still as they are.)</li>
+<li><b>Each part is read only as video.</b> ffmpeg reads every part as the recording's own kind of file (MP4 or WebM),
+never as whatever its contents claim to be, so a part holding a list of other links or files fails the join instead
+of fetching them.</li>
 <li><b>Tested every night.</b> The 3am job has the joiner join two small test files that ship in its image, so a broken
 joiner is known before a game needs it (Background jobs).</li></ul>
 <h3>From an external app (RTMPS)</h3>

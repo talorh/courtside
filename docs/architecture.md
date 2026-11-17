@@ -410,7 +410,11 @@ sequenceDiagram
  dropped, each segment's own decoder settings carried in-band, every timestamp in the one clock), which is then
  wrapped into the MP4; ffmpeg's concat demuxer, which stops at a segment a dead page left mid-frame and needs every
  segment's clock to match, is used only for WebM, and for an MP4 whose picture isn't H.264 (a browser without that
- encoder records VP9, which a transport stream can't carry: staging's test browser does). A run that stopped reading part way counts as failed whatever its
+ encoder records VP9, which a transport stream can't carry: staging's test browser does). Every segment is read
+ only as the recording's own container (`-f mov` per MP4 segment; for the concat demuxer a format whitelist, on the
+ command and on each segment's line in its list, of `mov` or `matroska`), never as whatever its bytes look like: a
+ filmer uploads the segments, and one holding a DASH or HLS manifest or an ffconcat list would otherwise have ffmpeg
+ open the links and files it names. Such a segment fails the join instead. A run that stopped reading part way counts as failed whatever its
  exit code, and a copy far smaller than its segments is refused rather than saved; a re-encode is the fallback when
  the streams don't line up. The joiner logs `join_done` with how long the read, the join and the store took. After the
  sixth try fails (or is lost), the site sets `join_failed_at`, writes a Problems line, logs `join_failed` and raises

@@ -70,23 +70,23 @@ describe("the joiner's request", () => {
 });
 
 describe("the joiner's ffmpeg commands", () => {
-	it("re-wraps each MP4 segment to a transport stream on stdout, dropping a cut-off frame, then wraps the stream into the MP4", () => {
-		expect(tsArgs("file:/app/test-a.mp4")).toEqual([...COMMON, "-i", "/app/test-a.mp4", "-c", "copy", "-bsf:v", "h264_mp4toannexb", "-f", "mpegts", "pipe:1"]);
+	it("re-wraps each MP4 segment, read only as MP4, to a transport stream on stdout, dropping a cut-off frame, then wraps the stream into the MP4", () => {
+		expect(tsArgs("file:/app/test-a.mp4")).toEqual([...COMMON, "-f", "mov", "-i", "/app/test-a.mp4", "-c", "copy", "-bsf:v", "h264_mp4toannexb", "-f", "mpegts", "pipe:1"]);
 	});
 	it("gives up reading a link that has sent nothing for two minutes", () => {
-		expect(tsArgs("https://a/1?x=1")).toEqual([...COMMON, "-rw_timeout", "120000000", "-i", "https://a/1?x=1", "-c", "copy", "-bsf:v", "h264_mp4toannexb", "-f", "mpegts", "pipe:1"]);
+		expect(tsArgs("https://a/1?x=1")).toEqual([...COMMON, "-rw_timeout", "120000000", "-f", "mov", "-i", "https://a/1?x=1", "-c", "copy", "-bsf:v", "h264_mp4toannexb", "-f", "mpegts", "pipe:1"]);
 	});
 	it("wraps the transport stream into the MP4 by stream copy, or re-encoded", () => {
 		expect(muxArgs("/tmp/all.ts", "/tmp/out.mp4", false)).toEqual([...COMMON, "-i", "/tmp/all.ts", "-c", "copy", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart", "/tmp/out.mp4"]);
 		expect(muxArgs("/tmp/all.ts", "/tmp/out.mp4", true)).toContain("libx264");
 	});
-	it("joins WebM through the concat demuxer, by stream copy or re-encoded", () => {
-		expect(concatArgs("/tmp/list.txt", "/tmp/out.webm", false)).toEqual([...COMMON, "-safe", "0", "-f", "concat", "-i", "/tmp/list.txt", "-c", "copy", "/tmp/out.webm"]);
+	it("joins WebM through the concat demuxer, each segment read only as WebM, by stream copy or re-encoded", () => {
+		expect(concatArgs("/tmp/list.txt", "/tmp/out.webm", false)).toEqual([...COMMON, "-format_whitelist", "concat,matroska", "-safe", "0", "-f", "concat", "-i", "/tmp/list.txt", "-c", "copy", "/tmp/out.webm"]);
 		expect(concatArgs("/tmp/list.txt", "/tmp/out.webm", true)).toContain("libvpx-vp9");
-		expect(listFile(["https://a/1?x=1", "file:/app/test-b.mp4"])).toBe("file 'https://a/1?x=1'\nfile '/app/test-b.mp4'\n");
+		expect(listFile(["https://a/1?x=1", "file:/app/test-b.webm"], "matroska")).toBe("file 'https://a/1?x=1'\noption format_whitelist matroska\nfile '/app/test-b.webm'\noption format_whitelist matroska\n");
 	});
 	it("joins an MP4 whose picture isn't H.264 through the concat demuxer too, its index at the front", () => {
-		expect(concatArgs("/tmp/list.txt", "/tmp/out.mp4", false)).toEqual([...COMMON, "-safe", "0", "-f", "concat", "-i", "/tmp/list.txt", "-c", "copy", "-movflags", "+faststart", "/tmp/out.mp4"]);
+		expect(concatArgs("/tmp/list.txt", "/tmp/out.mp4", false)).toEqual([...COMMON, "-format_whitelist", "concat,mov", "-safe", "0", "-f", "concat", "-i", "/tmp/list.txt", "-c", "copy", "-movflags", "+faststart", "/tmp/out.mp4"]);
 		expect(concatArgs("/tmp/list.txt", "/tmp/out.mp4", true)).toEqual(expect.arrayContaining(["libx264", "aac", "+faststart"]));
 		expect(concatArgs("/tmp/list.txt", "/tmp/out.mp4", true)).not.toContain("libvpx-vp9");
 	});
