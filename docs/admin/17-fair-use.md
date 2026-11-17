@@ -8,7 +8,7 @@ The site is paid for by its owner and built for one thing: each team's own game 
 | --- | --- | --- |
 | Videos | One video for each of your team's own games, the whole game in one file: about 30 to 40 a season. Not training, not other teams' games, not anything else. | One video a game, up to 30 GB; a game set to No video can't be uploaded to |
 | Live streams | Your team's games only, from the Go live page (its camera, or an external app for an AI tracking camera), one stream a game. | Only games marked Live stream on the fixture; a stream under a minute is treated as a test and thrown away |
-| Highlight clips | A few a game, the moments worth keeping. Not the whole game cut into pieces. | 50 clips a game, each 3 seconds to 5 minutes; an hour of clips a day for each person, 5 hours for each team |
+| Highlight clips | A few a game, the moments worth keeping. Not the whole game cut into pieces. | 50 clips a game, each 3 seconds to 5 minutes; an hour of clips a day for each person, 5 hours for each team; 5 hours of clips kept for each team |
 | Photos | Photos of your team's games and team events, taken by the team: up to about 50 a game day and a few hundred a season. Not screenshots, memes or anything from elsewhere. | 10 MB a photo, redrawn to 2560 px; 500 photos a day for each person, 2,000 for each team |
 | Watching | Watch any game as often as you like: that's what it's for. Don't leave a video looping or playing to an empty room. | None; a team's viewing shows on its Costs page |
 | Downloads | The HD video and photos for your own household's keeping. Not for posting publicly or passing to anyone outside the team: these are children. | Every download is logged with who took it: a game's video, a clip or a photo, each photo in a zip too |

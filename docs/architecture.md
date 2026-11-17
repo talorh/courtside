@@ -496,12 +496,15 @@ to 5 minutes, inside the video) and the players ticked, then:
 1. **Takes the clip's place** (`clip-limits.ts`, `takeClipPlace`; `clip-limits-repository.ts`, `reserveClip`): one
  `INSERT … SELECT … WHERE … RETURNING id` that adds the row, with no `stream_uid` yet, only when the video has fewer
  than 50 clips (places being made count), the member's clips made in the last 24 hours plus this one come to an hour
- at most, and the team's to 5 hours at most. Each clip is a Stream video of its own, and Stream's storage is shared by
+ at most, the team's to 5 hours at most, and the team's kept clips (not deleted or failed, on a video not deleted,
+ places being made included) plus this one to 5 hours at most, whenever they were made: the day's limits are a rate,
+ this one a ceiling. Each clip is a Stream video of its own, and Stream's storage is shared by
  every team, so this keeps one member or team from filling it; being one statement, posts sent together can't all
  pass a count read before any is saved. Clips made count by `created_at`, deleted ones too; an external app's other
  parts (`part = 1`, made by the site) don't. Refused, it reads why: 409 "This game already has 50 clips.", or 429
  (`clip_limit`) naming the hour or the 5 hours, what's been made, when the oldest clips turning a day old make room,
- and how long a clip fits now.
+ and how long a clip fits now; or, for the 5 hours kept, what the team's clips come to and that a team manager
+ deleting some makes room.
 2. **Asks Stream** for the clip (`clipper.clip`, REST, with the team in its metadata). If Stream refuses, the place is
  given back (the row deleted) and the page says so (`stream_storage_full` 503, or `clip_failed` 502).
 3. **Fills the place** (`fillClip`): the Stream uid and who's in it, in one batch. If that fails, the row goes and

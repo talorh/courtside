@@ -9,12 +9,18 @@ export interface ClipLimits {
 	memberSeconds: number;
 	teamSeconds: number;
 	since: string;
+	/** Seconds of clips a team keeps, whenever they were made. */
+	keptSeconds: number;
 }
 
 export interface NewClip { videoId: number; label: string; startSeconds: number; endSeconds: number; createdBy: number; createdAt: string }
 
 // The seconds of the clips people made since a time, deleted ones too (they were made); an app stream's parts aren't.
 const MADE = "SELECT COALESCE(SUM(end_seconds - start_seconds), 0) FROM clips WHERE team_id = ?1 AND part = 0 AND created_at > ?9";
+// The seconds of the clips a team keeps in Stream: places being made too, not deleted or failed ones, nor a deleted video's.
+const KEPT = `SELECT COALESCE(SUM(c.end_seconds - c.start_seconds), 0) AS s FROM clips c WHERE c.team_id = ?1 AND c.part = 0
+	AND c.deleted_at IS NULL AND c.status <> 'failed'
+	AND EXISTS (SELECT 1 FROM videos v WHERE v.team_id = ?1 AND v.id = c.video_id AND v.deleted_at IS NULL)`;
 
 /** The new clip's id, or null when it would pass a limit. */
 export async function reserveClip(db: D1Database, teamId: string, c: NewClip, limits: ClipLimits): Promise<number | null> {
@@ -23,14 +29,18 @@ export async function reserveClip(db: D1Database, teamId: string, c: NewClip, li
 		WHERE (SELECT COUNT(*) FROM clips WHERE team_id = ?1 AND video_id = ?2 AND deleted_at IS NULL) < ?8
 			AND (${MADE} AND created_by = ?6) + ?5 - ?4 <= ?10
 			AND (${MADE}) + ?5 - ?4 <= ?11
+			AND (${KEPT}) + ?5 - ?4 <= ?12
 		RETURNING id`)
-		.bind(teamId, c.videoId, c.label, c.startSeconds, c.endSeconds, c.createdBy, c.createdAt, limits.perVideo, limits.since, limits.memberSeconds, limits.teamSeconds)
+		.bind(teamId, c.videoId, c.label, c.startSeconds, c.endSeconds, c.createdBy, c.createdAt, limits.perVideo, limits.since, limits.memberSeconds,
+			limits.teamSeconds, limits.keptSeconds)
 		.first<number>("id");
 }
 
 export const countVideoClips = (db: D1Database, teamId: string, videoId: number) => db
 	.prepare("SELECT COUNT(*) AS n FROM clips WHERE team_id = ? AND video_id = ? AND deleted_at IS NULL").bind(teamId, videoId).first<number>("n")
 	.then((n) => n ?? 0);
+
+export const keptClipSeconds = (db: D1Database, teamId: string) => db.prepare(KEPT).bind(teamId).first<number>("s").then((n) => n ?? 0);
 
 /** The clips people made since `since`, oldest first: to say when a limit frees up. */
 export async function clipsMadeSince(db: D1Database, teamId: string, since: string): Promise<Array<{ createdBy: number | null; seconds: number; createdAt: string }>> {

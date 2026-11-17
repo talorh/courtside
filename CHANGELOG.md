@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Enhancement] **Clips:** A team now keeps at most 5 hours of clips, so clips made over many days can't fill the shared Stream storage either; past it the site says a team manager deleting clips makes room, and offers a shorter clip when one fits.
 - [Fix] **Teams:** Fixed an issue where Reopen and Cancel tonight's delete were still offered once a team's videos and photos were past their date, though the 3am job would close it again and delete it that night: they now say why and offer nothing.
 - [Enhancement] **Photos:** Each person can add up to 500 photos a day and each team 2,000, as every photo counts against the account's shared Images allowance; photos sent together stop at the limits, and past one the Photos page stops and says when there's room again, rather than listing every photo refused.
 - [Enhancement] **Video joiner:** The joiner's image is now pinned, its base by digest and ffmpeg by version, so a rebuild changes only the site's own files; the setup runbook says how to move the pin. Rebuild the joiner's image (npm run join -- image) to pick it up.

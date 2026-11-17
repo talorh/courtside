@@ -145,6 +145,41 @@ describe("five hours of clips a day for each team", () => {
 	});
 });
 
+describe("5 hours of clips kept for each team", () => {
+	/** Two more games' videos holding `perVideo` clips each, all 5 minutes long and made two days ago. */
+	async function kept(deps: TestDeps, by: number, perVideo: number) {
+		const ids: number[] = [];
+		for (const round of ["10", "11"]) {
+			const id = await seedVideo(deps, { gameId: await seedGame(deps, { roundLabel: round }), streamUid: `u${round}` });
+			await made(deps, id, by, ago(48 * HOUR), 300, perVideo);
+			ids.push(id);
+		}
+		return ids;
+	}
+	it("refuses a clip once the team's kept clips come to 5 hours, however long ago they were made", async () => {
+		const { deps, videoId, q, watcher } = await setup();
+		await kept(deps, q, 30);
+		const res = await watcher(`/videos/${videoId}/clips`, clip("0:10", "0:20"));
+		expect(res.status).toBe(429);
+		const text = await res.text();
+		expect(text).toContain("A team keeps up to 5 hours of clips, to keep video storage free for games, and the team&#39;s clips come to 5 hours now.");
+		expect(text).toContain("This one can be made once a team manager deletes some clips.");
+		expect(deps.clipper.requests).toEqual([]);
+		expect(await rows(deps)).toBe(60);
+	});
+	it("offers a shorter one when there's room, and leaves out deleted clips and a deleted video's", async () => {
+		const { deps, videoId, q, watcher } = await setup();
+		const [first] = await kept(deps, q, 30);
+		await deps.db.prepare("UPDATE clips SET end_seconds = 180 WHERE team_id = ? AND id = (SELECT MIN(id) FROM clips WHERE team_id = ?)").bind(deps.team.id, deps.team.id).run();
+		await made(deps, videoId, q, ago(48 * HOUR), 300, 2, true);
+		const res = await watcher(`/videos/${videoId}/clips`, clip("1:00", "4:00"));
+		expect(res.status).toBe(429);
+		expect(await res.text()).toContain("This one can be made once a team manager deletes some clips, or one up to 2 minutes long now.");
+		await deps.db.prepare("UPDATE videos SET deleted_at = ? WHERE team_id = ? AND id = ?").bind(ago(HOUR), deps.team.id, first).run();
+		expect((await watcher(`/videos/${videoId}/clips`, clip("1:00", "4:00"))).status).toBe(303);
+	});
+});
+
 describe("a clip's place, taken before Stream is asked", () => {
 	it("is given back when Stream can't make the clip", async () => {
 		const { deps, videoId, watcher } = await setup();

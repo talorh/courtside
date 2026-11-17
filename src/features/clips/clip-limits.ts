@@ -1,16 +1,18 @@
 // How many clips can be made. Each is a video of its own in Stream, whose storage every team shares: when it's full, no
-// team can upload or go live. So a game video has at most 50 clips, a member makes at most an hour of clips a day, and a
-// team five hours. A clip's place is taken, against all three, before Stream is asked for it (clip-limits-repository.ts).
+// team can upload or go live. So a game video has at most 50 clips, a member makes at most an hour of clips a day, a
+// team five hours a day, and a team keeps five hours of clips at most. A clip's place is taken, against all four, before
+// Stream is asked for it (clip-limits-repository.ts).
 import type { TeamDeps } from "../../app/deps.ts";
 import { conflict, HttpError } from "../../app/errors.ts";
 import { addDays } from "../../shared/time.ts";
 import { whenAgain } from "../../shared/when-again.ts";
 import type { Member } from "../members/members-repository.ts";
-import { clipsMadeSince, countVideoClips, dropStaleReservedClips, type NewClip, reserveClip } from "./clip-limits-repository.ts";
+import { clipsMadeSince, countVideoClips, dropStaleReservedClips, keptClipSeconds, type NewClip, reserveClip } from "./clip-limits-repository.ts";
 
 export const MAX_CLIPS_PER_VIDEO = 50;
 export const MEMBER_CLIP_SECONDS_A_DAY = 3600;
 export const TEAM_CLIP_SECONDS_A_DAY = 5 * 3600;
+export const TEAM_CLIP_SECONDS_KEPT = 5 * 3600;
 const MIN_SHORTER = 3;
 /** A place Stream's clip never filled in this long (the Worker stopped after taking it) is given back. */
 const PLACE_KEPT_MS = 10 * 60_000;
@@ -33,7 +35,18 @@ function fitsAt(made: Array<{ seconds: number; createdAt: string }>, limit: numb
 	return addDays(new Date(made.at(-1)?.createdAt ?? 0), 1);
 }
 
-/** Why a clip was refused, and when it can be made: a member's hour first, then the team's five hours. */
+/** A shorter clip that fits in the `room` left now, when one can. */
+const shorterNow = (room: number) => room >= MIN_SHORTER ? `, or one up to ${lengthWords(room)} long now` : "";
+
+/** Why a team's kept clips leave no room, or null when they do. */
+async function keptRefusal(deps: TeamDeps, seconds: number): Promise<HttpError | null> {
+	const kept = await keptClipSeconds(deps.db, deps.team.id);
+	if (kept + seconds <= TEAM_CLIP_SECONDS_KEPT) return null;
+	return new HttpError(429, "clip_limit", `A team keeps up to ${lengthWords(TEAM_CLIP_SECONDS_KEPT)} of clips, to keep video storage free for games, `
+		+ `and the team's clips come to ${lengthWords(kept)} now. This one can be made once a team manager deletes some clips${shorterNow(TEAM_CLIP_SECONDS_KEPT - kept)}.`);
+}
+
+/** Why a clip was refused, and when it can be made: a member's hour first, then the team's five hours, then what it keeps. */
 async function refusal(deps: TeamDeps, member: Member, c: NewClip, since: string, now: Date): Promise<HttpError> {
 	if ((await countVideoClips(deps.db, deps.team.id, c.videoId)) >= MAX_CLIPS_PER_VIDEO) return conflict(`This game already has ${MAX_CLIPS_PER_VIDEO} clips.`);
 	const seconds = c.endSeconds - c.startSeconds;
@@ -42,13 +55,12 @@ async function refusal(deps: TeamDeps, member: Member, c: NewClip, since: string
 	const limit = (made: typeof all, most: number, rule: string, who: string) => {
 		const used = made.reduce((sum, x) => sum + x.seconds, 0);
 		if (used + seconds <= most) return null;
-		const room = most - used;
-		const shorter = room >= MIN_SHORTER ? `, or one up to ${lengthWords(room)} long now` : "";
 		return new HttpError(429, "clip_limit", `${rule}, and ${who} made ${lengthWords(used)} of clips in the last 24 hours. `
-			+ `This one can be made from ${whenAgain(fitsAt(made, most, seconds), now)}${shorter}.`);
+			+ `This one can be made from ${whenAgain(fitsAt(made, most, seconds), now)}${shorterNow(most - used)}.`);
 	};
 	return limit(mine, MEMBER_CLIP_SECONDS_A_DAY, "Clips are up to an hour a day for each person", "you've")
 		?? limit(all, TEAM_CLIP_SECONDS_A_DAY, "Clips are up to 5 hours a day for each team, to keep video storage free for games", "the team has")
+		?? await keptRefusal(deps, seconds)
 		// Nothing over a limit now: one was a moment ago (a clip that hadn't been made let go of its place).
 		?? new HttpError(503, "clip_busy", "Couldn't make the clip just now. Please try again.");
 }
@@ -59,7 +71,7 @@ export async function takeClipPlace(deps: TeamDeps, member: Member, c: Omit<NewC
 	const since = addDays(now, -1).toISOString();
 	const clip = { ...c, createdBy: member.id, createdAt: now.toISOString() };
 	const id = await reserveClip(deps.db, deps.team.id, clip, {
-		perVideo: MAX_CLIPS_PER_VIDEO, memberSeconds: MEMBER_CLIP_SECONDS_A_DAY, teamSeconds: TEAM_CLIP_SECONDS_A_DAY, since,
+		perVideo: MAX_CLIPS_PER_VIDEO, memberSeconds: MEMBER_CLIP_SECONDS_A_DAY, teamSeconds: TEAM_CLIP_SECONDS_A_DAY, since, keptSeconds: TEAM_CLIP_SECONDS_KEPT,
 	});
 	if (id === null) throw await refusal(deps, member, clip, since, now);
 	return id;
