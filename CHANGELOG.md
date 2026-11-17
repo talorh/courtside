@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Game check:** Fixed an issue where photos in Images near their limit made a coming game not ready, though Go live and uploads don't use Images.
 - [Enhancement] **Log:** A person's phone reports (an upload or photos that stopped) are capped at 30 an hour, so a page gone wrong can't fill the Log's Problems.
 - [Fix] **Clips and photos:** Fixed an issue where a limit's "room again at" time was a minute early when it fell part way through a minute: it's now the minute after.
 - [Fix] **Sign-in:** Fixed an issue where a code refused over a limit could have its count taken back twice when noting the refusal failed, letting one more code through.

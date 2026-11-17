@@ -88,5 +88,5 @@ ${table(["Checked", "Warns", "Urgent"], [
 		["Each game's Go live input", "Set up but gone from Stream (Go live sets up a new one)", ""],
 		["The video joiner", "Not answering, or its test join failed", ""],
 		["The 5-minute job", "", "No run for 15 minutes (staging has none, and isn't asked)"],
-		["The other alerts (not Team budgets, AI models, the 3am job's own alert or video storage, whose minutes for the games it checks itself)", "Any up at a warning", "Any up at urgent"],
+		["The other alerts (not Team budgets, AI models, photos in Images, the 3am job's own alert or video storage, whose minutes for the games it checks itself)", "Any up at a warning", "Any up at urgent"],
 	])}`});

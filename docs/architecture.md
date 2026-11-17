@@ -745,8 +745,8 @@ joiner's self-test join; did the 5-minute job run in the last 15 minutes (not as
 as for every alert. The button's answer on the week stands until a game's 8-hour check, or for a week: while it isn't
 ok, `checkComingGames` checks the week's games again every hour, and it's set to ok once they're fine or the week has
 no live game left. A 5-minute run whose outside calls are used up (`FetchBudgetSpent`) judges nothing and leaves the
-check to the next run. `NOT_A_GAME` lists the alerts that don't touch a game: Team budgets, AI models and the 3am job's
-own alert (`daily_job`). It never throws: a failure is a problem in the Log (`alertFailed`).
+check to the next run. `NOT_A_GAME` lists the alerts that don't touch a game: Team budgets, AI models, photos in Images, the 3am job's
+own alert (`daily_job`) and video storage (whose minutes it checks itself). It never throws: a failure is a problem in the Log (`alertFailed`).
 
 ## Manage team: the setup checklist and the end-of-season pack
 
