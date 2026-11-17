@@ -57,7 +57,8 @@ export async function setAlert(deps: AppDeps, kind: AlertKind, level: AlertLevel
 	const prev = await getAlert(deps.db, kind);
 	const was = prev?.level ?? "ok";
 	const since = level === "ok" ? null : was === "ok" ? nowIso : prev?.since ?? nowIso;
-	await saveAlert(deps.db, { kind, level, detail, since, failures, checkedAt: nowIso });
+	// Two checks at once (a job's run and Check again): the one whose save finds the level it read tells the news.
+	if (!(await saveAlert(deps.db, { kind, level, detail, since, failures, checkedAt: nowIso }, was))) return;
 	const open = await findOpenSiteTicket(deps.db, kind);
 	const db = deps.db;
 	const note = (body: string, emailTo: "admins" | null) => messageStatement(db, { ticket: open!, kind: "event", adminEmail: null, body, emailTo, nowIso });
@@ -70,7 +71,14 @@ export async function setAlert(deps: AppDeps, kind: AlertKind, level: AlertLevel
 		// ticket.
 		if (was !== "ok" && RANK[level] <= RANK[was] && await spellHasTicket(db, prev!)) return;
 		const message = `${titleOf(kind, level)}: ${detail}.\nSince ${formatGameDate(localTime(new Date(since ?? nowIso)))}.\n\nWhat to do: ${WORDS[kind].todo}`;
-		const id = await insertSiteTicket(db, { alertKind: kind, title: titleOf(kind, level), message, nowIso });
+		let id: number;
+		try {
+			id = await insertSiteTicket(db, { alertKind: kind, title: titleOf(kind, level), message, nowIso });
+		} catch (err) {
+			// Another check opened it at the same moment (one open site ticket a kind): it's open, and emailed once.
+			if (String(err).includes("UNIQUE")) return;
+			throw err;
+		}
 		await setAlertTicket(db, kind, id);
 		await trySend(deps, "ticket", id);
 		return;

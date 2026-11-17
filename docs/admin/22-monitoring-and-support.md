@@ -2,7 +2,7 @@
 
 *Courtside Documentation › Running it. [Contents](README.md).*
 
-The site watches itself and raises a ticket on the Support desk only when something needs doing, emailing the admins once. It emails again only if things get worse, resolves the ticket by itself when it clears, and never sends reminders.
+The site watches itself and raises a ticket on the Support desk only when something needs doing, emailing the admins once. It emails again only if things get worse, resolves the ticket by itself when it clears, and never sends reminders. Two checks of the same thing at once (a job's run and Check again) still raise one ticket, and one email.
 
 ![An alert's path](diagrams/22-1.svg)
 

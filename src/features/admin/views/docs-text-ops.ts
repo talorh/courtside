@@ -27,7 +27,7 @@ ${table(["What", "How long it's kept"], [
 export const monitoring = (): DocSection => ({ id: "monitoring", title: "Monitoring and support", body: html`
 <p>The site watches itself and raises a ticket on the Support desk only when something needs doing, emailing the admins
 once. It emails again only if things get worse, resolves the ticket by itself when it clears, and never sends
-reminders.</p>
+reminders. Two checks of the same thing at once (a job's run and Check again) still raise one ticket, and one email.</p>
 ${alertDiagram()}
 <p>The admin area's <b>Log</b> starts with what's happening right now in every team, then shows what admins and team
 managers change (teams, people and players, letting someone sign in, games added, changed or deleted, and videos deleted

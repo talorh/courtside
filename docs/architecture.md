@@ -857,7 +857,9 @@ codes to an address that bounces (kind `bounced:<email>`).
 ### Monitoring
 
 `alerts-service.ts`, `usage-checks.ts`, the `platform_alerts` table. the site owner wanted "only actionable tickets": something
-to buy or something to fix, and no spam.
+to buy or something to fix, and no spam. Two checks of one kind at once (a job's run and Check again) tell its news
+once: a level is saved only while it still stands as that check read it, and a ticket the other check opened at the
+same moment (the unique index refusing a second) counts as opened.
 
 | What's watched | Checked | Warns | Urgent | Clears |
 | --- | --- | --- | --- | --- |

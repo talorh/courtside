@@ -53,6 +53,34 @@ The ticket: https://saints.example/admin/support/1` }]);
 		expect(await tickets(deps)).toHaveLength(1);
 	});
 
+	it("opens one ticket, emailed once and with no problem, when two checks raise the same alert at once", async () => {
+		const { deps } = clocked();
+		const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+		await Promise.all([setAlert(deps, "stream_storage", "warn", "150 minutes left"), setAlert(deps, "stream_storage", "warn", "149 minutes left")]);
+		expect((await tickets(deps)).map((t) => t.title)).toEqual(["Video storage is running low"]);
+		expect(subjects(deps)).toEqual(["Courtside: Video storage is running low (#1)"]);
+		expect(await alertRow(deps)).toMatchObject({ level: "warn", ticket_id: 1 });
+		expect(await deps.db.prepare("SELECT COUNT(*) AS n FROM problems").first("n")).toBe(0);
+		expect(errors).not.toHaveBeenCalled();
+	});
+
+	it("opens one ticket when two checks find it still on with none yet (opening it failed before)", async () => {
+		const { deps } = clocked();
+		await deps.db.prepare("INSERT INTO platform_alerts (kind, level, detail, since, failures, checked_at) VALUES ('stream_storage', 'warn', '150 minutes left', '2026-10-14T00:00:00.000Z', 0, '2026-10-14T00:00:00.000Z')").run();
+		await Promise.all([setAlert(deps, "stream_storage", "warn", "150 minutes left"), setAlert(deps, "stream_storage", "warn", "150 minutes left")]);
+		expect(await tickets(deps)).toHaveLength(1);
+		expect(subjects(deps)).toEqual(["Courtside: Video storage is running low (#1)"]);
+		expect(await alertRow(deps)).toMatchObject({ ticket_id: 1 });
+	});
+
+	it("says it got worse once, with one email, when two checks find it worse at once", async () => {
+		const { deps } = clocked();
+		await setAlert(deps, "stream_storage", "warn", "150 minutes left");
+		await Promise.all([setAlert(deps, "stream_storage", "urgent", "No minutes left"), setAlert(deps, "stream_storage", "urgent", "No minutes left")]);
+		expect(subjects(deps)).toEqual(["Courtside: Video storage is running low (#1)", "Courtside: Video storage is too low for a game night, now urgent (#1)"]);
+		expect(await events(deps)).toEqual([{ kind: "event", body: "Worse: video storage is too low for a game night: No minutes left.", email_to: "admins" }]);
+	});
+
 	it("resolves its ticket by itself when it clears, saying so, with no email; if it comes back, that's a new ticket", async () => {
 		const { deps } = clocked();
 		await setAlert(deps, "daily_job", "urgent", "The backup failed");

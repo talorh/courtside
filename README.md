@@ -12,7 +12,7 @@
 <p align="center">
   <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-2F6FDB"></a>
   <img alt="Runs on Cloudflare" src="https://img.shields.io/badge/runs%20on-Cloudflare-14274E">
-  <img alt="2,117 unit tests passing" src="https://img.shields.io/badge/unit%20tests-2%2C117%20passing-2F6FDB">
+  <img alt="2,120 unit tests passing" src="https://img.shields.io/badge/unit%20tests-2%2C120%20passing-2F6FDB">
   <img alt="217 browser tests passing" src="https://img.shields.io/badge/browser%20tests-217%20passing-2F6FDB">
   <img alt="Node 26" src="https://img.shields.io/badge/node-26-14274E">
 </p>
@@ -213,7 +213,7 @@ Good places to start:
 - [Why it's built this way](docs/admin/30-technology-decisions.md)
 - [AGENTS.md](AGENTS.md), the rules every change follows
 
-Every change has to pass all 2,117 unit tests and 217 browser tests before it ships. The unit tests include two teams
+Every change has to pass all 2,120 unit tests and 217 browser tests before it ships. The unit tests include two teams
 going through every page to prove neither can see the other's. The browser tests run Go live on Android, iPhone and
 Firefox.
 

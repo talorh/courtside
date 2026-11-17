@@ -20,11 +20,13 @@ export async function getAlert(db: D1Database, kind: AlertKind): Promise<Platfor
 	return db.prepare(`SELECT ${COLUMNS} FROM platform_alerts WHERE kind = ?`).bind(kind).first<PlatformAlert>();
 }
 
-/** Where `kind` stands now; its ticket stays as it was. */
-export async function saveAlert(db: D1Database, a: Omit<PlatformAlert, "ticketId">): Promise<void> {
-	await db.prepare(`INSERT INTO platform_alerts (kind, level, detail, since, failures, checked_at) VALUES (?, ?, ?, ?, ?, ?)
-		ON CONFLICT (kind) DO UPDATE SET level = excluded.level, detail = excluded.detail, since = excluded.since, failures = excluded.failures, checked_at = excluded.checked_at`)
-		.bind(a.kind, a.level, a.detail, a.since, a.failures, a.checkedAt).run();
+/** Where `kind` stands now, only while it still stands at `was` (as read, "ok" for no row): false when another check
+ * changed it in between, which then has the news to tell. Its ticket stays as it was. */
+export async function saveAlert(db: D1Database, a: Omit<PlatformAlert, "ticketId">, was: AlertLevel): Promise<boolean> {
+	return (await db.prepare(`INSERT INTO platform_alerts (kind, level, detail, since, failures, checked_at) VALUES (?, ?, ?, ?, ?, ?)
+		ON CONFLICT (kind) DO UPDATE SET level = excluded.level, detail = excluded.detail, since = excluded.since, failures = excluded.failures, checked_at = excluded.checked_at
+		WHERE platform_alerts.level = ?`)
+		.bind(a.kind, a.level, a.detail, a.since, a.failures, a.checkedAt, was).run()).meta.changes === 1;
 }
 
 export const setAlertTicket = (db: D1Database, kind: AlertKind, ticketId: number) => db.prepare("UPDATE platform_alerts SET ticket_id = ? WHERE kind = ?").bind(ticketId, kind).run();
