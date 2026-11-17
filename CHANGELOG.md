@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Enhancement] **Video joiner:** The joiner's image is now pinned, its base by digest and ffmpeg by version, so a rebuild changes only the site's own files; the setup runbook says how to move the pin. Rebuild the joiner's image (npm run join -- image) to pick it up.
 - [Fix] **Teams:** Fixed an issue where deleting a closed team could leave some of its unfinished uploads in R2 when R2 listed them over several pages: every page is now read.
 - [Enhancement] **Go live:** A carried-on recording made as H.264 in WebM (as Chrome records) is now copied into one video rather than re-encoded, so it's joined in minutes, and a re-encode that's still needed is about 20 times cheaper; the video joiner takes waiting joins one team at a time, each with its newest links, so one team's joins can't hold up another's. Rebuild the joiner's image (npm run join -- image) to pick it up.
 - [Enhancement] **Staging:** Staging is now its own Worker, staging-<worker>, at the same workers.dev address, in place of a Preview of the live Worker, and the live Worker has no preview addresses at all; npm run staging -- setup turns them off and deletes the old Preview before staging's first deploy, staging's keys go with each deploy in a file removed as soon as it's done, a deploy is recorded only once Cloudflare shows it, and staging's Platform shows its own Worker's figures.

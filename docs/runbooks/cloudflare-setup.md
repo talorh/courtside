@@ -208,6 +208,18 @@ Durable Object `Joiner` and the container (`Dockerfile`: Alpine, ffmpeg, `server
 `cloudflare.config.ts` binds to it, so the joiner must be deployed before a site config that names it (the live site
 and the staging Worker alike).
 
+**The image is pinned**, as one bad image breaks every team's joins (and staging's) at once: the base by its
+multi-arch digest (`node:26-alpine@sha256:6bd9ab43…`: Node 26.13.1, Alpine 3.24.4) and ffmpeg by Alpine's version
+(`ffmpeg=8.1.3-r0`), so a rebuild changes only the repository's own files. Alpine keeps only the newest build of a
+package, so once it ships `8.1.3-r1` (a security fix, say) the build stops with "unable to select packages": that's
+the signal to move the pin, not to drop it. To move either: `podman pull docker.io/library/node:26-alpine`, then
+`skopeo inspect --raw docker://docker.io/library/node:26-alpine | sha256sum` for the index digest (or `podman image
+inspect` and its `RepoDigests`), and `podman run --rm <that image> sh -c 'apk update -q && apk policy ffmpeg'` for the
+version. Put both in `join/Dockerfile`, then build it locally (`podman build -t <worker>-join:try join`) and, with
+`--network=none`, check `ffmpeg -version` and the container's own `POST /self-test` (start `node server.mjs` and post to
+port 8080 from inside it); `npx vitest run tests/join` runs the joins on this computer's ffmpeg, which may be newer.
+Then `npm run join -- image` as below.
+
 ```bash
 npm run join -- image        # when join/ changed: build the image (podman as docker, scripts/podman-as-docker.sh), push it to Cloudflare's registry, write its tag to join/image-tag.txt (commit it)
 npm run join -- dry-run      # the joiner's tests, then cf deploy --dry-run in join/ (the image by tag: no Docker needed)
