@@ -292,7 +292,7 @@ describe("Insights, the admin area's landing page (graphical, what needs attenti
 
 	it("counts a live stream's recording as live, not as an upload under way, as the Log's Right now does", async () => {
 		const deps = await site();
-		const game = (await run(deps, "INSERT INTO games (team_id, starts_at, competition, round_label, opponent) VALUES (?, '2026-10-15T18:40', 'VJBL', '12', 'Eltham')", B12_1.id)).meta.last_row_id;
+		const game = (await run(deps, "INSERT INTO games (team_id, starts_at, competition, round_label, opponent) VALUES (?, '2026-10-15T18:40', 'VJBL', '12', 'Riverton')", B12_1.id)).meta.last_row_id;
 		const video = (await run(deps, `INSERT INTO videos (team_id, game_id, status, delete_after, created_at) VALUES (?, ?, 'uploading', '2027-12-31T13:00:00.000Z', '2026-10-14T23:30:00.000Z')`, B12_1.id, game)).meta.last_row_id;
 		await run(deps, "INSERT INTO live_streams (team_id, game_id, live_input_uid, status, created_at, recording_video_id) VALUES (?, ?, 'in-live', 'open', '2026-10-14T23:00:00.000Z', ?)", B12_1.id, game, video);
 		const window = { stuckBefore: "2026-10-14T00:00:00.000Z", failedSince: "2026-10-08T00:00:00.000Z" };
