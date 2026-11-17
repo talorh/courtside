@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Enhancement] **Sign-in:** When Cloudflare refuses the site's own Turnstile key (a wrong or revoked secret), sign-ins are still refused, but the admins now get a Site problem in the Log and a log line saying so, rather than nothing.
 - [Fix] **Support:** Fixed an issue where a ticket's email could go twice when its page and the 5-minute job sent it at the same moment.
 - [Fix] **Clips:** Fixed an issue where a clip Stream couldn't make counted against its maker's hour, the team's 5 hours and its game's 50, though it holds no storage.
 - [Enhancement] **Clips:** A team now keeps at most 5 hours of clips, so clips made over many days can't fill the shared Stream storage either; past it the site says a team manager deleting clips makes room, and offers a shorter clip when one fits.

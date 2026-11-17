@@ -103,6 +103,25 @@ describe("Turnstile on the sign-in page", () => {
 		expect((await deps.db.prepare("SELECT COUNT(*) AS n FROM support_requests").first<number>("n"))).toBe(0);
 		expect(warn).not.toHaveBeenCalled();
 	});
+	it("still refuses when Cloudflare refuses the site's own secret, but logs it and opens a problem, on both forms", async () => {
+		const deps = createTestDeps();
+		vi.spyOn(console, "log").mockImplementation(() => {});
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const keyRefused = vi.fn(async () => new Response("{}", { status: 403 }));
+		const withTurnstile = { ...deps, turnstile: createTurnstile({ secret: "old", fetch: keyRefused }) };
+		const post = (path: string, body: Record<string, string>) => handleRequest(new Request(`https://saints.example${path}`, {
+			method: "POST", headers: { Origin: "https://saints.example", "CF-Connecting-IP": "1.2.3.4" }, body: new URLSearchParams(body),
+		}), withTurnstile, refuse, buildRouter(), buildAdminRouter());
+		expect((await post("/signin", { email: MANAGER, next: "/", "cf-turnstile-response": "tok" })).status).toBe(400);
+		expect((await post("/signin/access", { name: "Steph Curry", team: "Saints B12.1", email: "steph@example.com", "cf-turnstile-response": "tok" })).status).toBe(400);
+		expect(deps.email.sent).toEqual([]);
+		expect(warn.mock.calls.map(([line]) => JSON.parse(String(line)))).toEqual([
+			{ event: "turnstile_key_refused", teamId: null, form: "signin", detail: "HTTP 403" },
+			{ event: "turnstile_key_refused", teamId: null, form: "access", detail: "HTTP 403" },
+		]);
+		const problems = await deps.db.prepare("SELECT kind, what, detail FROM problems ORDER BY id").all();
+		expect(problems.results).toEqual([{ kind: "site_problem", what: "Turnstile refused the site's own secret key, so nobody can sign in or ask for access", detail: "HTTP 403" }]);
+	});
 	it("still sends the code when Cloudflare can't be reached, and logs that it couldn't check", async () => {
 		const deps = createTestDeps();
 		deps.turnstile.result = "unreachable";

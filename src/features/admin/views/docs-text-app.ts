@@ -28,7 +28,9 @@ export const signIn = (): DocSection => ({ id: "signin", title: "Signing in", bo
 30 days on that device. A code is only ever sent to an address on a team's list, or a site admin's, and only once
 Cloudflare Turnstile says a person, not a script, asked: the check is invisible unless Cloudflare wants a tap. If
 Cloudflare can't be reached, or has trouble of its own (a server error, or it's too busy), the code still goes, with the
-limits below holding. If it refuses the question, or the token is longer than Cloudflare ever makes, no code goes.</p>
+limits below holding. If it refuses the question, or the token is longer than Cloudflare ever makes, no code goes. If it
+refuses the site's own secret key (wrong, revoked, or the widget deleted), no code goes either, and since then nobody can
+sign in, it's a Site problem in the Log.</p>
 <p>Someone not on a list can tap <b>raise an access request here</b> at the foot of the sign-in page: their name, their
 team and their email, behind the same Turnstile check, open one of the site's own tickets on the support desk (Access
 request: the name, the team), emailed to the admins. An address gets one open request at a time, an address already on a

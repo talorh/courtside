@@ -154,7 +154,9 @@ flowchart TD
  with Cloudflare (`siteverify`: the secret, the person's IP address; the token must be for action `signin` on this
  site's address) before anything else. Failed (a missing token, one over 2,048 characters, the longest Cloudflare
  makes, refused without asking; a 4xx other than 429; or Cloudflare saying it isn't good): no code, "couldn't confirm
- you're a person". Cloudflare's own trouble (no answer in 10 seconds, a network error, a 5xx or 429, an answer that
+ you're a person". Failed because Cloudflare refused the site's own secret (a 401, 403 or 404, or an `*-input-secret`
+ error code: the key wrong or revoked, or the widget gone) is refused the same way, as every sign-in would be, so it's
+ logged (`turnstile_key_refused`) and a Site problem goes in the Log. Cloudflare's own trouble (no answer in 10 seconds, a network error, a 5xx or 429, an answer that
  isn't JSON, or `internal-error`): the code still goes and `turnstile_unreachable` is logged, so an outage there
  doesn't stop families signing in; the limits hold. Only the sign-in pages' CSP allows `challenges.cloudflare.com`
  (script and frame). The live site and staging each have their own widget and secret (`TURNSTILE_SITE_KEY`,

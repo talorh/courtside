@@ -48,6 +48,7 @@ Each line: when, level, event, team, its other fields (ids, the error), and its 
 | `phone_problem` | warn | An upload or photos that stopped on the phone, or an upload page closed mid-upload: `progress` (`pct`, `mb`, `minutes`) and the status, never the words (the Log has those) |
 | `video_failed`, `video_slow` | error, warn | Stream couldn't process a video (`videoId`, `gameId`, `streamUid`, Stream's reason), or is still on it an hour in (Stream's `state`) |
 | `live_app_live`, `live_app_back`, `live_app_recording_failed` | log, log, warn | A camera app's stream (RTMPS) noted live, back after dropping out (`goneMinutes`), and a part Stream couldn't record (a gap in the saved video) |
+| `turnstile_key_refused` | warn | Turnstile refused the site's own secret (a 401, 403 or 404, or a `*-input-secret` code: the key wrong or revoked, or the widget deleted), so every sign-in and access request is refused until `TURNSTILE_SECRET` is fixed; also a Site problem in the Log |
 | `signin_email_failed` | error | A sign-in code's email didn't go (the address masked; `bounced` when Email Sending won't send to it) |
 | `problem_log_failed` | error | A problem couldn't be written to the Log (D1 failing): what it was is on this line instead |
 | `joiner_stopped`, `joiner_container_error` | log, error | The joiner's container stopped (a crash when it exits by itself with an error code), or failed |

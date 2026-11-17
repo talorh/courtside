@@ -28,6 +28,13 @@ const ipOf = (req: Request) => req.headers.get("CF-Connecting-IP") ?? "";
 /** The sign-in page for a path someone wanted while signed out. */
 export const signInPath = (url: URL) => `/signin?next=${encodeURIComponent(url.pathname + url.search)}`;
 
+/** Turnstile refusing the site's own secret: the form still refuses (it fails closed), but nobody can get past it until
+ * the key is fixed, so the admins hear of it. */
+async function keyRefused(deps: AppDeps, form: "signin" | "access", detail: string): Promise<void> {
+	console.warn(JSON.stringify({ event: "turnstile_key_refused", teamId: null, form, detail }));
+	await logProblem(deps, { kind: "site_problem", teamId: null, what: "Turnstile refused the site's own secret key, so nobody can sign in or ask for access", detail });
+}
+
 const page = (deps: AppDeps, step: "email" | "code", email: string, next: string, message: SignInMessage | null, status = 200) =>
 	htmlResponse(signInPage({ step, email, next: sitePath(next), message, siteKey: deps.config.turnstileSiteKey }), status);
 
@@ -37,6 +44,7 @@ async function sendCode(req: Request, url: URL, deps: AppDeps): Promise<Response
 	// limits (auth/sign-in-limits.ts) are what hold, and it's logged.
 	const check = await deps.turnstile.verify(token, ipOf(req), url.hostname);
 	if (check.result === "failed") {
+		if (check.broken) await keyRefused(deps, "signin", check.detail);
 		console.log(JSON.stringify({ event: "signin_refused", teamId: null, email: maskEmail(email), why: "turnstile", detail: check.detail }));
 		await recordSignInEvent(deps.db, { kind: "robot", email: storedEmail(email.trim().toLowerCase()), ip: ipOf(req), at: deps.now().toISOString(), device: deps.device });
 		return page(deps, "email", email, next, "robot", 400);
@@ -69,7 +77,10 @@ async function askForAccess(req: Request, url: URL, deps: AppDeps): Promise<Resp
 	const again = (message: Parameters<typeof accessPage>[0]["message"], status: number) =>
 		htmlResponse(accessPage({ name: form.name, team: form.team, email: form.email, message, siteKey: deps.config.turnstileSiteKey }), status);
 	const check = await deps.turnstile.verify(form["cf-turnstile-response"], ipOf(req), url.hostname);
-	if (check.result === "failed") return again("robot", 400);
+	if (check.result === "failed") {
+		if (check.broken) await keyRefused(deps, "access", check.detail);
+		return again("robot", 400);
+	}
 	if (check.result === "unreachable") {
 		console.warn(JSON.stringify({ event: "turnstile_unreachable", teamId: null, detail: check.detail }));
 		await logProblem(deps, { kind: "site_problem", teamId: null, what: "The access request form's robot check (Turnstile) didn't answer, so only its limits held", detail: check.detail });

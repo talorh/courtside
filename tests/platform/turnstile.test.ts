@@ -41,10 +41,24 @@ describe("checking a Turnstile token", () => {
 		expect(fetch).toHaveBeenCalledTimes(1);
 	});
 	it("fails when Cloudflare refuses the question (a 4xx), except a 429, which is Cloudflare limiting its own service", async () => {
-		for (const status of [400, 401, 403, 404, 405, 413]) {
+		for (const status of [400, 405, 413]) {
 			expect(await createTurnstile({ secret: "s", fetch: answering({}, status) }).verify("t", "", "saints.example")).toEqual({ result: "failed", detail: `HTTP ${status}` });
 		}
 		expect(await createTurnstile({ secret: "s", fetch: answering({}, 429) }).verify("t", "", "saints.example")).toEqual({ result: "unreachable", detail: "HTTP 429" });
+	});
+	it("fails, marked broken, when Cloudflare refuses the site's own secret: a 401, 403 or 404, or a secret it says is missing or wrong", async () => {
+		for (const status of [401, 403, 404]) {
+			expect(await createTurnstile({ secret: "s", fetch: answering({}, status) }).verify("t", "", "saints.example")).toEqual({ result: "failed", detail: `HTTP ${status}`, broken: true });
+		}
+		for (const code of ["invalid-input-secret", "missing-input-secret"]) {
+			const fetch = answering({ success: false, "error-codes": [code] });
+			expect(await createTurnstile({ secret: "s", fetch }).verify("t", "", "saints.example")).toEqual({ result: "failed", detail: code, broken: true });
+		}
+		for (const status of [400, 405, 413]) {
+			expect((await createTurnstile({ secret: "s", fetch: answering({}, status) }).verify("t", "", "saints.example")).broken).toBeUndefined();
+		}
+		const notAPerson = answering({ success: false, "error-codes": ["invalid-input-response"] });
+		expect((await createTurnstile({ secret: "s", fetch: notAPerson }).verify("t", "", "saints.example")).broken).toBeUndefined();
 	});
 	it("is unreachable, not failed, when Cloudflare doesn't answer, answers with a server error, or has its own trouble", async () => {
 		const down = vi.fn(async () => { throw new TypeError("network"); });
