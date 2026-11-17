@@ -8,7 +8,7 @@ import { formatGameDate, localTime } from "../../shared/time.ts";
 import { type AlertKind, type AlertLevel, getAlert } from "./alerts-repository.ts";
 import { setAlert } from "./alerts-service.ts";
 import { serverErrorsLately } from "./server-errors-repository.ts";
-import { countUnsentBefore } from "./support-desk-repository.ts";
+import { countUnsentBefore } from "./support-email-repository.ts";
 import { EMAILS_A_MONTH, emailsSentIn, monthKey } from "./email-count-repository.ts";
 
 const HOUR_MS = 3_600_000;

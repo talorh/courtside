@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { retryTicketEmails } from "../../../src/features/admin/support-desk-service.ts";
+import { retryTicketEmails, sendMessageEmail, sendTicketEmail } from "../../../src/features/admin/support-desk-service.ts";
 import { form, makeClient, MANAGER } from "../../helpers/app.ts";
 import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 import { addMember, addTeam, G14_5 } from "../../helpers/two-teams.ts";
@@ -192,6 +192,37 @@ describe("the support desk: a queue of tickets (a proper service desk)", () => {
 		await site(deps, "Done", "resolved");
 		const page = await (await admin(deps)("/admin/log")).text();
 		expect(page).toContain('<span class="count" title="2 waiting for an answer" aria-hidden="true">2</span>');
+	});
+});
+
+describe("a ticket's emails go once", () => {
+	it("sends a ticket's first email once when the page and the 5-minute job send it at the same time", async () => {
+		const deps = await setup();
+		const id = (await site(deps, "Photos are near Images' 100,000")).meta.last_row_id;
+		await Promise.all([sendTicketEmail(deps, id), retryTicketEmails(deps), sendTicketEmail(deps, id)]);
+		expect(deps.email.sent.map((e) => e.subject)).toEqual(["Courtside: Photos are near Images' 100,000 (#2)"]);
+		expect(await deps.db.prepare("SELECT emailed_at FROM support_requests WHERE id = ?").bind(id).first("emailed_at")).toBe("2026-10-15T00:00:00.000Z");
+	});
+
+	it("sends a message's email once when two sends overlap", async () => {
+		const deps = await setup();
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		deps.email.failNext = "E_INTERNAL_SERVER_ERROR";
+		await admin(deps)("/admin/support/1/message", form({ body: "Is it on Wi-Fi?", then: "reply" }));
+		const message = await deps.db.prepare("SELECT id FROM support_messages WHERE email_to IS NOT NULL").first<number>("id");
+		await Promise.all([sendMessageEmail(deps, message ?? 0), retryTicketEmails(deps), sendMessageEmail(deps, message ?? 0)]);
+		expect(deps.email.sent.map((e) => e.to)).toEqual([[JANE]]);
+	});
+
+	it("leaves an email that didn't go to be sent again", async () => {
+		const deps = await setup();
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		const id = (await site(deps, "Photos are near Images' 100,000")).meta.last_row_id;
+		deps.email.failNext = "E_INTERNAL_SERVER_ERROR";
+		await retryTicketEmails(deps);
+		expect(await deps.db.prepare("SELECT emailed_at FROM support_requests WHERE id = ?").bind(id).first("emailed_at")).toBeNull();
+		await retryTicketEmails(deps);
+		expect(deps.email.sent.map((e) => e.subject)).toEqual(["Courtside: Photos are near Images' 100,000 (#2)"]);
 	});
 });
 

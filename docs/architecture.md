@@ -843,7 +843,9 @@ Everything is saved first, with who it's for (`email_to`), then emailed:
 Any email that didn't go is sent by the 5-minute job, a few a run for the whole site. One that fails again is logged
 (`ticket_email_failed`) and never fails the job; the email alert raises it after an hour. Someone no longer there (a
 team manager off the list, or an admin removed since they wrote it) is skipped and logged (`ticket_email_skipped`). A
-ticket resolved before its first email could go never sends it.
+ticket resolved before its first email could go never sends it. Each email is claimed before it's sent (`emailed_at`
+set only where it's still empty, `support-email-repository.ts`), so the page and the 5-minute job trying the same one
+at once send it once; a send that fails clears its claim for the next run.
 
 The site's own tickets (below) have no team and nobody to reply to: they're open or resolved, never waiting on
 anyone, and an old one can't reopen while a newer one about the same thing is open (a unique index allows one open

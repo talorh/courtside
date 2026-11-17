@@ -11,8 +11,9 @@ import { adminLogStatement } from "./admin-log-repository.ts";
 import { mailAdmin, mailAdmins, mailTicketManager } from "./admin-mail.ts";
 import { messageEmail, newTicketEmail, siteTicketEmail } from "./support-emails.ts";
 import {
-	findOpenSiteTicket, getMessage, getTicket, listUnsent, markMessageEmailed, markTicketEmailed, messageStatement, type Ticket, ticketStatement,
+	findOpenSiteTicket, getMessage, getTicket, messageStatement, type Ticket, ticketStatement,
 } from "./support-desk-repository.ts";
+import { claimEmail, listUnsent, releaseEmail } from "./support-email-repository.ts";
 
 const RETRY_BATCH = 5;
 
@@ -28,12 +29,22 @@ const body = (text: string) => {
 	return b;
 };
 
+/** Sends an email only when this call claims it (the page and the 5-minute job can try the same one at once); one that
+ * fails is given back for the next run. */
+async function once(deps: AppDeps, what: "ticket" | "message", id: number, send: () => Promise<unknown>): Promise<void> {
+	const at = deps.now().toISOString();
+	if (!(await claimEmail(deps.db, what, id, at))) return;
+	await send().catch(async (err: unknown) => {
+		await releaseEmail(deps.db, what, id, at);
+		throw err;
+	});
+}
+
 /** Sends a ticket's first email (to the admins), once. */
 export async function sendTicketEmail(deps: AppDeps, id: number): Promise<void> {
 	const t = await ticketOr404(deps, id);
 	if (t.emailedAt) return;
-	await mailAdmins(deps, t.source === "site" ? siteTicketEmail(t) : newTicketEmail(t));
-	await markTicketEmailed(deps.db, id, deps.now().toISOString());
+	await once(deps, "ticket", id, () => mailAdmins(deps, t.source === "site" ? siteTicketEmail(t) : newTicketEmail(t)));
 }
 
 /** Sends one message's email, to whoever it's for; someone no longer there gets nothing, and it isn't tried again. */
@@ -41,12 +52,13 @@ export async function sendMessageEmail(deps: AppDeps, id: number): Promise<void>
 	const m = await getMessage(deps.db, id);
 	if (!m?.emailTo || m.emailedAt) return;
 	const t = await ticketOr404(deps, m.ticketId);
-	const email = messageEmail(t, m);
-	const sent = m.emailTo === "admins" ? (await mailAdmins(deps, email), "sent")
-		: m.emailTo === "manager" ? (t.teamId && t.member && m.adminEmail ? await mailTicketManager(deps, { teamId: t.teamId, memberId: t.member.id }, m.adminEmail, email) : "gone")
-		: await mailAdmin(deps, m.emailTo, email);
-	if (sent === "gone") console.log(JSON.stringify({ event: "ticket_email_skipped", teamId: t.teamId, ticket: t.id, message: id }));
-	await markMessageEmailed(deps.db, id, deps.now().toISOString());
+	const email = messageEmail(t, m), to = m.emailTo;
+	await once(deps, "message", id, async () => {
+		const sent = to === "admins" ? (await mailAdmins(deps, email), "sent")
+			: to === "manager" ? (t.teamId && t.member && m.adminEmail ? await mailTicketManager(deps, { teamId: t.teamId, memberId: t.member.id }, m.adminEmail, email) : "gone")
+			: await mailAdmin(deps, to, email);
+		if (sent === "gone") console.log(JSON.stringify({ event: "ticket_email_skipped", teamId: t.teamId, ticket: t.id, message: id }));
+	});
 }
 
 /** Tries now; a failure is logged (a problem in the admin Log too) and the 5-minute job sends it. */

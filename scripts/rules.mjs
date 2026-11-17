@@ -10,7 +10,7 @@
 const CROSS_TEAM = new Set([
 	"src/jobs/backup-db.ts", "src/features/teams/teams-repository.ts", "src/auth/admins-repository.ts",
 	"src/auth/memberships-repository.ts", "src/features/teams/owner-repository.ts", "src/features/admin/platform-repository.ts",
-	"src/features/admin/alerts-repository.ts", "src/features/admin/support-desk-repository.ts", "src/features/admin/desk-figures-repository.ts", "src/features/admin/admin-log-repository.ts",
+	"src/features/admin/alerts-repository.ts", "src/features/admin/support-desk-repository.ts", "src/features/admin/support-email-repository.ts", "src/features/admin/desk-figures-repository.ts", "src/features/admin/admin-log-repository.ts",
 	"src/features/admin/insights-repository.ts", "src/features/admin/admin-nav-repository.ts",
 	"src/features/admin/activity-admin-repository.ts", "src/features/admin/server-errors-repository.ts", "src/features/admin/problems-repository.ts",
 	// The sign-in: a person's sessions and codes, before any team is known.

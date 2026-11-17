@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Support:** Fixed an issue where a ticket's email could go twice when its page and the 5-minute job sent it at the same moment.
 - [Fix] **Clips:** Fixed an issue where a clip Stream couldn't make counted against its maker's hour, the team's 5 hours and its game's 50, though it holds no storage.
 - [Enhancement] **Clips:** A team now keeps at most 5 hours of clips, so clips made over many days can't fill the shared Stream storage either; past it the site says a team manager deleting clips makes room, and offers a shorter clip when one fits.
 - [Fix] **Teams:** Fixed an issue where Reopen and Cancel tonight's delete were still offered once a team's videos and photos were past their date, though the 3am job would close it again and delete it that night: they now say why and offer nothing.

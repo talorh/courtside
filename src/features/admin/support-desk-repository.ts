@@ -106,28 +106,6 @@ export function ticketStatement(db: D1Database, id: number, t: { status: TicketS
 		.bind(id, t.status, t.assignedTo, t.by, t.nowIso);
 }
 
-export const markTicketEmailed = (db: D1Database, id: number, nowIso: string) => db.prepare("UPDATE support_requests SET emailed_at = ? WHERE id = ?").bind(nowIso, id).run();
-export const markMessageEmailed = (db: D1Database, id: number, nowIso: string) => db.prepare("UPDATE support_messages SET emailed_at = ? WHERE id = ?").bind(nowIso, id).run();
-
-// A ticket's first email is news only until it's resolved: one resolved before it could go (an alert that cleared while
-// emails weren't going) is never sent.
-const FIRST_UNSENT = "emailed_at IS NULL AND status <> 'resolved'";
-
-/** Tickets whose first email hasn't gone, and messages whose email hasn't, oldest first. */
-export async function listUnsent(db: D1Database, limit: number): Promise<{ tickets: number[]; messages: number[] }> {
-	const [tickets, messages] = await db.batch<{ id: number }>([
-		db.prepare(`SELECT id FROM support_requests WHERE ${FIRST_UNSENT} ORDER BY id LIMIT ?`).bind(limit),
-		db.prepare("SELECT id FROM support_messages WHERE email_to IS NOT NULL AND emailed_at IS NULL ORDER BY id LIMIT ?").bind(limit),
-	]);
-	return { tickets: (tickets?.results ?? []).map((r) => r.id), messages: (messages?.results ?? []).map((r) => r.id) };
-}
-
-/** Emails still waiting since before `beforeIso` (the "emails not going" alert). */
-export async function countUnsentBefore(db: D1Database, beforeIso: string): Promise<number> {
-	return (await db.prepare(`SELECT (SELECT COUNT(*) FROM support_requests WHERE ${FIRST_UNSENT} AND created_at < ?1)
-		+ (SELECT COUNT(*) FROM support_messages WHERE email_to IS NOT NULL AND emailed_at IS NULL AND created_at < ?1) AS n`).bind(beforeIso).first<number>("n")) ?? 0;
-}
-
 /** The site's open ticket about one of its alerts, if any (at most one: a unique index). */
 export const findOpenSiteTicket = async (db: D1Database, alertKind: string) => {
 	const row = await db.prepare(`${TICKET} WHERE s.source = 'site' AND s.alert_kind = ? AND s.status <> 'resolved'`).bind(alertKind).first<Row>();
