@@ -146,6 +146,15 @@ describe("the admin area's Documentation", () => {
 		}
 	});
 
+	it("says beside Cloudflare's money alerts that a Workers spending limit (US$20 a period, say) stops the site when reached", async () => {
+		const html = await page();
+		for (const id of ["costs", "cloudflare"]) {
+			const body = html.split(`id="${id}" aria-labelledby`)[1]!.split('<section class="panel docsec"')[0]!;
+			expect(body, id).toContain("spending limit");
+			expect(body, id).toContain("US$20");
+		}
+	});
+
 	it("maps every table the migrations make in The data's diagram", async () => {
 		const sql = readdirSync("migrations").map((f) => readFileSync(`migrations/${f}`, "utf8")).join("\n");
 		const tables = new Set([...sql.matchAll(/CREATE TABLE (?:IF NOT EXISTS )?(\w+)/gi)].map((m) => m[1]!.replace(/_new$/, "")).filter((t) => !t.endsWith("_backup")));

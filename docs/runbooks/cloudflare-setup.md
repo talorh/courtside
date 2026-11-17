@@ -87,6 +87,9 @@ subdomain of `CLUB.zone`, the zone is the club's, shared with its website, and:
 
 Monthly spend past a threshold (two, say US$50 and US$100); the Worker has a new issue; an HTTP DDoS attack; the
 domain's certificate events; an abuse report. Emailed to the owner. These work when the Worker itself is down.
+Beside them, a Workers spending limit (Billing, Spend Management; US$20 of Workers usage in a billing period, say)
+blocks the Worker's requests past it: a runaway Workers bill can't happen, but reaching it stops the site until the
+next billing period. Stream, R2 and Images aren't in it.
 
 ## 2. Checking it
 

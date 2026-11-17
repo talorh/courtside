@@ -77,5 +77,7 @@ tiles' figures, each actual or estimated), Teams (a row each), Months (a row a t
 or pivot), Team by team, and Cloudflare's bill for the season's days (US dollars). Figures stay numbers, so Excel adds
 them up.</li></ul>
 <h3>Cloudflare's own alerts about money</h3>
-<p>Cloudflare emails the owner when the month's spend passes US$50 and US$100, whatever the site itself is doing. The
-bill, the invoices and the card are under Billing in the dashboard.</p>`});
+<p>Cloudflare emails the owner when the month's spend passes US$50 and US$100, whatever the site itself is doing. A
+Workers spending limit (Billing, Spend Management; US$20 of Workers usage in a billing period, say) also stops Workers
+past it: it covers Workers alone, not Stream, R2 or Images, and reaching it takes the site down until the next billing
+period starts. The bill, the invoices and the card are under Billing in the dashboard.</p>`});

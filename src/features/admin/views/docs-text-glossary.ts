@@ -38,7 +38,7 @@ ${table(["Word", "What it means here"], [
 		["Preview", "An address Cloudflare can give each version of a Worker on workers.dev. The site's Workers have them off, as they'd answer outside the zone's protections, and the Worker refuses any address but its own. Staging is a Worker of its own, staging-courtside."],
 		["Cron", "A schedule for running the Worker without a request: every five minutes, and at 3am local time."],
 		["Observability, Workers Logs", "Cloudflare's record of every request and job run, with the Worker's own log lines, kept for 7 days (npm run logs reads them). Traces time each request's database queries and outside calls. Issues emails the owner when the Worker starts failing in a new way."],
-		["Notifications", "Cloudflare's own emails to the owner: spend past US$50 and US$100, a new issue in the Worker, a DDoS attack, a certificate change, an abuse report. They work even if the Worker is down."],
+		["Notifications", "Cloudflare's own emails to the owner: spend past US$50 and US$100, a new issue in the Worker, a DDoS attack, a certificate change, an abuse report. They work even if the Worker is down. Beside them, a Workers spending limit (US$20 a billing period, say) stops the Worker past that much Workers usage."],
 		["CSP", "The Content Security Policy: a rule each page sends saying scripts and styles may only come from the site itself, so nothing injected can run."],
 		["Tombstone", "A deleted row kept a while (90 days) so the site can say what happened and bring back a mistake, before it's cleared for good."],
 		["Release", "The one way to deploy: npm run release, which runs every check and pushes main for Workers Builds to deploy."],

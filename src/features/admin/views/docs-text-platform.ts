@@ -96,7 +96,10 @@ ${table(["Secret", "What it unlocks"], [
 <h3>Cloudflare's own alerts</h3>
 <p>Cloudflare emails the owner when the month's spend passes US$50 and US$100, when the Worker starts failing in a new
 way, when it stops an HTTP DDoS attack, when the certificate changes, and if someone reports abuse. These work even if
-the Worker itself is down, alongside the site's own alerts on Platform and Insights.</p>
+the Worker itself is down, alongside the site's own alerts on Platform and Insights. A Workers spending limit (Billing,
+Spend Management; US$20 of Workers usage in a billing period, say) blocks the Worker's requests past it, so a runaway
+bill can't happen there, but reaching it stops the site until the next billing period; Stream, R2 and Images aren't in
+it.</p>
 <h3>Outside the account</h3>
 <p>Costs reads the day's US dollar rate for the club's currency from Frankfurter (the European Central Bank's reference
 rate; free, with no key), a few times a day, and keeps the last one if it doesn't answer.</p>`});

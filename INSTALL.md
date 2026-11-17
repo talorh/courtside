@@ -162,7 +162,8 @@ a dry run first, then for real after your yes. Read-only commands need no yes.
     admins only while the site has never had one, so an admin removed later stays removed; `npm run admin -- add
     <email>` adds an admin when the admin area isn't to hand.
 15. **Cloudflare's own alerts** (§1): notifications for a spend past a threshold, a new Worker issue and an HTTP DDoS
-    attack, emailed to you. These work even when the site doesn't.
+    attack, emailed to you. These work even when the site doesn't. And, with your yes, a Workers spending limit
+    (Billing, Spend Management; US$20 a billing period, say), which stops the site if Workers usage ever runs away.
 
 ## 6. Checking it's right
 

@@ -64,7 +64,7 @@ Secrets are stored on the Worker, never in the code. Most services are bindings 
 
 ### Cloudflare's own alerts
 
-Cloudflare emails the owner when the month's spend passes US$50 and US$100, when the Worker starts failing in a new way, when it stops an HTTP DDoS attack, when the certificate changes, and if someone reports abuse. These work even if the Worker itself is down, alongside the site's own alerts on Platform and Insights.
+Cloudflare emails the owner when the month's spend passes US$50 and US$100, when the Worker starts failing in a new way, when it stops an HTTP DDoS attack, when the certificate changes, and if someone reports abuse. These work even if the Worker itself is down, alongside the site's own alerts on Platform and Insights. A Workers spending limit (Billing, Spend Management; US$20 of Workers usage in a billing period, say) blocks the Worker's requests past it, so a runaway bill can't happen there, but reaching it stops the site until the next billing period; Stream, R2 and Images aren't in it.
 
 ### Outside the account
 

@@ -40,4 +40,4 @@ In short below; where each figure comes from, and how it's kept, is in The admin
 
 ### Cloudflare's own alerts about money
 
-Cloudflare emails the owner when the month's spend passes US$50 and US$100, whatever the site itself is doing. The bill, the invoices and the card are under Billing in the dashboard.
+Cloudflare emails the owner when the month's spend passes US$50 and US$100, whatever the site itself is doing. A Workers spending limit (Billing, Spend Management; US$20 of Workers usage in a billing period, say) also stops Workers past it: it covers Workers alone, not Stream, R2 or Images, and reaching it takes the site down until the next billing period starts. The bill, the invoices and the card are under Billing in the dashboard.
