@@ -83,7 +83,12 @@ describe("the joiner's ffmpeg commands", () => {
 	it("joins WebM through the concat demuxer, each segment read only as WebM, by stream copy or re-encoded", () => {
 		expect(concatArgs("/tmp/list.txt", "/tmp/out.webm", false)).toEqual([...COMMON, "-format_whitelist", "concat,matroska", "-safe", "0", "-f", "concat", "-i", "/tmp/list.txt", "-c", "copy", "/tmp/out.webm"]);
 		expect(concatArgs("/tmp/list.txt", "/tmp/out.webm", true)).toContain("libvpx-vp9");
+		// A whole game's VP9 at libvpx's default settings can't finish inside the join's limit.
+		expect(concatArgs("/tmp/list.txt", "/tmp/out.webm", true).join(" ")).toContain("-deadline realtime -cpu-used 8 -row-mt 1");
 		expect(listFile(["https://a/1?x=1", "file:/app/test-b.webm"], "matroska")).toBe("file 'https://a/1?x=1'\noption format_whitelist matroska\nfile '/app/test-b.webm'\noption format_whitelist matroska\n");
+	});
+	it("copies a WebM recording whose picture WebM can't hold into Matroska, under the same name", () => {
+		expect(concatArgs("/tmp/list.txt", "/tmp/out.webm", false, true)).toEqual([...COMMON, "-format_whitelist", "concat,matroska", "-safe", "0", "-f", "concat", "-i", "/tmp/list.txt", "-c", "copy", "-f", "matroska", "/tmp/out.webm"]);
 	});
 	it("joins an MP4 whose picture isn't H.264 through the concat demuxer too, its index at the front", () => {
 		expect(concatArgs("/tmp/list.txt", "/tmp/out.mp4", false)).toEqual([...COMMON, "-format_whitelist", "concat,mov", "-safe", "0", "-f", "concat", "-i", "/tmp/list.txt", "-c", "copy", "-movflags", "+faststart", "/tmp/out.mp4"]);
@@ -104,7 +109,9 @@ describe("the joiner's ffmpeg commands", () => {
 });
 
 const hasFfmpeg = (() => { try { execFileSync("ffmpeg", ["-version"], { stdio: "ignore" }); return true; } catch { return false; } })();
-const hasVp9 = hasFfmpeg && (() => { const list = execFileSync("ffmpeg", ["-hide_banner", "-encoders"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }); return list.includes("libvpx-vp9") && list.includes("libopus"); })();
+const encoders = hasFfmpeg ? execFileSync("ffmpeg", ["-hide_banner", "-encoders"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }) : "";
+const hasVp9 = encoders.includes("libvpx-vp9") && encoders.includes("libopus");
+const hasX264 = encoders.includes("libx264") && encoders.includes("libopus");
 const probe = (file: string) => Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file], { encoding: "utf8" }).trim());
 
 // With ffmpeg on this computer: the whole join on the image's own test files, the first cut off part way through a frame,
@@ -137,6 +144,21 @@ describe.skipIf(!hasFfmpeg)("the join itself", () => {
 		expect(probe(out)).toBeGreaterThan(4.5);
 		expect(probe(out)).toBeLessThan(5.5);
 		expect(execFileSync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name", "-of", "csv=p=0", out], { encoding: "utf8" }).trim()).toBe("vp9");
+	}, 60_000);
+	// Chrome's webm;codecs=h264 recording: H.264 in a Matroska file named .webm, which a WebM can't hold.
+	it.skipIf(!hasX264)("joins WebM segments whose picture is H.264 by stream copy into Matroska, never re-encoding it", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "join-test-"));
+		const make = (name: string, seconds: number) => {
+			const file = join(dir, name);
+			execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i", `testsrc=duration=${seconds}:size=160x120:rate=10`, "-f", "lavfi", "-i", `sine=duration=${seconds}`, "-c:v", "libx264", "-c:a", "libopus", "-f", "matroska", file]);
+			return file;
+		};
+		const a = make("a.webm", 2), b = make("b.webm", 3), out = join(dir, "out.webm");
+		const result = await joinSegments([`file:${a}`, `file:${b}`], out, "webm", [a, b].map((f) => statSync(f).size), dir);
+		expect(result).toMatchObject({ ok: true });
+		expect(probe(out)).toBeGreaterThan(4.5);
+		expect(probe(out)).toBeLessThan(5.5);
+		expect(execFileSync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name", "-of", "csv=p=0", out], { encoding: "utf8" }).trim()).toBe("h264");
 	}, 60_000);
 	it("refuses a join whose copy came out far smaller than its segments", async () => {
 		const dir = await mkdtemp(join(tmpdir(), "join-test-"));

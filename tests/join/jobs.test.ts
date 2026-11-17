@@ -66,6 +66,34 @@ describe("the joiner's jobs", () => {
 		await jobs.idle();
 		expect(jobs.ask(ask(other, false))).toMatchObject({ state: "done", bytes: 2 });
 	});
+	it("a join waiting its turn runs with the newest ask's links, as the first ask's may have run out by then", async () => {
+		const { calls, run } = held();
+		const jobs = createJobs(run, { log: () => {} });
+		const other = (sig: number) => ({ segments: [`https://r2/a2?sig=${sig}`, `https://r2/b2?sig=${sig}`], output: `https://r2/bucket/originals/u/y/live.joined.mp4?sig=${sig}`, container: "mp4", start: true });
+		jobs.ask(ask(OUT));
+		jobs.ask(other(1));
+		expect(jobs.ask({ ...other(2), start: false })).toEqual({ ok: true, state: "running" });
+		await vi.waitFor(() => expect(calls).toHaveLength(1));
+		calls[0]!.end({ ok: true, bytes: 1, seconds: 1 });
+		await vi.waitFor(() => expect(calls).toHaveLength(2));
+		expect(calls[1]!.req).toEqual({ ...other(2), start: false });
+		calls[1]!.end({ ok: true, bytes: 2, seconds: 1 });
+		await jobs.idle();
+	});
+	it("takes the waiting joins one team at a time in turn, so one team's many can't hold up another's", async () => {
+		const { calls, run } = held();
+		const jobs = createJobs(run, { log: () => {} });
+		const out = (bucket: string, team: string, rec: string) => `https://r2/${bucket}/originals/${team}/${rec}/live.joined.mp4?sig=1`;
+		const asked = [out("bucket", "t1", "a"), out("bucket", "t1", "b"), out("bucket", "t1", "c"), out("bucket", "t2", "d"), out("staging", "t1", "e")];
+		for (const o of asked) expect(jobs.ask(ask(o))).toEqual({ ok: true, state: "running", started: true });
+		for (let n = 1; n <= asked.length; n++) {
+			await vi.waitFor(() => expect(calls).toHaveLength(n));
+			calls[n - 1]!.end({ ok: true, bytes: 1, seconds: 1 });
+		}
+		await jobs.idle();
+		// The first was already running; then the team waiting longest since its last turn. Staging's bucket is its own.
+		expect(calls.map((c) => c.req.output)).toEqual([asked[0], asked[3], asked[4], asked[1], asked[2]]);
+	});
 	it("stops a join that runs past its limit, and says so", async () => {
 		const jobs = createJobs((_req: unknown, signal: AbortSignal) => new Promise((_, fail) => { signal.addEventListener("abort", () => fail(new Error("AbortError"))); }), { limitMs: 30, log: () => {} });
 		jobs.ask(ask(OUT));

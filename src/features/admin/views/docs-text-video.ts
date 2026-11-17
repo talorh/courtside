@@ -83,7 +83,10 @@ no team's game is still waiting (the alert is one for the whole site).</li>
 <li><b>The picture isn't touched.</b> ffmpeg copies each part as it is into one transport stream (a cut-off last frame
 dropped, each part's own decoder settings carried along, one clock), then wraps that as the MP4. Nothing is encoded
 again, so the video is exactly what the phone recorded. (Parts that aren't H.264, which only a test browser records,
-are joined one after the other instead, still as they are.)</li>
+are joined one after the other instead, still as they are. WebM parts whose picture is H.264, as some Android browsers
+record, are joined as they are into a Matroska file, which Stream reads the same way.)</li>
+<li><b>Every team gets its turn.</b> The joiner runs one join at a time for every team. Those waiting take turns by
+team, so one team's games can't hold up another's, and each starts with the newest links the site sent.</li>
 <li><b>Each part is read only as video.</b> ffmpeg reads every part as the recording's own kind of file (MP4 or WebM),
 never as whatever its contents claim to be, so a part holding a list of other links or files fails the join instead
 of fetching them.</li>

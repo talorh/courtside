@@ -21,6 +21,8 @@ const READ_TIMEOUT = ["-rw_timeout", "120000000"];
 const DEMUXER = { mp4: "mov", webm: "matroska" };
 // ffmpeg's words for segments whose streams don't line up for a copy: then it's re-encoded.
 const NEEDS_REENCODE = /codec|parameters|timebase|time base|resolution|stream #|non-monotonic|Non-monotonous|incompatible|during demuxing|filter failed/i;
+// ffmpeg's words for a codec the WebM muxer won't take (H.264, from Chrome's webm;codecs=h264): it's copied into Matroska.
+const NOT_WEBM = /supported for WebM/i;
 // ffmpeg's words for a picture the H.264 re-wrap can't take: it isn't H.264.
 const NOT_H264 = /initializing bitstream filter/i;
 
@@ -45,11 +47,14 @@ export const muxArgs = (tsPath, outPath, reencode) => [
 ];
 
 /** The concat demuxer over the list of links, stream copy or a re-encode: into a WebM, or an MP4 (its index at the front).
- * Only the list and the recording's own container may be opened; the list names that container for each segment too. */
-export const concatArgs = (listPath, outPath, reencode) => {
+ * Only the list and the recording's own container may be opened; the list names that container for each segment too.
+ * `matroska`: the copy is written as Matroska under the WebM's name, for a picture WebM can't hold. VP9 is encoded at
+ * realtime settings, as libvpx's defaults take hours for a game on the joiner's half a CPU. */
+export const concatArgs = (listPath, outPath, reencode, matroska = false) => {
 	const mp4 = outPath.endsWith(".mp4");
-	const encode = mp4 ? ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac"] : ["-c:v", "libvpx-vp9", "-c:a", "libopus"];
-	return [...COMMON, "-format_whitelist", `concat,${DEMUXER[mp4 ? "mp4" : "webm"]}`, "-safe", "0", "-f", "concat", "-i", listPath, ...(reencode ? encode : ["-c", "copy"]), ...(mp4 ? ["-movflags", "+faststart"] : []), outPath];
+	const encode = mp4 ? ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac"] : ["-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-row-mt", "1", "-c:a", "libopus"];
+	const copy = ["-c", "copy", ...(matroska ? ["-f", "matroska"] : [])];
+	return [...COMMON, "-format_whitelist", `concat,${DEMUXER[mp4 ? "mp4" : "webm"]}`, "-safe", "0", "-f", "concat", "-i", listPath, ...(reencode ? encode : copy), ...(mp4 ? ["-movflags", "+faststart"] : []), outPath];
 };
 
 /** Why a run failed: ffmpeg's last lines, with a signed link (an input's or the output's) cut to its address, as the
@@ -93,6 +98,7 @@ export async function joinSegments(segments, outPath, container, inputBytes, dir
 		const list = joinPath(dir, "list.txt");
 		await writeList(list, segments, DEMUXER[container]);
 		let run = await runFfmpeg(concatArgs(list, outPath, false), null, signal);
+		if (runFailed(run) && NOT_WEBM.test(run.err)) run = await runFfmpeg(concatArgs(list, outPath, false, true), null, signal);
 		if (runFailed(run) && NEEDS_REENCODE.test(run.err)) return runFailed(run = await runFfmpeg(concatArgs(list, outPath, true), null, signal)) ? { ok: false, reason: why(run) } : finish(true);
 		return runFailed(run) ? { ok: false, reason: why(run) } : finish(false);
 	};

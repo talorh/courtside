@@ -410,7 +410,9 @@ sequenceDiagram
  by this ask, `started`, or still going), `done` or `failed` (told once, then forgotten), or `none`. An ask may begin a
  join (`start`) only when none has been tried or ten minutes have passed since the last began, and fewer than six have
  been; a try is counted when a join begins, or when a due ask is refused or not answered. In the container
- (`server.mjs`), `jobs.mjs` keeps the jobs by the output link's path, runs one at a time and stops one at 40 minutes;
+ (`server.mjs`), `jobs.mjs` keeps the jobs by the output link's path, runs one at a time and stops one at 40 minutes,
+ taking the waiting ones one team at a time in turn (the team, and the bucket, so staging's are their own, from the
+ output's key), each with the links of the latest ask for it, as the first ask's may have run out by its turn;
  ffmpeg (`pipeline.mjs`) re-wraps each MP4 segment by stream copy into one transport stream (a cut-off last frame
  dropped, each segment's own decoder settings carried in-band, every timestamp in the one clock), which is then
  wrapped into the MP4; ffmpeg's concat demuxer, which stops at a segment a dead page left mid-frame and needs every
@@ -421,7 +423,11 @@ sequenceDiagram
  filmer uploads the segments, and one holding a DASH or HLS manifest or an ffconcat list would otherwise have ffmpeg
  open the links and files it names. Such a segment fails the join instead. A run that stopped reading part way counts as failed whatever its
  exit code, and a copy far smaller than its segments is refused rather than saved; a re-encode is the fallback when
- the streams don't line up. The joiner logs `join_done` with how long the read, the join and the store took. After the
+ the streams don't line up. A WebM whose picture is H.264 (Chrome's `webm;codecs=h264`), which ffmpeg's WebM muxer
+ refuses, is copied into Matroska instead, still under the `.webm` key and sent as `video/webm` (Stream takes
+ Matroska; the WebM Chrome records is Matroska with H.264 in it already), never re-encoded; a VP9 re-encode runs at
+ libvpx's realtime settings (`-deadline realtime -cpu-used 8 -row-mt 1`), as its defaults cost about 4 CPU-seconds a
+ recorded second, hours for a game on half a vCPU. The joiner logs `join_done` with how long the read, the join and the store took. After the
  sixth try fails (or is lost), the site sets `join_failed_at`, writes a Problems line, logs `join_failed` and raises
  the `joiner` alert, and the game page offers team managers **Keep the first part** (`keep-first-service.ts`: segment
  1 becomes the video, the rest deleted, `first_part_kept`); keeping it, or deleting the video, clears the alert. An
