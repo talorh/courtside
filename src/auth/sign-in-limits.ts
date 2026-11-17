@@ -26,6 +26,9 @@ function countFrom(hold: SignInHold | null, now: Date, ms: number): string {
 const wrongToday = (db: D1Database, email: string, hold: SignInHold | null, now: Date) =>
 	countSignInEvents(db, "wrong", countFrom(hold, now, DAY), { email });
 
+/** Whether `email` is held now (too many codes or wrong codes). */
+export const isHeld = async (db: D1Database, email: string, now: Date) => ((await getHold(db, email))?.until ?? "") > now.toISOString();
+
 /** Held, or over its codes in the hour or the day, or its wrong codes today: held from now (15 minutes, or a day). */
 async function overEmailLimit(db: D1Database, email: string, now: Date, codeId: number): Promise<boolean> {
 	const hold = await getHold(db, email);

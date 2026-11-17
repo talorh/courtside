@@ -5,7 +5,7 @@ import { isEmail } from "../features/members/members-service.ts";
 import { randomToken, sameText, sha256Hex, sixDigitCode } from "./crypto.ts";
 import { insertSession } from "./session-repository.ts";
 import { claimTry, countSignInEvents, forgetSignInEvent, insertCode, latestLiveCode, markCodeUsed, recordSignInEvent, type SignInEvent, voidCode, voidCodes } from "./sign-in-codes-repository.ts";
-import { holdIfWrongLimit, LIMITS, overCodeLimit, overWrongLimit, since } from "./sign-in-limits.ts";
+import { holdIfWrongLimit, isHeld, LIMITS, overCodeLimit, overWrongLimit, since } from "./sign-in-limits.ts";
 import { CODE_MINUTES, sendCodeEmail } from "./sign-in-mail.ts";
 import { loadViewer } from "./viewer.ts";
 
@@ -50,6 +50,12 @@ export async function requestCode(deps: AppDeps, rawEmail: string, ip: string): 
 		await note("unknown_email");
 		log("signin_refused", email, { why: "unknown" });
 		return "unknown";
+	}
+	// A held address is refused before its request is counted, so its taps never count against others from its IP address.
+	if (await isHeld(deps.db, email, deps.now())) {
+		await note("limited");
+		log("signin_refused", email, { why: "limited" });
+		return "limited";
 	}
 	// Counted before the limits are looked at, so requests sent together each count the ones before them, and taken back
 	// if it's refused or its email doesn't go, so a code the email service dropped doesn't count toward the address's hold.

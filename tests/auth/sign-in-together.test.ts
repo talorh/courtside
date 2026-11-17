@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { handleRequest } from "../../src/app/handle-request.ts";
 import { buildRouter } from "../../src/app/routes.ts";
-import { heldEmails, signInFigures } from "../../src/auth/sign-in-codes-repository.ts";
+import { heldEmails, holdEmail, signInFigures } from "../../src/auth/sign-in-codes-repository.ts";
 import { LIMITS } from "../../src/auth/sign-in-limits.ts";
 import { requestCode } from "../../src/auth/sign-in-service.ts";
 import { buildAdminRouter } from "../../src/features/admin/admin-routes.ts";
@@ -74,6 +74,23 @@ describe("codes asked for together", () => {
 		expect(answers.filter((a) => a === "sent")).toHaveLength(5);
 		expect(deps.email.sent).toHaveLength(5);
 		expect(await heldEmails(deps.db, deps.now().toISOString())).toEqual([]);
+	});
+	it("for a held address don't use up the IP address's 30 while others from it are asked for", async () => {
+		const { deps } = clocked();
+		for (let i = 0; i < LIMITS.ipPer15m; i++) await addMember(deps.db, deps.team.id, `p${i}@x.com`, "watcher");
+		await holdEmail(deps.db, MANAGER, "2026-10-31T09:15:00.000Z");
+		// The test database answers at once; on D1 taking a count back is a trip of its own, so each is held a moment here.
+		const real = deps.db.prepare.bind(deps.db);
+		deps.db.prepare = ((sql: string) => {
+			const statement = real(sql);
+			if (!sql.startsWith("DELETE FROM sign_in_events WHERE id")) return statement;
+			return { bind: (...args: unknown[]) => { const bound = statement.bind(...args); return { run: async () => { await new Promise((r) => setTimeout(r, 100)); return bound.run(); } }; } };
+		}) as typeof deps.db.prepare;
+		const held = together(5, () => requestCode(deps, MANAGER, "9.9.9.9"));
+		const others = await together(LIMITS.ipPer15m, (i) => requestCode(deps, `p${i}@x.com`, "9.9.9.9"));
+		expect(await held).toEqual(Array(5).fill("limited"));
+		expect(others.filter((a) => a === "sent")).toHaveLength(LIMITS.ipPer15m);
+		expect(await codeSentRows(deps)).toBe(LIMITS.ipPer15m);
 	});
 	it("stop at the site's 200 an hour, and raise one Sign-in flood ticket", async () => {
 		const { deps } = clocked();

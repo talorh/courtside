@@ -168,7 +168,8 @@ flowchart TD
  gym's Wi-Fi, or a phone company's shared address, is many families), 10 addresses on no list in 15 minutes from one
  IP address, 200 an hour for the whole site (past which codes pause and a
  **Sign-in flood** ticket is raised for the admins, once while it's open), and 30 wrong codes an hour from one IP
- address. A code's `code_sent` row is written before the limits are looked at, and its counts take in only the rows up
+ address. An address already held is refused before anything is counted, so its taps never count against others
+ sharing its IP address. A code's `code_sent` row is written before the limits are looked at, and its counts take in only the rows up
  to its own, so requests sent at the same moment are counted in turn and no more than a limit's worth go; a code
  that's refused, or whose email doesn't go, has its row taken back, so it doesn't count. Every request, code and check is a row in `sign_in_events` (a month, 31 days; the admin Log shows them; anything
  typed that isn't an address is stored masked, as `n…`) and a log line with the address
