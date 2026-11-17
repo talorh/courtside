@@ -91,8 +91,7 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  Zero Trust app is in front of the hostname or of staging's.
 - Authorization (member? which role?) is decided in the Worker from D1 on every request, never from the session
  alone or user-editable data.
-- The human-check WAF rule tells a signed-in visitor by the `courtside_session` cookie (`infra/zone-courtside-app/
- waf-custom-rules.json`); the rate limit on posts covers the sign-in's forms.
+- The human-check WAF rule tells a signed-in visitor by the `courtside_session` cookie (`infra/zone/waf-custom-rules.json`); the rate limit on posts covers the sign-in's forms.
 - The robot check on the sign-in's forms (Turnstile, `platform/turnstile.ts`) fails open only when Cloudflare has
  trouble of its own: a network error, no answer in 10 seconds, a 5xx, a 429 (Cloudflare limiting its own service), an
  answer that isn't JSON, or `internal-error`. Then the sign-in goes ahead on the database's limits alone, so nobody is
