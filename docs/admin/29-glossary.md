@@ -35,7 +35,7 @@ Cloudflare's words and the site's own, in plain English.
 | SPF, DKIM, DMARC | DNS records that let other mail systems check an email really came from saints.example, and tell them to reject one that didn't. |
 | Artifacts | Cloudflare's git hosting. The site's code lives there, in the account (Where the code lives). |
 | Workers Builds | Cloudflare building and deploying the Worker from a push to the repository's main branch. |
-| Preview | A copy of the Worker deployed under its own address with its own settings. Staging is a preview of courtside on its own database and bucket. |
+| Preview | An address Cloudflare can give each version of a Worker on workers.dev. The site's Workers have them off, as they'd answer outside the zone's protections, and the Worker refuses any address but its own. Staging is a Worker of its own, staging-courtside. |
 | Cron | A schedule for running the Worker without a request: every five minutes, and at 3am local time. |
 | Observability, Workers Logs | Cloudflare's record of every request and job run, with the Worker's own log lines, kept for 7 days (npm run logs reads them). Traces time each request's database queries and outside calls. Issues emails the owner when the Worker starts failing in a new way. |
 | Notifications | Cloudflare's own emails to the owner: spend past US$50 and US$100, a new issue in the Worker, a DDoS attack, a certificate change, an abuse report. They work even if the Worker is down. |

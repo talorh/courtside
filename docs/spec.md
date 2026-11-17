@@ -665,8 +665,8 @@ and record of the team, except what the download log names (kept its two years).
  files): a code by email, sent only to an address on a team's list or an admin's, then a 30-day session per device;
  the Worker checks the team's list on every request. Codes are limited per address (10 an hour, then a 15-minute wait
  that the team manager can end on Manage team), per IP address and for the whole site, with a ticket for the admins
- if the site is flooded. `workers.dev` is off, and the one preview address,
- staging's, is behind the same sign-in. The Worker answers only on its own address (the club's domain; staging's on
+ if the site is flooded. The live Worker's `workers.dev` address and preview URLs are off; staging is a Worker of its
+ own, on its own workers.dev address and database, behind the same sign-in. The Worker answers only on its own address (the club's domain; staging's on
  staging): any other name that reaches it gets a bare "Not found".
 - **Every team sees only its own.** Every write says which team its page was for, so nothing can be saved into
  another team from a page left open.

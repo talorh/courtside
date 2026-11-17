@@ -31,8 +31,9 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  calls, outside fetches and Durable Object calls, timed with their outcome (they record addresses and SQL, never
  bodies or headers, so no signed link or token). Only log at error level what's really an error: each error line
  counts as one of the Worker's failures. A service that didn't answer is a warning where the site carries on.
-- Keep `workersDev` off, as a `*.workers.dev` address would be a second way in. Preview URLs are on only for staging,
- which runs the same sign-in as the live site.
+- Keep the live Worker's `workersDev` off, as a `*.workers.dev` address would be a second way in, and `previewUrls` off
+ on every Worker: each version's preview URL would serve that version's code on the live data outside the zone. Only
+ staging's own Worker is on workers.dev, as that's its address.
 - The Worker answers only on its own hostname (`SITE_HOST`, read as `siteHost` in `src/app/config.ts`; checked first in
  `app/handle-request.ts`): the club's domain, staging's address on staging, localhost in `cf dev`. Any other name that
  reaches it (a version's workers.dev preview URL) would miss the zone's WAF, rate limit, human check and maintenance
@@ -57,10 +58,12 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  nothing).
 - **Deploys come from `main` only**: `npm run release` pushes it to the Artifacts repo `courtside/courtside`, and Workers
  Builds checks and deploys it (development standards §11). Never `cf deploy` by hand.
-- **Staging is a Worker Preview** of the same Worker (`npm run staging`), on its own database and bucket.
- Previews run no cron triggers and take no domain; `workers.dev` itself stays off.
-- **The site Worker has no Durable Object of its own**: a Worker that implements one gets no Preview URLs, and staging
- is a Preview. Anything that needs one lives in a second Worker the site binds to across Workers (the joiner).
+- **Staging is its own Worker**, `staging-courtside`: the same code and config built in staging mode (`npm run
+ staging`: `cf deploy --mode staging`), on its own database and bucket, with no domain, no cron triggers and no preview
+ URLs, at its workers.dev address (`deploy.config.ts` `staging.host`). Its keys go with each deploy (`--secrets-file`)
+ or through `npm run staging -- setup`.
+- **The site Worker has no Durable Object of its own**: anything that needs one lives in a second Worker the site binds
+ to across Workers (the joiner), which staging's Worker binds to as well.
 
 ## Containers
 
@@ -85,7 +88,7 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
 - The site's own sign-in is the gate: an email code, then a session
  cookie whose token is hashed in D1 (`src/auth/`). The Worker runs before static assets (`assets.runWorkerFirst`) and
  serves them through the `ASSETS` binding, so nothing on the hostname is open but the sign-in page's own files. No
- Zero Trust app is in front of the hostname or of staging's previews.
+ Zero Trust app is in front of the hostname or of staging's.
 - Authorization (member? which role?) is decided in the Worker from D1 on every request, never from the session
  alone or user-editable data.
 - The human-check WAF rule tells a signed-in visitor by the `courtside_session` cookie (`infra/zone-courtside-app/

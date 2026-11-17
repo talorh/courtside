@@ -36,7 +36,8 @@ ${table(["Piece", "What it is", "What it's for"], [
 		["Domain", html`${code(`${CLUB.domain}`)}, its zone id in ${code("deploy.config.ts")}`, onSubdomain()
 			? `A subdomain of the club's own ${CLUB.zone}: the zone's rules for the site are its own, each matching ${CLUB.domain} alone, and the zone's own settings stay the club's`
 			: "Registered at Cloudflare, renewing automatically, with DNSSEC on"],
-		["Worker", html`${code("courtside")} on the custom domain ${CLUB.domain} only`, "Every page, the API, the sign-in and the scheduled jobs. Its workers.dev address is off"],
+		["Worker", html`${code("courtside")} on the custom domain ${CLUB.domain} only`, "Every page, the API, the sign-in and the scheduled jobs. Its workers.dev address and preview URLs are off"],
+		["Staging Worker", html`${code("staging-courtside")} on its workers.dev address only`, "The staging site: the same code on staging's own database and bucket, with no cron triggers (Environments and releases)"],
 		["D1", html`${code("courtside")}, in the region nearest the club`, "All the site's data, with 30 days of Time Travel to undo a bad change"],
 		["R2", html`${code("courtside-originals")}, in the same region`, "Uploaded videos (deleted after 30 days, once Stream has its copy) and the nightly backups (kept 14 days, locked so nothing can delete or overwrite one before then)"],
 		["Stream", "The account's Stream", "Playback copies, highlight clips, HD downloads and a live input for each streamed game. Signed links only"],
@@ -89,7 +90,7 @@ ${table(["Secret", "What it unlocks"], [
 		[code("STREAM_API_TOKEN"), "Every call to Stream: copies, clips, downloads, live inputs (token courtside-stream-clips, Stream Edit)"],
 		[code("STREAM_KEY_ID, STREAM_KEY_JWK"), "Stream's signing key, to sign playback links without a call each time"],
 		[code("R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY"), "Signed upload links for the originals bucket only (token courtside-r2-originals)"],
-		[code("CF_INSIGHTS_TOKEN"), "Read-only analytics and billing: Platform's Cloudflare figures, the Worker's errors on Insights' Alerts, and for Costs Stream's minutes watched by video and Cloudflare's bill (token courtside-insights-read, with Billing Read)"],
+		[code("CF_INSIGHTS_TOKEN"), "Read-only analytics and billing: Platform's Cloudflare figures, the Worker's errors on Insights' Alerts, and for Costs Stream's minutes watched by video and Cloudflare's bill (token courtside-insights-read, with Billing Read). The Worker's figures are those of the Worker its WORKER_NAME setting names, so staging's are its own"],
 		[code("TURNSTILE_SECRET"), "Checking the sign-in page's Turnstile tokens with Cloudflare (staging has its own widget and secret)"],
 	])}
 <h3>Cloudflare's own alerts</h3>

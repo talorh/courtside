@@ -6,7 +6,7 @@ describe("the Documentation's diagram of how the site fits together", () => {
 		const svg = systemDiagram().__html;
 		for (const part of ["Edge protection", "DDoS", "WAF", "bot", "rate limits", "Turnstile", "Worker: courtside", "Cron Triggers",
 			"Durable Object", "Container", "D1", "R2", "Stream", "Images", "Workers AI", "Email Sending",
-			"Workers Logs", "GraphQL Analytics", "Billing", "Workers Builds", "Artifacts", "Previews", "DNS", "DNSSEC", "Registrar",
+			"Workers Logs", "GraphQL Analytics", "Billing", "Workers Builds", "Artifacts", "Staging Worker", "DNS", "DNSSEC", "Registrar",
 			"Rules", "Email Routing", "Maintenance", "AI tracking camera", "RTMPS"]) {
 			expect(svg, part).toContain(part);
 		}

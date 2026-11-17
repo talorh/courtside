@@ -4,14 +4,14 @@ import { readFileSync } from "node:fs";
 
 const field = (text, name) => new RegExp(`\\b${name}:\\s*"([^"]*)"`).exec(text)?.[1];
 
-/** The deploy settings: the account, zone, Worker name, the live database and bucket, and staging's; and the first
+/** The deploy settings: the account, zone, Worker name, the live database and bucket, and staging's (and its address); and the first
  * admins' emails, checked only where it's used (scripts/first-admin.mjs). */
 export function readDeploy(text) {
 	const staging = /staging:\s*\{([^}]*)\}/.exec(text)?.[1] ?? "";
 	const out = {
 		accountId: field(text, "accountId"), zoneId: field(text, "zoneId"), worker: field(text, "worker"),
 		d1Id: field(text, "d1Id"), d1Name: field(text, "d1Name"), bucket: field(text, "bucket"),
-		staging: { d1Id: field(staging, "d1Id"), d1Name: field(staging, "d1Name"), bucket: field(staging, "bucket") },
+		staging: { d1Id: field(staging, "d1Id"), d1Name: field(staging, "d1Name"), bucket: field(staging, "bucket"), host: field(staging, "host") },
 	};
 	const firstAdmins = field(text, "firstAdmins");
 	for (const [k, v] of Object.entries(out)) if (k !== "staging" && !v) throw new Error(`couldn't read ${k} from deploy.config.ts`);

@@ -69,13 +69,13 @@ export function environmentsDiagram(): SafeHtml {
 	const d = draw("environments");
 	return figure("environments", {
 		w: 760, h: 320, min: 640, title: "The two environments and how each is deployed",
-		desc: "From the staging folder, npm run staging deploys the staging branch as a preview of the Worker with its own database and bucket. From the main folder, npm run release pushes main to Cloudflare, where Workers Builds deploys the live Worker. Stream, Images, Workers AI and Email Sending are shared, with staging's things labelled.",
+		desc: "From the staging folder, npm run staging deploys the staging branch as its own Worker, staging-courtside, with its own database and bucket. From the main folder, npm run release pushes main to Cloudflare, where Workers Builds deploys the live Worker. Stream, Images, Workers AI and Email Sending are shared, with staging's things labelled.",
 		caption: "Staging is deployed from the computer in about a minute, as often as needed. Production is deployed only by Workers Builds, from a push the release makes once every check has passed.",
 	}, html`${d.zone(4, 14, 196, 230, "This computer")}
 ${d.box({ x: 16, y: 48, w: 172, title: "courtside-staging", sub: "staging and the branches", kind: "step" })}
 ${d.box({ x: 16, y: 170, w: 172, title: "courtside-prod", sub: "main", kind: "step" })}
 ${d.box({ x: 230, y: 48, w: 170, title: "npm run staging", sub: "check, migrations, deploy", kind: "job" })}
-${d.box({ x: 430, y: 48, w: 320, title: "Staging: a preview of courtside", sub: "D1 and R2 courtside-staging, test data only", kind: "worker" })}
+${d.box({ x: 430, y: 48, w: 320, title: "Staging: the staging-courtside Worker", sub: "D1 and R2 courtside-staging, test data only", kind: "worker" })}
 ${d.box({ x: 230, y: 170, w: 170, title: "npm run release", sub: "every check, then push", kind: "job" })}
 ${d.box({ x: 430, y: 170, w: 150, title: "Workers Builds", sub: "checks, deploys", kind: "job" })}
 ${d.box({ x: 600, y: 170, w: 150, title: `${CLUB.domain}`, sub: "D1 courtside, R2 originals", kind: "done" })}

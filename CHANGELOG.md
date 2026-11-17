@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Enhancement] **Staging:** Staging is now its own Worker, staging-<worker>, at the same workers.dev address, in place of a Preview of the live Worker, and the live Worker has no preview addresses at all; npm run staging -- setup turns them off and deletes the old Preview before staging's first deploy, staging's keys go with each deploy in a file removed as soon as it's done, a deploy is recorded only once Cloudflare shows it, and staging's Platform shows its own Worker's figures.
 - [Enhancement] **Clips:** A person can make up to an hour of clips a day and a team up to 5 hours, as each clip is a video of its own in Stream's shared storage; a game still has at most 50 clips, and each clip's place is now taken before Stream is asked, so clips made at the same moment stop at the limits. Past one, the site says when there's room again.
 - [Fix] **Sign-in:** Fixed an issue where the robot check let a sign-in or access request through when Cloudflare refused the question itself: now only Cloudflare's own trouble (no answer, a 5xx, or Cloudflare limiting its service) lets it carry on on the site's limits, and a token longer than Cloudflare makes is refused.
 - [Fix] **Sign-in:** Fixed an issue where codes asked for at the same moment could all pass the sign-in limits, as each was counted only once its email had gone: each code is now counted first, and taken back if it's refused or its email doesn't go. Request access's hourly limit holds the same way.

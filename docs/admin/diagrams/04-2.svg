@@ -23,7 +23,7 @@
 .dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
 .dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
 <rect width="760" height="260" fill="#FFFFFF"/>
-<title id="dg-worktrees-t">One repository, two folders</title><desc id="dg-worktrees-d">The repository&#39;s git folder lives in courtside-prod, which stays on main, what&#39;s live; courtside-staging is a worktree of the same repository, where the staging branch and every feature and fix branch are worked on. npm run staging deploys staging&#39;s commit to the staging preview; npm run release pushes main from courtside-prod to Cloudflare Artifacts, which Workers Builds deploys; a new computer clones from Artifacts with a read token.</desc>
+<title id="dg-worktrees-t">One repository, two folders</title><desc id="dg-worktrees-d">The repository&#39;s git folder lives in courtside-prod, which stays on main, what&#39;s live; courtside-staging is a worktree of the same repository, where the staging branch and every feature and fix branch are worked on. npm run staging deploys staging&#39;s commit to the staging Worker; npm run release pushes main from courtside-prod to Cloudflare Artifacts, which Workers Builds deploys; a new computer clones from Artifacts with a read token.</desc>
 <defs><marker id="ah-worktrees" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
 <g class="dg-box k-step"><rect x="20" y="30" width="220" height="56" rx="10"/>
 <text class="dg-t" x="130" y="55">courtside-staging</text><text class="dg-s" x="130" y="72">a worktree: staging, feature/, fix/</text></g>
@@ -32,7 +32,7 @@
 <g class="dg-box k-done"><rect x="520" y="30" width="220" height="56" rx="10"/>
 <text class="dg-t" x="630" y="55">courtside-prod</text><text class="dg-s" x="630" y="72">main only: what&#39;s live</text></g>
 <g class="dg-box k-service"><rect x="20" y="170" width="220" height="56" rx="10"/>
-<text class="dg-t" x="130" y="195">The staging preview</text><text class="dg-s" x="130" y="212">staging&#39;s commit, test data</text></g>
+<text class="dg-t" x="130" y="195">The staging Worker</text><text class="dg-s" x="130" y="212">staging&#39;s commit, test data</text></g>
 <g class="dg-box k-store"><rect x="520" y="170" width="220" height="56" rx="10"/>
 <text class="dg-t" x="630" y="195">Artifacts: courtside/courtside</text><text class="dg-s" x="630" y="212">main, pushed by the release</text></g>
 <path class="dg-arrow" d="M240 58 L268 58" marker-end="url(#ah-worktrees)" marker-start="url(#ah-worktrees)"/><path class="dg-arrow" d="M520 58 L492 58" marker-end="url(#ah-worktrees)" marker-start="url(#ah-worktrees)"/>

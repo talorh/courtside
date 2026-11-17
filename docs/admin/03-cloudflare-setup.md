@@ -7,7 +7,8 @@ Everything runs in the club's own Cloudflare account (its id in `deploy.config.t
 | Piece | What it is | What it's for |
 | --- | --- | --- |
 | Domain | `saints.example`, its zone id in `deploy.config.ts` | Registered at Cloudflare, renewing automatically, with DNSSEC on |
-| Worker | `courtside` on the custom domain saints.example only | Every page, the API, the sign-in and the scheduled jobs. Its workers.dev address is off |
+| Worker | `courtside` on the custom domain saints.example only | Every page, the API, the sign-in and the scheduled jobs. Its workers.dev address and preview URLs are off |
+| Staging Worker | `staging-courtside` on its workers.dev address only | The staging site: the same code on staging's own database and bucket, with no cron triggers (Environments and releases) |
 | D1 | `courtside`, in the region nearest the club | All the site's data, with 30 days of Time Travel to undo a bad change |
 | R2 | `courtside-originals`, in the same region | Uploaded videos (deleted after 30 days, once Stream has its copy) and the nightly backups (kept 14 days, locked so nothing can delete or overwrite one before then) |
 | Stream | The account's Stream | Playback copies, highlight clips, HD downloads and a live input for each streamed game. Signed links only |
@@ -58,7 +59,7 @@ Secrets are stored on the Worker, never in the code. Most services are bindings 
 | `STREAM_API_TOKEN` | Every call to Stream: copies, clips, downloads, live inputs (token courtside-stream-clips, Stream Edit) |
 | `STREAM_KEY_ID, STREAM_KEY_JWK` | Stream's signing key, to sign playback links without a call each time |
 | `R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY` | Signed upload links for the originals bucket only (token courtside-r2-originals) |
-| `CF_INSIGHTS_TOKEN` | Read-only analytics and billing: Platform's Cloudflare figures, the Worker's errors on Insights' Alerts, and for Costs Stream's minutes watched by video and Cloudflare's bill (token courtside-insights-read, with Billing Read) |
+| `CF_INSIGHTS_TOKEN` | Read-only analytics and billing: Platform's Cloudflare figures, the Worker's errors on Insights' Alerts, and for Costs Stream's minutes watched by video and Cloudflare's bill (token courtside-insights-read, with Billing Read). The Worker's figures are those of the Worker its WORKER_NAME setting names, so staging's are its own |
 | `TURNSTILE_SECRET` | Checking the sign-in page's Turnstile tokens with Cloudflare (staging has its own widget and secret) |
 
 ### Cloudflare's own alerts

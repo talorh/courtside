@@ -32,6 +32,11 @@ describe("loadConfig", () => {
 		expect(loadConfig({ ...full, STAGING: "1" }).staging).toBe(true);
 		expect(loadConfig({ ...full, STAGING: "0" }).staging).toBe(false);
 	});
+	it("Platform's Cloudflare figures name this Worker (WORKER_NAME), so staging's are its own Worker's", () => {
+		expect(loadConfig({ ...full, WORKER_NAME: "staging-courtside" }).workerName).toBe("staging-courtside");
+		const config = readFileSync("cloudflare.config.ts", "utf8");
+		expect(config).toContain("WORKER_NAME: bindings.text(isStaging ? `staging-${DEPLOY.worker}` : DEPLOY.worker),");
+	});
 	it("keeps a dev email when set", () => {
 		expect(loadConfig({ ...full, DEV_AUTH_EMAIL: "t@x.y" }).devAuthEmail).toBe("t@x.y");
 	});

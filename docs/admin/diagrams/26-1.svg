@@ -23,7 +23,7 @@
 .dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
 .dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
 <rect width="760" height="320" fill="#FFFFFF"/>
-<title id="dg-environments-t">The two environments and how each is deployed</title><desc id="dg-environments-d">From the staging folder, npm run staging deploys the staging branch as a preview of the Worker with its own database and bucket. From the main folder, npm run release pushes main to Cloudflare, where Workers Builds deploys the live Worker. Stream, Images, Workers AI and Email Sending are shared, with staging&#39;s things labelled.</desc>
+<title id="dg-environments-t">The two environments and how each is deployed</title><desc id="dg-environments-d">From the staging folder, npm run staging deploys the staging branch as its own Worker, staging-courtside, with its own database and bucket. From the main folder, npm run release pushes main to Cloudflare, where Workers Builds deploys the live Worker. Stream, Images, Workers AI and Email Sending are shared, with staging&#39;s things labelled.</desc>
 <defs><marker id="ah-environments" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
 <g class="dg-zone"><rect x="4" y="14" width="196" height="230" rx="14"/><text x="18" y="34">This computer</text></g>
 <g class="dg-box k-step"><rect x="16" y="48" width="172" height="56" rx="10"/>
@@ -33,7 +33,7 @@
 <g class="dg-box k-job"><rect x="230" y="48" width="170" height="56" rx="10"/>
 <text class="dg-t" x="315" y="73">npm run staging</text><text class="dg-s" x="315" y="90">check, migrations, deploy</text></g>
 <g class="dg-box k-worker"><rect x="430" y="48" width="320" height="56" rx="10"/>
-<text class="dg-t" x="590" y="73">Staging: a preview of courtside</text><text class="dg-s" x="590" y="90">D1 and R2 courtside-staging, test data only</text></g>
+<text class="dg-t" x="590" y="73">Staging: the staging-courtside Worker</text><text class="dg-s" x="590" y="90">D1 and R2 courtside-staging, test data only</text></g>
 <g class="dg-box k-job"><rect x="230" y="170" width="170" height="56" rx="10"/>
 <text class="dg-t" x="315" y="195">npm run release</text><text class="dg-s" x="315" y="212">every check, then push</text></g>
 <g class="dg-box k-job"><rect x="430" y="170" width="150" height="56" rx="10"/>

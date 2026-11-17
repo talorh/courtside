@@ -21,7 +21,7 @@ Everything runs in one Cloudflare account: the Worker, its database, the uploade
 | Email | Email Sending from the club's own domain | Codes, welcomes and alerts come from one address the binding alone can send as, with SPF, DKIM and DMARC set. No mail provider account. |
 | Jobs | Two cron triggers: every 5 minutes, and 3am | A job asks Stream how each video is going, so no webhook has to find its way into the site. Everything is safe to run twice: a job reads the current state each time, and a retry of a step that worked is told it's done. |
 | Code and deploys | Cloudflare Artifacts and Workers Builds | The code sits in the account beside the site; a push to [object Object] is checked again by Workers Builds and deployed, with the changelog line as the deployment's message. The release script refuses to push unless every check passed, nothing is uploading or streaming, and the commit was tried on staging. |
-| Staging | A Worker Preview of the same Worker | The same code, told it's staging at build time, on its own database and bucket, deployed from the computer in a minute. Every change is tried there on real phones before it goes live. |
+| Staging | A Worker of its own, staging-courtside | The same code, told it's staging at build time, on its own database and bucket, deployed from the computer in a minute. Every change is tried there on real phones before it goes live. |
 
 ### Roads not taken
 

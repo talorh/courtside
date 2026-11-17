@@ -82,7 +82,7 @@ export function platformRoutes(router: AdminRouter): void {
 			message: doneMessage(PLATFORM_MESSAGES, url),
 		}));
 	});
-	// Staging has no scheduled jobs (Worker Previews don't run them), so an admin runs the 5-minute one there by hand. Never
+	// Staging has no scheduled jobs (its Worker has no cron triggers), so an admin runs the 5-minute one there by hand. Never
 	// the 3am one: its clean-up would take the live site's things for leftovers (jobs/sweep-orphans.ts refuses anyway).
 	router.post("/admin/run-sync", async ({ deps }) => {
 		if (!deps.config.staging) throw notFound("Page");

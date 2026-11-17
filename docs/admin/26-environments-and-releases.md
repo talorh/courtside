@@ -7,7 +7,7 @@ There are two environments, running the same code. Every change is tried on stag
 |  | Production | Staging |
 | --- | --- | --- |
 | Address | saints.example | staging-courtside.<subdomain>.workers.dev |
-| What it is | The courtside Worker | A preview of the same Worker, with an orange strip on every page |
+| What it is | The courtside Worker | Its own Worker, staging-courtside: the same code, with an orange strip on every page |
 | Database | D1 `courtside` | D1 `courtside-staging`, test data only |
 | Bucket | R2 `courtside-originals` | R2 `courtside-staging`, emptied after 7 days |
 | Stream, Images, AI, email | The account's | Shared, with staging's things labelled and swept within a week; its emails go only to admins |
@@ -15,7 +15,7 @@ There are two environments, running the same code. Every change is tried on stag
 
 ### Environments
 
-Staging is the same Worker deployed as a Worker Preview of `courtside`, told it's staging at build time, so it uses its own database, bucket, Turnstile widget and keys, and labels anything it puts in the shared Stream and Images. The two are deployed differently: staging straight from the computer in a minute, production only through the release.
+Staging is the same code deployed as its own Worker, `staging-courtside`, told it's staging at build time, so it uses its own database, bucket, Turnstile widget and keys, and labels anything it puts in the shared Stream and Images. The two are deployed differently: staging straight from the computer in a minute, production only through the release.
 
 |  | Staging deploy | Production deploy |
 | --- | --- | --- |
@@ -23,8 +23,8 @@ Staging is the same Worker deployed as a Worker Preview of `courtside`, told it'
 | From | The `staging` branch, committed | `main`, fast-forwarded to `staging` |
 | Checked first | `npm run check`: types, unit tests, line limits | Everything in Releases below, the browser tests included |
 | Migrations | Applied to staging's database by the command itself | Must already be on the live database; the release refuses otherwise |
-| How it's deployed | `cf previews deploy --preview-name staging` from the computer, then the commit is recorded as `refs/courtside/staging` | Pushed to Cloudflare Artifacts; Workers Builds checks it again and deploys it |
-| Keys | Staging's own, set once with `npm run staging -- setup` and kept on the preview | The Worker's own secrets, untouched by a deploy |
+| How it's deployed | `cf deploy --mode staging` from the computer, only once the live Worker has no preview URLs or Preview; the commit is recorded as `refs/courtside/staging` once `staging-courtside` shows the deployment | Pushed to Cloudflare Artifacts; Workers Builds checks it again and deploys it |
+| Keys | Staging's own, sent with each deploy from the git-ignored secrets files, or at once with `npm run staging -- setup` | The Worker's own secrets, untouched by a deploy |
 | Changelog | Not needed | The deploy's line at the top, which becomes the deployment's message |
 | When | Any time, as often as needed | Not on a day a team plays, unless it fixes something broken; never while anyone is uploading or streaming |
 | Who sees it | Admins and the test accounts, signed in | Every team |
@@ -39,7 +39,7 @@ Staging is the same Worker deployed as a Worker Preview of `courtside`, told it'
 
 ### Branches
 
-One repository, two working folders: one for `staging` and the branches, one for `main`. A change is built on its own branch, `feature/` or `fix/`, off `staging`, its tests written first. When it's ready it's merged into `staging`, the staging environment's branch, and `npm run staging` puts that branch on the staging site: it checks the code, applies staging's migrations, makes `firstAdmins` (`deploy.config.ts`) admins while staging has never had one, deploys the preview and records the commit it deployed as `refs/courtside/staging` (nothing, if HEAD moved meanwhile). `main` is production. Nothing is committed on it directly: it's only ever fast-forwarded to `staging` for a release, so what goes live is exactly what was tried. A merged branch is deleted.
+One repository, two working folders: one for `staging` and the branches, one for `main`. A change is built on its own branch, `feature/` or `fix/`, off `staging`, its tests written first. When it's ready it's merged into `staging`, the staging environment's branch, and `npm run staging` puts that branch on the staging site: it checks the code, applies staging's migrations, makes `firstAdmins` (`deploy.config.ts`) admins while staging has never had one, deploys staging's Worker and records the commit it deployed as `refs/courtside/staging` (nothing, if HEAD moved meanwhile). `main` is production. Nothing is committed on it directly: it's only ever fast-forwarded to `staging` for a release, so what goes live is exactly what was tried. A merged branch is deleted.
 
 ![The branches](diagrams/26-3.svg)
 
@@ -57,7 +57,7 @@ npm run check                            # types, every unit test, the line and 
 npm run e2e -- "<scenario>"              # a page script or the phone: its browser scenario
 git commit -am "What changed, in plain words"   # with its CHANGELOG.md line at the top, if it'll go live
 git switch staging && git merge --no-ff feature/<name>
-npm run staging                          # staging's migrations, then the preview, then refs/courtside/staging
+npm run staging                          # staging's migrations, then staging's Worker, then refs/courtside/staging
 # try it on the staging site, signed in, on a phone
 cd ../courtside-prod
 git merge --ff-only staging              # main becomes exactly what was tried

@@ -28,7 +28,7 @@ npm run logs -- --game 38 --all --since 6h    # everything that names a game (or
 npm run logs -- --ray 8f1c2a3b4c5d6e7f        # the line behind an error page's Reference
 npm run logs -- --request <id> --all          # every line of one request or job run (each line ends with its request)
 npm run logs -- --joiner --all --since 1d     # the video joiner (<worker>-join): joins, its container's stops
-npm run logs -- --staging --all --since 30m   # staging's lines (a Preview of the same Worker; never in the live site's)
+npm run logs -- --staging --all --since 30m   # staging's lines (its own Worker, staging-<worker>; never in the live site's)
 ```
 
 Each line: when, level, event, team, its other fields (ids, the error), and its request. The events that matter most:

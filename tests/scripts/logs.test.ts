@@ -8,29 +8,30 @@ const filters = (argv: string[]) => logsBody(args(argv), NOW).parameters.filters
 const level = { kind: "group", filterCombination: "or", filters: [
 	{ key: "$metadata.level", operation: "eq", type: "string", value: "error" }, { key: "$metadata.level", operation: "eq", type: "string", value: "warn" }] };
 const site = { key: "$workers.scriptName", operation: "eq", type: "string", value: "courtside" };
-const live = { key: "$workers.preview.slug", operation: "is_null", type: "string" };
+const noPreview = { key: "$workers.preview.slug", operation: "is_null", type: "string" };
 
 describe("npm run logs", () => {
 	it("by default: the live site's warnings and errors in the last hour, newest first", () => {
 		const body = logsBody(args([]), NOW);
 		expect(body).toMatchObject({ view: "events", limit: 100, timeframe: { from: NOW - 3_600_000, to: NOW }, parameters: { datasets: ["cloudflare-workers"] } });
-		expect(body.parameters.filters).toEqual([site, live, level]);
+		expect(body.parameters.filters).toEqual([site, noPreview, level]);
 	});
 
 	it("narrows to a team, an event, a game, a video, a Ray ID or one request, over a longer time", () => {
 		const body = logsBody(args(["--since", "3h", "--team", "u14-2026", "--event", "job_failed", "--game", "38", "--video", "46"]), NOW);
 		expect(body.timeframe.from).toBe(NOW - 3 * 3_600_000);
-		expect(body.parameters.filters).toEqual([site, live, level,
+		expect(body.parameters.filters).toEqual([site, noPreview, level,
 			{ key: "teamId", operation: "eq", type: "string", value: "u14-2026" }, { key: "event", operation: "eq", type: "string", value: "job_failed" },
 			{ key: "gameId", operation: "eq", type: "number", value: 38 }, { key: "videoId", operation: "eq", type: "number", value: 46 }]);
 		expect(filters(["--ray", "8f1c2a3b4c5d6e7f"]).at(-1)).toEqual({ key: "ray", operation: "eq", type: "string", value: "8f1c2a3b4c5d6e7f" });
 		expect(filters(["--request", "b885219b"]).at(-1)).toEqual({ key: "$metadata.requestId", operation: "eq", type: "string", value: "b885219b" });
 	});
 
-	it("every line with --all, the video joiner's with --joiner, and staging's (never in the live site's) with --staging", () => {
-		expect(filters(["--all"])).toEqual([site, live]);
-		expect(filters(["--joiner", "--all", "--since", "2d"])).toEqual([{ ...site, value: "courtside-join" }, live]);
-		expect(filters(["--staging", "--all"])).toEqual([site, { key: "$workers.preview.slug", operation: "eq", type: "string", value: "staging" }]);
+	it("every line with --all, the video joiner's with --joiner, and staging's own Worker's with --staging", () => {
+		// A Preview's lines (the live Worker's old staging Preview) are never the site's own.
+		expect(filters(["--all"])).toEqual([site, noPreview]);
+		expect(filters(["--joiner", "--all", "--since", "2d"])).toEqual([{ ...site, value: "courtside-join" }, noPreview]);
+		expect(filters(["--staging", "--all"])).toEqual([{ ...site, value: "staging-courtside" }, noPreview]);
 	});
 
 	it("refuses what it doesn't know, saying how to use it", () => {

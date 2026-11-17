@@ -927,7 +927,7 @@ section and keeps one More menu open at a time.
  100,000, D1's size against 10 GB (from D1's own answer, or Cloudflare's), server errors, emails, the 3am job with the
  backup and the sweep, and the 5-minute job. Cloudflare's own last 30 days come from
  `platform/cloudflare-insights.ts`, with the read-only account token `CF_INSIGHTS_TOKEN`: one GraphQL query for the
- Worker's requests, CPU and errors, D1's rows, the originals in R2, Stream's minutes watched, Workers AI's neurons, and
+ Worker's (the one `WORKER_NAME` names, `staging-courtside` on staging, so staging's are its own) requests, CPU and errors, D1's rows, the originals in R2, Stream's minutes watched, Workers AI's neurons, and
  the zone's requests and threats. The page waits 4 seconds for Cloudflare and 3 for
  Stream, then shows itself without them.
 - **Costs** (`/admin/costs`; `costs-*.ts`, `budget-checks.ts`, `views/costs-*.ts`): what each team costs on Cloudflare,
@@ -1135,8 +1135,8 @@ There's no team in the config: each request and job step gets its team (`TeamDep
  turn, and a local phone routed through Singapore or the US by its network made each one cross an ocean; pinned
  beside the database each is a millisecond or two. `cf-placement: remote-SYD` on every answer shows it. Smart
  Placement, read replicas and the default were weighed and left (the admin Documentation, Where the Worker runs).
-- **Staging:** `STAGING=1` marks it (`docs/runbooks/staging.md`): the same Worker built as a Worker Preview (the
- config's `isPreview`) on its own database and bucket, behind the same sign-in. It labels what it makes in the shared Stream and
+- **Staging:** `STAGING=1` marks it (`docs/runbooks/staging.md`): the same code as its own Worker, `staging-courtside`
+ (the config built with `--mode staging`), on its own database and bucket, behind the same sign-in. It labels what it makes in the shared Stream and
  Images (`site-label.ts`), shows a strip on every page and puts `[Staging]` on its emails.
 - **Local development** uses `.dev.vars` (git-ignored) with `DEV_AUTH_EMAIL`, which only works when the request's host
  is `localhost`.

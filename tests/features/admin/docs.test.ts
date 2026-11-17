@@ -63,11 +63,11 @@ describe("the admin area's Documentation", () => {
 		expect(html).toContain("aws:ap-southeast-2");
 		expect(html).toMatch(/nothing runs on AWS/i);
 		expect(html).toMatch(/costs nothing extra/i);
-		// Branches and builds: feature/ and fix/ off staging, staging deployed as the preview, main fast-forwarded, Builds deploys.
+		// Branches and builds: feature/ and fix/ off staging, staging deployed as its own Worker, main fast-forwarded, Builds deploys.
 		// Environments: how a staging deploy differs from a production one, side by side.
 		expect(html).toContain("<h3>Environments</h3>");
 		expect(html).toContain('<th scope="col">Staging deploy</th><th scope="col">Production deploy</th>');
-		for (const words of ["cf previews deploy --preview-name staging", "npm run staging -- setup", "Applied to staging's database by the command itself", "Not on a day a team plays"]) {
+		for (const words of ["cf deploy --mode staging", "npm run staging -- setup", "Applied to staging's database by the command itself", "Not on a day a team plays"]) {
 			expect(html, words).toContain(words);
 		}
 		expect(html).toContain("<h3>Branches</h3>");

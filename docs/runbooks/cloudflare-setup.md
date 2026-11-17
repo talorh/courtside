@@ -22,7 +22,7 @@ cf auth whoami                            # your email, this account
 | --- | --- | --- |
 | Account | The club's own, Workers Paid, with the Images and Stream bundle | Nothing to do with the site lives anywhere else |
 | Domain | `CLUB.domain` (`src/club.ts`) in the zone `CLUB.zone`. Recommended, a domain of its own (the two the same): registered through Cloudflare Registrar or an existing zone, auto-renew, DNSSEC on. Or a subdomain of the club's own domain, a zone already in this account that the club's website shares (On a subdomain, below) | `cf zones get -z $z` |
-| Worker | `DEPLOY.worker` (`courtside` unless renamed): the custom domain only, workers.dev off, Preview URLs on (staging), crons `*/5 * * * *`, one an hour for the 3am job (`CLUB.dailyJobUtcHours`), placement by region, `DEPLOY.region` (not Smart Placement), observability (Workers Logs with query strings redacted, traces) and Issues on (`npm run logs` reads the logs; `incident.md`) | `cloudflare.config.ts` |
+| Worker | `DEPLOY.worker` (`courtside` unless renamed): the custom domain only, workers.dev and Preview URLs off, crons `*/5 * * * *`, one an hour for the 3am job (`CLUB.dailyJobUtcHours`), placement by region, `DEPLOY.region` (not Smart Placement), observability (Workers Logs with query strings redacted, traces) and Issues on (`npm run logs` reads the logs; `incident.md`) | `cloudflare.config.ts` |
 | D1 | `<worker>` (live) and `<worker>-staging`, in the region nearest the club | `cf d1 list`; migrations in `migrations/` |
 | R2 | `<worker>-originals`: uploaded videos and the nightly backups; `<worker>-staging` | `infra/r2-cors.json`, `r2-lifecycle.json`, `r2-lock.json`; `infra/staging/` |
 | Stream | The account's: playback copies, clips, HD MP4s and a live input a streamed game; the customer code in `deploy.config.ts`; a signing key for playback links | Reached by REST with `STREAM_API_TOKEN` |
@@ -35,7 +35,7 @@ cf auth whoami                            # your email, this account
 | Workers Builds | Triggers on the site, the maintenance page and the joiner, branch `main` only, previews off, caching off; build `npm ci && npm run check`, deploy `npm run deploy:builds [-- maintenance \| join]`; the two small Workers build only when their folders change | §4 |
 | Maintenance Worker | `<worker>-maintenance`, routed to `<domain>/*` only while maintenance is on | `docs/runbooks/maintenance.md` |
 | Joiner Worker | `<worker>-join`: a Durable Object `Joiner` carrying the ffmpeg container (`standard-1`, one instance) that joins a carried-on recording's parts; the site's `JOINER` binding reaches it | §7 |
-| Staging | The same Worker as a Preview, on its own database and bucket | `docs/runbooks/staging.md` |
+| Staging | Its own Worker, `staging-<worker>` (the config in staging mode), on workers.dev only (`DEPLOY.staging.host`), its own database and bucket, no crons | `docs/runbooks/staging.md` |
 
 ### Secrets on the Worker
 
@@ -91,8 +91,9 @@ domain's certificate events; an abuse report. Emailed to the owner. These work w
 ## 2. Checking it
 
 ```bash
-cf workers get <worker>                             # domain, subdomain off, previews on, observability
+cf workers get <worker>                             # domain, subdomain off, previews off, observability
 cf workers secrets list --worker <worker>           # the seven secrets
+cf workers deployments list --worker staging-<worker>   # staging's own Worker: npm run staging's deploys
 cf d1 list; cf r2 buckets list
 cf r2 buckets cors get <worker>-originals; cf r2 buckets lifecycle get <worker>-originals; cf r2 buckets locks get <worker>-originals
 cf rulesets entrypoint get http_request_firewall_custom -z $z   # and _managed, http_ratelimit, http_request_dynamic_redirect, http_request_cache_settings (a subdomain)
@@ -205,7 +206,7 @@ staging, with real Stream, before a phone test.
 `join/` is its own cf project (like `maintenance/`): its `cloudflare.config.ts` names the Worker `<worker>-join`, its
 Durable Object `Joiner` and the container (`Dockerfile`: Alpine, ffmpeg, `server.mjs` on port 8080). The site's
 `cloudflare.config.ts` binds to it, so the joiner must be deployed before a site config that names it (the live site
-and the staging preview alike).
+and the staging Worker alike).
 
 ```bash
 npm run join -- image        # when join/ changed: build the image (podman as docker, scripts/podman-as-docker.sh), push it to Cloudflare's registry, write its tag to join/image-tag.txt (commit it)

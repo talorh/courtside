@@ -100,7 +100,7 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
 | The admin Documentation as Markdown, and the agent instructions as a constant | `npm run docs` (after a change to either; commit the result) |
 | The club's generated images, after `src/club.ts` or the logo changes | `npm run club -- all` (`-- placeholder` draws a stand-in logo set; `docs/runbooks/cloudflare-setup.md`, Branding) |
 | Deploy (add the deploy's line at the top of `CHANGELOG.md`, commit on `main`, then) | `npm run release` (pushes `main`, then follows Workers Builds' build and deploy; `-- --check-only`: every check and the dry run, no push) |
-| Staging: the committed code on the staging preview, to try on phones before a release | `npm run staging` (`-- --dry-run`; `-- setup` once, and after a key changes) |
+| Staging: the committed code on staging's own Worker, `staging-courtside`, to try on phones before a release | `npm run staging` (`-- --dry-run`; `-- setup` once, and after a key changes) |
 | Maintenance page on or off, or is it on (the owner's yes to change it) | `npm run maintenance -- on`, `-- off`, `-- status` (`-- deploy` by hand: a release deploys it when `maintenance/` changes) |
 | The video joiner's image, after `join/` changes (then commit `join/image-tag.txt` and release) | `npm run join -- image` (`-- dry-run`, `-- deploy` by hand) |
 | Another site admin, when the admin area isn't to hand (the first ones are `deploy.config.ts` `firstAdmins`, made by the first deploy) | `npm run admin -- add <email>` |

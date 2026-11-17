@@ -6,7 +6,8 @@ export const DEPLOY = {
 	accountId: "REPLACE_WITH_ACCOUNT_ID",
 	/** The zone id of the club's domain (src/club.ts domain) in that account. */
 	zoneId: "REPLACE_WITH_ZONE_ID",
-	/** The Worker's name; the joiner is `<name>-join` and the maintenance page `<name>-maintenance`. */
+	/** The Worker's name; the joiner is `<name>-join`, the maintenance page `<name>-maintenance` and staging's own Worker
+	 * `staging-<name>`. */
 	worker: "courtside",
 	/** Where the Worker runs, nearest the club and its database: an AWS-style region name Cloudflare placement accepts. */
 	region: "aws:ap-southeast-2",
@@ -25,8 +26,9 @@ export const DEPLOY = {
 	firstAdmins: "REPLACE_WITH_THE_ADMINS_EMAILS",
 	/** Who `cf dev` signs in as on this computer. */
 	devEmail: "you@example.com",
-	/** Staging (docs/runbooks/staging.md): its own database, bucket and Turnstile widget, in the same account, and its
-	 * address, staging-<worker> on the account's workers.dev subdomain: the only hostname staging answers on. */
+	/** Staging (docs/runbooks/staging.md), its own Worker, staging-<worker>: its own database, bucket and Turnstile widget,
+	 * in the same account, and its address, staging-<worker> on the account's workers.dev subdomain: the only hostname
+	 * staging answers on. */
 	staging: {
 		d1Name: "courtside-staging", d1Id: "REPLACE_WITH_STAGING_D1_ID", bucket: "courtside-staging", turnstileSiteKey: "REPLACE_WITH_STAGING_TURNSTILE_SITE_KEY",
 		host: "staging-courtside.REPLACE_WITH_WORKERS_SUBDOMAIN.workers.dev",

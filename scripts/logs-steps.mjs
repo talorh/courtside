@@ -6,14 +6,14 @@ const TEXT = { "--team": "teamId", "--event": "event", "--ray": "ray", "--reques
 const NUMBER = { "--game": "gameId", "--video": "videoId" };
 
 /** The options from the command line, or { error } saying what's wrong and how to use it. `worker`: the site's Worker
- * (deploy.config.ts), whose video joiner is `<worker>-join`. */
+ * (deploy.config.ts), whose video joiner is `<worker>-join` and staging's own Worker `staging-<worker>`. */
 export function parseLogsArgs(argv, worker) {
-	const o = { sinceMs: UNITS.h, worker, staging: false, all: false, match: [] };
+	const o = { sinceMs: UNITS.h, worker, all: false, match: [] };
 	for (let i = 0; i < argv.length; i++) {
 		const flag = argv[i], value = argv[i + 1]?.startsWith("--") ? undefined : argv[i + 1];
 		if (flag === "--all") o.all = true;
 		else if (flag === "--joiner") o.worker = `${worker}-join`;
-		else if (flag === "--staging") o.staging = true;
+		else if (flag === "--staging") o.worker = `staging-${worker}`;
 		else if (flag === "--since") {
 			const m = /^(\d+)([mhd])$/.exec(value ?? "");
 			if (!m) return { error: `--since takes a time like 30m, 3h or 2d. ${USAGE}` };
@@ -33,10 +33,11 @@ export function parseLogsArgs(argv, worker) {
 const levelIs = (value) => ({ key: "$metadata.level", operation: "eq", type: "string", value });
 
 /** The body for `cf o11y telemetry query --body`: the Worker's lines (warnings and errors unless --all), newest first.
- * Staging is a Preview of the same Worker: its lines are the ones with a preview, kept out unless --staging. */
+ * Staging is its own Worker, staging-<worker> (--staging). A Preview's lines (the live Worker's old staging Preview, while
+ * it lasts) are never the Worker's own, so they're left out. */
 export function logsBody(o, nowMs) {
 	const filters = [{ key: "$workers.scriptName", operation: "eq", type: "string", value: o.worker },
-		o.staging ? { key: "$workers.preview.slug", operation: "eq", type: "string", value: "staging" } : { key: "$workers.preview.slug", operation: "is_null", type: "string" }];
+		{ key: "$workers.preview.slug", operation: "is_null", type: "string" }];
 	if (!o.all) filters.push({ kind: "group", filterCombination: "or", filters: [levelIs("error"), levelIs("warn")] });
 	return {
 		queryId: `logs-${nowMs}`, view: "events", limit: 100, timeframe: { from: nowMs - o.sinceMs, to: nowMs },
