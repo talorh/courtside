@@ -11,6 +11,11 @@ import { adminLayout } from "./admin-layout.ts";
 /** The day a season's footage is due to go: the last day before its deadline (midnight at the end of 31 Dec). */
 export const dueDay = (team: Team) => formatDay(localTime(new Date(Date.parse(seasonEndDeadline(team.seasonStart)) - 60_000)));
 
+/** Its season's footage date has gone by: a closed team then goes tonight whatever is done, since the 3am job closes a
+ * reopened one again with that date, and the 5-minute job deletes it. */
+export const footagePassed = (team: Team, now: Date) => seasonEndDeadline(team.seasonStart) <= now.toISOString();
+export const goesTonight = (team: Team) => `${teamLabel(team)}'s videos and photos were due to be deleted on ${dueDay(team)}, so it's deleted tonight, at 3am`;
+
 const error = (message?: string) => (message ? html`<div class="note warn" role="alert">${message}</div>` : "");
 const back = html`<p><a class="btn" href="/admin/teams">Back to Teams</a></p>`;
 const TEAMS = { href: "/admin/teams", label: "Teams" };
@@ -23,14 +28,14 @@ export function closePage(p: { frame: AdminFrame; team: Team; now: Date; values?
 	if (p.team.status !== "active") return page(said(`${label}'s season is over already.`));
 	const tonight = p.values?.when === "tonight";
 	// Its date gone by, waiting for it would delete the team at once: only tonight, with its code typed, is offered.
-	const passed = seasonEndDeadline(p.team.seasonStart) <= p.now.toISOString();
+	const passed = footagePassed(p.team, p.now);
 	const choice = (value: string, checked: boolean, title: string, note: string) =>
 		html`<label class="option"><input type="radio" name="when" value="${value}"${checked ? html` checked` : ""}><span>${title}<span class="small">${note}</span></span></label>`;
 	return page(html`<form class="panel stack" method="post" action="/admin/teams/${p.team.id}/close">
 <p>Ending the season closes the team's site: it's read-only straight away. Families can still watch, download and ask for things to be removed, but nothing new can be added. It moves to Past seasons on Teams.</p>
 ${error(p.error)}
 ${passed ? html`<input type="hidden" name="when" value="tonight">
-<p>Its videos and photos were due to be deleted on ${dueDay(p.team)}, so they're deleted tonight, at 3am. Until then the team can be reopened.</p>`
+<p>Its videos and photos were due to be deleted on ${dueDay(p.team)}, so they're deleted tonight, at 3am.</p>`
 		: html`<fieldset class="deletewhen"><legend>When should its videos and photos be deleted?</legend>
 ${choice("due", !tonight, `When they're due: ${dueDay(p.team)}`, "What Help has told families: the end of the year the season ends. Recommended.")}
 ${choice("tonight", tonight, "Tonight, at 3am", "Can be cancelled until then. Type the team's code to confirm.")}</fieldset>`}
@@ -56,6 +61,7 @@ export function reopenPage(p: { frame: AdminFrame; team: Team; now: Date }): Saf
 	const page = (body: SafeHtml) => adminLayout({ title: `Reopen ${label}`, current: "teams", frame: p.frame, back: TEAMS }, body);
 	if (p.team.status === "active") return page(said(`${label} is open already.`));
 	if (isBeingDeleted(p.team, p.now)) return page(said(`Deleting ${label} has started, so it can't be reopened.`));
+	if (footagePassed(p.team, p.now)) return page(said(`${goesTonight(p.team)}, and can't be reopened.`));
 	return page(html`<form class="panel stack" method="post" action="/admin/teams/${p.team.id}/reopen">${yes}
 <p>Its families can add videos and photos again, and it won't be deleted until it's closed again.</p>
 <div class="row-actions"><button class="btn primary">Reopen ${label}</button><a class="btn" href="/admin/teams">Keep it closed</a></div></form>`);
@@ -67,6 +73,7 @@ export function keepPage(p: { frame: AdminFrame; team: Team; now: Date }): SafeH
 	const page = (body: SafeHtml) => adminLayout({ title: "Cancel tonight's delete", current: "teams", frame: p.frame, back: TEAMS }, body);
 	if (p.team.status === "active") return page(said(`${label} is open.`));
 	if (isBeingDeleted(p.team, p.now)) return page(said(`Deleting ${label} has started, so it can't be cancelled.`));
+	if (footagePassed(p.team, p.now)) return page(said(`${goesTonight(p.team)}: that can't be cancelled.`));
 	if (!p.team.deleteAfter || p.team.deleteAfter === seasonEndDeadline(p.team.seasonStart)) return page(said(`${label} isn't set to be deleted tonight.`));
 	return page(html`<form class="panel stack" method="post" action="/admin/teams/${p.team.id}/keep">${yes}
 <p>${label} is set to be deleted at 3am ${formatShortDate(localTime(new Date(p.team.deleteAfter)))}. Cancel that, and it stays until ${dueDay(p.team)}.</p>

@@ -12,7 +12,7 @@ import { VIEWABLE } from "../view-as.ts";
 import type { TeamSummary } from "../../teams/teams-repository.ts";
 import { adminLayout } from "./admin-layout.ts";
 import { setupProgress } from "../../teams/team-setup.ts";
-import { dueDay } from "./team-close-page.ts";
+import { dueDay, footagePassed } from "./team-close-page.ts";
 import { queueHref } from "./support-page.ts";
 
 /** What a change just did (`?done=`): fixed words only, never anything from the address itself. */
@@ -46,13 +46,15 @@ const ROLES = VIEWABLE.map((r) => ({ value: r, label: ROLE_LABELS[r] }));
 const viewAs = (t: Team) => html`<form method="post" action="/view-as" class="viewas"><input type="hidden" name="team" value="${t.id}"><label>View as <select name="role">${selectOptions(ROLES, "watcher")}</select></label><button class="btn" aria-label="View ${teamLabel(t)} as this role">View</button></form>`;
 
 /** Open, and a More menu: View as and Edit, then End season and close team while it's running, or
- * Reopen and Delete tonight once its season's over (Cancel tonight's delete once it's set). Each of those is its own page,
- * which says what it does and asks. A team being deleted can only be opened. */
+ * Reopen and Delete tonight once its season's over (Cancel tonight's delete once it's set), neither once its footage
+ * date has passed (it goes tonight then). Each of those is its own page, which says what it does and asks. A team being
+ * deleted can only be opened. */
 function actions(t: Team, now: Date): SafeHtml {
 	if (isBeingDeleted(t, now)) return html`<div class="row-actions">${openTeamForm(t, "btn")}</div>`;
 	const link = (path: string, label: string, danger = false) => html`<a${danger ? html` class="danger"` : ""} href="/admin/teams/${t.id}/${path}">${label}</a>`;
 	const tonight = t.deleteAfter !== seasonEndDeadline(t.seasonStart) ? link("keep", "Cancel tonight's delete") : link("delete", "Delete tonight", true);
-	const items = t.status === "active" ? link("close", "End season and close team", true) : html`${link("reopen", "Reopen")}${tonight}`;
+	const closed = footagePassed(t, now) ? "" : html`${link("reopen", "Reopen")}${tonight}`;
+	const items = t.status === "active" ? link("close", "End season and close team", true) : closed;
 	return html`<div class="row-actions">${openTeamForm(t, t.status === "active" ? "btn primary" : "btn")}<details class="rowmenu"><summary class="btn">More<span class="sr"> for ${teamLabel(t)}</span></summary>
 <div class="menu">${viewAs(t)}<hr>${link("edit", "Edit")}${items}</div></details></div>`;
 }

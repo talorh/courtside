@@ -165,7 +165,8 @@ describe("closing a team", () => {
 		expect(page).not.toContain("When they&#39;re due");
 		expect(page).not.toContain('type="radio"');
 		expect(page).toContain('<input type="hidden" name="when" value="tonight">');
-		expect(page).toContain("Its videos and photos were due to be deleted on Fri 31 Dec 2027, so they're deleted tonight, at 3am. Until then the team can be reopened.");
+		expect(page).toContain("Its videos and photos were due to be deleted on Fri 31 Dec 2027, so they're deleted tonight, at 3am.");
+		expect(page).not.toContain("reopened");
 		const due = await admin(deps)(`/admin/teams/${G}/close`, form({ when: "due", confirmCode: "" }));
 		expect(due.status).toBe(400);
 		expect(await due.text()).toContain("Saints G14.5&#39;s videos and photos were due to be deleted on Fri 31 Dec 2027, so they&#39;d go tonight: type g14.5 to end its season.");
@@ -216,6 +217,28 @@ describe("reopening, deleting tonight and cancelling that", () => {
 		expect((await admin(deps)(`/admin/teams/${G}/keep`, yes())).headers.get("Location")).toBe("/admin/teams?done=kept");
 		expect(await team(deps)).toMatchObject({ delete_after: SEASON_END });
 		expect((await log(deps)).map((l) => l.action)).toEqual(["delete_scheduled", "delete_cancelled"]);
+	});
+
+	it("once its season's date has passed, neither reopens it nor cancels tonight's delete, as the 3am job would close it again and delete it", async () => {
+		// 11am on Wed 5 Jan 2028 at the club: closed with its code typed, to go at 3am tonight.
+		const deps = createTestDeps(new Date("2028-01-05T00:00:00Z"));
+		await addTeam(deps.db, { ...G14_5, status: "closed", closedAt: "2028-01-04T00:00:00.000Z", deleteAfter: "2028-01-05T16:00:00.000Z" });
+		const why = "Saints G14.5&#39;s videos and photos were due to be deleted on Fri 31 Dec 2027, so it&#39;s deleted tonight, at 3am";
+		const reopen = await (await admin(deps)(`/admin/teams/${G}/reopen`)).text();
+		expect(reopen).toContain(`${why}, and can&#39;t be reopened.`);
+		expect(reopen).not.toContain('<form class="panel stack"');
+		const refused = await admin(deps)(`/admin/teams/${G}/reopen`, yes());
+		expect(refused.status).toBe(409);
+		expect(await refused.text()).toContain(`${why}, and can&#39;t be reopened.`);
+		expect(await team(deps)).toMatchObject({ status: "closed", delete_after: "2028-01-05T16:00:00.000Z" });
+		const keep = await (await admin(deps)(`/admin/teams/${G}/keep`)).text();
+		expect(keep).toContain(`${why}: that can&#39;t be cancelled.`);
+		expect(keep).not.toContain('<form class="panel stack"');
+		const page = await (await admin(deps)("/admin/teams")).text();
+		const row = page.slice(page.indexOf("<b>Saints G14.5</b>"), page.indexOf("</tr>", page.indexOf("<b>Saints G14.5</b>")));
+		expect(row).toContain(`<a href="/admin/teams/${G}/edit">Edit</a>`);
+		expect(row).not.toMatch(/reopen|keep|\/delete/);
+		expect(await log(deps)).toEqual([]);
 	});
 
 	it("can't delete an open team, or cancel once deleting has started", async () => {

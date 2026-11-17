@@ -10,7 +10,7 @@ import { lastPartAt } from "../live/recording-segments-service.ts";
 import { listPhotos } from "../photos/photos-repository.ts";
 import { teamLabel, teamNames } from "../teams/team-code.ts";
 import { isBeingDeleted, type Team } from "../teams/team.ts";
-import { dueDay } from "./views/team-close-page.ts";
+import { dueDay, footagePassed, goesTonight } from "./views/team-close-page.ts";
 import { closeTeamWrite, findOpenTeam, reopenTeamWrite, setDeleteAfterWrite, updateTeam } from "../teams/teams-repository.ts";
 import { listVideosByStatus } from "../videos/videos-repository.ts";
 import { type AdminAction, adminLogStatement } from "./admin-log-repository.ts";
@@ -106,6 +106,7 @@ async function closeAs(deps: AppDeps, who: string, team: Team, deleteAfter: stri
 export async function reopenTeam(deps: AppDeps, adminEmail: string, team: Team): Promise<void> {
 	if (team.status !== "closed") throw conflict(`${teamLabel(team)} is open already.`);
 	if (isBeingDeleted(team, deps.now())) throw conflict(`Deleting ${teamLabel(team)} has started, so it can't be reopened.`);
+	if (footagePassed(team, deps.now())) throw conflict(`${goesTonight(team)}, and can't be reopened.`);
 	const open = await findOpenTeam(deps.db, team.code);
 	const taken = (other: Team | null) => conflict(`${other ? teamLabel(other, { season: true }) : "Another team"} has its code now: close that first.`);
 	if (open) throw taken(open);
@@ -132,7 +133,7 @@ export async function cancelDelete(deps: AppDeps, adminEmail: string, team: Team
 	if (team.status !== "closed") throw conflict(`${teamLabel(team)} is open.`);
 	if (isBeingDeleted(team, now)) throw conflict(`Deleting ${teamLabel(team)} has started, so it can't be cancelled.`);
 	const due = seasonEndDeadline(team.seasonStart);
-	if (due <= now.toISOString()) throw conflict(`${teamLabel(team)}'s season's date has passed, so it can't wait any longer.`);
+	if (footagePassed(team, now)) throw conflict(`${goesTonight(team)}: that can't be cancelled.`);
 	if (team.deleteAfter === due) return;
 	if (!(await setDeleteAfterWrite(deps.db, team.id, due, now.toISOString())).meta.changes) throw conflict(`Deleting ${teamLabel(team)} has started, so it can't be cancelled.`);
 	await log(deps, adminEmail, team, "delete_cancelled");

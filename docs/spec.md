@@ -616,7 +616,9 @@ welcome page shows it, to copy or email again. A team's code and season can be f
 only until its first photo too, since a photo is deleted with the season it was added in. **Ending a season** closes
 the team: read-only at once, and deleted when its season's footage is due (31 December of the year its season ends, as
 Help tells families) or at 3am that night, with its code typed. Once that date has passed, it can only be deleted that
-night, with its code typed. It can be reopened until deleting starts. **A season ends by itself**:
+night, with its code typed. It can be reopened until deleting starts, but not once that date has passed (the 3am job
+ would close it again and it would go that night): Reopen and Cancel tonight's delete then say why and offer nothing.
+ **A season ends by itself**:
 a team's site stays open and everything is kept until the end of 31 December of the year its season ends (31 Dec 2027
 for 2026/27), then the 3am job closes it as End season's "When they're due" would, a line in the Log by the site, and
 it's deleted that night. A team still uploading or streaming at 3am is left for the next night. An admin can end a

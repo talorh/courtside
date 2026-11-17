@@ -24,14 +24,14 @@ export function teamLifecycleDiagram(): SafeHtml {
 	const d = draw("lifecycle");
 	return figure("lifecycle", {
 		w: 760, h: 210, min: 640, title: "A team's life on the site",
-		desc: "A team is onboarded, runs its season (its setup checklist first), is closed and becomes read-only, by itself at the end of 31 December of the year its season ends or earlier with an admin's End season, and is deleted with its footage then, or on a night an admin picks. A closed team can be reopened until deleting starts.",
+		desc: "A team is onboarded, runs its season (its setup checklist first), is closed and becomes read-only, by itself at the end of 31 December of the year its season ends or earlier with an admin's End season, and is deleted with its footage then, or on a night an admin picks. A closed team can be reopened until deleting starts, and never once 31 December has passed, since it goes that night.",
 		caption: "Deleting takes every video, clip, photo, original and record of the team, except what its download log names, which is kept its two years.",
 	}, html`${d.box({ x: 10, y: 40, w: 170, title: "Onboarded", sub: "code, season, team manager", kind: "step" })}
 ${d.box({ x: 200, y: 40, w: 170, title: "Running", sub: "the checklist, then the season", kind: "done" })}
 ${d.box({ x: 390, y: 40, w: 170, title: "Closed", sub: "by itself, or End season", kind: "service" })}
 ${d.box({ x: 580, y: 40, w: 170, title: "Deleted", sub: "31 Dec, or a night chosen", kind: "stop" })}
 ${d.arrow([[180, 68], [198, 68]])}${d.arrow([[370, 68], [388, 68]])}${d.arrow([[560, 68], [578, 68]])}
-${d.arrow([[475, 96], [475, 140], [285, 140], [285, 98]], { label: "Reopen, until deleting starts", at: [300, 160] })}
+${d.arrow([[475, 96], [475, 140], [285, 140], [285, 98]], { label: "Reopen, before 31 Dec", at: [300, 160] })}
 ${d.label(10, 196, "Each team is one season's squad: a new season is a new team, onboarded again.")}`);
 }
 

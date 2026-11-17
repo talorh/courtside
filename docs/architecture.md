@@ -914,14 +914,16 @@ section and keeps one More menu open at a time.
  team managers, setup (`teams/team-setup.ts`: "3 of 4" and what's left, as Manage team's checklist), last used, open
  tickets), each with Open (it becomes the admin's current team, as its team manager)
  and a More menu: View as Watch only, Watch and film, coach or team manager, Edit, and End season and close team; or, its season over,
- Edit, Reopen and Delete tonight (Cancel tonight's delete once that's set).
+ Edit, Reopen and Delete tonight (Cancel tonight's delete once that's set; just Edit once its footage date has passed,
+ when it goes tonight).
  - **Onboard a team** asks only for the code, the season (this or next), the team manager's name and email, and who
  to ask. The site then emails the team manager a welcome (Reply-To the admin), and the welcome page says whether it
  went, with the message to copy and **Email it again**.
  - **Edit**: who to ask, any time; the code and season only until the team's first game (to fix a typo; the id stays).
  - **End season** closes the team: read-only at once, and refused while a phone is sending the team an upload, a
  recording or a live picture (the release's 15 quiet minutes). **Reopen** works until deleting starts, unless an open
- team has its code by then.
+ team has its code by then, and never once its footage date has passed: the 3am job would close it again with that
+ date and it would be deleted that night, so Reopen and Cancel tonight's delete each say so and offer nothing.
 - **Support** (`/admin/support`): the ticket desk (Emails, the support desk and monitoring); its menu link counts
  tickets waiting for an answer.
 - **Alerts**, at the top of Insights (`health-load.ts`, `health-*.ts`, `views/alerts-section.ts`; `/admin/support/alerts`,

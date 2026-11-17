@@ -23,7 +23,7 @@
 .dg-zone rect{fill:none;stroke:#E1E5E2;stroke-width:1.5;stroke-dasharray:7 5}
 .dg-zone text{fill:#5D6862;font-size:12px;font-weight:700}</style>
 <rect width="760" height="210" fill="#FFFFFF"/>
-<title id="dg-lifecycle-t">A team&#39;s life on the site</title><desc id="dg-lifecycle-d">A team is onboarded, runs its season (its setup checklist first), is closed and becomes read-only, by itself at the end of 31 December of the year its season ends or earlier with an admin&#39;s End season, and is deleted with its footage then, or on a night an admin picks. A closed team can be reopened until deleting starts.</desc>
+<title id="dg-lifecycle-t">A team&#39;s life on the site</title><desc id="dg-lifecycle-d">A team is onboarded, runs its season (its setup checklist first), is closed and becomes read-only, by itself at the end of 31 December of the year its season ends or earlier with an admin&#39;s End season, and is deleted with its footage then, or on a night an admin picks. A closed team can be reopened until deleting starts, and never once 31 December has passed, since it goes that night.</desc>
 <defs><marker id="ah-lifecycle" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
 <g class="dg-box k-step"><rect x="10" y="40" width="170" height="56" rx="10"/>
 <text class="dg-t" x="95" y="65">Onboarded</text><text class="dg-s" x="95" y="82">code, season, team manager</text></g>
@@ -34,5 +34,5 @@
 <g class="dg-box k-stop"><rect x="580" y="40" width="170" height="56" rx="10"/>
 <text class="dg-t" x="665" y="65">Deleted</text><text class="dg-s" x="665" y="82">31 Dec, or a night chosen</text></g>
 <path class="dg-arrow" d="M180 68 L198 68" marker-end="url(#ah-lifecycle)"/><path class="dg-arrow" d="M370 68 L388 68" marker-end="url(#ah-lifecycle)"/><path class="dg-arrow" d="M560 68 L578 68" marker-end="url(#ah-lifecycle)"/>
-<path class="dg-arrow" d="M475 96 L475 140 L285 140 L285 98" marker-end="url(#ah-lifecycle)"/><text class="dg-label" x="300" y="160">Reopen, until deleting starts</text>
+<path class="dg-arrow" d="M475 96 L475 140 L285 140 L285 98" marker-end="url(#ah-lifecycle)"/><text class="dg-label" x="300" y="160">Reopen, before 31 Dec</text>
 <text class="dg-label" x="10" y="196">Each team is one season&#39;s squad: a new season is a new team, onboarded again.</text></svg>
