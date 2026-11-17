@@ -1,6 +1,6 @@
 import type { TeamDeps } from "../../app/deps.ts";
 import { badRequest } from "../../app/errors.ts";
-import { compareIso, localDate } from "../../shared/time.ts";
+import { compareIso, localDate, localTime } from "../../shared/time.ts";
 import { type GameWithVideo, listGamesWithVideoStatus } from "../games/games-repository.ts";
 import { awayCredit } from "./roster-away.ts";
 import { ALL_DUTIES, type RosterDuties } from "./roster-duties.ts";
@@ -78,7 +78,10 @@ export async function syncRoster(deps: TeamDeps, rebuild = false): Promise<{ wee
 	// Time off the roster counts as a fair share of those weeks (roster-away.ts), so a family back isn't caught up.
 	const ids = families.map((f) => f.id);
 	const credit = awayCredit(slots, await familyPresence(db, deps.team.id), ids, duties);
-	const added = fillWeeks(weeks.filter((w) => w.week >= thisWeek).map(needOf), ids, slots, duties, credit);
+	// A game that's started keeps who was down for it: an empty duty there isn't filled after the event.
+	const now = localTime(deps.now());
+	const upcoming = weeks.filter((w) => w.week >= thisWeek).map((w) => needOf({ ...w, games: w.games.filter((g) => g.game.startsAt > now) }));
+	const added = fillWeeks(upcoming, ids, slots, duties, credit);
 	const writes = [...stale.map((s) => deleteSlotWrite(db, deps.team.id, s.week, s.duty, s.position, s.gameId)),
 		...added.map((s) => insertSlotWrite(db, deps.team.id, s))];
 	if (writes.length) await db.batch(writes);

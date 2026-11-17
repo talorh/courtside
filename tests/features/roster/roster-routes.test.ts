@@ -453,6 +453,29 @@ describe("roster", () => {
 		expect((await manager(`/roster/families/${smith}/remove`, form({ confirm: "yes" }))).status).toBe(404);
 		expect((await manager("/roster/families/999/remove", form({ confirm: "yes" }))).status).toBe(404);
 	});
+	it("taking a family off after this week's game keeps what they did at it, and hands on only what's to come", async () => {
+		const { deps, manager } = await generated();
+		// Saturday 17 Oct, 10am: Friday night's game has been played.
+		deps.now = () => new Date("2026-10-16T23:00:00Z");
+		const played = (await slotsOf(deps)).filter((s) => s.week === "2026-10-12");
+		const scorer = played.find((s) => s.duty === "scoring")!.f;
+		await manager(`/roster/families/${scorer}/remove`, form({ confirm: "yes" }));
+		const slots = await slotsOf(deps);
+		expect(slots.filter((s) => s.week === "2026-10-12")).toEqual(played);
+		expect(slots.filter((s) => s.week > "2026-10-12").some((s) => s.f === scorer)).toBe(false);
+		expect(slots.filter((s) => s.week > "2026-10-12")).toHaveLength(10); // 4, and the weekend's 6
+	});
+	it("doesn't fill an empty duty at a game that's already started", async () => {
+		const { deps, manager } = await generated();
+		const friday = await gameOn(deps, "2026-10-16");
+		await deps.db.prepare("DELETE FROM roster_slots WHERE team_id = ? AND game_id = ? AND duty = 'lollies'").bind(deps.team.id, friday).run();
+		deps.now = () => new Date("2026-10-16T08:00:00Z"); // Friday 7pm, the game under way
+		await manager("/roster");
+		expect((await slotsOf(deps)).filter((s) => s.g === friday).map((s) => s.duty)).toEqual(["scoring", "scoring", "video"]);
+		deps.now = () => new Date("2026-10-16T07:00:00Z"); // 6pm, before tip-off: it's filled
+		await manager("/roster");
+		expect((await slotsOf(deps)).filter((s) => s.g === friday).map((s) => s.duty)).toEqual(["lollies", "scoring", "scoring", "video"]);
+	});
 	it("the database itself refuses a second slot for a family on the same game, whichever duty", async () => {
 		const { deps } = await generated();
 		const slots = await slotsOf(deps);

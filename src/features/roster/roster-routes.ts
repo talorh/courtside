@@ -3,7 +3,7 @@ import { badRequest, notFound } from "../../app/errors.ts";
 import { CLUB } from "../../club.ts";
 import { fileResponse, htmlResponse, redirect } from "../../app/respond.ts";
 import type { Router } from "../../app/router.ts";
-import { isRealDate, localDate } from "../../shared/time.ts";
+import { isRealDate, localDate, localTime } from "../../shared/time.ts";
 import { XLSX_TYPE, xlsxFile } from "../../shared/xlsx.ts";
 import { doneMessage, idParam, parseForm } from "../../shared/validation.ts";
 import { weekOf } from "./roster-plan.ts";
@@ -91,7 +91,7 @@ export function registerRosterRoutes(router: Router): void {
 	router.post("/roster/families/:id/remove", "manager", async ({ params, deps }) => {
 		const id = idParam(params.id, "Family");
 		if (!(await listFamilies(deps.db, deps.team.id)).some((f) => f.id === id)) throw notFound("Family");
-		await removeFamily(deps.db, deps.team.id, id, weekOf(localDate(deps.now())), deps.now().toISOString());
+		await removeFamily(deps.db, deps.team.id, id, weekOf(localDate(deps.now())), deps.now().toISOString(), localTime(deps.now()));
 		// A family taken off no longer has a duty every week: it's shared out again.
 		const d = await getRosterDuties(deps.db, deps.team.id);
 		if (d.lolliesFamily === id || d.videoFamily === id) {

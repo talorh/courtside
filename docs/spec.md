@@ -338,7 +338,8 @@ families scoring, one on lollies and one on video. There's no video duty when ev
  where each is free) while it evens things out. Tested for 4 to 16 families and seasons up to 30 weeks, in a few
  milliseconds.
 - **Time off the roster**: taking a family off
- starts its time away, and adding the same surname back ends it. Each week it was off, and each week before a family
+ starts its time away, and adding the same surname back ends it. Its duties at games still to come go to others; a
+ game that's already started keeps who was down for it, and an empty duty at a started game isn't filled. Each week it was off, and each week before a family
  added partway through the season was added, counts as its share of that week's duties (the week's duties over the
  families on the roster then; a family on one duty every week isn't sharing, so isn't counted). So a family back
  takes turns like everyone else instead of duty after duty to catch up. Roster fairness counts it too: the verdict

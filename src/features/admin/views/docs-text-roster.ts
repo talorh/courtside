@@ -55,7 +55,8 @@ and shares the rest out around them. A duty left with a family that's since been
 family the roster chose. A family picked comes off any other duty that week, a family does one duty a game at most, and
 whatever's left is filled fairly. The week then says "Set by hand" for the team manager.</li>
 <li><b>Time off the roster</b> (a child away or injured): taking a family off starts its time away, and adding the same
-surname back ends it. Each week away, and each week before a family added partway through the season, counts as its
+surname back ends it. Its duties at games still to come go to others; a game that's already started (this weekend's
+first game, say) keeps who was down for it, and an empty duty at a started game isn't filled after the event. Each week away, and each week before a family added partway through the season, counts as its
 fair share of that week's duties (the week's duties over the families on the roster then), so a family back takes turns
 like everyone else instead of duty after duty to catch up.</li>
 <li><b>A closed season's</b> roster stays exactly as it was.</li></ul>

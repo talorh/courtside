@@ -49,11 +49,13 @@ export async function familyPresence(db: D1Database, teamId: string): Promise<Pr
 	});
 }
 
-/** Takes a family off, and out of every week from `fromWeek` on (they're filled again by others); its time away starts then. */
-export async function removeFamily(db: D1Database, teamId: string, id: number, fromWeek: string, nowIso: string): Promise<void> {
+/** Takes a family off, and out of every game from `fromWeek` on that hasn't started by `nowLocal` (the club's wall time):
+ * those are filled again by others, and a game already played keeps who did it. Its time away starts at `fromWeek`. */
+export async function removeFamily(db: D1Database, teamId: string, id: number, fromWeek: string, nowIso: string, nowLocal: string): Promise<void> {
 	const [removed] = await db.batch([
 		db.prepare("UPDATE roster_families SET removed_at = ?, away = json_insert(away, '$[#]', json_array(?, NULL)) WHERE team_id = ? AND id = ? AND removed_at IS NULL").bind(nowIso, fromWeek, teamId, id),
-		db.prepare("DELETE FROM roster_slots WHERE team_id = ? AND family_id = ? AND week >= ?").bind(teamId, id, fromWeek),
+		db.prepare(`DELETE FROM roster_slots WHERE team_id = ?1 AND family_id = ?2 AND week >= ?3
+			AND game_id NOT IN (SELECT id FROM games WHERE team_id = ?1 AND starts_at <= ?4)`).bind(teamId, id, fromWeek, nowLocal),
 	]);
 	assertChanged(removed!, "family");
 }
