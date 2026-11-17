@@ -15,6 +15,11 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
 ## Read first
 
 - `README.md`: the site for people opening the repo.
+- `skills-lock.json`: the agents' skills, imported from Cloudflare's repositories (security-audit,
+  workers-best-practices, cloudflare, cf-cli, cloudflare-email-service). Run `npm run skills` first: it fetches and
+  updates them, never a copy in the repo, into `.agents/skills/` and each tool's own skills folder, so OpenCode,
+  Claude Code, Codex, Cursor and the rest all find them. Every commit is checked against `workers-best-practices` and
+  `security-audit` first (`docs/agent-setup.md` §4).
 - `docs/spec.md`: what the site does (source of truth). `docs/architecture.md`: how it works, the data model, what was
   simplified and why. `docs/README.md`: what each doc is for.
 - `docs/development-standards.md` and `docs/cloudflare-standards.md`: the rules code must follow.
@@ -89,6 +94,7 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
 | Install | `npm install` |
 | Dev server (needs `.dev.vars`, see `.dev.vars.example`) | `npm run dev` |
 | Types + tests + line limits + rules | `npm run check` |
+| The agents' skills, from `skills-lock.json`, fetched and updated to Cloudflare's latest | `npm run skills` |
 | One test file | `npx vitest run tests/path/file.test.ts` |
 | Browser suite (podman Playwright; must pass before any deploy) | `npm run e2e` (`npm run e2e -- upright` for one scenario, `PHONES=iphone npm run e2e`) |
 | The admin Documentation as Markdown, and the agent instructions as a constant | `npm run docs` (after a change to either; commit the result) |

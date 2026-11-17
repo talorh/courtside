@@ -423,6 +423,7 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 
  A change to Go live, the live player or the recording gets its scenario in the suite first, failing until the change
  makes it pass.
-- Each change gets two review passes of its diff before it's committed, the second a fresh read asking whether it can
+- Each change gets two review passes of its diff before it's committed: the first against Cloudflare's
+  `workers-best-practices` and `security-audit` skills (`npm run skills`), the second a fresh read asking whether it can
  break Go live, an upload or a page. Layout changes get a WebKit check at iPhone
  sizes.

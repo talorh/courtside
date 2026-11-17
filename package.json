@@ -8,6 +8,7 @@
 	},
 	"scripts": {
 		"dev": "cf dev",
+		"skills": "export DISABLE_TELEMETRY=1; skills install -a claude-code -a opencode -a windsurf -a roo -a kiro-cli -a goose -a junie -a augment -a continue && skills update -p -y && skills list",
 		"dev:db": "node scripts/dev-db.mjs",
 		"dev:seed": "node scripts/dev-seed.mjs",
 		"build": "cf build",
@@ -34,6 +35,7 @@
 		"@types/node": "^26.6.5",
 		"cf": "^1.0.0-beta.32",
 		"playwright": "1.56.1",
+		"skills": "^1.9.0",
 		"typescript": "^7.0.2",
 		"vite": "^8.3.0",
 		"vitest": "^5.0.4"

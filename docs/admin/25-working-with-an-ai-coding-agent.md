@@ -54,6 +54,7 @@ cf auth whoami                        # the admin's email, and the club's accoun
 ls ../courtside-prod/.secrets.production.json ../courtside-prod/.secrets.staging.json   # both there (never print them)
 podman --version                      # the browser test suite runs in podman
 npm run check                         # types, every unit test, line limits and rules: all pass on a clean checkout
+npm run skills                        # the agents' skills, fetched and brought up to date (skills-lock.json)
 ```
 
 If `node_modules` is missing, `npm install` is yours to run, in each folder.
@@ -101,7 +102,9 @@ of the same repository: you work there, on `staging` and on your own branches.
    starts with a test that reproduces it.
 3. Run `npm run check` until it passes. For anything a page script or the phone does, also run the browser scenario:
    `npm run e2e -- "<part of its name>"`.
-4. Commit with a clear message. **No AI attribution** in a commit message: no `Co-Authored-By` or similar lines, ever.
+4. Before committing, check the diff against the skills: `workers-best-practices` for Workers code and config, and
+   `security-audit` (a focused review of the change, not a full audit). Fix what they find, or say why it stands.
+   Then commit with a clear message. **No AI attribution** in a commit message: no `Co-Authored-By` or similar lines, ever.
    If your tool adds one by default, turn it off. Commit with the admin's own git identity. A change that will go live
    also adds its lines at the top of `CHANGELOG.md`, under today's date, as release notes: `- [Feature]`,
    `[Enhancement]` or `[Fix]`, the area in bold, then a plain sentence ("- [Fix] **Costs:** Fixed an issue where ...").
@@ -138,6 +141,27 @@ of the same repository: you work there, on `staging` and on your own branches.
 - On a subdomain of the club's domain (`CLUB.domain` isn't `CLUB.zone`), the zone and its settings are the club's: the
   site's rules match its own hostname and go beside the club's, never in place of them.
 - Use the `cf` CLI, never wrangler. Find a command with `cf cli search "<what you want to do>"`.
+
+**Skills.** The agents' skills come from Cloudflare's own repositories, as dependencies: `skills-lock.json` names each
+one and the commit it's at, and `npm run skills` fetches them into `.agents/skills/`, then updates them to Cloudflare's
+latest. Commit `skills-lock.json` when it changes. Never copy a skill into the repository. They work in any popular AI
+coding tool: OpenCode, Codex, Cursor, GitHub Copilot, Gemini CLI, Amp, Cline, Warp and Zed read `.agents/skills/`
+itself, and `npm run skills` links them into the folders Claude Code, Windsurf, Roo Code, Kiro, Goose, Junie, Augment
+and Continue read (all git-ignored). For another tool, add its name (from `npx skills add --help` and the skills CLI's
+agent list) to the `skills` script in `package.json` and its folder to `.gitignore`. They are:
+
+- `security-audit` (github.com/cloudflare/security-audit-skill): security questions, focused reviews and full audits.
+- `workers-best-practices`, `cloudflare`, `cf-cli` and `cloudflare-email-service` (github.com/cloudflare/skills):
+  Cloudflare's best practices for Workers, the platform's products, the `cf` CLI and Email Sending.
+
+Where a skill and this project's rules differ (`cf`, never wrangler; `cloudflare.config.ts`, not a Wrangler file), the
+project's rules win. Your tool may load the skills by itself; if it doesn't, read the skill's `SKILL.md` first.
+
+**Security audits.** A full audit, when the admin asks for one, follows the `security-audit` skill. It writes its files
+outside the repository, in `~/security-audit-skill/courtside/run-<N>`, and each new run reads the earlier runs first.
+It reads the code, and runs code only in a sandbox with no network: it never sends anything to the live site, staging
+or Cloudflare to test a finding. Each confirmed finding is fixed like any other bug (a test that shows it, its own
+`fix/` branch, through staging, its line in `CHANGELOG.md`).
 
 ## 5. What you may do, and what needs the admin's yes
 

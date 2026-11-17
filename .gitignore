@@ -16,3 +16,15 @@ infra/*.local.json
 
 e2e-out/
 join/node_modules
+
+# The agents' skills: npm run skills fetches them from skills-lock.json into .agents/skills/ and links them into each
+# tool's own folder (docs/agent-setup.md §4)
+.agents/skills/
+.claude/skills/
+.windsurf/skills/
+.roo/skills/
+.kiro/skills/
+.goose/skills/
+.junie/skills/
+.augment/skills/
+.continue/skills/

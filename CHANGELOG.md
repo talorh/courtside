@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 17 Nov 2026
 
+- [Enhancement] **Documentation:** The AI coding agent now fetches Cloudflare's skills (security audit and Workers best practices among them) at the start of each session, and checks every change against them before it's committed.
 - [Fix] **Video joiner:** Fixed an issue where a failed join's reason could quote a recording's signed link from ffmpeg's output: it's cut to the address before it's logged, and a failed join is now an error in the joiner's logs. Rebuild the joiner's image (npm run join -- image) to pick it up.
 - [Enhancement] **Logs:** A problem on the site can be found fast: every failed request, job step and video join names its team, game or video and the cause, families' live players report when the picture fails and comes back, a stopped upload says how far it got, error pages show a reference to quote, and npm run logs reads them.
 - [Fix] **Costs:** Fixed an issue where the months to come counted only the Stream storage their minutes needed, not the storage bought: they now count at least what's bought, since Cloudflare bills it until it's lowered.
