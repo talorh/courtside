@@ -5,7 +5,10 @@ import { loadViewer } from "../../src/auth/viewer.ts";
 import { deleteTeamsDue } from "../../src/jobs/delete-teams.ts";
 import { sweepOrphans } from "../../src/jobs/sweep-orphans.ts";
 import { runSync } from "../../src/jobs/sync-videos.ts";
+import type { AppDeps } from "../../src/app/deps.ts";
 import { FetchBudgetSpent } from "../../src/platform/fetch-budget.ts";
+import { createR2Originals } from "../../src/platform/r2-originals.ts";
+import { FakeR2Bucket } from "../helpers/fake-r2-bucket.ts";
 import { makeClient, MANAGER } from "../helpers/app.ts";
 import { B12_1, createTestDeps, type TestDeps } from "../helpers/fakes.ts";
 import { addMember, addTeam, G14_5, seedTeam, teamSnapshot } from "../helpers/two-teams.ts";
@@ -166,6 +169,23 @@ describe("deleting a closed team once its date has passed", () => {
 		expect(await count(deps, "clips")).toBe(1);
 		deps.stream.deleteFails.clear();
 		await untilDeleted(deps);
+	});
+
+	it("isn't done while R2 still has its stray uploads, however short a page R2 lists them in", async () => {
+		const { deps } = await closedG14();
+		quiet();
+		// R2 answers one object a page, each but the last truncated: a short page isn't the end of the folder.
+		const bucket = new FakeR2Bucket(1);
+		for (const n of [2, 5, 6, 7]) bucket.add(`originals/g14.5-2026/u${n}/stray.mov`);
+		bucket.add("originals/g14.5-2026-2/u3/next-seasons.mov");
+		bucket.add("originals/b12.1-2026/u4/b12s.mov");
+		const r2: AppDeps = { ...deps, originals: createR2Originals(bucket.asBinding()) };
+		for (let run = 0; run < 10 && (await status(deps))?.status !== "deleted"; run++) {
+			expect(await deleteTeamsDue(r2)).toMatchObject({ errors: [] });
+			if ((await status(deps))?.status === "deleted") expect([...bucket.objects.keys()].filter((k) => k.startsWith("originals/g14.5-2026/"))).toEqual([]);
+		}
+		expect(await status(deps)).toMatchObject({ status: "deleted" });
+		expect([...bucket.objects.keys()].sort()).toEqual(["originals/b12.1-2026/u4/b12s.mov", "originals/g14.5-2026-2/u3/next-seasons.mov"]);
 	});
 
 	/** A second closed team, due a day before G14.5, so its turn comes first. */

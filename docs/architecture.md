@@ -762,7 +762,8 @@ run (Stream's also come out of the run's 200 outside calls), so a big team's del
 
 1. Its photos' images, each photo's row marked deleted as it goes.
 2. Every Stream copy its videos and clips have, deleted ones too, each row's `stream_uid` cleared as it goes.
-3. Every original or unfinished upload its videos have in R2, then anything else under `originals/<team id>/`.
+3. Every original or unfinished upload its videos have in R2, then anything else under `originals/<team id>/` (the
+ whole folder, every page of R2's list followed to its end, as a page can be short while more remain).
 4. Once nothing of it is left in Images, Stream or R2: its rows, child first, in one batch (all or nothing). The team
  becomes `deleted`, a tombstone kept for the download log, and the Log says what went (`team_deleted`, by "site").
 

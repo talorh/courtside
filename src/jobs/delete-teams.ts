@@ -13,8 +13,6 @@ import { FetchBudgetSpent } from "../platform/fetch-budget.ts";
 
 /** A run's calls to Images, Stream and R2 for deleting (Stream's also come out of the run's budget of outside calls). */
 const SLICE_CALLS = 20;
-// R2 lists up to 1,000 objects at a time: a full list may have more behind it.
-const R2_LIST_MAX = 1000;
 
 /** The team's next slice, up to `budget` calls; done once nothing of it is left in Images, Stream or R2. One thing that
  * can't be deleted goes in `errors` and the rest carry on, leaving what's done done; a run whose outside calls are used
@@ -45,12 +43,13 @@ async function deleteMedia(deps: TeamDeps, budget: number, spent: { calls: numbe
 		await forgetOriginal(db, team.id, video.id);
 	});
 	if (spent.calls >= budget) return false;
-	// Anything else in the team's folder: an upload whose row went another way.
+	// Anything else in the team's folder: an upload whose row went another way. The list is the whole folder (every page
+	// of R2's), so it's done once all of it is removed.
 	spent.calls++;
 	const stray = await deps.originals.list(`originals/${team.id}/`);
 	const now = stray.slice(0, room());
 	await each(now, (object) => deps.originals.remove(object.key));
-	return errors.length === failed && now.length === stray.length && stray.length < R2_LIST_MAX;
+	return errors.length === failed && now.length === stray.length;
 }
 
 const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;

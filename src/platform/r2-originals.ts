@@ -14,7 +14,7 @@ export interface OriginalsPort {
 	exists(key: string): Promise<boolean>;
 	/** Small whole-object writes (the nightly database backup). `sha256` (hex): R2 refuses the write if the bytes differ. */
 	put(key: string, body: string, contentType: string, o?: { sha256?: string; custom?: Record<string, string> }): Promise<void>;
-	/** The objects under a prefix, newest last (backups are named by date), with their custom metadata. */
+	/** Every object under a prefix (all of R2's pages), newest last (backups are named by date), with their custom metadata. */
 	list(prefix: string): Promise<StoredObject[]>;
 }
 
@@ -53,9 +53,15 @@ export function createR2Originals(bucket: R2Bucket): OriginalsPort {
 			await bucket.put(key, body, { httpMetadata: { contentType }, customMetadata: o.custom, ...(o.sha256 ? { sha256: o.sha256 } : {}) });
 		},
 		async list(prefix) {
-			const listed = await bucket.list({ prefix, include: ["customMetadata"] });
-			return listed.objects.map((o) => ({ key: o.key, size: o.size, uploaded: o.uploaded.toISOString(), custom: o.customMetadata ?? {} }))
-				.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)); // names hold the date: plain order
+			// R2 answers a page at a time, and a page can be short while more remain: follow its cursor until it's done.
+			const found: StoredObject[] = [];
+			let cursor: string | undefined;
+			do {
+				const page = await bucket.list({ prefix, include: ["customMetadata"], ...(cursor ? { cursor } : {}) });
+				for (const o of page.objects) found.push({ key: o.key, size: o.size, uploaded: o.uploaded.toISOString(), custom: o.customMetadata ?? {} });
+				cursor = page.truncated ? page.cursor : undefined;
+			} while (cursor);
+			return found.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)); // names hold the date: plain order
 		},
 	};
 }

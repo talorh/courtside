@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Teams:** Fixed an issue where deleting a closed team could leave some of its unfinished uploads in R2 when R2 listed them over several pages: every page is now read.
 - [Enhancement] **Go live:** A carried-on recording made as H.264 in WebM (as Chrome records) is now copied into one video rather than re-encoded, so it's joined in minutes, and a re-encode that's still needed is about 20 times cheaper; the video joiner takes waiting joins one team at a time, each with its newest links, so one team's joins can't hold up another's. Rebuild the joiner's image (npm run join -- image) to pick it up.
 - [Enhancement] **Staging:** Staging is now its own Worker, staging-<worker>, at the same workers.dev address, in place of a Preview of the live Worker, and the live Worker has no preview addresses at all; npm run staging -- setup turns them off and deletes the old Preview before staging's first deploy, staging's keys go with each deploy in a file removed as soon as it's done, a deploy is recorded only once Cloudflare shows it, and staging's Platform shows its own Worker's figures.
 - [Enhancement] **Clips:** A person can make up to an hour of clips a day and a team up to 5 hours, as each clip is a video of its own in Stream's shared storage; a game still has at most 50 clips, and each clip's place is now taken before Stream is asked, so clips made at the same moment stop at the limits. Past one, the site says when there's room again.
