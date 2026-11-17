@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Staging:** Fixed an issue where staging's emails (support tickets, admin changes, Platform's test email) and its match day message linked to the live site: they now link to the address the site is on.
 - [Enhancement] **Documentation:** Beside Cloudflare's money alerts, the Documentation, the setup runbook and the install guide now describe a Workers spending limit (US$20 a billing period, say), which stops a runaway Workers bill but takes the site down until the next period if it's reached.
 - [Fix] **Roster:** Fixed an issue where adding only families already on the roster showed an error page.
 - [Fix] **Costs:** Fixed an issue where, once a season's twelve months were over, the month under way while its footage is still kept (October to December) was shown as its last finished month, and the kept months still to come had no estimate: they're now estimated at the minutes the team stores now, and the month under way is this month.

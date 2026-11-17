@@ -1,4 +1,5 @@
-import { CLUB, siteOrigin } from "../../club.ts";
+import { CLUB } from "../../club.ts";
+import { ownOrigin } from "../../app/config.ts";
 // The site's admins: added and removed on the admin area's Admins page, each change
 // logged (and emailed to every admin, so a misused login can't add an admin quietly).
 import { logProblem } from "./problem-log.ts";
@@ -15,7 +16,7 @@ import { mailAdmins } from "./admin-mail.ts";
 async function tellAdmins(deps: AppDeps, actor: string, action: "admin_added" | "admin_removed", email: string): Promise<void> {
 	const added = action === "admin_added";
 	const subject = added ? `${CLUB.siteName}: ${email} is a site admin now` : `${CLUB.siteName}: ${email} isn't a site admin any more`;
-	const text = `${actor} ${added ? "added" : "removed"} ${email} as a site admin.\n\nAdmins: ${siteOrigin()}/admin/admins`;
+	const text = `${actor} ${added ? "added" : "removed"} ${email} as a site admin.\n\nAdmins: ${ownOrigin(deps.config)}/admin/admins`;
 	let note = "";
 	try {
 		await mailAdmins(deps, { subject, text }, added ? {} : { former: email });

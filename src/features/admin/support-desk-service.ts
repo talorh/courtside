@@ -3,6 +3,7 @@
 // and any email that didn't go is sent by the 5-minute job. An admin's reply waits on the team manager; a team manager's
 // reply opens it again (support-service.ts).
 import { logProblem } from "./problem-log.ts";
+import { ownOrigin } from "../../app/config.ts";
 import type { AppDeps } from "../../app/deps.ts";
 import { badRequest, conflict, notFound } from "../../app/errors.ts";
 import { isAdmin } from "../../auth/admins-repository.ts";
@@ -44,7 +45,7 @@ async function once(deps: AppDeps, what: "ticket" | "message", id: number, send:
 export async function sendTicketEmail(deps: AppDeps, id: number): Promise<void> {
 	const t = await ticketOr404(deps, id);
 	if (t.emailedAt) return;
-	await once(deps, "ticket", id, () => mailAdmins(deps, t.source === "site" ? siteTicketEmail(t) : newTicketEmail(t)));
+	await once(deps, "ticket", id, () => mailAdmins(deps, t.source === "site" ? siteTicketEmail(ownOrigin(deps.config), t) : newTicketEmail(ownOrigin(deps.config), t)));
 }
 
 /** Sends one message's email, to whoever it's for; someone no longer there gets nothing, and it isn't tried again. */
@@ -52,7 +53,7 @@ export async function sendMessageEmail(deps: AppDeps, id: number): Promise<void>
 	const m = await getMessage(deps.db, id);
 	if (!m?.emailTo || m.emailedAt) return;
 	const t = await ticketOr404(deps, m.ticketId);
-	const email = messageEmail(t, m), to = m.emailTo;
+	const email = messageEmail(ownOrigin(deps.config), t, m), to = m.emailTo;
 	await once(deps, "message", id, async () => {
 		const sent = to === "admins" ? (await mailAdmins(deps, email), "sent")
 			: to === "manager" ? (t.teamId && t.member && m.adminEmail ? await mailTicketManager(deps, { teamId: t.teamId, memberId: t.member.id }, m.adminEmail, email) : "gone")

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ownOrigin } from "../../app/config.ts";
 import { badRequest, notFound } from "../../app/errors.ts";
 import { CLUB } from "../../club.ts";
 import { fileResponse, htmlResponse, redirect } from "../../app/respond.ts";
@@ -71,7 +72,7 @@ export function registerRosterRoutes(router: Router): void {
 		if (!game) throw notFound("Game");
 		const uniform = CLUB.uniforms.find((u) => u === url.searchParams.get("uniform")) ?? CLUB.uniforms[0]!;
 		const text = matchMessage({
-			game, slots: slots.filter((s) => s.week === week && s.gameId === game.id), names: await familyNames(deps.db, deps.team.id),
+			site: ownOrigin(deps.config), game, slots: slots.filter((s) => s.week === week && s.gameId === game.id), names: await familyNames(deps.db, deps.team.id),
 			video: !game.noVideo && w.video, extra: w.extra, uniform, duties: dutiesFor(week, weekOf(localDate(deps.now())), duties),
 		});
 		return htmlResponse(messagePage({ frame, week, game: w.games.length > 1 ? game : null, uniform, text }));

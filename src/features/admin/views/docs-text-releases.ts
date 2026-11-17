@@ -12,7 +12,7 @@ ${table(["", "Production", "Staging"], [
 		["What it is", "The courtside Worker", "Its own Worker, staging-courtside: the same code, with an orange strip on every page"],
 		["Database", html`D1 ${code("courtside")}`, html`D1 ${code("courtside-staging")}, test data only`],
 		["Bucket", html`R2 ${code("courtside-originals")}`, html`R2 ${code("courtside-staging")}, emptied after 7 days`],
-		["Stream, Images, AI, email", "The account's", "Shared, with staging's things labelled and swept within a week; its emails go only to admins"],
+		["Stream, Images, AI, email", "The account's", "Shared, with staging's things labelled and swept within a week; its emails go only to admins, and link to its own address"],
 		["Jobs", "Every 5 minutes, and 3am", "The 5-minute job, run by hand from Platform; the 3am job never runs"],
 	])}
 <h3>Environments</h3>

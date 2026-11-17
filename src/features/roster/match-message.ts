@@ -1,4 +1,4 @@
-import { CLUB, siteOrigin } from "../../club.ts";
+import { CLUB } from "../../club.ts";
 import { formatClock, parseLocal } from "../../shared/time.ts";
 import type { Game } from "../games/games-repository.ts";
 import { ALL_DUTIES, type RosterDuties } from "./roster-duties.ts";
@@ -26,19 +26,17 @@ export function longDate(startsAt: string): string {
 	return `${DAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]} ${day} ${MONTHS[month - 1]}, ${formatClock(time)}`;
 }
 
-// Where the family on video duty films the game (Go live), as the WhatsApp chat shows it.
-const SITE = `${siteOrigin()}`;
-
 const known = (s: string) => (s.trim() && s.trim().toUpperCase() !== "TBC" ? s.trim() : "");
 
-/** `slots`: the game's duties. `video`: whether the game is filmed. `extra` false: a Scorers only week. `duties`: the
- * team's (the extra duty and video can be off; there are always two scorers). */
-export function matchMessage(o: { game: Game; slots: Slot[]; names: Map<number, string>; video: boolean; extra?: boolean; uniform: Uniform; duties?: RosterDuties }): string {
+/** `site`: the site's own address, where the family on video films the game. `slots`: the game's duties. `video`:
+ * whether the game is filmed. `extra` false: a Scorers only week. `duties`: the team's (the extra duty and video can be
+ * off; there are always two scorers). */
+export function matchMessage(o: { site: string; game: Game; slots: Slot[]; names: Map<number, string>; video: boolean; extra?: boolean; uniform: Uniform; duties?: RosterDuties }): string {
 	const duties = o.duties ?? ALL_DUTIES;
 	const who = (duty: Slot["duty"]) => o.slots.filter((s) => s.duty === duty).sort((a, b) => a.position - b.position)
 		.map((s) => o.names.get(s.familyId) ?? "?").join(", ") || "TBC";
 	const g = o.game;
-	const filming = g.liveStream ? `live stream it from ${SITE}` : `record it, then upload it to ${SITE}`;
+	const filming = g.liveStream ? `live stream it from ${o.site}` : `record it, then upload it to ${o.site}`;
 	const duty = [
 		`💻 Scorers: ${who("scoring")}`,
 		...(duties.lollies && o.extra !== false ? [`🍬 ${duties.lolliesLabel}: ${who("lollies")}`] : []),

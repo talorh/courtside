@@ -29,6 +29,10 @@ export type AppConfig = { readonly [K in keyof typeof REQUIRED]: string } & {
 
 const insights = (token: string | null, zoneId: string | null, d1Id: string | null) => (token && zoneId && d1Id ? { token, zoneId, d1Id } : null);
 
+/** The address this Worker answers on, for links in its emails and messages: the club's domain live, staging's own on
+ * staging (club.ts `siteOrigin` is always the live site's). */
+export const ownOrigin = (config: AppConfig): string => `https://${config.siteHost}`;
+
 export class ConfigError extends Error {
 	override name = "ConfigError";
 }

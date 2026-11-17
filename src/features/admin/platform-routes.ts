@@ -1,4 +1,5 @@
-import { CLUB, siteOrigin } from "../../club.ts";
+import { CLUB } from "../../club.ts";
+import { ownOrigin } from "../../app/config.ts";
 // The admin area's Platform and Changelog pages.
 import { logProblem } from "./problem-log.ts";
 import { checkAiModelsSoon } from "./ai-model-checks.ts";
@@ -103,7 +104,7 @@ export function platformRoutes(router: AdminRouter): void {
 		try {
 			const { sent } = await mailAdmins(deps, {
 				subject: `${CLUB.siteName}: test email`,
-				text: `A test email from the admin area's Platform page, sent by ${viewer.email}. If it reached you, the site's alerts and support requests will too.\n\nPlatform: ${siteOrigin()}/admin/platform`,
+				text: `A test email from the admin area's Platform page, sent by ${viewer.email}. If it reached you, the site's alerts and support requests will too.\n\nPlatform: ${ownOrigin(deps.config)}/admin/platform`,
 			});
 			detail = `sent to ${sent} admin${sent === 1 ? "" : "s"}`;
 		} catch (err) {

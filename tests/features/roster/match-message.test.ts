@@ -46,7 +46,7 @@ describe("match day message", () => {
 	});
 	it("is laid out like a team's WhatsApp match-day message", () => {
 		expect(longDate("2026-10-23T18:30")).toBe("Friday 23 October, 6:30pm");
-		expect(matchMessage({ game: game({}), slots, names, video: true, uniform: "White" })).toBe(`Hi Team.
+		expect(matchMessage({ site: "https://saints.example", game: game({}), slots, names, video: true, uniform: "White" })).toBe(`Hi Team.
 
 Please see below match day details.
 
@@ -63,13 +63,13 @@ White uniform, pack Navy just in case.
 🎥 Video: Rivers (live stream it from https://saints.example)`);
 	});
 	it("says TBC for what isn't known, and leaves out video for a game that isn't filmed and the extra duty on a Scorers only week", () => {
-		const text = matchMessage({ game: game({ startsAt: "2026-11-08T13:20", opponent: "TBC", venue: "", noVideo: true }), slots, names, video: true, extra: false, uniform: "Navy" });
+		const text = matchMessage({ site: "https://saints.example", game: game({ startsAt: "2026-11-08T13:20", opponent: "TBC", venue: "", noVideo: true }), slots, names, video: true, extra: false, uniform: "Navy" });
 		expect(text).toContain("Opponent: TBC\nVenue TBC\nSunday 8 November, 1:20pm");
 		expect(text).toContain("\n\nNavy uniform, pack White just in case.\n\n");
 		expect(text.endsWith("💻 Scorers: Appleby, Birchwood")).toBe(true);
 	});
 	it("tells the family on video to record and upload a game that isn't live streamed", () => {
-		expect(matchMessage({ game: game({ liveStream: false }), slots, names, video: true, uniform: "Navy" })).toContain("🎥 Video: Rivers (record it, then upload it to https://saints.example)");
+		expect(matchMessage({ site: "https://saints.example", game: game({ liveStream: false }), slots, names, video: true, uniform: "Navy" })).toContain("🎥 Video: Rivers (record it, then upload it to https://saints.example)");
 	});
 	it("names the club's uniforms: the other packed as the clash uniform, or just the one for a club with a reversible singlet", async () => {
 		expect(uniformLine("Navy")).toBe("Navy uniform, pack White just in case.");
@@ -78,7 +78,7 @@ White uniform, pack Navy just in case.
 		expect(uniformLine("White")).toBe("White uniform, pack Navy or Gold just in case.");
 		CLUB.uniforms = ["Reversible singlet"];
 		expect(uniformLine("Reversible singlet")).toBe("Uniform: Reversible singlet.");
-		expect(matchMessage({ game: game({}), slots, names, video: true, uniform: "Reversible singlet" })).toContain("\n\nUniform: Reversible singlet.\n\n");
+		expect(matchMessage({ site: "https://saints.example", game: game({}), slots, names, video: true, uniform: "Reversible singlet" })).toContain("\n\nUniform: Reversible singlet.\n\n");
 		const deps = createTestDeps();
 		const member = (await findActiveMemberByEmail(deps.db, deps.team.id, "sam@saints.example"))!;
 		const frame = { team: deps.team, member, viewer: { email: member.email, isAdmin: true, memberships: [] }, viewAs: null };
