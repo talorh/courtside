@@ -16,11 +16,13 @@ export async function stopStream(s) {
 	// Under a minute recorded (pauses left out) the site may call it a test (thrown away, the game free again), so wait
 	// for its answer.
 	const warn = (err) => console.warn(`stop stream: ${err.message ?? err}`);
+	// The phone's watch (golive-watch.js) has stopped, so a failure from here on goes to the site's Log straight away.
+	const tell = (what) => api(`/api/live/${s.gameId}/events`, { events: [{ s: 0, what: what.slice(0, 160), p: true }] }, undefined, { keepalive: true }).catch(warn);
 	// How it ended goes in the site's Log: End game tapped (the only way it ends; the site also takes "camera" from older
 	// pages). keptMinutes: what's still only on this phone, so the site waits for it before saving by itself.
 	const body = { recordedSeconds: s.rec.recordedSeconds(), cause: "tapped", keptMinutes: onPhoneMinutes(s.progress()) };
 	const answer = body.recordedSeconds < 60 ? await api(`/api/live/${s.gameId}/end`, body).catch((err) => warn(err) ?? null) : null;
-	if (!answer) withRetries(() => api(`/api/live/${s.gameId}/end`, body), warn).catch(warn);
+	if (!answer) withRetries(() => api(`/api/live/${s.gameId}/end`, body), warn).catch((err) => { warn(err); tell(`End game didn't reach the site: ${err.message ?? err}`); });
 	try {
 		if (answer?.status === "test") {
 			s.rec.cancel();
@@ -34,6 +36,7 @@ export async function stopStream(s) {
 		s.saving.saved();
 	} catch (err) {
 		s.saving.failed(err);
+		tell(`End game's save failed: ${err.message ?? err}`);
 		throw err;
 	}
 }

@@ -19,6 +19,7 @@ These change in the same commit as the code they describe.
 | `runbooks/cloudflare-setup.md` | Setting up and checking each Cloudflare piece, deploys, rollback and restore, local development, the video joiner and the club's branding |
 | `runbooks/staging.md` | Staging: what it is, what's its own and what it shares with the live site, and how to use it |
 | `runbooks/maintenance.md` | The maintenance page: switching it on and off, a release behind it, and emergencies |
+| `runbooks/incident.md` | Something's broken: finding out what, fast (the Log's Problems, `npm run logs`, traces, Cloudflare's own view) |
 | `agent-setup.md` | An AI coding agent's instructions: checking it's set up, what to read, how to work, what needs an admin's yes, what to do when something goes wrong. The admin Documentation shows it as it is, with a Copy button |
 
 `../AGENTS.md`, at the top of the repo, holds the hard rules every agent and person follows. `../CHANGELOG.md` has a

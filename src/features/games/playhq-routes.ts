@@ -24,7 +24,7 @@ export function registerPlayhqRoutes(router: Router): void {
 		// couldn't be saved is collected, not thrown, so each one is logged here as the 5-minute job logs its own.
 		const { errors } = await checkFinalScores(deps).catch((err: unknown) => ({ errors: [err] }));
 		for (const err of errors) {
-			console.error(JSON.stringify({ event: "playhq_score_failed", teamId: deps.team.id, fixtureId: fixture.id, error: String(err) }));
+			console.warn(JSON.stringify({ event: "playhq_score_failed", teamId: deps.team.id, fixtureId: fixture.id, error: String(err) }));
 			await logProblem(deps, { kind: "site_problem", teamId: deps.team.id, who: viewer.email, what: "PlayHQ's final scores couldn't be read (Check now)", error: err });
 		}
 		return redirect(`/fixture?done=${ok ? "playhqchecked" : "playhqfailed"}`);

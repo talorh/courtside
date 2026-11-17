@@ -62,6 +62,6 @@ export async function checkFinalScores(deps: TeamDeps) {
 		if (!entered?.meta.changes) return;
 		scoresEntered++;
 		console.log(JSON.stringify({ event: "playhq_score_entered", teamId: deps.team.id, gameId: g.gameId, ours, opponent }));
-	});
+	}, (g) => ({ gameId: g.gameId }));
 	return { scoresEntered, errors };
 }

@@ -37,7 +37,7 @@ ${table(["Word", "What it means here"], [
 		["Workers Builds", "Cloudflare building and deploying the Worker from a push to the repository's main branch."],
 		["Preview", "A copy of the Worker deployed under its own address with its own settings. Staging is a preview of courtside on its own database and bucket."],
 		["Cron", "A schedule for running the Worker without a request: every five minutes, and at 3am local time."],
-		["Observability, Workers Logs", "Cloudflare's record of every request and job run, with the Worker's own log lines, kept for a few days. Issues emails the owner when the Worker starts failing in a new way."],
+		["Observability, Workers Logs", "Cloudflare's record of every request and job run, with the Worker's own log lines, kept for 7 days (npm run logs reads them). Traces time each request's database queries and outside calls. Issues emails the owner when the Worker starts failing in a new way."],
 		["Notifications", "Cloudflare's own emails to the owner: spend past US$50 and US$100, a new issue in the Worker, a DDoS attack, a certificate change, an abuse report. They work even if the Worker is down."],
 		["CSP", "The Content Security Policy: a rule each page sends saying scripts and styles may only come from the site itself, so nothing injected can run."],
 		["Tombstone", "A deleted row kept a while (90 days) so the site can say what happened and bring back a mistake, before it's cleared for good."],

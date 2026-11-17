@@ -21,15 +21,15 @@ export async function enforceRetention(deps: TeamDeps) {
 	const { db } = deps;
 	const now = deps.now();
 	const expired = (await listExpiredVideos(db, deps.team.id, now.toISOString())).slice(0, BATCH);
-	const expiredResult = await runEach(expired, (v) => deleteVideo(deps, v, "retention"));
+	const expiredResult = await runEach(expired, (v) => deleteVideo(deps, v, "retention"), (v) => ({ videoId: v.id, gameId: v.gameId }));
 	const cutoff = addDays(now, -ABANDONED_AFTER_DAYS).toISOString();
 	const abandoned = (await listVideosByStatus(db, deps.team.id, "uploading")).filter((v) => v.createdAt < cutoff).slice(0, BATCH);
-	const abandonedResult = await runEach(abandoned, (v) => deleteVideo(deps, v, "upload_cancelled"));
+	const abandonedResult = await runEach(abandoned, (v) => deleteVideo(deps, v, "upload_cancelled"), (v) => ({ videoId: v.id, gameId: v.gameId }));
 	const kept = (await listVideosToPurge(db, deps.team.id, now.toISOString())).slice(0, BATCH);
 	const purgedResult = await runEach(kept, async (v) => {
 		await purgeMedia(deps, v);
 		await markPurged(db, deps.team.id, v.id);
-	});
+	}, (v) => ({ videoId: v.id, gameId: v.gameId }));
 	const downloadsPurged = await purgeDownloadsBefore(db, deps.team.id, retentionCutoff(now));
 	await purgeActivityBefore(db, deps.team.id, addDays(now, -ACTIVITY_DAYS).toISOString());
 	await purgeViewsBefore(db, deps.team.id, addDays(now, -VIEWS_KEPT_DAYS).toISOString());

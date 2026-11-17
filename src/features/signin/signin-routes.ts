@@ -52,7 +52,7 @@ async function sendCode(req: Request, url: URL, deps: AppDeps): Promise<Response
 		// The email didn't go: logged with the cause. Email Sending down, say: the page says to try again. An address it
 		// won't send to (it bounced): trying again won't help, so the page says so and the admins get a ticket.
 		const who = email.trim().toLowerCase(), bounced = isBounced(err);
-		console.error(JSON.stringify({ event: "signin_email_failed", teamId: null, error: String(err) }));
+		console.error(JSON.stringify({ event: "signin_email_failed", teamId: null, email: maskEmail(who), bounced, error: String(err) }));
 		await logProblem(deps, { kind: "email_failed", teamId: null, who, what: bounced ? "A sign-in code's email didn't send: the address is bouncing" : "A sign-in code's email didn't send", error: err });
 		if (bounced) await reportBounced(deps, who);
 		return page(deps, "email", email, next, bounced ? "bounced" : "notSent", 502);

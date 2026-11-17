@@ -50,6 +50,21 @@ describe("the live picture after End game", () => {
 		expect(states).toEqual(["connecting", "reconnecting"]);
 	});
 
+	it("reconnecting says why: Stream refusing, no answer, or the connection failing", async () => {
+		vi.useFakeTimers();
+		let status = 503;
+		globalThis.fetch = (async () => new Response("", { status })) as unknown as typeof fetch;
+		const said: string[] = [];
+		const live = publish(media, WHIP, (s: string, why?: string) => said.push(why ? `${s}: ${why}` : s));
+		await vi.advanceTimersByTimeAsync(10);
+		expect(said).toEqual(["connecting", "reconnecting: Error: live stream refused (HTTP 503)"]);
+		globalThis.fetch = (async () => { throw new TypeError("Failed to fetch"); }) as typeof fetch;
+		await vi.advanceTimersByTimeAsync(2_010);
+		expect(said.at(-1)).toBe("reconnecting: TypeError: Failed to fetch");
+		live.stop();
+		status = 0;
+	});
+
 	it("End game while Stream is still answering: that answer's session is ended, not left open", async () => {
 		const calls: Array<{ url: string; method: string }> = [];
 		let answer!: (res: Response) => void;

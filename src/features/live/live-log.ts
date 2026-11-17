@@ -30,3 +30,12 @@ export async function logLive(deps: TeamDeps, who: string | number | null, actio
 		console.error(JSON.stringify({ event: "live_log_failed", teamId: deps.team.id, gameId, action, error: String(err) }));
 	}
 }
+
+/** Whether a phone is still streaming, as Stream says; a Stream hiccup reads as not streaming, as on the pages, with a
+ * warning in the Worker's logs (a Stream outage changes what Save and Delete do). */
+export async function stillStreaming(deps: TeamDeps, live: { id: number; gameId: number; liveInputUid: string }): Promise<boolean> {
+	return deps.live.isConnected(live.liveInputUid).catch((err: unknown) => {
+		console.warn(JSON.stringify({ event: "live_status_failed", teamId: deps.team.id, gameId: live.gameId, liveStreamId: live.id, liveInputUid: live.liveInputUid, error: String(err) }));
+		return false;
+	});
+}

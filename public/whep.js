@@ -3,6 +3,7 @@
 // drops, so it needs no taps. An external app's stream plays in Stream's own player; for both, the page moves on by
 // itself once the stream is over.
 import { timeoutSignal } from "./upload-net.js";
+import { watchReporter } from "./watch-report.js";
 import { frozenClock, playOnTap, reloadWhenOver, waitCard } from "./whep-wait.js";
 
 // Stream answers in a second or two; a request that hangs longer is given up and tried again.
@@ -81,9 +82,12 @@ const opened = Date.now();
 function watch(video, url, over) {
 	let pc = null;
 	let wait = 3000;
+	// Its trouble goes to the site's logs (watch-report.js); waiting for a stream that hasn't started isn't trouble.
+	const report = watchReporter("live");
 	const retry = (why) => {
 		if (Date.now() - opened > RELOAD_AFTER_MS) return location.reload();
 		console.warn(`live player: ${why}, trying again in ${wait / 1000}s`);
+		if (why !== "no picture yet") report.trouble(why);
 		pc?.close();
 		pc = null;
 		setTimeout(attempt, wait);
@@ -103,7 +107,7 @@ function watch(video, url, over) {
 		setTimeout(() => {
 			if (mine !== pc) return;
 			if (video.readyState < 2) retry("no picture yet");
-			else wait = 3000;
+			else { wait = 3000; report.fine(); }
 		}, 12000);
 	}
 	// The filming phone went (its page closed, or it lost signal): this connection can stay up with nothing arriving on
@@ -116,6 +120,7 @@ function watch(video, url, over) {
 		if (!mine) return;
 		const count = await arrived(mine, video);
 		if (mine !== pc) return;
+		if (count > last.count && last.on === mine) report.fine();
 		if (last.on !== mine || count > last.count || document.hidden || video.paused) last = { on: mine, count, at: Date.now() };
 		else if (count > 0 && Date.now() - last.at >= 10_000) retry("picture stopped");
 	}, 5000);

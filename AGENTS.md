@@ -22,7 +22,7 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
   same text as Markdown, written by `npm run docs`) documents the site and its Cloudflare setup as they stand: a change
   to either updates it, and runs `npm run docs`, in the same commit.
 - `docs/runbooks/cloudflare-setup.md`: the pieces, checking and changing them, deploys, rollback, local development;
-  `docs/runbooks/staging.md` and `docs/runbooks/maintenance.md`.
+  `docs/runbooks/staging.md` and `docs/runbooks/maintenance.md`; `docs/runbooks/incident.md` when something's broken.
 - **Branches:** each change is built on its own branch, `feature/<name>` or `fix/<name>`, off `staging`. When it's
   ready it's merged into `staging`, which is the staging environment's branch (`npm run staging` deploys only
   `staging`), and tested there. `main` is production: it's only ever fast-forwarded to `staging` and released. Two
@@ -98,6 +98,7 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
 | Maintenance page on or off, or is it on (the owner's yes to change it) | `npm run maintenance -- on`, `-- off`, `-- status` (`-- deploy` by hand: a release deploys it when `maintenance/` changes) |
 | The video joiner's image, after `join/` changes (then commit `join/image-tag.txt` and release) | `npm run join -- image` (`-- dry-run`, `-- deploy` by hand) |
 | Another site admin, when the admin area isn't to hand (the first ones are `deploy.config.ts` `firstAdmins`, made by the first deploy) | `npm run admin -- add <email>` |
+| The live site's log lines, newest first: the last hour's warnings and errors by default (`docs/runbooks/incident.md`) | `npm run logs` (`-- --since 3h --team <id> --event job_failed --game <id> --video <id> --ray <ref> --request <id> --joiner --staging --all`) |
 | Restore a nightly backup into a new, empty D1 | `npm run restore-d1 -- <file.sql> <db-id> --account <id>` (`--sqlite <file.db>` to drill it locally) |
 
 The deploy (`npm run deploy:builds` in Workers Builds) passes `--message` (the newest `CHANGELOG.md` line) and `--tag`

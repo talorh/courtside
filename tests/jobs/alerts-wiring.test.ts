@@ -32,7 +32,8 @@ describe("the jobs feed the admins' alerts", () => {
 		const problems = (await deps.db.prepare("SELECT team_id, what, detail FROM problems WHERE kind = 'job_failed' ORDER BY id").all()).results;
 		expect(problems).toEqual([
 			{ team_id: deps.team.id, what: "The 5-minute job", detail: expect.stringContaining("Stream GET u1 failed") },
-			{ team_id: null, what: "The 5-minute job", detail: "D1 hiccup" },
+			{ team_id: null, what: "The 5-minute job", detail: "ticket_emails: D1 hiccup" },
+			{ team_id: null, what: "The 5-minute job", detail: "emails_check: D1 hiccup" },
 		]);
 		expect((await alerts(deps)).sync_job).toBe("ok/1");
 	});

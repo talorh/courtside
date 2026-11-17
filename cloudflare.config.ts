@@ -44,7 +44,7 @@ export default defineConfig(({ mode, isPreview }) => {
 			triggers: isPreview ? [] : [triggers.scheduled({ schedule: "*/5 * * * *" }), ...club.dailyJobUtcHours.map((h) => triggers.scheduled({ schedule: `0 ${h} * * *` }))],
 			// Issues: Cloudflare groups the Worker's failures and emails the account when a new one starts, the
 			// one alert that still works when the Worker itself is failing. Every deploy must keep it on, or it goes off.
-			observability: { enabled: true, redactQueryString: true, issues: { enabled: true } },
+			observability: { enabled: true, redactQueryString: true, issues: { enabled: true }, traces: { enabled: true } },
 			env: {
 				DB: isPreview ? bindings.d1({ id: DEPLOY.staging.d1Id, name: DEPLOY.staging.d1Name }) : bindings.d1({ id: DEPLOY.d1Id, name: DEPLOY.d1Name }),
 				// The static files, which the Worker serves itself once the sign-in is checked (app/static-files.ts).

@@ -9,6 +9,7 @@ import { finishLive, getLatestLiveForGame, getOpenLiveForGame, type LiveStream }
 import { switchOff } from "./live-service.ts";
 import { finishSegments, lastPartAt, leadingRun } from "./recording-segments-service.ts";
 import { listSegments } from "./recording-segments-repository.ts";
+import { stillStreaming } from "./live-log.ts";
 
 // While a phone films or saves, a part reaches R2 about every 25 seconds: a newer one means it's still sending.
 export const STILL_SENDING_SECONDS = 120;
@@ -88,7 +89,7 @@ async function decideSave(deps: TeamDeps, member: Member, gameId: number): Promi
 	if (video.status !== "uploading") return { status: "saved" };
 	if (video.uploadedBy !== member.id && !hasRole(member.role, "coach")) throw forbidden("Only the parent who filmed it, a coach or a team manager can save it.");
 	// A phone still streaming it, or one that just stopped (a Stream hiccup reads as not streaming, as on the pages).
-	if (!open.endRequestedAt && await deps.live.isConnected(open.liveInputUid).catch(() => false)) return { status: "streaming", retryIn: ASK_AGAIN_SECONDS };
+	if (!open.endRequestedAt && await stillStreaming(deps, open)) return { status: "streaming", retryIn: ASK_AGAIN_SECONDS };
 	const result = await saveRecordedSoFar(deps, open, video, STILL_SENDING_SECONDS);
 	if (result !== "sending") return { status: result };
 	const waitLeft = Math.max(1, Math.ceil(STILL_SENDING_SECONDS - (deps.now().getTime() - Date.parse(await lastPartAt(deps, video))) / 1000));

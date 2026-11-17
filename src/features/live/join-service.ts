@@ -15,6 +15,7 @@ import { logProblem } from "../admin/problem-log.ts";
 import { requestStreamCopy } from "../videos/upload-finish.ts";
 import { countJoinTry, setJoinFailed } from "../videos/video-writes-repository.ts";
 import type { Video } from "../videos/videos-repository.ts";
+import { withoutLinkQueries } from "../../shared/redact.ts";
 import { logLive } from "./live-log.ts";
 import { joinedKey, listSegments, replaceSegmentsWith } from "./recording-segments-repository.ts";
 
@@ -74,10 +75,11 @@ async function joinOne(deps: TeamDeps, video: Video): Promise<boolean> {
 	// A join that ran and failed (or says it's done with no file to show) had its try counted when it began. A joiner
 	// that refused the ask or didn't answer is a try of its own, when one was due.
 	const ran = answer.ok || answer.state === "failed";
-	const reason = answer.ok ? "the joined file isn't in storage" : answer.reason;
+	// The joiner's reason can quote ffmpeg, which names its inputs: signed links.
+	const reason = answer.ok ? "the joined file isn't in storage" : withoutLinkQueries(answer.reason);
 	if (!ran && start) await countJoinTry(deps.db, deps.team.id, video.id, now.toISOString());
 	const tries = video.joinTries + (!ran && start ? 1 : 0);
-	console.error(JSON.stringify({ event: "join_failed", teamId: deps.team.id, videoId: video.id, tries, reason }));
+	console.error(JSON.stringify({ event: "join_failed", teamId: deps.team.id, videoId: video.id, gameId: video.gameId, tries, reason }));
 	if (tries >= JOIN_TRIES && (ran || waited)) await gaveUp(deps, video, keys.length, reason);
 	return false;
 }
@@ -90,6 +92,6 @@ export async function joinRecordings(deps: TeamDeps, waiting: Video[]) {
 		return { joined: 0, errors: [] as unknown[] };
 	}
 	let joined = 0;
-	const result = await runEach(picked, async (video) => { if (await joinOne(deps, video)) joined++; });
+	const result = await runEach(picked, async (video) => { if (await joinOne(deps, video)) joined++; }, (v) => ({ videoId: v.id, gameId: v.gameId }));
 	return { joined, errors: result.errors };
 }

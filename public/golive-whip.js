@@ -9,7 +9,8 @@ const ANSWER_TIMEOUT_MS = 15_000;
 const LIVE_MAX_BITRATE = 1_500_000;
 
 /**
- * onState("connecting" | "live" | "reconnecting"). Returns { stop(), pause(card), resume(), useMedia(media), sent() }:
+ * onState("connecting" | "live" | "reconnecting", why): reconnecting says why (Stream refusing, no answer, the connection
+ * failing or dropping), for the site's logs. Returns { stop(), pause(card), resume(), useMedia(media), sent() }:
  * while paused, families see `card` (a video track) instead of the camera, and no sound. useMedia() swaps in a new
  * camera (Resume camera), from now on and on every new connection.
  */
@@ -42,7 +43,7 @@ export function publish(media, url, onState) {
 			} else if (mine.connectionState === "failed") {
 				retry("connection failed");
 			} else if (mine.connectionState === "disconnected") {
-				onState("reconnecting");
+				onState("reconnecting", "disconnected");
 				// Often comes back by itself (a moment without signal); if not, start a new connection.
 				setTimeout(() => { if (mine === pc && mine.connectionState !== "connected") retry("disconnected"); }, 8000);
 			}
@@ -62,7 +63,7 @@ export function publish(media, url, onState) {
 	function retry(why) {
 		if (stopped) return;
 		console.warn(`live stream: ${why}, reconnecting in ${wait / 1000}s`);
-		onState("reconnecting");
+		onState("reconnecting", why);
 		end();
 		setTimeout(() => connect().catch((err) => retry(String(err))), wait);
 		wait = Math.min(wait * 2, 20000);

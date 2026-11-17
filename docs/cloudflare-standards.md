@@ -27,8 +27,10 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
 - Pin `compatibilityDate`; bump it deliberately and note why.
 - Enable `observability` and set `redactQueryString: true`, because pre-signed and signed URLs carry credentials
  in query strings. Keep `issues` on too: Cloudflare then emails the site owner when the Worker starts failing in a new way, the
- one alert that works when the Worker itself is down. Only log at error level what's really an error: each error line
- counts as one of the Worker's failures.
+ one alert that works when the Worker itself is down. Keep `traces` on: each request's and job run's D1 queries, R2
+ calls, outside fetches and Durable Object calls, timed with their outcome (they record addresses and SQL, never
+ bodies or headers, so no signed link or token). Only log at error level what's really an error: each error line
+ counts as one of the Worker's failures. A service that didn't answer is a warning where the site carries on.
 - Keep `workersDev` off, as a `*.workers.dev` address would be a second way in. Preview URLs are on only for staging,
  which runs the same sign-in as the live site.
 - Don't keep request state in module-level variables. Isolates are reused across requests. Build dependencies

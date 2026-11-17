@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { sha256Hex } from "../../../src/auth/crypto.ts";
 import { insertSession } from "../../../src/auth/session-repository.ts";
 import { advanceBrowserLive } from "../../../src/features/live/browser-live-service.ts";
@@ -35,6 +35,19 @@ describe("Stream not answering", () => {
 		expect((await rows(deps))[0]).toMatchObject({ status: "open", end_requested_at: expect.any(String) });
 		expect((await client(`/api/uploads/${videoId}/complete`, jsonBody({ parts: [{ partNumber: 1, etag: "a" }] }))).status).toBe(200);
 		expect((await rows(deps))[0]).toMatchObject({ status: "saved" });
+	});
+
+	it("not knowing whether the phone is still streaming is a warning in the Worker's logs, with the game and its input", async () => {
+		const { deps, client, later } = clocked();
+		const warned = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const gameId = await seedGame(deps, { startsAt: "2026-10-15T18:40" });
+		await goLive(client, gameId);
+		later(30 * 60);
+		deps.live.down = true;
+		await client(`/api/live/${gameId}/save`, jsonBody({}));
+		const lines = warned.mock.calls.map((c) => JSON.parse(String(c[0])) as Record<string, unknown>).filter((l) => l.event === "live_status_failed");
+		expect(lines[0]).toMatchObject({ teamId: deps.team.id, gameId, liveStreamId: expect.any(Number), liveInputUid: expect.any(String), error: expect.stringContaining("Stream live GET") });
+		warned.mockRestore();
 	});
 
 	it("a test's Stop still frees the game", async () => {

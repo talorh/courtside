@@ -60,6 +60,8 @@ export const ROUTES: RouteCase[] = [
 	post("/api/live/:gameId/events", (s) => `/api/live/${s.gameId}/events`, () => json({ events: [{ s: 0, what: "x", p: true }] }), { foreign: 200 }),
 	// Only writes a problem line, with the current team's id: another team's game is named as no game.
 	post("/api/problems", () => "/api/problems", (s) => json({ what: "upload", gameId: s.gameId, message: "x" }), { foreign: 200 }),
+	// Only writes a log line (a family's player trouble), and only for the current team's own games.
+	post("/api/watch-events", () => "/api/watch-events", (s) => json({ gameId: s.gameId, kind: "live", events: [{ s: 0, what: "x" }] })),
 	post("/videos/:id/move", (s) => `/videos/${s.videoId}/move`, (_s, own) => form({ gameId: String(own.gameId) })),
 	post("/videos/:id/move", (_s, own) => `/videos/${own.videoId}/move`, (s) => form({ gameId: String(s.gameId) })),
 	post("/videos/:id/delete", (s) => `/videos/${s.videoId}/delete`, () => form({ confirm: "yes" })),

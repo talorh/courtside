@@ -122,6 +122,8 @@ export async function advanceAppLive(deps: TeamDeps, stream: LiveStream, counts:
 		if (stream.lastLiveAt === null) return noteAppLive(deps, stream);
 		if (Date.parse(stream.lastLiveAt) > deps.now().getTime() - SETTLE_MINUTES * 60_000) return;
 	}
+	// A part Stream couldn't record is lost from the game: said, so a gap in the saved video can be explained.
+	for (const r of recordings.filter((x) => x.state === "error")) console.warn(JSON.stringify({ event: "live_app_recording_failed", teamId: deps.team.id, gameId: stream.gameId, liveStreamId: stream.id, recordingUid: r.uid, createdAt: r.createdAt }));
 	const ready = recordings.filter((r) => r.state === "ready");
 	const parts = ready.filter((r) => r.durationSeconds >= MIN_RECORDING_SECONDS);
 	const short = ready.filter((r) => !parts.includes(r));

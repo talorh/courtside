@@ -4,6 +4,7 @@
 // Video (to upload it after all) gives it another week from then. In the Log, by the site.
 import { type AppDeps, withTeam } from "../../app/deps.ts";
 import { addDays, localTime } from "../../shared/time.ts";
+import { tagFailure } from "../../shared/failure-ids.ts";
 import { unfilmedGames } from "../../jobs/all-teams-repository.ts";
 import { logTeamChange } from "../admin/team-log.ts";
 import { closeUnusedLive } from "../live/live-service.ts";
@@ -32,7 +33,7 @@ export async function setUnfilmedNoVideo(deps: AppDeps, teams: Team[]): Promise<
 			await logTeamChange(teamDeps, "site", "game_changed", `${gameName(game)}: No video, as nothing was uploaded or streamed in the week it waited for video`);
 			noVideoSet++;
 		} catch (err) {
-			errors.push(err);
+			errors.push(tagFailure(err, { teamId: team.id, gameId: game.id }));
 		}
 	}
 	return { noVideoSet, errors };

@@ -6,6 +6,7 @@ import { sessionAuthenticator } from "./auth/session.ts";
 import { buildAdminRouter } from "./features/admin/admin-routes.ts";
 import { DAILY_CRONS, dailyDue, runDaily } from "./jobs/daily.ts";
 import { runSync } from "./jobs/sync-videos.ts";
+import { timedRun } from "./jobs/cron-run.ts";
 import { createFetchBudget } from "./platform/fetch-budget.ts";
 import { newImageUrlCache } from "./platform/hosted-images.ts";
 import { newStorageCache } from "./platform/storage-cache.ts";
@@ -36,6 +37,6 @@ export default {
 		if (daily && !dailyDue(controller.scheduledTime)) return;
 		// Every team's work, each with its own deps (src/jobs/teams.ts).
 		const deps = buildDeps(env, loadConfig(env), { fetch: createFetchBudget(CRON_FETCH_BUDGET).fetch });
-		await (daily ? runDaily(deps) : runSync(deps));
+		await timedRun(controller.cron, () => (daily ? runDaily(deps) : runSync(deps)));
 	},
 } satisfies ExportedHandler<Env>;

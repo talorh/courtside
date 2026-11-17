@@ -32,7 +32,7 @@ export function streaming(p) {
 		const { sound } = p.sound();
 		s.mix = mixer(p.video, media, p.sound());
 		sound.addEventListener("statechange", () => s.phone?.note(`sound ${sound.state}`));
-		s.live = publish(media, answer.whipUrl, (state) => { s.liveState = state; s.phone?.note(`live ${state}`, state === "reconnecting"); p.show(); });
+		s.live = publish(media, answer.whipUrl, (state, why) => { s.liveState = state; s.phone?.note(`live ${state}${why ? `: ${why}` : ""}`, state === "reconnecting"); p.show(); });
 		s.rec = record(s.mix.stream, { videoId: answer.videoId, partSize: answer.partSize, segment: answer.segment, minutesBefore, mime: p.mime, gameId: p.gameId }, {
 			onProgress: (progress) => { s.progress = progress; if (s.live) p.show(); else p.saving.progress(progress); },
 			hint: (text) => { console.warn(`upload: ${text}`); s.phone?.note(`upload: ${text}`); },

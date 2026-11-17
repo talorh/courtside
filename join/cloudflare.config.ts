@@ -28,7 +28,7 @@ export default defineConfig(() => ({
 		entrypoint,
 		workersDev: false,
 		previewUrls: false,
-		observability: { enabled: true, redactQueryString: true, issues: { enabled: true } },
+		observability: { enabled: true, redactQueryString: true, issues: { enabled: true }, traces: { enabled: true } },
 		exports: { Joiner: exports.durableObject({ storage: "sqlite", container }) },
 	},
 	containers: [container],

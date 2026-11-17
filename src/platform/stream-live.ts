@@ -1,5 +1,6 @@
 // Stream Live inputs (and storage usage) aren't on the Worker binding either, so they use the REST API with the Stream-only token.
 import { siteLabel, siteOf } from "./site-label.ts";
+import { answering, type ApiErrors, firstError } from "./api-failure.ts";
 import { type AppLivePort, appLive, STALE_SECONDS } from "./stream-live-app.ts";
 
 /** A game's live input. The WHIP address is secret (it lets anyone broadcast to the game): never log it. */
@@ -28,7 +29,7 @@ export interface LivePort extends AppLivePort {
 	storage(): Promise<{ usedMinutes: number; limitMinutes: number }>;
 }
 
-interface ApiBody<T> { success: boolean; result?: T; errors?: Array<{ message?: string }> }
+interface ApiBody<T> { success: boolean; result?: T; errors?: ApiErrors }
 interface InputResult {
 	uid?: string;
 	webRTC?: { url?: string };
@@ -43,7 +44,8 @@ export function createLiveClient(config: { accountId: string; apiToken: string; 
 
 	/** Null when Stream says there's no such input (404); any other failure throws. */
 	async function callOrMissing<T>(path: string, init: RequestInit = {}): Promise<T | null> {
-		const res = await doFetch(`${base}${path}`, {
+		const named = `Stream live ${init.method ?? "GET"} ${path}`;
+		const res = await answering(doFetch, named)(`${base}${path}`, {
 			...init,
 			headers: { Authorization: `Bearer ${config.apiToken}`, "Content-Type": "application/json" },
 			signal: AbortSignal.timeout(15_000),
@@ -51,14 +53,14 @@ export function createLiveClient(config: { accountId: string; apiToken: string; 
 		if (res.status === 404) return null;
 		const body = (await res.json().catch(() => ({ success: false }))) as ApiBody<T>;
 		if (!res.ok || !body.success || body.result === undefined) {
-			throw new Error(`Stream live ${init.method ?? "GET"} failed (${res.status}): ${body.errors?.[0]?.message ?? "no details"}`);
+			throw new Error(`${named} failed (${res.status}): ${firstError(body.errors)}`);
 		}
 		return body.result;
 	}
 
 	async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
 		const result = await callOrMissing<T>(path, init);
-		if (result === null) throw new Error(`Stream live ${init.method ?? "GET"} failed (404): no such live input`);
+		if (result === null) throw new Error(`Stream live ${init.method ?? "GET"} ${path} failed (404): no such live input`);
 		return result;
 	}
 

@@ -133,6 +133,6 @@ export async function advanceClips(deps: TeamDeps) {
 			await setClipStatus(deps.db, deps.team.id, clip.id, "failed", state.errorReason || "Stream could not make this clip");
 			counts.clipsFailed++;
 		}
-	});
+	}, (c) => ({ clipId: c.id, videoId: c.videoId }));
 	return { ...counts, errors: result.errors };
 }

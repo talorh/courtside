@@ -3,6 +3,8 @@
 // past the product's free allowance, and what it cost, in US dollars. Fixed plan fees aren't in it. Thin, like every
 // platform client.
 
+import { type ApiErrors, firstError } from "./api-failure.ts";
+
 /** One product's use on one UTC day, in the billing period starting `periodStart`. `quantity`: all it used;
  * `billable`: the part past its free allowance; `billed`: what that cost (US$). */
 export interface BilledRow { day: string; service: string; family: string; quantity: number; billable: number; unit: string; billed: number; periodStart: string }
@@ -34,8 +36,8 @@ export function createCloudflareBilling(o: { accountId: string; token: string; f
 		async usage(range) {
 			const query = range ? `?from=${range.from}&to=${range.to}` : "";
 			const res = await doFetch(`${API}/accounts/${o.accountId}/billable-usage${query}`, { headers: { Authorization: `Bearer ${o.token}` }, signal: AbortSignal.timeout(15_000) });
-			const body = (await res.json().catch(() => ({}))) as { success?: boolean; result?: unknown; errors?: Array<{ message?: string }> };
-			if (!res.ok || !body.success || !Array.isArray(body.result)) throw new Error(`Cloudflare's bill (${res.status}): ${body.errors?.map((e) => e.message).join("; ") || "no details"}`);
+			const body = (await res.json().catch(() => ({}))) as { success?: boolean; result?: unknown; errors?: ApiErrors };
+			if (!res.ok || !body.success || !Array.isArray(body.result)) throw new Error(`Cloudflare's bill (${res.status}): ${firstError(body.errors)}`);
 			return (body.result as Raw[]).map(toRow).filter((r): r is BilledRow => r !== null);
 		},
 	};

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 // @ts-expect-error plain Node, no types: the container runs it as it is
 import { contentRangeTotal, listFile, parseJoinRequest, putFile, runFfmpeg, tooBig } from "../../join/join.mjs";
 // @ts-expect-error plain Node, no types
-import { concatArgs, joinSegments, muxArgs, runFailed, tooSmall, tsArgs } from "../../join/pipeline.mjs";
+import { concatArgs, joinSegments, muxArgs, runFailed, tooSmall, tsArgs, why } from "../../join/pipeline.mjs";
 
 const COMMON = ["-hide_banner", "-loglevel", "error", "-y", "-protocol_whitelist", "file,https,tls,tcp,pipe", "-fflags", "+discardcorrupt"];
 
@@ -162,4 +162,12 @@ describe.skipIf(!hasFfmpeg)("the join itself", () => {
 		expect(run.code).not.toBe(0);
 		expect(Date.now() - began).toBeLessThan(10_000);
 	}, 20_000);
+});
+
+describe("why a join failed", () => {
+	it("keeps ffmpeg's last lines, with a signed link cut to its address", () => {
+		const err = "Opening input\nError opening input file https://r2.test/originals/t/x.mp4?X-Amz-Signature=abc123&X-Amz-Credential=key.\nExiting";
+		expect(why({ err, code: 1 })).toBe("ffmpeg: Opening input | Error opening input file https://r2.test/originals/t/x.mp4?… | Exiting");
+		expect(why({ err: "", code: 8 })).toBe("ffmpeg: exit 8");
+	});
 });

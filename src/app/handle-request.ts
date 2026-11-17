@@ -47,7 +47,7 @@ export async function handleRequest(req: Request, deps: AppDeps, authenticate: A
 }
 
 /** What the request found out before anything failed: its team, who's asking, and cookies to put right. */
-export interface Found { teamId: string | null; email: string | null; setCookies: string[] }
+export interface Found { teamId: string | null; email: string | null; memberId?: number; setCookies: string[] }
 
 /** The request path (docs/architecture.md): who's asking, the site's own pages, then the current team's. */
 async function respond(req: Request, url: URL, deps: AppDeps, authenticate: Authenticate, router: Router, admin: AdminRouter, found: Found): Promise<Response> {
@@ -89,14 +89,15 @@ async function respond(req: Request, url: URL, deps: AppDeps, authenticate: Auth
 	const requestTeam = isWrite ? await teamForWrite(deps.db, viewer, team, await writeTeam(req)) : team;
 	if (typeof requestTeam === "string") return noTeam(requestTeam, viewer, url);
 	found.teamId = requestTeam.id;
-	return teamPage(req, url, deps, viewer, requestTeam, router, cookies.viewAs ?? null);
+	return teamPage(req, url, deps, viewer, requestTeam, router, cookies.viewAs ?? null, found);
 }
 
-async function teamPage(req: Request, url: URL, appDeps: AppDeps, viewer: Viewer, team: Team, router: Router, viewAs: string | null): Promise<Response> {
+async function teamPage(req: Request, url: URL, appDeps: AppDeps, viewer: Viewer, team: Team, router: Router, viewAs: string | null, found: Found): Promise<Response> {
 	const ctx = await teamContext(appDeps, viewer, team, viewAs);
 	// currentTeam only gives a team the viewer can open, so this is a race (removed a moment ago): no such page for them.
 	if (!ctx) throw notFound("Page");
 	const { member, deps } = ctx;
+	found.memberId = member.id;
 	const match = router.match(req.method, url.pathname);
 	if (!match) throw notFound("Page");
 	if (!hasRole(member.role, match.minRole)) throw forbidden();

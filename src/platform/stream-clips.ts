@@ -1,4 +1,5 @@
 // Stream's clip API isn't on the Worker binding, so it goes through the REST API with a Stream-only token.
+import { type ApiErrors, firstError } from "./api-failure.ts";
 import { siteLabel } from "./site-label.ts";
 
 export interface ClipRequest {
@@ -20,7 +21,7 @@ export interface Clipper {
 interface StreamApiResponse {
 	success: boolean;
 	result?: { uid?: string };
-	errors?: Array<{ message?: string }>;
+	errors?: ApiErrors;
 }
 
 export function createClipper(config: { accountId: string; apiToken: string; fetch?: typeof fetch; site?: string | null }): Clipper {
@@ -44,7 +45,7 @@ export function createClipper(config: { accountId: string; apiToken: string; fet
 			const body = (await res.json().catch(() => ({ success: false }))) as StreamApiResponse;
 			const uid = body.result?.uid;
 			if (!res.ok || !body.success || !uid) {
-				throw new Error(`Stream clip failed (${res.status}): ${body.errors?.[0]?.message ?? "no details"}`);
+				throw new Error(`Stream clip failed (${res.status}): ${firstError(body.errors)}`);
 			}
 			// Stream's clip call keeps only the name of the metadata sent with it, so the team (and staging's label) go on the
 			// new video with a second call. Non-fatal: the clip exists and its row names it; unlabelled, only staging's would be

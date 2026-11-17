@@ -64,8 +64,15 @@ Stream, stuck or failed videos, the Worker's errors and refused sign-ins checked
 and the Team budgets alert, are in Costs and billing.</p>`});
 
 export const recovery = (): DocSection => ({ id: "recovery", title: "When something goes wrong", body: html`
-<p>First, the top of Insights says what's wrong. Then one of these, each spelt out step by step in the Cloudflare runbook.
-Anything that deletes or restores data needs the owner's go-ahead first.</p>
+<p>First, find out what: the top of Insights says what's wrong, and the Log's Problems has each failure with its team,
+person and device (a job's with its step and the video or game it was for). The Worker's own logs (${code("npm run logs")},
+kept 7 days) have every request and job run: a 5xx is a ${code("request_error")} line, a job's failure a
+${code("job_failed")} one, each with its ids and the error's cause, and an error page shows a Reference (its Ray ID) that
+finds its line. The phones add their side: the filming phone's events, each family's player trouble (the live picture
+not coming or stopping, and when it came back) and an upload that stopped, with how far it got. Traces time every
+database query and outside call. The incident runbook, ${code("docs/runbooks/incident.md")},
+goes through it in order. Then one of these, each spelt out step by step in the Cloudflare runbook. Anything that deletes
+or restores data needs the owner's go-ahead first.</p>
 ${recoveryDiagram()}
 ${table(["Problem", "What to do"], [
 		["A fix will take a while", "Switch the maintenance page on: everyone but admins sees Back soon, and admins see the real site to check it (the sign-in still opens, so an admin can sign in)"],

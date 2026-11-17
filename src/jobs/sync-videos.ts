@@ -1,14 +1,4 @@
-import type { AppDeps, TeamDeps } from "../app/deps.ts";
-import { advanceClips } from "../features/clips/clips-service.ts";
-import { checkPlayhqFixturesDue } from "../features/games/playhq-service.ts";
-import { advanceLive } from "../features/live/live-sync.ts";
-import { enforcePhotoRetention } from "../features/photos/photos-service.ts";
-import { isBeingDeleted, type TeamStatus } from "../features/teams/team.ts";
-import { advanceProcessing, retryStreamCopies, trackHdDownloads } from "../features/videos/processing-service.ts";
-import { enforceRetention } from "../features/videos/retention-service.ts";
-import { clearTombstones } from "../features/videos/tombstones-service.ts";
-import { checkFinalScores } from "../features/scores/scores-service.ts";
-import { FetchBudgetSpent } from "../platform/fetch-budget.ts";
+import type { AppDeps } from "../app/deps.ts";
 import { retryTicketEmails } from "../features/admin/support-desk-service.ts";
 import { checkStreamStorage } from "../features/admin/storage-check.ts";
 import { checkEmailAllowance, checkJobRan, checkEmails, checkSiteErrors, recordSyncRun } from "../features/admin/usage-checks.ts";
@@ -16,31 +6,13 @@ import { checkComingGames } from "../features/admin/game-day-checks.ts";
 import { localDate } from "../shared/time.ts";
 import { listTeamsIn } from "../features/teams/teams-repository.ts";
 import { busyTeamIds } from "./all-teams-repository.ts";
-import { deleteTeamsDue, removeLeftovers } from "./delete-teams.ts";
+import { deleteTeamsDue } from "./delete-teams.ts";
+import { type SyncSummary, syncTeam, ZERO } from "./sync-team.ts";
 import { runTeams } from "./teams.ts";
 import { setUnfilmedNoVideo } from "../features/games/no-video-after.ts";
 import { logJobProblems, logRunStopped } from "./job-problems.ts";
+import { tagFailure } from "../shared/failure-ids.ts";
 import { alertFailed } from "../features/admin/problem-log.ts";
-
-const ZERO = {
-	copiesRequested: 0, joined: 0, ready: 0, failed: 0, expired: 0, abandoned: 0, purged: 0, downloadsPurged: 0, photosExpired: 0, hdReady: 0,
-	clipsReady: 0, clipsFailed: 0, liveNow: 0, playhqChecked: 0, scoresEntered: 0, tombstonesCleared: 0,
-};
-export type SyncSummary = typeof ZERO;
-
-type Step = (deps: TeamDeps) => Promise<Partial<SyncSummary> & { errors: unknown[] }>;
-
-// Live streams go first (LIVE NOW, tidying up). A closed team's season is over: no new live streams, PlayHQ or scores,
-// but what's on its way still finishes: a recording whose phone stopped is saved, an unused live input closed, videos
-// and clips processed, and its retention runs. A closed team being deleted has no steps of its own: the run's last step
-// deletes it (delete-teams.ts). A deleted team keeps only its download log for its two years, which retention purges,
-// and then what that log named goes.
-const MEDIA: Step[] = [retryStreamCopies, advanceProcessing, trackHdDownloads, advanceClips, enforceRetention, enforcePhotoRetention, clearTombstones];
-const STEPS: Record<TeamStatus, Step[]> = {
-	active: [advanceLive, ...MEDIA, checkPlayhqFixturesDue, checkFinalScores],
-	closed: [advanceLive, ...MEDIA],
-	deleted: [enforceRetention, removeLeftovers],
-};
 
 /** Runs are five minutes apart: the run's number picks whose turn it is. */
 const RUN_MS = 300_000;
@@ -65,26 +37,6 @@ export function teamsThisRun<T extends { id: string }>(teams: T[], busy: Set<str
 		busy: busyTeams.length ? from(busyTeams, runIndex % busyTeams.length, busyTeams.length) : [],
 		turn: quiet.length ? from(quiet, (runIndex * step) % quiet.length, take) : [],
 	};
-}
-
-/** One team's steps, every one even if another fails, outright or record by record. Work past the run's budget of
- * outside calls waits for the next run. */
-async function syncTeam(deps: TeamDeps): Promise<{ summary: SyncSummary; errors: unknown[]; deferred: number }> {
-	const summary = { ...ZERO };
-	const all: unknown[] = [];
-	if (isBeingDeleted(deps.team, deps.now())) return { summary, errors: all, deferred: 0 };
-	for (const step of STEPS[deps.team.status]) {
-		try {
-			const { errors, ...counts } = await step(deps);
-			for (const [key, n] of Object.entries(counts) as Array<[keyof SyncSummary, number]>) summary[key] += n;
-			all.push(...errors);
-		} catch (err) {
-			all.push(err);
-		}
-	}
-	const errors = all.filter((err) => !(err instanceof FetchBudgetSpent));
-	console.log(JSON.stringify({ event: "sync_team", teamId: deps.team.id, ...summary, deferred: all.length - errors.length, errorCount: errors.length }));
-	return { summary, errors, deferred: all.length - errors.length };
 }
 
 /**
@@ -119,7 +71,7 @@ async function syncAll(deps: AppDeps): Promise<SyncSummary> {
 	const deleted = await listTeamsIn(deps.db, ["deleted"]);
 	const runIndex = Math.floor(now.getTime() / RUN_MS);
 	// Who's busy can't be read (a database hiccup): this turn still runs, and the run fails loudly at the end.
-	const busy = await busyTeamIds(deps.db, localDate(now)).catch((err: unknown) => { errors.push(err); return new Set<string>(); });
+	const busy = await busyTeamIds(deps.db, localDate(now)).catch((err: unknown) => { errors.push(tagFailure(err, { step: "busy_teams" })); return new Set<string>(); });
 	const picked = teamsThisRun(teams, busy, runIndex);
 	const tombstone = deleted.length ? [deleted[runIndex % deleted.length]!] : [];
 	const runs = await runTeams(deps, [...picked.busy, ...picked.turn, ...tombstone], syncTeam);
@@ -132,18 +84,19 @@ async function syncAll(deps: AppDeps): Promise<SyncSummary> {
 	}
 	// Games nobody filmed in the week after tip-off: No video (features/games/no-video-after.ts), one read for all.
 	const unfilmed = await setUnfilmedNoVideo(deps, teams).catch((err: unknown) => ({ noVideoSet: 0, errors: [err] }));
-	errors.push(...unfilmed.errors);
+	errors.push(...unfilmed.errors.map((err) => tagFailure(err, { step: "no_video" })));
 	// After every team's own steps: deleting closed teams whose date has passed, a slice a run.
 	const deleting = await deleteTeamsDue(deps).catch((err: unknown) => ({ deleted: 0, errors: [err] }));
-	errors.push(...deleting.errors);
+	errors.push(...deleting.errors.map((err) => tagFailure(err, { step: "delete_teams" })));
 	// Support tickets' emails that didn't go, every team's and the site's own. One that
 	// fails again is logged, and the email alert raises it: only failing to look for them fails the run.
-	await retryTicketEmails(deps).catch((err: unknown) => void errors.push(err));
+	await retryTicketEmails(deps).catch((err: unknown) => void errors.push(tagFailure(err, { step: "ticket_emails" })));
 	// Basic monitoring: Stream's minutes, the site failing, emails not going, the 3am job running, and each live game 8
 	// hours before tip-off (game-day-checks.ts). A check that fails
 	// (a database hiccup) is one more failure of the run, never one that loses the others before they reach the Log.
-	const checks = [checkStreamStorage, checkSiteErrors, checkEmails, checkEmailAllowance, (d: AppDeps) => checkJobRan(d, "daily_job"), checkComingGames];
-	for (const check of checks) await check(deps).catch((err: unknown) => void errors.push(err));
+	const checks: Array<[string, (d: AppDeps) => Promise<unknown>]> = [["stream_storage_check", checkStreamStorage], ["site_errors_check", checkSiteErrors],
+		["emails_check", checkEmails], ["email_allowance_check", checkEmailAllowance], ["daily_job_check", (d) => checkJobRan(d, "daily_job")], ["game_check", checkComingGames]];
+	for (const [step, check] of checks) await check(deps).catch((err: unknown) => void errors.push(tagFailure(err, { step })));
 	console.log(JSON.stringify({ event: "sync_videos", teams: teams.length, deletedTeams: deleted.length, busy: picked.busy.length, turn: picked.turn.length, ...summary, teamsDeleted: deleting.deleted, noVideoSet: unfilmed.noVideoSet, deferred, errorCount: errors.length }));
 	await logJobProblems(deps, "sync", runs, errors);
 	if (errors.length > 0) throw new AggregateError(errors, `sync_videos: ${errors.length} record(s) failed`);

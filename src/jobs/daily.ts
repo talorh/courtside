@@ -13,6 +13,7 @@ import { checkDatabase, checkImages, checkJobRan, recordDailyRun } from "../feat
 import { databaseBytes } from "../features/admin/platform-repository.ts";
 import { forgetServerErrors } from "../features/admin/server-errors-repository.ts";
 import { logJobProblems } from "./job-problems.ts";
+import { failureIds, tagFailure } from "../shared/failure-ids.ts";
 import { recordSweep, sweepOrphans } from "./sweep-orphans.ts";
 import { CLUB } from "../club.ts";
 import { purgeSessions } from "../auth/session-repository.ts";
@@ -35,30 +36,31 @@ export const dailyDue = (scheduledTime: number) => localTime(new Date(scheduledT
  * the sign-in's leftovers, then the teams whose season is over. Each runs even if another fails; any failure fails the run. The backup goes first: a run cut short still has it.
  */
 export async function runDaily(deps: AppDeps): Promise<void> {
-	const errors: unknown[] = [];
-	await backupDatabase(deps).catch((err: unknown) => void errors.push(err));
+	const errors: unknown[] = [], started = Date.now();
+	await backupDatabase(deps).catch((err: unknown) => void errors.push(tagFailure(err, { step: "backup" })));
 	const sweep = await sweepOrphans(deps).catch((err: unknown) => ({ failed: err }));
-	errors.push(...("failed" in sweep ? [sweep.failed] : sweep.errors));
-	await recordSweep(deps, sweep).catch((err: unknown) => void errors.push(err));
+	errors.push(...("failed" in sweep ? [sweep.failed] : sweep.errors).map((err) => tagFailure(err, { step: "orphan_sweep" })));
+	await recordSweep(deps, sweep).catch((err: unknown) => void errors.push(tagFailure(err, { step: "record_sweep" })));
 	// The sign-in's leftovers (auth/): sessions that are over, codes older than a day, events older than a month, and holds.
-	await purgeSignIn(deps).catch((err: unknown) => void errors.push(err));
+	await purgeSignIn(deps).catch((err: unknown) => void errors.push(tagFailure(err, { step: "sign_in_purge" })));
 	// Running teams whose season's videos and photos are due close, to be deleted from tonight (close-seasons.ts).
-	await closeSeasonsOver(deps).catch((err: unknown) => void errors.push(err));
+	await closeSeasonsOver(deps).catch((err: unknown) => void errors.push(tagFailure(err, { step: "close_seasons" })));
 	// The admins' alerts (features/admin/usage-checks.ts): Images' photos (from the clean-up's own list), the database's
 	// size, and how the night went; and the server errors' count keeps two days.
-	if (!("failed" in sweep) && sweep.imagesStored !== null) await checkImages(deps, sweep.imagesStored).catch((err: unknown) => void errors.push(err));
-	await databaseBytes(deps.db).then((bytes) => checkDatabase(deps, bytes)).catch((err: unknown) => void errors.push(err));
+	if (!("failed" in sweep) && sweep.imagesStored !== null) await checkImages(deps, sweep.imagesStored).catch((err: unknown) => void errors.push(tagFailure(err, { step: "images_check" })));
+	await databaseBytes(deps.db).then((bytes) => checkDatabase(deps, bytes)).catch((err: unknown) => void errors.push(tagFailure(err, { step: "database_check" })));
 	// The Workers AI models' planned retirements (ai-model-checks.ts).
-	await checkAiModels(deps).catch((err: unknown) => void errors.push(err));
+	await checkAiModels(deps).catch((err: unknown) => void errors.push(tagFailure(err, { step: "ai_models_check" })));
 	// The video joiner's nightly try (joiner-checks.ts).
-	await checkJoiner(deps).catch((err: unknown) => void errors.push(err));
-	await forgetServerErrors(deps.db, addDays(deps.now(), -2)).catch((err: unknown) => void errors.push(err));
+	await checkJoiner(deps).catch((err: unknown) => void errors.push(tagFailure(err, { step: "joiner_check" })));
+	await forgetServerErrors(deps.db, addDays(deps.now(), -2)).catch((err: unknown) => void errors.push(tagFailure(err, { step: "server_errors_purge" })));
 	// Cloudflare's bill, read every night (Costs puts its own figures right by it); then the budgets, by the bill.
 	await loadBill(deps, { force: true }).then((b) => { if (b.read === "failed") throw new Error("Cloudflare's bill couldn't be read (Costs shows the copy saved)"); })
-		.catch((err: unknown) => void errors.push(err));
-	await loadCosts(deps).then((c) => checkBudgets(deps, inLocal(c))).catch((err: unknown) => void errors.push(err));
+		.catch((err: unknown) => void errors.push(tagFailure(err, { step: "bill" })));
+	await loadCosts(deps).then((c) => checkBudgets(deps, inLocal(c))).catch((err: unknown) => void errors.push(tagFailure(err, { step: "budgets_check" })));
 	// Costs' months over a week ago, saved as they stand (costs-saved.ts).
-	await loadCosts(deps).then((c) => saveSpentMonths(deps, c)).catch((err: unknown) => void errors.push(err));
+	await loadCosts(deps).then((c) => saveSpentMonths(deps, c)).catch((err: unknown) => void errors.push(tagFailure(err, { step: "save_costs" })));
+	console.log(JSON.stringify({ event: "daily_run", teamId: null, ms: Date.now() - started, errorCount: errors.length, failedSteps: errors.map((e) => failureIds(e).step) }));
 	await logJobProblems(deps, "daily", [], errors);
 	await recordDailyRun(deps, errors);
 	// And the 5-minute job's heartbeat: it can't say it has stopped running (usage-checks.ts).

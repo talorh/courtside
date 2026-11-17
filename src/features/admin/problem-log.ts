@@ -15,7 +15,8 @@ const MAX_WHAT = 200, MAX_DETAIL = 300;
  * happened in (none in a job), even for the site's own: which phone was in use when it failed. */
 export interface Problem { kind: ProblemKind; teamId: string | null; who?: string; what: string; error?: unknown; detail?: string }
 
-const said = (err: unknown) => {
+/** An error in words: its message, and its cause's. */
+export const said = (err: unknown) => {
 	if (!(err instanceof Error)) return err === undefined ? "" : String(err);
 	const cause = err.cause instanceof Error ? `: ${err.cause.message}` : "";
 	return `${err.message}${cause}`;
@@ -30,7 +31,7 @@ export async function logProblem(deps: Pick<AppDeps, "db" | "now" | "device">, p
 	try {
 		await deps.db.batch(problemStatements(deps.db, row, new Date(now.getTime() - REPEAT_MS).toISOString(), addDays(now, -1).toISOString()));
 	} catch (err) {
-		console.error(JSON.stringify({ event: "problem_log_failed", teamId: p.teamId, kind: p.kind, error: String(err) }));
+		console.error(JSON.stringify({ event: "problem_log_failed", teamId: p.teamId, kind: p.kind, what: row.what, detail: row.detail, error: String(err) }));
 	}
 }
 

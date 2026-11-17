@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { runSync } from "../../../src/jobs/sync-videos.ts";
 import type { LiveRecording } from "../../../src/platform/stream-live-app.ts";
 import { form, jsonBody, makeClient } from "../../helpers/app.ts";
@@ -193,6 +193,28 @@ describe("stopping and saving an external app's stream", () => {
 		await runSync(deps);
 		expect((await videos())[0]).toMatchObject({ stream_uid: "rec-1" });
 	});
+	it("the app dropping out and coming back is a line in the Worker's logs, with how long it was gone; a part Stream couldn't record is a warning", async () => {
+		const { deps, goLive, appStops, stop, recorded, later } = await streaming();
+		const logged = vi.spyOn(console, "log").mockImplementation(() => {});
+		const warned = vi.spyOn(console, "warn").mockImplementation(() => {});
+		await goLive();
+		later(5);
+		await runSync(deps);
+		appStops();
+		later(5);
+		await runSync(deps);
+		later(10);
+		await goLive();
+		const line = (spy: typeof logged, event: string) => spy.mock.calls.map((c) => JSON.parse(String(c[0])) as Record<string, unknown>).find((l) => l.event === event);
+		expect(line(logged, "live_app_back")).toMatchObject({ teamId: deps.team.id, liveStreamId: expect.any(Number), goneMinutes: 15 });
+		appStops();
+		recorded(["rec-2", "ready", 1500, 30], ["rec-1", "error", 0, 1]);
+		await stop();
+		await runSync(deps);
+		expect(line(warned, "live_app_recording_failed")).toMatchObject({ teamId: deps.team.id, recordingUid: "rec-1" });
+		vi.restoreAllMocks();
+	});
+
 	it("a restart after a long gap: the longest part is the game video, the others clips; a part under a minute is deleted", async () => {
 		const { deps, goLive, appStops, stop, recorded, videos, clips } = await streaming();
 		await goLive();

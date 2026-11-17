@@ -24,6 +24,7 @@ import { registerDownloadRoutes } from "../features/videos/download-routes.ts";
 import { registerUploadRoutes } from "../features/videos/upload-routes.ts";
 import { registerProblemRoutes } from "../features/admin/problem-routes.ts";
 import { registerWatchRoutes } from "../features/videos/watch-routes.ts";
+import { registerWatchEventsRoutes } from "../features/videos/watch-events-routes.ts";
 import { Router } from "./router.ts";
 
 export function buildRouter(): Router {
@@ -35,6 +36,7 @@ export function buildRouter(): Router {
 	registerAppLiveRoutes(router);
 	registerLibraryRoutes(router);
 	registerWatchRoutes(router);
+	registerWatchEventsRoutes(router);
 	registerDownloadRoutes(router);
 	registerClipRoutes(router);
 	registerNoteRoutes(router);

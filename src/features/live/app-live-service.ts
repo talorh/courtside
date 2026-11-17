@@ -63,15 +63,23 @@ export async function useCamera(deps: TeamDeps, member: Member, gameId: number):
 	return game;
 }
 
-/** An app's stream is arriving: the first time, the game is noted live (Activity), then when it was last seen. */
+/** An app's stream is arriving: the first time, the game is noted live (Activity), then when it was last seen. Back
+ * after more than two runs unseen, it had dropped out: a line saying for how long. */
 export async function noteAppLive(deps: TeamDeps, stream: LiveStream): Promise<void> {
 	const nowIso = deps.now().toISOString();
 	if (await noteFirstLive(deps.db, deps.team.id, stream.id, nowIso)) {
 		await record(deps, { kind: "live_started", gameId: stream.gameId, memberId: stream.startedBy });
 		await logLive(deps, stream.startedBy, "live_started", stream.gameId);
 		event(deps, "live_app_live", stream);
-	} else await setLastLive(deps.db, deps.team.id, stream.id, nowIso);
+		return;
+	}
+	const gone = stream.lastLiveAt ? Math.round((deps.now().getTime() - Date.parse(stream.lastLiveAt)) / 60_000) : 0;
+	if (gone > DROPPED_MINUTES) event(deps, "live_app_back", stream, { goneMinutes: gone, liveInputUid: stream.liveInputUid });
+	await setLastLive(deps.db, deps.team.id, stream.id, nowIso);
 }
+
+/** Unseen this long (two 5-minute runs), an app's stream had dropped out. */
+const DROPPED_MINUTES = 10;
 
 export interface AppStatus {
 	/** The app is sending right now. */

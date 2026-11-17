@@ -61,6 +61,17 @@ describe("Go live's watch on the phone: a recording that hands nothing over", ()
 		watching(() => 12_000);
 		expect(await logged()).toContain("check: 10 sound, 20 picture packets sent; recording quiet 12s; recorder recording; sound interrupted");
 	});
+	it("notes that couldn't be sent (the signal dropped) go with the next sending", async () => {
+		const send = globalThis.fetch;
+		let down = true;
+		vi.stubGlobal("fetch", async (path: string, init: { body: string }) => { if (down) throw new TypeError("Failed to fetch"); return send(path, init); });
+		const { phone } = watching(() => 1000);
+		phone.note("camera stopped", true);
+		await vi.advanceTimersByTimeAsync(30_000);
+		expect(posted).toEqual([]);
+		down = false;
+		expect(await logged()).toContain("camera stopped");
+	});
 	it("a check with the recording going says only the usual", async () => {
 		watching(() => 1000);
 		await vi.advanceTimersByTimeAsync(95_000); // the minute's check, then the next sending

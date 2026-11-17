@@ -30,6 +30,14 @@ async function bounced(): Promise<TestDeps> {
 }
 
 describe("A sign-in code to an address that bounces", () => {
+	it("is a line in the Worker's logs naming the address, masked, beside the error", async () => {
+		const deps = await bounced();
+		deps.email.failNext = "E_RECIPIENT_SUPPRESSED";
+		await askForCode(deps);
+		const lines = (console.error as unknown as { mock: { calls: unknown[][] } }).mock.calls.map((c) => JSON.parse(String(c[0])) as Record<string, unknown>);
+		expect(lines.find((l) => l.event === "signin_email_failed")).toMatchObject({ email: "s…@example.com", bounced: true, error: expect.stringContaining("E_RECIPIENT_SUPPRESSED") });
+	});
+
 	it("says the address is bouncing and to ask for another, not to try again in a minute", async () => {
 		const deps = await bounced();
 		deps.email.failNext = "E_RECIPIENT_SUPPRESSED";

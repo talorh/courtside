@@ -40,3 +40,26 @@ describe("End game tells the site what's still on this phone", () => {
 		expect((await endGame(null, 30)).body).toEqual({ recordedSeconds: 30, cause: "tapped", keptMinutes: 0 });
 	});
 });
+
+describe("End game's save failing", () => {
+	it("is a problem in the site's Log, sent straight away (the phone's own watch has stopped by then)", async () => {
+		const posted: { path: string; body: { events?: Array<{ what: string; p?: boolean }> } }[] = [];
+		vi.stubGlobal("document", { documentElement: { classList: { toggle() {} } }, fullscreenElement: null });
+		vi.stubGlobal("fetch", async (path: string, init: { body: string }) => {
+			posted.push({ path, body: JSON.parse(init.body) });
+			return Response.json({ ok: true, data: { status: "ended" } });
+		});
+		const s = {
+			phone: { stop() {} }, pause: { end() {} }, live: { stop() {} }, mix: { stop() {} },
+			media: { getTracks: () => [] }, cam: { hidden: false, classList: { toggle() {} } }, gameId: 7,
+			saving: { show() {}, progress() {}, saved() {}, failed() {}, test() {} },
+			rec: { recordedSeconds: () => 3600, stop: async () => { throw new Error("the recording's last part didn't upload"); }, cancel() {} },
+			progress: () => null,
+		};
+		// @ts-expect-error: a browser script (plain JS), tested here on its own.
+		const { stopStream } = await import("../../public/golive-stop.js");
+		await expect(stopStream(s)).rejects.toThrow("last part");
+		await vi.waitFor(() => expect(posted.find((p) => p.path === "/api/live/7/events")).toBeTruthy());
+		expect(posted.find((p) => p.path === "/api/live/7/events")!.body.events).toEqual([{ s: 0, what: "End game's save failed: the recording's last part didn't upload", p: true }]);
+	});
+});

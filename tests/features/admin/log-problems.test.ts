@@ -79,7 +79,7 @@ describe("problems in the admin Log", () => {
 		vi.spyOn(deps.stream, "details").mockRejectedValue(new Error("Stream answered 500"));
 		await expect(runSync(deps)).rejects.toThrow(/record\(s\) failed/);
 		const lines = await problems(deps);
-		expect(lines).toContain("The site | Job failed | The 5-minute job: Stream answered 500");
+		expect(lines).toContain("The site | Job failed | The 5-minute job: processing: Stream answered 500");
 		const html = await (await makeClient(deps)("/admin/log?show=problems")).text();
 		expect(html).toContain('<a class="teamtag" href="/admin/log?show=problems&amp;from=2026-10-09&amp;to=2026-10-15&amp;team=b12.1-2026" title="Only Saints B12.1 (2026/27)">Saints B12.1</a>');
 	});

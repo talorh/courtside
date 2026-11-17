@@ -2,7 +2,7 @@
 
 *Courtside Documentation › Running it. [Contents](README.md).*
 
-Two scheduled jobs keep things moving, one every five minutes and one at 3am local time, and the 5-minute job checks each live game 8 hours before tip-off (the game check). Every step reads the current state, so running one twice does no harm; every record is processed even if one fails; and one team's or one step's failure never stops the rest. A run's failures are thrown together at its end, so the run shows as failed in Workers Observability; each one is also a problem in the admin Log, under the team whose step it was (the same one every run counts on one line). Each job watches the other: an alert is raised if the 5-minute job hasn't run for 15 minutes or the 3am job for 26 hours.
+Two scheduled jobs keep things moving, one every five minutes and one at 3am local time, and the 5-minute job checks each live game 8 hours before tip-off (the game check). Every step reads the current state, so running one twice does no harm; every record is processed even if one fails; and one team's or one step's failure never stops the rest. A run's failures are thrown together at its end, so the run shows as failed in Workers Observability; each one is also a `job_failed` line in the Worker's logs and a problem in the admin Log, under the team whose step it was, naming the step and the video, game or clip it was for (the same one every run counts on one line). Each run has a `cron_run` line: which trigger, how long it took, and whether it failed. Each job watches the other: an alert is raised if the 5-minute job hasn't run for 15 minutes or the 3am job for 26 hours.
 
 ### The 5-minute job
 

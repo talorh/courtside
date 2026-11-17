@@ -27,6 +27,17 @@ describe("the daily job when one of its checks throws", () => {
 		expect(deps.originals.puts.has("backups/d1/courtside-2026-10-25.sql")).toBe(true);
 	});
 
+	it("says in the Worker's logs how the night went, and which step failed", async () => {
+		Object.assign(fail, { joiner: true, jobRan: false });
+		const logged = vi.spyOn(console, "log").mockImplementation(() => {});
+		const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+		await runDaily(createTestDeps(new Date("2026-10-24T16:00:00Z"))).catch(() => {});
+		const lines = [...logged.mock.calls, ...errors.mock.calls].map((c) => JSON.parse(String(c[0])) as Record<string, unknown>);
+		expect(lines.find((l) => l.event === "daily_run")).toMatchObject({ errorCount: 1, failedSteps: ["joiner_check"], ms: expect.any(Number) });
+		expect(lines.find((l) => l.event === "job_failed")).toMatchObject({ job: "daily", step: "joiner_check", teamId: null, error: "Error: the joiner's check broke" });
+		vi.restoreAllMocks();
+	});
+
 	it("fails the run when the 5-minute job's heartbeat can't be checked", async () => {
 		Object.assign(fail, { joiner: false, jobRan: true });
 		const deps = createTestDeps(new Date("2026-10-24T16:00:00Z"));

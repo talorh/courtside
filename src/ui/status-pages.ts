@@ -15,7 +15,8 @@ export function entryPage(o: { title: string; scripts?: string[]; preview?: bool
 }
 
 /** A 401 (a page script's call while signed out gets JSON; a page is sent to /signin by handle-request.ts) offers the sign-in page. */
-export function errorPage(status: number, message: string): SafeHtml {
+/** `ray`: the request's Ray ID, a reference to quote that finds its line in the Worker's logs. */
+export function errorPage(status: number, message: string, ray: string | null = null): SafeHtml {
 	return entryPage({ title: `Error ${status}` }, status === 404 ? "Out of bounds" : "Air ball!", html`
-<p>${message}</p><p><a class="btn" href="${status === 401 ? "/signin" : "/"}">${status === 401 ? "Sign in again" : "Back to the start"}</a></p>`);
+<p>${message}</p>${ray ? html`<p><small>Reference ${ray}</small></p>` : ""}<p><a class="btn" href="${status === 401 ? "/signin" : "/"}">${status === 401 ? "Sign in again" : "Back to the start"}</a></p>`);
 }

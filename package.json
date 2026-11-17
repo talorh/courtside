@@ -26,6 +26,7 @@
 		"restore-d1": "node --no-warnings scripts/restore-d1.mjs",
 		"maintenance": "node --no-warnings scripts/maintenance.mjs",
 		"staging": "node scripts/staging.mjs",
+		"logs": "node --no-warnings scripts/logs.mjs",
 		"join": "node scripts/join.mjs"
 	},
 	"devDependencies": {

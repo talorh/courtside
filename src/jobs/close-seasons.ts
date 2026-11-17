@@ -13,6 +13,6 @@ export async function closeSeasonsOver(deps: AppDeps): Promise<void> {
 		const outcome = await closeSeasonOver(deps, team);
 		if (outcome === "closed") console.log(JSON.stringify({ event: "season_closed", teamId: team.id }));
 		if (outcome === "busy") console.log(JSON.stringify({ event: "season_close_waits", teamId: team.id }));
-	});
+	}, (t) => ({ teamId: t.id }));
 	if (errors.length) throw new AggregateError(errors, `closing seasons: ${errors.length} team(s) couldn't be closed`);
 }

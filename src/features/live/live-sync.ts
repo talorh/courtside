@@ -45,6 +45,6 @@ export async function advanceStream(deps: TeamDeps, stream: LiveStream, counts: 
 export async function advanceLive(deps: TeamDeps) {
 	const counts = { liveNow: 0 };
 	const open = await listOpenLive(deps.db, deps.team.id);
-	const result = await runEach(open, (stream) => advanceStream(deps, stream, counts));
+	const result = await runEach(open, (stream) => advanceStream(deps, stream, counts), (s) => ({ liveStreamId: s.id, gameId: s.gameId, liveInputUid: s.liveInputUid }));
 	return { ...counts, errors: result.errors };
 }

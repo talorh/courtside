@@ -48,7 +48,9 @@ export const concatArgs = (listPath, outPath, reencode) => {
 	return [...COMMON, "-safe", "0", "-f", "concat", "-i", listPath, ...(reencode ? encode : ["-c", "copy"]), ...(mp4 ? ["-movflags", "+faststart"] : []), outPath];
 };
 
-const why = (run) => `ffmpeg: ${run.err.trim().split("\n").slice(-3).join(" | ") || `exit ${run.code}`}`;
+/** Why a run failed: ffmpeg's last lines, with a signed link (an input's or the output's) cut to its address, as the
+ * site's own redaction does (src/shared/redact.ts): the reason is logged, stored and emailed. */
+export const why = (run) => `ffmpeg: ${run.err.trim().split("\n").slice(-3).join(" | ").replace(/(https?:\/\/[^\s'"?]+)\?[^\s'"]*/g, "$1?…") || `exit ${run.code}`}`;
 
 /** Every segment appended to one transport stream at `tsPath`; the first run that failed, or null. A stream that can't
  * be written (the disk full) stops its ffmpeg and is that failure, never an error left to take the joiner down. */

@@ -27,7 +27,7 @@ export async function retryStreamCopies(deps: TeamDeps) {
 	const uncopied = (await listVideosByStatus(deps.db, deps.team.id, "processing")).filter((v) => !v.streamUid && !asking(v));
 	const joining = uncopied.length ? await videosWithSegments(deps.db, deps.team.id) : new Set<number>();
 	const pending = uncopied.filter((v) => !joining.has(v.id)).slice(0, BATCH);
-	const result = await runEach(pending, (video) => requestStreamCopy(deps, video));
+	const result = await runEach(pending, (video) => requestStreamCopy(deps, video), (v) => ({ videoId: v.id, gameId: v.gameId }));
 	const joins = await joinRecordings(deps, uncopied.filter((v) => joining.has(v.id)));
 	return { copiesRequested: result.succeeded, joined: joins.joined, errors: [...result.errors, ...joins.errors] };
 }
@@ -61,12 +61,20 @@ async function advance(deps: TeamDeps, video: Video, counts: { ready: number; fa
 		await requestHd(deps, uid, { videoId: video.id });
 	} else if (state.state === "error") {
 		await markFailed(deps.db, deps.team.id, video.id, state.errorReason || "Stream could not process this video");
-		console.error(JSON.stringify({ event: "video_failed", teamId: deps.team.id, videoId: video.id, reason: state.errorReason }));
+		console.error(JSON.stringify({ event: "video_failed", teamId: deps.team.id, videoId: video.id, gameId: video.gameId, streamUid: uid, reason: state.errorReason }));
 		counts.failed++;
 		await record(deps, { kind: "video_failed", gameId: video.gameId, memberId: video.uploadedBy, detail: state.errorReason || null });
 		await ticketFailedVideo(deps, video, state.errorReason);
+	} else if (video.processingAt) {
+		// An hour in, once (the run that crosses it), with Stream's own state; Insights' light says when it's stuck for hours.
+		const minutes = Math.floor((deps.now().getTime() - Date.parse(video.processingAt)) / 60_000);
+		if (minutes >= SLOW_MINUTES && minutes < SLOW_MINUTES + 5) {
+			console.warn(JSON.stringify({ event: "video_slow", teamId: deps.team.id, videoId: video.id, gameId: video.gameId, streamUid: uid, state: state.state, minutes }));
+		}
 	}
 }
+
+const SLOW_MINUTES = 60;
 
 /** Asks Stream for the HD MP4 once a video or clip is ready. Non-fatal (logged): a hiccup here mustn't fail the run, as
  * trackHdDownloads asks again every run while Stream has none (a video), and the first download asks (a clip). */
@@ -82,7 +90,7 @@ export async function requestHd(deps: TeamDeps, uid: string, ids: { videoId?: nu
 export async function advanceProcessing(deps: TeamDeps) {
 	const processing = (await listVideosByStatus(deps.db, deps.team.id, "processing")).filter((v) => v.streamUid).slice(0, BATCH);
 	const counts = { ready: 0, failed: 0 };
-	const result = await runEach(processing, (video) => advance(deps, video, counts));
+	const result = await runEach(processing, (video) => advance(deps, video, counts), (v) => ({ videoId: v.id, gameId: v.gameId }));
 	return { ...counts, errors: result.errors };
 }
 
@@ -116,6 +124,6 @@ export async function trackHdDownloads(deps: TeamDeps) {
 		} else if (state === "error") {
 			await hdFailed(deps, video, uid);
 		}
-	});
+	}, (v) => ({ videoId: v.id, gameId: v.gameId }));
 	return { ...counts, errors: result.errors };
 }

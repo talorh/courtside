@@ -95,18 +95,9 @@ of the same repository: you work there, on `staging` and on your own branches.
    the live database first: `npx cf d1 migrations apply <live database id> --dir migrations --dry-run` (production's
    `d1Id` in `deploy.config.ts`; the dry run only checks the command), then without `--dry-run`, right before the
    release, and check the new table or column is there with a read-only `cf d1 query`.
-8. Watch the live logs for ten minutes after a release, then delete the merged branch. The Worker's error lines in the
-   last 15 minutes (its JSON log lines come back as fields of `source`; filter on `event` or `level`):
-
-   ```bash
-   now=$(date +%s%3N); from=$((now - 15*60*1000))
-   npx cf o11y telemetry query --query-id "q$RANDOM" --view events --limit 50 \
-     --timeframe-from $from --timeframe-to $now --parameters-datasets cloudflare-workers \
-     --parameters-calculations '[{"operator":"count","alias":"c"}]' --parameters-order-by-value c \
-     --parameters-filters '[{"key":"level","operation":"eq","value":"error","type":"string"}]'
-   ```
-
-   The same with `{"key":"event","operation":"eq","value":"sync_team","type":"string"}` shows each team's 5-minute job.
+8. Watch the live logs for ten minutes after a release, then delete the merged branch: `npm run logs -- --since 15m`
+   (the Worker's warnings and errors, newest first; `--all` for every line, `--event sync_team --all` for each team's
+   5-minute job; `docs/runbooks/incident.md`).
 
 **Rules that catch people out** (all in `AGENTS.md`):
 
@@ -142,8 +133,10 @@ creating remotes, always needs a yes.
 
 You may be asked to deal with a problem on the admin's behalf. Find out before you change anything.
 
-1. **Look first, read-only.** The admin area's Insights page says what's wrong; Platform shows every limit. Read the
-   Worker's logs (the command in section 4, step 8), the build
+1. **Look first, read-only, in the order `docs/runbooks/incident.md` gives.** The admin area's Insights page says
+   what's wrong; the Log's Problems has each failure with its team, step and record; Platform shows every limit. Read
+   the Worker's logs (`npm run logs`: by team, event, game, video, an error page's Reference or one request), the
+   traces for anything slow, the build
    (`cf builds list --worker <the Worker's tag>`, the tag from `cf workers scripts search --name courtside`; `cf builds logs <build id>`), and the database read-only
    (`cf d1 query <id> --sql "SELECT ..."`).
 2. **Say what you found** to the admin: what's broken, since when, who it affects, and what you'd do.

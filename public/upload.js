@@ -5,16 +5,25 @@
 import { keepAwake } from "./awake.js";
 import { enableDrop } from "./upload-drop.js";
 import { needsReload } from "./upload-net.js";
-import { reportProblem } from "./problems.js";
+import { progressOf, progressWords, reportProblem } from "./problems.js";
 import { cancelOnServer, failedWords, upload } from "./upload-run.js";
 import { forget, gb, keyFor } from "./upload-state.js";
 import { tapAgain } from "./tap-again.js";
 
 const $ = (id) => document.getElementById(id);
 const hint = (text) => { $("hint").textContent = text; };
+// How far the upload has got, for its report if it stops (problems.js), and the upload going, if one is.
+const sent = { pct: 0, startedMs: 0, going: null };
+const reportStopped = (file, gameId, why, status, keepalive = false) => {
+	const progress = progressOf(sent.pct, file.size, sent.startedMs, Date.now());
+	reportProblem("upload", { gameId, message: `${progressWords(progress)}: ${why}`, status, progress, keepalive });
+};
+// The page closing mid-upload (iPhone reclaiming the tab, say): told as it goes. The upload carries on where it left off
+// when the video is chosen again.
+addEventListener("pagehide", () => { if (sent.going) reportStopped(sent.going.file, sent.going.gameId, "the page closed mid-upload", undefined, true); });
 const ui = {
 	hint,
-	show: ({ pct, text }) => { $("bar").style.width = `${pct}%`; $("pct").textContent = text; },
+	show: ({ pct, text }) => { sent.pct = pct; $("bar").style.width = `${pct}%`; $("pct").textContent = text; },
 };
 
 function main() {
@@ -57,6 +66,7 @@ function main() {
 		cancel.hidden = false;
 		$("file-name").textContent = file.name;
 		$("pct").textContent = gb(file.size);
+		Object.assign(sent, { pct: 0, startedMs: Date.now(), going: { file, gameId } });
 		pickText.textContent = "Uploading…";
 		hint("Keep this page open until it finishes (we'll keep your screen on).");
 		window.addEventListener("beforeunload", warn);
@@ -82,11 +92,12 @@ function main() {
 				// The game has a video already, or the upload's gone: forget it. Not when the site only asks for a reload.
 				if (err.status === 409 && !needsReload(err)) forget(keyFor(file, gameId));
 				hint(failedWords(err));
-				// The site logs its own failures (5xx); signed out isn't one.
-				if (!(err.status >= 500) && err.status !== 401) reportProblem("upload", { gameId, message: err.message, status: err.status });
+				// The site logs its own failures (5xx), but not storage's (the parts go straight to R2); signed out isn't one.
+				if ((!(err.status >= 500) || /^storage /.test(err.message)) && err.status !== 401) reportStopped(file, gameId, err.message, err.status);
 			}
 			pickText.textContent = "Choose the video";
 		} finally {
+			sent.going = null;
 			busy = false;
 			sureToCancel.reset();
 			cancel.hidden = true;

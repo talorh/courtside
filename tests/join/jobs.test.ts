@@ -79,4 +79,17 @@ describe("the joiner's jobs", () => {
 		await jobs.idle();
 		expect(lines).toEqual([{ event: "join_done", job: "/bucket/originals/t/x/live.joined.mp4", bytes: 5, seconds: 2, took: { read: 1, join: 0, store: 1 } }]);
 	});
+	it("a join that failed is an error line in the Worker's logs; one that's done, the usual line", async () => {
+		const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+		const logged = vi.spyOn(console, "log").mockImplementation(() => {});
+		const failing = createJobs(async () => ({ ok: false, reason: "ffmpeg: moov atom not found" }));
+		failing.ask(ask(OUT));
+		await failing.idle();
+		expect(JSON.parse(String(errors.mock.calls[0]?.[0]))).toMatchObject({ event: "join_failed", reason: "ffmpeg: moov atom not found" });
+		const done = createJobs(async () => ({ ok: true, bytes: 5, seconds: 2 }));
+		done.ask(ask(OUT));
+		await done.idle();
+		expect(JSON.parse(String(logged.mock.calls[0]?.[0]))).toMatchObject({ event: "join_done" });
+		vi.restoreAllMocks();
+	});
 });

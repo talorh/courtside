@@ -1,5 +1,6 @@
 // Game page: full screen, "Mark" buttons (clip maker, coach notes), jump-to-time links and "Carry on from", which
 // read and set the Stream player's position through the vendored Player SDK (/stream-sdk.js, loaded first).
+import { watchReporter } from "./watch-report.js";
 const frame = document.querySelector(".player iframe");
 
 // The player, or a live stream from the Go live page (a plain video). iPhone can't make part of a page full screen,
@@ -33,6 +34,10 @@ const clock = (seconds) => {
 function playerControls() {
 	if (!frame || typeof window.Stream !== "function") return;
 	const player = window.Stream(frame);
+	// Stream's player failing (a saved game's, or an app's live stream) goes to the site's logs (watch-report.js).
+	const report = watchReporter(frame.hasAttribute("data-live-player") ? "live" : "video");
+	player.addEventListener("error", () => report.trouble("Stream's player: error"));
+	player.addEventListener("playing", () => report.fine());
 	for (const button of document.querySelectorAll("[data-mark]")) {
 		const input = document.getElementById(button.dataset.mark);
 		if (!input) continue;

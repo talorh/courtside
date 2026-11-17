@@ -6,6 +6,8 @@
 
 // A whole game joins in well under this; the site's links last longer.
 const LIMIT_MS = 40 * 60_000;
+// A join that failed is an error line in the Worker's logs; the rest, the usual line.
+const logLine = (line) => (line.event === "join_failed" ? console.error : console.log)(JSON.stringify(line));
 
 /** The job a request is for: its output link's path (the bucket and key), which stays the same however it's signed. */
 export const jobId = (output) => new URL(output).pathname;
@@ -15,7 +17,7 @@ export const jobId = (output) => new URL(output).pathname;
  * Returns { ask(req), idle() }: ask answers at once (running, done, failed, or none when `req.start` is false and no
  * such job is known); idle resolves once nothing is running or waiting.
  */
-export function createJobs(run, { limitMs = LIMIT_MS, log = (line) => console.log(JSON.stringify(line)) } = {}) {
+export function createJobs(run, { limitMs = LIMIT_MS, log = logLine } = {}) {
 	const jobs = new Map();
 	let turn = Promise.resolve();
 

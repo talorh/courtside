@@ -16,8 +16,14 @@ import { api } from "./upload-net.js";
 export function watchPhone(media, gameId, { live, rec, paused, health, onCameraLost, onSoundLost, onRecordingQuiet, onRecordingBack }) {
 	const started = Date.now();
 	const waiting = [];
+	// Notes that couldn't be sent (no signal: the likeliest time for them) go back in the queue for the next sending.
 	const flush = () => {
-		if (waiting.length) api(`/api/live/${gameId}/events`, { events: waiting.splice(0, 40) }).catch((err) => console.warn(`live log: ${err.message ?? err}`));
+		if (!waiting.length) return;
+		const batch = waiting.splice(0, 40);
+		api(`/api/live/${gameId}/events`, { events: batch }).catch((err) => {
+			waiting.unshift(...batch.slice(0, Math.max(0, 80 - waiting.length)));
+			console.warn(`live log: ${err.message ?? err}`);
+		});
 	};
 	// The page hiding (a lock) or closing may be the last chance: the notes go now, as a request that outlives the page.
 	const flushLeaving = () => {

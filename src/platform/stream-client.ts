@@ -1,3 +1,4 @@
+import { answering, type ApiErrors, firstError } from "./api-failure.ts";
 import { siteLabel, siteOf } from "./site-label.ts";
 
 export type DownloadState = "none" | "inprogress" | "ready" | "error";
@@ -28,7 +29,7 @@ export interface StreamPort {
 /** Stream's list answers this many at most. */
 const PAGE = 1000;
 
-interface ApiBody<T> { success: boolean; result?: T; errors?: Array<{ message?: string }> }
+interface ApiBody<T> { success: boolean; result?: T; errors?: ApiErrors }
 interface VideoResult { uid?: string; readyToStream?: boolean; duration?: number; status?: { state?: string; errorReasonCode?: string; errorReasonText?: string } }
 interface DownloadsResult { default?: { status?: DownloadState } }
 
@@ -51,7 +52,8 @@ export function createStreamClient(config: { accountId: string; apiToken: string
 
 	/** Null when Stream says the video (or its download) doesn't exist; any other failure throws. */
 	async function call<T>(path: string, init: RequestInit = {}): Promise<T | null> {
-		const res = await doFetch(`${base}${path}`, {
+		const named = `Stream ${init.method ?? "GET"} ${path.split("/")[1] ?? ""}`;
+		const res = await answering(doFetch, named)(`${base}${path}`, {
 			...init,
 			headers: { Authorization: `Bearer ${config.apiToken}`, "Content-Type": "application/json" },
 			signal: AbortSignal.timeout(15_000),
@@ -61,7 +63,7 @@ export function createStreamClient(config: { accountId: string; apiToken: string
 		// A delete can answer with an empty body; anything else that isn't JSON (a Cloudflare error page) is a failure.
 		const body = (text ? parseBody<T>(text) : { success: res.ok }) as ApiBody<T>;
 		if (!res.ok || !body.success) {
-			throw new Error(`Stream ${init.method ?? "GET"} ${path.split("/")[1] ?? ""} failed (${res.status}): ${body.errors?.[0]?.message ?? "no details"}`);
+			throw new Error(`${named} failed (${res.status}): ${firstError(body.errors)}`);
 		}
 		return (body.result ?? {}) as T;
 	}

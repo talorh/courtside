@@ -132,6 +132,6 @@ export async function checkPlayhqFixturesDue(deps: TeamDeps) {
 	const now = deps.now();
 	const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
 	const due = await listPlayhqFixturesDue(deps.db, deps.team.id, { usually: hoursAgo(CHECK_EVERY_HOURS), tournamentOn: hoursAgo(TOURNAMENT_EVERY_HOURS), today: localDate(now) });
-	const { succeeded, errors } = await runEach(due, (f) => checkPlayhqFixture(deps, f));
+	const { succeeded, errors } = await runEach(due, (f) => checkPlayhqFixture(deps, f), (f) => ({ fixtureId: f.id }));
 	return { playhqChecked: succeeded, errors };
 }

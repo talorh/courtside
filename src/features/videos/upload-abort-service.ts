@@ -10,6 +10,7 @@ import type { Member } from "../members/members-repository.ts";
 import { requireActiveUpload } from "./upload-service.ts";
 import { deleteVideo } from "./video-removal-service.ts";
 import type { Video } from "./videos-repository.ts";
+import { stillStreaming } from "../live/live-log.ts";
 
 export async function abortUpload(deps: TeamDeps, member: Member, videoId: number): Promise<void> {
 	const upload = await requireActiveUpload(deps, member, videoId);
@@ -24,7 +25,7 @@ export async function refuseWhileStillComing(deps: TeamDeps, video: Video): Prom
 	// A live recording a phone is still streaming (the same filmer's other phone or tab) isn't deleted from here. A
 	// Stream hiccup reads as not streaming, as on the pages.
 	const live = await getLiveByRecording(deps.db, deps.team.id, video.id);
-	if (live?.status === "open" && !live.endRequestedAt && await deps.live.isConnected(live.liveInputUid).catch(() => false)) {
+	if (live?.status === "open" && !live.endRequestedAt && await stillStreaming(deps, live)) {
 		throw conflict("This game is still being streamed from a phone, so its recording can't be deleted from here.");
 	}
 	// Nor one still sending: a part in the last two minutes, or a recording newer than that whose first part may still

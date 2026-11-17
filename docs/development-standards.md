@@ -157,13 +157,25 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
  A new non-fatal case gets a comment saying why it can't hurt data, and a log line.
 - Batch work uses `runEach` (`shared/run-each.ts`): one item at a time, failures collected. The caller surfaces
  them; the cron throws an `AggregateError` after finishing the rest (`jobs/sync-videos.ts`). A `FetchBudgetSpent`
- error is the one exception: logged as `deferred`, picked up by the next run.
+ error is the one exception: logged as `deferred`, picked up by the next run. Pass `runEach` the record's ids
+ (`(v) => ({ videoId: v.id, gameId: v.gameId })`), and name a job's step where its failures are collected
+ (`tagFailure`, `shared/failure-ids.ts`): each failure is then a `job_failed` line naming its step and record, and a
+ problem naming its step (`jobs/job-problems.ts`).
 - Logs are one JSON object per line: `console.error|warn|log(JSON.stringify({ event: "snake_case_name", teamId, …ids,
  error: String(err) }))` (`handle-request.ts` `request_error`, `jobs/sync-videos.ts` `sync_team`,
  `live-routes.ts` `golive_events`). Every line from a team's request or job carries `teamId` (a rule; the site-wide
- ones are listed in `scripts/rules.mjs`). Logs never contain secrets, signed URLs, WHIP addresses or tokens.
-- Platform clients throw `Error("<Service> <operation> failed (<status>)")`, adding the service's first error
- message when it sends one (`platform/stream-client.ts`, `stream-live.ts`, `stream-clips.ts`, `playhq.ts`).
+ ones are listed in `scripts/rules.mjs`), and the ids of what it's about (`gameId`, `videoId`, `liveStreamId`,
+ `liveInputUid`, `memberId`). `error` level is something that failed, `warn` something refused or not known, `log`
+ what happened. Logs never contain secrets, signed URLs, WHIP addresses or tokens: an error that may quote a signed
+ link goes through `withoutLinkQueries` (`shared/redact.ts`). A request's failure is logged once, in
+ `app/request-errors.ts` (`request_error` for a 5xx, `request_refused` for a signed-in person's refusal, never its
+ message, which can name a person), with its method, path, member and Ray ID: a route needn't log its own `HttpError`,
+ but should give it the outside failure as its `cause`. `docs/runbooks/incident.md` lists the events that matter and
+ how to find them (`npm run logs`).
+- Platform clients throw `Error("<Service> <operation> failed (<status>): <code> <message>")`, with Cloudflare's first
+ error's code and message when it sends one (`platform/api-failure.ts` `firstError`), and `"<Service> <operation>
+ didn't answer"` for a call that times out (`answering`; the run's budget refusal, `FetchBudgetSpent`, stays itself)
+ (`platform/stream-client.ts`, `stream-live.ts`, `stream-clips.ts`, `playhq.ts`, `cloudflare-billing.ts`).
 
 ## 5. Data (D1)
 

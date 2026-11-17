@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { insertSegment, listSegments, segmentKey } from "../../../src/features/live/recording-segments-repository.ts";
 import { getVideo } from "../../../src/features/videos/videos-repository.ts";
 import { runSync } from "../../../src/jobs/sync-videos.ts";
@@ -78,6 +78,22 @@ describe("the join step", () => {
 		await runSync(deps);
 		expect(deps.joiner.asked).toHaveLength(asked); // given up
 	});
+	it("a failure's reason never keeps a signed link's query: not in the Worker's logs, the Log, the team's log or the alert", async () => {
+		const { deps, later } = await waiting();
+		const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+		deps.joiner.result = { ok: false, reason: "ffmpeg: Error opening input file https://r2.test/originals/b12.1-2026/x.mp4?X-Amz-Signature=abc123&X-Amz-Credential=key." };
+		for (let i = 0; i < 6; i++) { await runSync(deps); later(5); await runSync(deps); later(5); }
+		const stored = [
+			...errors.mock.calls.map((c) => String(c[0])),
+			...((await deps.db.prepare("SELECT detail FROM problems").all<{ detail: string }>()).results.map((r) => r.detail)),
+			...((await deps.db.prepare("SELECT detail FROM admin_log WHERE action = 'join_failed'").all<{ detail: string }>()).results.map((r) => r.detail)),
+			(await alert(deps))!.detail,
+		];
+		expect(stored.join("\n")).toContain("https://r2.test/originals/b12.1-2026/x.mp4?…");
+		expect(stored.join("\n")).not.toMatch(/Signature|Credential|abc123/);
+		errors.mockRestore();
+	});
+
 	it("a joiner that doesn't answer counts as a try, ten minutes apart, and nothing is deleted; six and the team manager is asked", async () => {
 		const { deps, videoId, key, later } = await waiting();
 		deps.joiner.down = true;

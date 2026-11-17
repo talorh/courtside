@@ -620,7 +620,9 @@ the run), and checks Stream's minutes (at most hourly), the site's server errors
 support desk and monitoring).
 
 Every record is processed even if one fails. Failures are thrown at the end as an `AggregateError`, so the run shows
-as failed in Workers Observability, and six failed runs in a row raise a ticket. Batches are capped to stay inside the
+as failed in Workers Observability, and six failed runs in a row raise a ticket. Each failure is noted with its step
+(`live`, `processing`, `clips`, …, named in `jobs/sync-team.ts`) and its record's ids (`runEach`'s `idOf`), and becomes
+a `job_failed` line naming them and a problem naming the step. Batches are capped to stay inside the
 run's 200 outside calls; work past that
 waits for the next run and is logged as `deferred`.
 
@@ -957,7 +959,7 @@ section and keeps one More menu open at a time.
  filters show.
 - **Problems** (`problem-log.ts`, `problems-repository.ts`, migration 0062): anything that failed, a line each,
  written beside the Worker log line where it happens: a request answered 5xx (`app/request-errors.ts`, with who and
- their device), each job failure (`jobs/job-problems.ts`, under its team; the 5-minute run's closing checks are
+ their device), each job failure (`jobs/job-problems.ts`, under its team, its detail starting with its step, as `processing: …`; the 5-minute run's closing checks are
  wrapped like its steps, so a check that fails never loses the others), an email that didn't send, an alert that
  couldn't be updated, Stream, PlayHQ, Images, Cloudflare, Frankfurter or Workers AI not answering, and what the phones
  report: Go live's notes marked as problems (`p: true`: the camera or sound lost, the connection dropping, Go live
@@ -1102,8 +1104,18 @@ There's no team in the config: each request and job step gets its team (`TeamDep
  Images (`site-label.ts`), shows a strip on every page and puts `[Staging]` on its emails.
 - **Local development** uses `.dev.vars` (git-ignored) with `DEV_AUTH_EMAIL`, which only works when the request's host
  is `localhost`.
-- **Observability:** Workers Logs, with query strings hidden (signed links carry credentials in them), and Issues, so
- Cloudflare emails the site owner when the Worker starts failing in a new way (`docs/runbooks/cloudflare-setup.md`, §7).
+- **Observability:** Workers Logs, with query strings hidden (signed links carry credentials in them), traces (each
+ request's and job run's D1, R2, outside and Durable Object calls, timed), and Issues, so Cloudflare emails the site
+ owner when the Worker starts failing in a new way (`docs/runbooks/cloudflare-setup.md`, §7), in all three Workers. Log
+ lines are JSON with an `event`, the team and the ids of what they're about. A failed request is one line in
+ `app/request-errors.ts`: `request_error` (a 5xx: method, path, member, Ray ID, status, the error, its cause and stack)
+ or `request_refused` (a signed-in person's 403, 409 and the like: its status and code), and the error page shows the
+ Ray ID as a Reference to quote. Each job run has a `cron_run` line (`jobs/cron-run.ts`), each failure in it a
+ `job_failed` line with its step and record (`shared/failure-ids.ts`, `jobs/job-problems.ts`). The phones add their
+ side: the filming phone's `golive_events`, each family's player trouble as `watch_events` (`public/watch-report.js`,
+ `/api/watch-events`: the Worker's logs only, never the admin Log), and an upload or photos that stopped as
+ `phone_problem` (and a problem). `npm run logs` reads them (`scripts/logs.mjs`), and `docs/runbooks/incident.md` says
+ where to look first.
 
 The Stream Player SDK is kept in the repo at `public/stream-sdk.js` (from embed.cloudflarestream.com, sha256
 f8627f93…14711), so the Content Security Policy stays `script-src 'self'`. `vite.config.ts` only loads Cloudflare's Vite
@@ -1131,7 +1143,7 @@ src/
  features/ activity admin changelog clips favourites games help home live members notes photos players removals
  roster scores season (the end-of-season pack) signin support teams videos (each: <name>-routes.ts, -service.ts, -repository.ts and views/, as
  it needs)
- jobs/ sync-videos.ts daily.ts teams.ts (each team's turn) delete-teams.ts backup-db.ts backup-sql.ts (the
+ jobs/ sync-videos.ts sync-team.ts (a team's named steps) daily.ts cron-run.ts job-problems.ts teams.ts (each team's turn) delete-teams.ts backup-db.ts backup-sql.ts (the
  backup file's order, and restoring it) sweep-orphans.ts
 maintenance/ the maintenance page's own small Worker, courtside-maintenance (docs/runbooks/maintenance.md)
 join/ the video joiner, courtside-join: a Durable Object carrying an ffmpeg container (server.mjs, jobs.mjs, join.mjs, pipeline.mjs, Dockerfile), deployed with

@@ -30,7 +30,7 @@ describe("Cloudflare's bill", () => {
 
 	it("says why when Cloudflare refuses (the token without Billing Read, say)", async () => {
 		const { fetch } = fakeFetch({ status: 403, body: { success: false, errors: [{ code: 10000, message: "Authentication error" }] } });
-		await expect(createCloudflareBilling({ accountId: "acct", token: "tok", fetch }).usage()).rejects.toThrow("Cloudflare's bill (403): Authentication error");
+		await expect(createCloudflareBilling({ accountId: "acct", token: "tok", fetch }).usage()).rejects.toThrow("Cloudflare's bill (403): 10000 Authentication error");
 	});
 
 	it("leaves out a record it can't read rather than count it wrong", async () => {

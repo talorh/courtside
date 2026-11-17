@@ -131,6 +131,6 @@ export async function enforcePhotoRetention(deps: TeamDeps) {
 	const result = await runEach(expired, async (photo) => {
 		await deletePhoto(deps, photo, "retention");
 		await logTeamChange(deps, "site", "photo_deleted", PHOTO_SEASON_OVER);
-	});
+	}, (p) => ({ photoId: p.id }));
 	return { photosExpired: result.succeeded, errors: result.errors };
 }
