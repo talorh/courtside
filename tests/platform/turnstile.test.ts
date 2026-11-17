@@ -32,10 +32,28 @@ describe("checking a Turnstile token", () => {
 		const fetch = answering({ ...good, hostname: "example.com" });
 		expect((await createTurnstile({ secret: "s", fetch }).verify("t", "", "localhost")).result).toBe("ok");
 	});
-	it("is unreachable, not failed, when Cloudflare doesn't answer, answers with an error, or has its own trouble", async () => {
+	it("fails a token longer than Cloudflare's 2,048 characters without asking, and asks about one that long", async () => {
+		const fetch = answering(good);
+		const turnstile = createTurnstile({ secret: "s", fetch });
+		expect(await turnstile.verify("t".repeat(2049), "", "saints.example")).toEqual({ result: "failed", detail: "a token over 2048 characters" });
+		expect(fetch).not.toHaveBeenCalled();
+		expect((await turnstile.verify("t".repeat(2048), "", "saints.example")).result).toBe("ok");
+		expect(fetch).toHaveBeenCalledTimes(1);
+	});
+	it("fails when Cloudflare refuses the question (a 4xx), except a 429, which is Cloudflare limiting its own service", async () => {
+		for (const status of [400, 401, 403, 404, 405, 413]) {
+			expect(await createTurnstile({ secret: "s", fetch: answering({}, status) }).verify("t", "", "saints.example")).toEqual({ result: "failed", detail: `HTTP ${status}` });
+		}
+		expect(await createTurnstile({ secret: "s", fetch: answering({}, 429) }).verify("t", "", "saints.example")).toEqual({ result: "unreachable", detail: "HTTP 429" });
+	});
+	it("is unreachable, not failed, when Cloudflare doesn't answer, answers with a server error, or has its own trouble", async () => {
 		const down = vi.fn(async () => { throw new TypeError("network"); });
 		expect(await createTurnstile({ secret: "s", fetch: down }).verify("t", "", "saints.example")).toEqual({ result: "unreachable", detail: "TypeError: network" });
-		expect(await createTurnstile({ secret: "s", fetch: answering({}, 503) }).verify("t", "", "saints.example")).toEqual({ result: "unreachable", detail: "HTTP 503" });
+		const timedOut = vi.fn(async () => { throw new DOMException("The operation timed out.", "TimeoutError"); });
+		expect((await createTurnstile({ secret: "s", fetch: timedOut }).verify("t", "", "saints.example")).result).toBe("unreachable");
+		for (const status of [500, 502, 503]) {
+			expect(await createTurnstile({ secret: "s", fetch: answering({}, status) }).verify("t", "", "saints.example")).toEqual({ result: "unreachable", detail: `HTTP ${status}` });
+		}
 		const garbled = vi.fn(async () => new Response("<html>", { status: 200 }));
 		expect((await createTurnstile({ secret: "s", fetch: garbled }).verify("t", "", "saints.example")).result).toBe("unreachable");
 		const internal = answering({ success: false, "error-codes": ["internal-error"] });

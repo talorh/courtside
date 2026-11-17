@@ -152,8 +152,10 @@ flowchart TD
  step, and the code step's Send a new code) carries a Turnstile widget, managed and seen only if Cloudflare wants a
  tap. `public/signin.js` loads its script and waits for its token before the form posts; the Worker checks the token
  with Cloudflare (`siteverify`: the secret, the person's IP address; the token must be for action `signin` on this
- site's address) before anything else. Failed: no code, "couldn't confirm you're a person". Cloudflare not answering
- in 10 seconds (or its own trouble): the code still goes and `turnstile_unreachable` is logged, so an outage there
+ site's address) before anything else. Failed (a missing token, one over 2,048 characters, the longest Cloudflare
+ makes, refused without asking; a 4xx other than 429; or Cloudflare saying it isn't good): no code, "couldn't confirm
+ you're a person". Cloudflare's own trouble (no answer in 10 seconds, a network error, a 5xx or 429, an answer that
+ isn't JSON, or `internal-error`): the code still goes and `turnstile_unreachable` is logged, so an outage there
  doesn't stop families signing in; the limits hold. Only the sign-in pages' CSP allows `challenges.cloudflare.com`
  (script and frame). The live site and staging each have their own widget and secret (`TURNSTILE_SITE_KEY`,
  `TURNSTILE_SECRET`); `cf dev` uses Cloudflare's always-passes test keys.

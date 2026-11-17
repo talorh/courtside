@@ -6,9 +6,13 @@ const VERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 /** The widget's action on the sign-in page (views/signin-page.ts): a token made for anything else isn't taken. */
 export const TURNSTILE_ACTION = "signin";
 const TIMEOUT_MS = 10_000;
+/** The longest token Cloudflare makes. */
+const MAX_TOKEN = 2048;
 
-/** "failed": not a person, or a token that's missing, already used or too old. "unreachable": Cloudflare didn't answer
- * (or had its own trouble), so the sign-in's own limits are what hold, rather than nobody being able to sign in. */
+/** "failed": not a person; a token that's missing, longer than Cloudflare makes, already used or too old; or a question
+ * Cloudflare refused (a 4xx other than 429). "unreachable": Cloudflare didn't answer in time, answered with a 5xx or a
+ * 429 (it's limiting its own service), sent something that isn't JSON, or said internal-error. Then the sign-in's own
+ * limits are what hold, rather than nobody being able to sign in. */
 export type TurnstileResult = "ok" | "failed" | "unreachable";
 export interface TurnstileCheck { result: TurnstileResult; detail: string }
 
@@ -26,12 +30,15 @@ export function createTurnstile(o: { secret: string; fetch?: typeof fetch }): Tu
 	return {
 		async verify(token, ip, hostname) {
 			if (!token) return failed("no token");
+			if (token.length > MAX_TOKEN) return failed(`a token over ${MAX_TOKEN} characters`);
 			let res: Response;
 			try {
 				res = await call(VERIFY, { method: "POST", body: new URLSearchParams({ secret: o.secret, response: token, remoteip: ip }), signal: AbortSignal.timeout(TIMEOUT_MS) });
 			} catch (err) {
 				return unreachable(String(err));
 			}
+			// A 4xx is Cloudflare refusing what was sent, so the token isn't taken; only its own trouble lets the sign-in go on.
+			if (res.status >= 400 && res.status < 500 && res.status !== 429) return failed(`HTTP ${res.status}`);
 			if (!res.ok) return unreachable(`HTTP ${res.status}`);
 			const answer = await res.json().catch(() => null) as Answer | null;
 			if (!answer) return unreachable("an answer that wasn't JSON");

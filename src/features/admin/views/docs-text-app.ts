@@ -26,8 +26,9 @@ server error is counted by the hour for Platform's alert.</li></ul>`});
 export const signIn = (): DocSection => ({ id: "signin", title: "Signing in", body: html`
 <p>There are no passwords. Someone types their email, gets a six-digit code by email, types it, and stays signed in for
 30 days on that device. A code is only ever sent to an address on a team's list, or a site admin's, and only once
-Cloudflare Turnstile says a person, not a script, asked: the check is invisible unless Cloudflare wants a tap, and if
-Cloudflare can't be reached the code still goes, with the limits below holding.</p>
+Cloudflare Turnstile says a person, not a script, asked: the check is invisible unless Cloudflare wants a tap. If
+Cloudflare can't be reached, or has trouble of its own (a server error, or it's too busy), the code still goes, with the
+limits below holding. If it refuses the question, or the token is longer than Cloudflare ever makes, no code goes.</p>
 <p>Someone not on a list can tap <b>raise an access request here</b> at the foot of the sign-in page: their name, their
 team and their email, behind the same Turnstile check, open one of the site's own tickets on the support desk (Access
 request: the name, the team), emailed to the admins. An address gets one open request at a time, an address already on a

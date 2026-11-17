@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Fix] **Sign-in:** Fixed an issue where the robot check let a sign-in or access request through when Cloudflare refused the question itself: now only Cloudflare's own trouble (no answer, a 5xx, or Cloudflare limiting its service) lets it carry on on the site's limits, and a token longer than Cloudflare makes is refused.
 - [Fix] **Sign-in:** Fixed an issue where codes asked for at the same moment could all pass the sign-in limits, as each was counted only once its email had gone: each code is now counted first, and taken back if it's refused or its email doesn't go. Request access's hourly limit holds the same way.
 - [Fix] **Video joiner:** Each part of a carried-on recording is now read only as the recording's own kind of file (MP4 or WebM): a part that holds a list of links or files fails the join instead of having the joiner open what it names. Rebuild the joiner's image (npm run join -- image) to pick it up.
 - [Fix] **Security:** The site now answers only on its own address (the club's domain, and staging on its own): any other address that reaches the Worker, such as a version's workers.dev preview address, gets a bare "Not found", as it would miss the zone's protections.

@@ -3,6 +3,7 @@ import { handleRequest } from "../../../src/app/handle-request.ts";
 import { buildRouter } from "../../../src/app/routes.ts";
 import { buildAdminRouter } from "../../../src/features/admin/admin-routes.ts";
 import { SIGN_IN_MESSAGES } from "../../../src/features/signin/views/signin-page.ts";
+import { createTurnstile } from "../../../src/platform/turnstile.ts";
 import { MANAGER } from "../../helpers/app.ts";
 import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
 
@@ -79,6 +80,28 @@ describe("Turnstile on the sign-in page", () => {
 		await askForCode(deps, "tok", "Magic Johnson 0400 000 000");
 		const problems = await deps.db.prepare("SELECT who FROM problems ORDER BY id").all();
 		expect(problems.results).toEqual([{ who: "m…" }]);
+	});
+	it("sends no code and opens no access request when Cloudflare refuses the question (a 4xx), and records it as a robot", async () => {
+		const deps = createTestDeps();
+		vi.spyOn(console, "log").mockImplementation(() => {});
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const refused = vi.fn(async () => new Response(JSON.stringify({ success: false, "error-codes": ["invalid-input-response"] }), { status: 400 }));
+		const withTurnstile = { ...deps, turnstile: createTurnstile({ secret: "ts", fetch: refused }) };
+		const post = (path: string, body: Record<string, string>) => handleRequest(new Request(`https://saints.example${path}`, {
+			method: "POST", headers: { Origin: "https://saints.example", "CF-Connecting-IP": "1.2.3.4" }, body: new URLSearchParams(body),
+		}), withTurnstile, refuse, buildRouter(), buildAdminRouter());
+		const code = await post("/signin", { email: MANAGER, next: "/", "cf-turnstile-response": "tok" });
+		expect(code.status).toBe(400);
+		expect(await code.text()).toContain(SIGN_IN_MESSAGES.robot.replaceAll("'", "&#39;"));
+		// A token longer than Cloudflare makes is refused the same way, without asking.
+		expect((await post("/signin", { email: MANAGER, next: "/", "cf-turnstile-response": "x".repeat(4000) })).status).toBe(400);
+		const access = await post("/signin/access", { name: "Steph Curry", team: "Saints B12.1", email: "steph@example.com", "cf-turnstile-response": "tok" });
+		expect(access.status).toBe(400);
+		expect(refused).toHaveBeenCalledTimes(2);
+		expect(deps.email.sent).toEqual([]);
+		expect((await deps.db.prepare("SELECT kind FROM sign_in_events").all()).results).toEqual([{ kind: "robot" }, { kind: "robot" }]);
+		expect((await deps.db.prepare("SELECT COUNT(*) AS n FROM support_requests").first<number>("n"))).toBe(0);
+		expect(warn).not.toHaveBeenCalled();
 	});
 	it("still sends the code when Cloudflare can't be reached, and logs that it couldn't check", async () => {
 		const deps = createTestDeps();

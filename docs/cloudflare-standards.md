@@ -90,16 +90,20 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
  alone or user-editable data.
 - The human-check WAF rule tells a signed-in visitor by the `courtside_session` cookie (`infra/zone-courtside-app/
  waf-custom-rules.json`); the rate limit on posts covers the sign-in's forms.
-- The robot check on the sign-in's forms (Turnstile, `platform/turnstile.ts`) fails open: when Cloudflare's check can't
- be reached in 10 seconds or has its own error, the sign-in goes ahead on the database's limits alone, so nobody is
- locked out by it (it's logged as `turnstile_unreachable`). Those limits (`auth/sign-in-limits.ts`): an address gets
- 10 codes an hour (then a 15-minute hold), 20 a day and 15 wrong codes a day (then a day's hold); an IP address 30
- codes in 15 minutes, 10 unknown addresses in 15 minutes and 30 wrong codes an hour; and the whole site 200 codes an
- hour, which also raises a ticket for the admins. Each code is counted before the limits are looked at, and taken back
- if it's refused or its email doesn't go, so requests sent at the same moment can't all pass a limit. Request access
- (`features/signin/access-service.ts`) has its own: 10 tries in 15 minutes from one IP address (each a sign-in event
- of its own kind, `access`, which no sign-in limit counts), and the whole site 10 requests an hour (counted in the
- statement that makes the ticket). A token that Cloudflare says is bad is still refused.
+- The robot check on the sign-in's forms (Turnstile, `platform/turnstile.ts`) fails open only when Cloudflare has
+ trouble of its own: a network error, no answer in 10 seconds, a 5xx, a 429 (Cloudflare limiting its own service), an
+ answer that isn't JSON, or `internal-error`. Then the sign-in goes ahead on the database's limits alone, so nobody is
+ locked out by it (it's logged as `turnstile_unreachable`). It fails closed (no code or request is made; the code form
+ records a `robot` sign-in event) for a missing token, a token over 2,048 characters (the longest Cloudflare makes;
+ refused without asking), any other 4xx (Cloudflare refusing what was sent), and any answer saying the token isn't
+ good, or was made for another page or site.
+- The database's limits (`auth/sign-in-limits.ts`): an address gets 10 codes an hour (then a 15-minute hold), 20 a day
+ and 15 wrong codes a day (then a day's hold); an IP address 30 codes in 15 minutes, 10 unknown addresses in 15
+ minutes and 30 wrong codes an hour; and the whole site 200 codes an hour, which also raises a ticket for the admins.
+ Each code is counted before the limits are looked at, and taken back if it's refused or its email doesn't go, so
+ requests sent at the same moment can't all pass a limit. Request access (`features/signin/access-service.ts`) has
+ its own: 10 tries in 15 minutes from one IP address (each a sign-in event of its own kind, `access`, which no
+ sign-in limit counts), and the whole site 10 requests an hour (counted in the statement that makes the ticket).
 
 ## Edge security
 
