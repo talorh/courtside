@@ -19,6 +19,12 @@ export const problemStatements = (db: D1Database, p: ProblemRow, sinceIso: strin
 		WHERE changes() = 0`).bind(p.teamId, p.kind, p.who, p.what, p.detail, p.device, p.at),
 ];
 
+/** How many of `kinds` a person's phone reported in a team since `sinceIso`: each line's count, once it's had one since. */
+export async function countReported(db: D1Database, teamId: string, who: string, kinds: readonly ProblemKind[], sinceIso: string): Promise<number> {
+	return (await db.prepare(`SELECT COALESCE(SUM(times), 0) AS n FROM problems WHERE team_id = ? AND who = ? AND at > ? AND kind IN (${kinds.map(() => "?").join(", ")})`)
+		.bind(teamId, who, sinceIso, ...kinds).first<number>("n")) ?? 0;
+}
+
 /** The newest `limit` lines of the days, newest first, by when each last happened. */
 export async function listProblems(db: D1Database, range: LogRange, limit: number): Promise<ProblemLine[]> {
 	const { results } = await db.prepare(`SELECT p.kind, p.who, p.what, p.detail, p.device, p.times, p.first_at, p.at, t.code, t.season_start

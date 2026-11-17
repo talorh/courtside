@@ -8,15 +8,23 @@ import { z } from "zod";
 import { gameName } from "../games/game-log.ts";
 import { getGame } from "../games/games-repository.ts";
 import { logProblem } from "./problem-log.ts";
+import { countReported } from "./problems-repository.ts";
 
 const reportSchema = z.object({
 	what: z.enum(["upload", "photos"]), gameId: z.number().int().positive().optional(), message: z.string().min(1).max(200), status: z.number().int().optional(),
 	progress: z.object({ pct: z.number().int().min(0).max(100), mb: z.number().int().min(0), minutes: z.number().int().min(0) }).optional(),
 });
 
+// A phone's reports a person an hour: past that a script gone wrong (or a page reloaded over and over) adds nothing, and
+// is answered as if it had, so it doesn't try again.
+const PER_HOUR = 30;
+const KINDS = ["upload_problem", "photo_problem"] as const;
+
 export function registerProblemRoutes(router: Router): void {
 	router.post("/api/problems", "watcher", async ({ req, member, deps }) => {
 		const r = await parseJson(req, reportSchema);
+		const hourAgo = new Date(deps.now().getTime() - 60 * 60_000).toISOString();
+		if (await countReported(deps.db, deps.team.id, member.email, KINDS, hourAgo) >= PER_HOUR) return jsonOk({ logged: false });
 		// Its words stay in the admin Log alone: a refusal can name the team's manager, a photo's file name a child.
 		console.warn(JSON.stringify({ event: "phone_problem", teamId: deps.team.id, gameId: r.gameId, memberId: member.id, device: deps.device, what: r.what, status: r.status, progress: r.progress }));
 		const game = r.gameId ? await getGame(deps.db, deps.team.id, r.gameId) : null;

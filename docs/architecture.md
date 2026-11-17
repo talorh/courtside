@@ -1025,7 +1025,7 @@ section and keeps one More menu open at a time.
  couldn't be updated, Stream, PlayHQ, Images, Cloudflare, Frankfurter or Workers AI not answering, and what the phones
  report: Go live's notes marked as problems (`p: true`: the camera or sound lost, the connection dropping, Go live
  refused, Resume camera failing) and `/api/problems` from the upload and photo pages (`public/problems.js`; not for a
- 5xx, which the site has already). The same problem (kind, team, person, words) again within 30 minutes, the same day,
+ 5xx, which the site has already; 30 a person an hour, past which a report is answered ok and writes nothing). The same problem (kind, team, person, words) again within 30 minutes, the same day,
  counts on its line (`times`, `first_at` to `at`), so an outage is a line. Kept a month (the 3am job), and a deleted
  team's go with it. Writing one never fails what it's about. Left out: the Log's own writes failing
  (`team_log_failed`, `activity_log_failed`, `live_log_failed`, `problem_log_failed`) and bookkeeping that can't log

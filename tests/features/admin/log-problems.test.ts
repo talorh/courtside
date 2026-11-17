@@ -71,6 +71,23 @@ describe("problems in the admin Log", () => {
 		expect((await client("/api/problems", jsonBody({ what: "anything", message: "x" }))).status).toBe(400);
 	});
 
+	it("takes 30 of a person's phone reports an hour: past that each is answered as taken but writes nothing, and an hour on they're taken again", async () => {
+		const deps = createTestDeps();
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		const client = makeClient(deps);
+		const reported = async () => (await deps.db.prepare("SELECT COALESCE(SUM(times), 0) AS n FROM problems").first<number>("n")) ?? 0;
+		for (let i = 1; i <= 30; i++) await client("/api/problems", jsonBody({ what: "photos", message: `Added ${i} of 40.` }));
+		expect(await reported()).toBe(30);
+		const over = await client("/api/problems", jsonBody({ what: "photos", message: "Added 31 of 40." }));
+		expect([over.status, await over.json()]).toEqual([200, { ok: true, data: { logged: false } }]);
+		expect(await client("/api/problems", jsonBody({ what: "photos", message: "Added 1 of 40." })).then((r) => r.status)).toBe(200);
+		expect(await reported()).toBe(30);
+		expect(warn).toHaveBeenCalledTimes(30);
+		at(deps, "2026-10-15T01:01:00Z");
+		await client("/api/problems", jsonBody({ what: "photos", message: "Added 32 of 40." }));
+		expect(await reported()).toBe(31);
+	});
+
 	it("the 5-minute job's failures, under the team whose step it was", async () => {
 		const deps = createTestDeps();
 		vi.spyOn(console, "error").mockImplementation(() => undefined);

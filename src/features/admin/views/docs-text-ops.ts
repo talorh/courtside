@@ -37,7 +37,7 @@ code, an email on no list, a limit reached, a failed robot check, a Request acce
 the mobile view or the desktop one, when a device's first page says and whenever it switches, and which device every
 line from a person came from. Its <b>Problems</b> are anything that failed: a page or request that failed, a job's
 step, an email that didn't send, Stream, PlayHQ, Images, Cloudflare or the AI not answering, and what the phones report
-(Go live's camera or sound lost, its connection dropping, an upload or photos that stopped). The same problem again within
+(Go live's camera or sound lost, its connection dropping, an upload or photos that stopped, up to 30 a person an hour). The same problem again within
 half an hour counts on its line, so an outage is a line. Filter it by group, and by day in the club's time zone: the last 7 days
 unless today, yesterday or the last month is chosen, or any two dates typed in (the newest 5,000 of each kind of line
 at most). What admins and team managers changed is kept for good; the teams' videos and photos lines 90 days; the
