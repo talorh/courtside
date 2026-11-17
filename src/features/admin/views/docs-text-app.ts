@@ -104,7 +104,8 @@ answer is 429 (${code("photo_limit")}), saying which limit and when there's room
 <li><b>Looking:</b> newest taken first under each day, 60 a page, through signed links that last six hours. A photo's
 page has Newer and Older (on a phone a swipe slides between photos in place, the neighbours' pictures already on the page: public/photo-swipe.js) and Download photo.
 Each page reads only the photos it shows. A pinch zooms a photo, and while it's zoomed a finger moves around it instead
-of swiping.</li>
+of swiping. Until the next photo's page has come (a weak signal can take a few seconds), the caption and buttons showing
+are greyed out and can't be tapped, so Save or Delete never acts on the photo swiped away from.</li>
 <li><b>Several at once:</b> Select photos ticks them, then Download sends them as one zip (stored, written a photo at a
 time so a page of 60 is never in memory at once), or on an iPhone opens the share menu with them all; Delete deletes
 them together, all or none, offered only when every one is the member's own (or for a team manager).</li>

@@ -406,7 +406,7 @@ them.
 - **Several at once**: **Select photos**, tap the ones wanted, then **Download** (one zip; on an
  iPhone **Save to Photos**, the share menu with them all) or **Delete** (shown only when every chosen one is the
  person's own, or for a team manager). Each photo is named in Cloudflare Images as it downloads.
-- **A photo's page:** the photo and when it was taken, Newer and Older (on a phone, a swipe left or right slides to the next photo in place, like a camera roll; a pinch zooms in, and while it's zoomed a finger moves around the photo instead), **Download photo** (the JPEG as stored,
+- **A photo's page:** the photo and when it was taken, Newer and Older (on a phone, a swipe left or right slides to the next photo in place, like a camera roll, its caption and buttons greyed out and untappable until its page has come; a pinch zooms in, and while it's zoomed a finger moves around the photo instead), **Download photo** (the JPEG as stored,
  `saints-b12-1-<date>-photo-<id>.jpg`; on an iPhone or iPad it's **Save photo**, which opens the share menu, where Save
  Image puts it in Photos), and **Ask for this photo to be removed**. Whoever added it gets **Delete photo** instead
  (added by mistake, say), and a team manager sees who added any photo and when, and **Delete photo**

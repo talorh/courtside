@@ -349,6 +349,49 @@ export const scenarios = [
 		},
 	},
 	{
+		name: "a swipe on a slow signal: until the next photo's page comes, the last one's caption and buttons can't be used",
+		phones: ["android", "iphone"],
+		async run(t) {
+			let asked = 0, arrive = () => {};
+			const arrived = new Promise((resolve) => { arrive = resolve; });
+			t.harness.page("/photo", () => photoPage({ newer: 9, older: 5 }));
+			t.harness.page("/photos/9", () => photoPage({ id: 9, older: PHOTO.id }));
+			// The read in advance fails; the swipe's own read is slow, coming only when the test lets it.
+			t.harness.page("/photos/5", async () => {
+				if (++asked === 1) return { status: 503, body: "" };
+				await arrived;
+				return photoPage({ id: 5, newer: PHOTO.id }).replace(/(class="small photo-when">)[^<]*/, "$1Tuesday 20 October, 8:30am");
+			});
+			await t.page.goto(`${t.harness.url}/photo`);
+			await t.until(() => asked >= 1, "the older photo's page read in advance (and failing)");
+			const caption = await t.text(".photo-when");
+			await t.page.evaluate(async () => {
+				const at = document.querySelector(".photoview");
+				const fire = (type, x) => {
+					const e = new Event(type, { bubbles: true });
+					Object.defineProperty(e, "touches", { value: type === "touchend" ? [] : [{ clientX: x, clientY: 300 }] });
+					at.dispatchEvent(e);
+				};
+				fire("touchstart", 200);
+				for (let i = 1; i <= 5; i++) { fire("touchmove", 200 - 36 * i); await new Promise((r) => setTimeout(r, 24)); }
+				fire("touchend", 20);
+			});
+			await t.until(() => asked >= 2, "photo 5's page asked for by the swipe");
+			const held = () => t.page.evaluate(() => [".photo-when", ".photonav", ".photoback", ".side"].map((sel) => document.querySelector(sel)?.inert ?? null));
+			const waiting = await held();
+			t.check(waiting.every((inert) => inert === true), `while it's on its way, the last photo's caption, Newer and Older, All photos and buttons can't be used (${JSON.stringify(waiting)})`);
+			t.check(await t.page.evaluate(() => getComputedStyle(document.querySelector(".side")).opacity === "0.5"), "and look it");
+			t.check(await t.page.evaluate(() => document.querySelector(".photoview").dataset.id === String(7)), "the page's facts still the last photo's until then");
+			arrive();
+			await t.until(() => t.page.evaluate(() => document.querySelector(".photoview")?.dataset.id === "5"), "the page to be photo 5's");
+			const after = await held();
+			t.check(after.every((inert) => inert === false), `photo 5's own caption and buttons can be used (${JSON.stringify(after)})`);
+			const five = await t.text(".photo-when");
+			t.check(five === "Tuesday 20 October, 8:30am" && five !== caption, `photo 5's own caption (${five})`);
+			t.check(await t.page.evaluate(() => document.querySelector("[data-save-photo]").getAttribute("href")) === "/photos/5/download", "its own Save");
+		},
+	},
+	{
 		name: "saving a photo on an iPhone with no share menu: says to press and hold the photo, and keeps the page",
 		phones: ["iphone"],
 		init: [noShareMenu],

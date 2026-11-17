@@ -48,12 +48,22 @@ export function pageFor(id) {
 	return reading.get(id);
 }
 
-/** The page showing becomes `f`'s: its own parts, each a fresh copy (so `f` stays as it is, for a swipe back), and its
- * title. */
+/** The page's own parts can't be used (and look it) while the next photo's page is on its way: until show() puts that
+ * photo's in, they're still the last one's, and Save or Delete would act on a photo swiped away from. */
+export function hold() {
+	for (const sel of OWN) { const mine = document.querySelector(sel); if (mine) mine.inert = true; }
+}
+
+/** The page showing becomes `f`'s: its own parts, each a fresh copy (so `f` stays as it is, for a swipe back) that can be
+ * used, and its title. */
 export function show(f) {
 	for (const sel of OWN) {
 		const mine = document.querySelector(sel), theirs = f.doc.querySelector(sel);
-		if (mine && theirs) mine.replaceWith(theirs.cloneNode(true));
+		if (!mine) continue;
+		if (!theirs) { mine.inert = false; continue; }
+		const fresh = theirs.cloneNode(true);
+		fresh.inert = false;
+		mine.replaceWith(fresh);
 	}
 	document.title = f.doc.title;
 }

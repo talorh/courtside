@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // The photo pages a swipe moves between (public/photo-pages.js): swiping away and back puts the opened photo's own
 // caption, links and buttons back, never the neighbour's; and each page is read once at a time, giving up on a stall.
 
-type Part = { sel: string; photo: number; copy: boolean; on: Map<string, Part> | null; cloneNode: () => Part; replaceWith: (next: Part) => void };
+type Part = { sel: string; photo: number; copy: boolean; inert: boolean; on: Map<string, Part> | null; cloneNode: () => Part; replaceWith: (next: Part) => void };
 const OWN = [".photo-when", ".photonav", ".photoback", ".side"];
 
 /** A stand-in for a photo's page: its figure (its facts) and its own parts, each saying which photo's it is. */
@@ -12,7 +12,8 @@ function standIn(photo: number, newer: number | null, older: number | null) {
 	/** A part goes in its page's place for it; one replaced puts the new one there, on whichever page it's on. */
 	const place = (on: Map<string, Part>, p: Part) => { p.on = on; on.set(p.sel, p); };
 	const part = (sel: string, of: number, copy = false): Part => {
-		const made: Part = { sel, photo: of, copy, on: null, cloneNode: () => part(sel, of, true), replaceWith: (next) => { if (made.on) place(made.on, next); } };
+		// A copy keeps the inert attribute, as the browser's cloneNode does.
+		const made: Part = { sel, photo: of, copy, inert: false, on: null, cloneNode: () => Object.assign(part(sel, of, true), { inert: made.inert }), replaceWith: (next) => { if (made.on) place(made.on, next); } };
 		return made;
 	};
 	for (const sel of OWN) place(parts, part(sel, photo));
@@ -63,6 +64,17 @@ describe("swiping between photos", () => {
 		pages.show(pages.known("7"));
 		expect(shows(page)).toEqual([7, 7, 7, 7]);
 		expect(OWN.every((sel) => page.parts.get(sel)!.copy && page.parts.get(sel) !== seven.doc.querySelector(sel))).toBe(true);
+	});
+	it("while the next photo's page is on its way, the caption, links and buttons showing can't be used, then are its own", async () => {
+		const { page, pages } = await open();
+		pages.hold();
+		expect(OWN.map((sel) => page.parts.get(sel)!.inert)).toEqual([true, true, true, true]);
+		pages.show(await pages.pageFor("5"));
+		expect([shows(page), OWN.map((sel) => page.parts.get(sel)!.inert)]).toEqual([[5, 5, 5, 5], [false, false, false, false]]);
+		// Swiped back to a page kept from before: its copies are usable too.
+		pages.hold();
+		pages.show(pages.known("7"));
+		expect([shows(page), OWN.map((sel) => page.parts.get(sel)!.inert)]).toEqual([[7, 7, 7, 7], [false, false, false, false]]);
 	});
 	it("the opened page's copy is taken as it was opened, before a swipe changes the page", async () => {
 		const { page, pages, seven } = await open();

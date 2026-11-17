@@ -77,7 +77,8 @@ export async function startHarness({ publicDir, bridge, port = 8799 }) {
 		const path = address.pathname;
 		const route = `${req.method} ${path}`;
 		if (req.method === "GET" && state.pages.has(path)) {
-			const page = state.pages.get(path)(address);
+			// A page may answer late (a weak signal): its render returns a promise.
+			const page = await state.pages.get(path)(address);
 			// A file (a photo's download, say) or a redirect comes back as { status, headers, body }.
 			if (typeof page !== "string") return res.writeHead(page.status ?? 200, page.headers).end(page.body);
 			return res.writeHead(200, { "Content-Type": "text/html", ...(path === "/bridge" ? {} : { "Content-Security-Policy": cspFor(path, address) }) }).end(page);

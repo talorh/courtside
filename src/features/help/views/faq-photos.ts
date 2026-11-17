@@ -15,7 +15,7 @@ person can add up to 500 photos a day and each team up to 2,000, to keep room fo
 page says when you can add more.</li>
 <li><b>Privacy:</b> a photo's location is removed when it's added.</li>
 ${shot("photos", "The Photos page with Add photos at the top and a green Choose photos button, before any photos are added")}
-<li><b>Looking:</b> the newest are first. Tap one to see it bigger, then swipe left or right to flick through (or tap <b>Newer</b> and <b>Older</b>). Pinch to zoom in. <b>Select photos</b> on the Photos page downloads or deletes several at once.</li>
+<li><b>Looking:</b> the newest are first. Tap one to see it bigger, then swipe left or right to flick through (or tap <b>Newer</b> and <b>Older</b>; on a weak signal the buttons under it are greyed out for a moment, until the next photo has come). Pinch to zoom in. <b>Select photos</b> on the Photos page downloads or deletes several at once.</li>
 <li><b>Download:</b> on a photo, tap <b>Download photo</b>. On an iPhone it's <b>Save photo</b>: then tap
 <b>Save Image</b> to put it in Photos.</li>
 <li><b>Several at once:</b> tap <b>Select photos</b>, tap the ones you want, then <b>Download</b> (they come as one zip

@@ -756,6 +756,8 @@ fieldset.players label{padding:6px 10px;font-size:14px}
 .swipe-hint{display:none;text-align:center}
 @media (hover:none){.swipe-hint{display:block}}
 .pager,.photonav{align-items:center;justify-content:space-between}
+/* A swipe's next photo's page on its way: the last photo's caption and buttons can't be used until its own come. */
+.photo-when[inert],.photonav[inert],.photoback[inert],.side[inert]{opacity:.5}
 /* Manage team: a photo's removal request shows the photo. */
 .photoreq{display:flex;gap:10px;align-items:center;min-width:0}.photoreq img{display:block;width:64px;height:64px;object-fit:cover;border-radius:6px;flex:none}
 /* Which team? One button a team, the one you're on marked. */

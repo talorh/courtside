@@ -5,7 +5,7 @@
 // the photos beyond them are loading before a swipe. Newer and Older stay as links. A pinch zooms the page, as anywhere
 // else; while it's zoomed in, a finger moves around the photo instead of swiping.
 import { setUpSave } from "./photo-save.js";
-import { facts, forget, known, opened, pageFor, show } from "./photo-pages.js";
+import { facts, forget, hold, known, opened, pageFor, show } from "./photo-pages.js";
 
 // A swipe: at least this far across, more across than up or down (a scroll), or a quick flick.
 const LEAST_PX = 50;
@@ -80,14 +80,16 @@ function setUp(figure) {
 	}
 
 	// After the snap: the neighbour's slide is the centre, the old centre goes to the other side, and the far side is the
-	// neighbour's own neighbour (known already when its page was read in advance). A page that can't be read (a weak
-	// signal) is opened as usual instead, so the buttons are never another photo's.
+	// neighbour's own neighbour (known already when its page was read in advance). Until its page is here, the caption and
+	// buttons showing are held (they're the last photo's). A page that can't be read (a weak signal) is opened as usual
+	// instead, so the buttons are never another photo's.
 	let busy = false;
 	async function become(which) {
 		const next = cur[which];
 		history.replaceState(history.state, "", `/photos/${next.id}`);
 		const [left, centre, right] = [...track.children];
 		const was = { id: cur.id, src: cur.src, thumb: cur.thumb };
+		hold();
 		let f = known(next.id);
 		const far = f ? f[which] : null;
 		track.replaceChildren(which === "older" ? centre : slide(far), which === "older" ? right : left, which === "older" ? slide(far) : centre);
