@@ -164,7 +164,9 @@ flowchart TD
  gym's Wi-Fi, or a phone company's shared address, is many families), 10 addresses on no list in 15 minutes from one
  IP address, 200 an hour for the whole site (past which codes pause and a
  **Sign-in flood** ticket is raised for the admins, once while it's open), and 30 wrong codes an hour from one IP
- address. Every request, code and check is a row in `sign_in_events` (a month, 31 days; the admin Log shows them; anything
+ address. A code's `code_sent` row is written before the limits are looked at, and its counts take in only the rows up
+ to its own, so requests sent at the same moment are counted in turn and no more than a limit's worth go; a code
+ that's refused, or whose email doesn't go, has its row taken back, so it doesn't count. Every request, code and check is a row in `sign_in_events` (a month, 31 days; the admin Log shows them; anything
  typed that isn't an address is stored masked, as `n…`) and a log line with the address
  masked (`signin_code_sent`, `signin_checked`, `signin_refused`); Platform's Sign-ins row sums the last 24 hours.
 - **Request access** (`/signin/access`, `features/signin/access-service.ts`): the sign-in page's footer ("Can't get in?
@@ -172,7 +174,8 @@ flowchart TD
  same Turnstile check. It opens one of the support desk's own tickets (`source` 'site', `alert_kind`
  `access:<email>`, topic members, title "Access request: <name>, <team>", `contact` the address), emailed to the
  admins as every ticket is. The unique index on open site tickets makes it one open request an address; an address on
- a list is told to sign in; ten an hour for the whole site, then a 429. Every try is a row in `sign_in_events` of its
+ a list is told to sign in; ten an hour for the whole site, then a 429 (counted in the statement that makes the
+ ticket, so requests sent together can't all pass it). Every try is a row in `sign_in_events` of its
  own kind, `access` (the address as the sign-in stores it, masked if it isn't one; the admin Log shows them), and past
  10 tries in 15 minutes from one IP address the form answers the same 429, whatever the address, before any list is
  looked at, so it can't be used to find out who is on a list faster than the sign-in allows. No sign-in limit or

@@ -15,7 +15,8 @@ class Statement {
 		return { results: this.db.prepare(this.sql).all(...this.params) as T[], success: true, meta: {} };
 	}
 	/** Like D1, rows come back from run() and batch() too (a SELECT, or a write with RETURNING). */
-	async run() {
+	async run() { return this.runNow(); }
+	runNow() {
 		if (/^\s*SELECT\b|\bRETURNING\b/i.test(this.sql)) {
 			const results = this.db.prepare(this.sql).all(...this.params);
 			const meta = this.db.prepare("SELECT changes() AS changes, last_insert_rowid() AS id").get() as { changes: number; id: number };
@@ -29,11 +30,13 @@ class Statement {
 class SqliteD1 {
 	constructor(private readonly db: DatabaseSync) {}
 	prepare(sql: string) { return new Statement(this.db, sql); }
+	/** One transaction, run without yielding, so requests that overlap can't start a second one inside it (D1 runs a
+	 * batch as one, with nothing else in between). */
 	async batch(statements: Statement[]) {
 		this.db.exec("BEGIN");
 		try {
 			const out = [];
-			for (const s of statements) out.push(await s.run());
+			for (const s of statements) out.push(s.runNow());
 			this.db.exec("COMMIT");
 			return out;
 		} catch (err) {

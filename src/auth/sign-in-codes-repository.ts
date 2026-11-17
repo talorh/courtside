@@ -46,17 +46,24 @@ export async function markCodeUsed(db: D1Database, id: number, nowIso: string): 
 /** `device`: the browser that asked ("iPhone, Safari": shared/device.ts). */
 export interface SignInEventInput { kind: SignInEvent; email: string; ip: string; at: string; device?: string }
 
-export const signInEventStatement = (db: D1Database, e: SignInEventInput) =>
-	db.prepare("INSERT INTO sign_in_events (kind, email, ip, at, device) VALUES (?, ?, ?, ?, ?)").bind(e.kind, e.email.toLowerCase(), e.ip, e.at, e.device ?? "");
-
-export async function recordSignInEvent(db: D1Database, e: SignInEventInput): Promise<void> {
-	await signInEventStatement(db, e).run();
+/** Records the event; its id, which is above every event's already recorded. */
+export async function recordSignInEvent(db: D1Database, e: SignInEventInput): Promise<number> {
+	const id = await db.prepare("INSERT INTO sign_in_events (kind, email, ip, at, device) VALUES (?, ?, ?, ?, ?) RETURNING id")
+		.bind(e.kind, e.email.toLowerCase(), e.ip, e.at, e.device ?? "").first<number>("id");
+	if (id === null) throw new Error("Sign-in event wasn't recorded");
+	return id;
 }
 
-/** How many events of a kind since `sinceIso`, for one email, one IP address, or the whole site (`by` left out). */
-export async function countSignInEvents(db: D1Database, kind: SignInEvent, sinceIso: string, by: { email: string } | { ip: string } | null = null): Promise<number> {
-	const where = by === null ? "" : "email" in by ? " AND email = ?" : " AND ip = ?";
-	const value = by === null ? [] : "email" in by ? [by.email.toLowerCase()] : [by.ip];
+/** An event that turned out not to have happened (a code that was refused, or whose email didn't go). */
+export async function forgetSignInEvent(db: D1Database, id: number): Promise<void> {
+	await db.prepare("DELETE FROM sign_in_events WHERE id = ?").bind(id).run();
+}
+
+/** How many events of a kind since `sinceIso`, for one email, one IP address, or the whole site (`by` left out).
+ * `upToId`: only those recorded up to and including that one, so requests sent together are counted in turn. */
+export async function countSignInEvents(db: D1Database, kind: SignInEvent, sinceIso: string, by: { email: string } | { ip: string } | null = null, upToId?: number): Promise<number> {
+	const where = (by === null ? "" : "email" in by ? " AND email = ?" : " AND ip = ?") + (upToId === undefined ? "" : " AND id <= ?");
+	const value = [...(by === null ? [] : "email" in by ? [by.email.toLowerCase()] : [by.ip]), ...(upToId === undefined ? [] : [upToId])];
 	return (await db.prepare(`SELECT COUNT(*) AS n FROM sign_in_events WHERE kind = ? AND at > ?${where}`).bind(kind, sinceIso, ...value).first<number>("n")) ?? 0;
 }
 

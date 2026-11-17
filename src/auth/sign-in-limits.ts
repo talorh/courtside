@@ -27,25 +27,28 @@ const wrongToday = (db: D1Database, email: string, hold: SignInHold | null, now:
 	countSignInEvents(db, "wrong", countFrom(hold, now, DAY), { email });
 
 /** Held, or over its codes in the hour or the day, or its wrong codes today: held from now (15 minutes, or a day). */
-async function overEmailLimit(db: D1Database, email: string, now: Date): Promise<boolean> {
+async function overEmailLimit(db: D1Database, email: string, now: Date, codeId: number): Promise<boolean> {
 	const hold = await getHold(db, email);
 	if ((hold?.until ?? "") > now.toISOString()) return true;
-	const codes = (ms: number) => countSignInEvents(db, "code_sent", countFrom(hold, now, ms), { email });
-	if (await wrongToday(db, email, hold, now) >= LIMITS.wrongPerEmailDay || await codes(DAY) >= LIMITS.emailPerDay) {
+	const codes = (ms: number) => countSignInEvents(db, "code_sent", countFrom(hold, now, ms), { email }, codeId);
+	if (await wrongToday(db, email, hold, now) >= LIMITS.wrongPerEmailDay || await codes(DAY) > LIMITS.emailPerDay) {
 		await holdEmail(db, email, later(now, DAY));
 		return true;
 	}
-	if (await codes(HOUR) < LIMITS.emailPerHour) return false;
+	if (await codes(HOUR) <= LIMITS.emailPerHour) return false;
 	await holdEmail(db, email, later(now, HOLD_MINUTES * MINUTE));
 	return true;
 }
 
-export async function overCodeLimit(deps: AppDeps, email: string, ip: string): Promise<boolean> {
+/** Whether the code whose `code_sent` event is `codeId` goes past a limit. That event is recorded before this is asked,
+ * and the counts take in it and every one recorded before it, so requests sent together are counted in turn rather than
+ * all seeing the same count: one is over when its count is more than the limit. */
+export async function overCodeLimit(deps: AppDeps, email: string, ip: string, codeId: number): Promise<boolean> {
 	const { db } = deps, now = deps.now();
-	const count = (sinceMs: number, by: { ip: string } | null) => countSignInEvents(db, "code_sent", since(now, sinceMs), by);
-	if (await overEmailLimit(db, email, now)) return true;
-	if (await count(15 * MINUTE, { ip }) >= LIMITS.ipPer15m) return true;
-	if (await count(HOUR, null) < LIMITS.sitePerHour) return false;
+	const count = (sinceMs: number, by: { ip: string } | null) => countSignInEvents(db, "code_sent", since(now, sinceMs), by, codeId);
+	if (await overEmailLimit(db, email, now, codeId)) return true;
+	if (await count(15 * MINUTE, { ip }) > LIMITS.ipPer15m) return true;
+	if (await count(HOUR, null) <= LIMITS.sitePerHour) return false;
 	await floodTicket(deps);
 	return true;
 }
@@ -65,11 +68,18 @@ export async function holdIfWrongLimit(db: D1Database, email: string, now: Date)
 async function floodTicket(deps: AppDeps): Promise<void> {
 	const kind = "signin_flood";
 	if (await findOpenSiteTicket(deps.db, kind)) return;
-	const id = await insertSiteTicket(deps.db, {
-		alertKind: kind, title: "Sign-in codes paused: too many asked for",
-		message: `More than ${LIMITS.sitePerHour} sign-in codes were asked for in an hour, so no more are being sent until it slows down (each is an email).`
-			+ " Platform's Sign-ins row shows what's happening. If it isn't families, the zone's WAF and rate limits are where to look.",
-		nowIso: deps.now().toISOString(),
-	});
+	let id: number;
+	try {
+		id = await insertSiteTicket(deps.db, {
+			alertKind: kind, title: "Sign-in codes paused: too many asked for",
+			message: `More than ${LIMITS.sitePerHour} sign-in codes were asked for in an hour, so no more are being sent until it slows down (each is an email).`
+				+ " Platform's Sign-ins row shows what's happening. If it isn't families, the zone's WAF and rate limits are where to look.",
+			nowIso: deps.now().toISOString(),
+		});
+	} catch (err) {
+		// A request refused at the same moment opened it first (one open site ticket a kind): it's open, and emailed once.
+		if (String(err).includes("UNIQUE")) return;
+		throw err;
+	}
 	await trySend(deps, "ticket", id);
 }

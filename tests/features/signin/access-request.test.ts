@@ -82,6 +82,14 @@ describe("Request access, from the sign-in page", () => {
 		expect(await text(busy)).toContain("Try again in an hour.");
 		expect(await tickets(deps)).toHaveLength(ACCESS_PER_HOUR);
 	});
+	it("stops at the hour's limit for the whole site even when the requests are sent together", async () => {
+		const deps = createTestDeps();
+		vi.spyOn(console, "log").mockImplementation(() => {});
+		const answers = await Promise.all(Array.from({ length: 15 }, (_, i) => ask(deps, { email: `parent${i}@example.com` }, `10.0.0.${i}`)));
+		expect(answers.filter((r) => r.status === 200)).toHaveLength(ACCESS_PER_HOUR);
+		expect(answers.filter((r) => r.status === 429)).toHaveLength(15 - ACCESS_PER_HOUR);
+		expect(await tickets(deps)).toHaveLength(ACCESS_PER_HOUR);
+	});
 });
 
 describe("Request access's tries, recorded and limited", () => {

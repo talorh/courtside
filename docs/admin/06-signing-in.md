@@ -21,4 +21,6 @@ An address Email Sending won't send to (its emails bounced, or its owner marked 
 | 200 codes an hour across the whole site | Past it, codes pause and the admins get a Sign-in flood ticket |
 | 30 wrong codes an hour from one internet address, and five a code | Makes guessing a code hopeless |
 
+Codes asked for at the same moment are counted one after another, so however many arrive together, no more than a limit allows are sent. A code whose email doesn't go isn't counted. Request access's ten an hour holds the same way.
+
 The session's token lives in a secure, HttpOnly cookie, and only its hash is kept in D1, with the device's name and, once its first page says (a second cookie the page sets), which view it uses: the mobile view, or the desktop view on a computer. The Log says when that's first seen or changes, and Insights sets mobile against desktop, counting each device once a week. On every request the Worker checks the teams' lists again, so taking someone off a list works straight away. When a session has under four hours left, Go live asks for a new code first, so it can't run out part way through a game.

@@ -49,6 +49,8 @@ ${table(["Limit", "Why"], [
 		["200 codes an hour across the whole site", "Past it, codes pause and the admins get a Sign-in flood ticket"],
 		["30 wrong codes an hour from one internet address, and five a code", "Makes guessing a code hopeless"],
 	])}
+<p>Codes asked for at the same moment are counted one after another, so however many arrive together, no more than a
+limit allows are sent. A code whose email doesn't go isn't counted. Request access's ten an hour holds the same way.</p>
 <p>The session's token lives in a secure, HttpOnly cookie, and only its hash is kept in D1, with the device's name and,
 once its first page says (a second cookie the page sets), which view it uses: the mobile view, or the desktop view on a
 computer. The Log says when that's first seen or changes, and Insights sets mobile against desktop, counting each device
