@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Enhancement] **Platform:** The site is now built and deployed with Cloudflare's cf command line 1.0 release candidate (1.0.0-rc.1) and its Vite plugin 2.0.0-rc.1, and the setup steps keep the Cloudflare login where the scripts can read it.
 - [Enhancement] **Roster:** The WhatsApp message now says "Please see below game details" rather than match day details, and no longer asks families to arrive 30 minutes early.
 - [Feature] **Cloudflare setup:** A club that manages its Cloudflare account with Terraform can now apply the site's setup that way (npm run terraform), from the same files as the cf commands, with a plan the owner reads before each apply and a way to take over an install cf made.
 - [Fix] **Documentation:** Fixed an issue where the Documentation said a join never encodes anything again: the parts are copied as they are, and encoded again only as a fallback when they don't line up. The request diagram now starts with the check that a request came to the site's own address.

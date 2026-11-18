@@ -30,10 +30,20 @@ export function readDomain(text) {
 /** `--profile <name>` when CF_PROFILE names the cf login to use (a computer with several accounts), else nothing. */
 export const profileArgs = () => (process.env.CF_PROFILE ? ["--profile", process.env.CF_PROFILE] : []);
 
-/** The cf login's OAuth token on this computer, for the few API calls cf has no command for. */
+/** The cf login's OAuth token on this computer, for the few API calls cf has no command for. It's read from cf's
+ * plaintext login file; a login in the OS keyring (cf's default for a new login) has none, so this says how to log in
+ * again without it. The message never quotes the file. */
 export function cfToken(home) {
 	const name = process.env.CF_PROFILE ?? "default";
-	return JSON.parse(readFileSync(`${home}/.config/cloudflare/config/${name}.json`, "utf8")).oauth_token;
+	const again = `Log in again with: cf auth login${name === "default" ? "" : ` --profile ${name}`} --force --no-use-keyring`;
+	let login;
+	try {
+		login = JSON.parse(readFileSync(`${home}/.config/cloudflare/config/${name}.json`, "utf8"));
+	} catch {
+		throw new Error(`cf's ${name} login isn't in its plaintext file (it may be in the OS keyring, which these scripts can't read). ${again}`);
+	}
+	if (typeof login.oauth_token !== "string" || !login.oauth_token) throw new Error(`cf's ${name} login has no token. ${again}`);
+	return login.oauth_token;
 }
 
 export const deployConfig = () => readDeploy(readFileSync("deploy.config.ts", "utf8"));

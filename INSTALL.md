@@ -55,9 +55,10 @@ sudo dnf install -y git podman python3-pillow ImageMagick          # Fedora
 # sudo apt install -y git podman python3-pil imagemagick            # Debian or Ubuntu
 # brew install git podman python pillow imagemagick && podman machine init && podman machine start   # a Mac
 
-# Cloudflare's command line, and your login (it opens the browser; approve the command line there)
+# Cloudflare's command line, and your login (it opens the browser; approve the command line there). The login stays in
+# its own file, not the system's keyring, because the scripts read its token from there.
 npm install -g cf
-cf auth login
+cf auth login --no-use-keyring
 cf auth whoami                 # your email, and your club's account
 cf cli search "list zones"     # how to find any cf command: describe the task, never a name or an id
 ```
@@ -68,7 +69,7 @@ HashiCorp's own packages on your system. Those need your password (sudo), so the
 you run them yourself.
 
 If the computer already has a Cloudflare login for another account, make a named one for the club and tell the
-scripts about it: `cf auth create club` and `export CF_PROFILE=club` (put it in your shell's profile).
+scripts about it: `CLOUDFLARE_AUTH_USE_KEYRING=false cf auth create club` and `export CF_PROFILE=club` (put it in your shell's profile).
 
 Then the code. Clone Courtside from GitHub into a folder called `courtside-prod`, and make the second folder the
 scripts expect, a git worktree called `courtside-staging` for the work:

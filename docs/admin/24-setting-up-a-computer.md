@@ -20,13 +20,13 @@ The account's owner adds your email as a member of the club's Cloudflare account
 
 ### 3. Log in to Cloudflare
 
-Logging in opens the browser to sign in to Cloudflare and approve the command line; then check it answers with your email and the club's account. A computer that works with several Cloudflare accounts makes a named profile instead and tells the scripts about it with `CF_PROFILE`.
+Logging in opens the browser to sign in to Cloudflare and approve the command line; then check it answers with your email and the club's account. A computer that works with several Cloudflare accounts makes a named profile instead and tells the scripts about it with `CF_PROFILE`. The login is kept in its own file, not the system's keyring, because the release and staging scripts read its token from there.
 
 ```
-cf auth login
+cf auth login --no-use-keyring
 cf auth whoami
 # Or, with several accounts on this computer:
-cf auth create club && export CF_PROFILE=club
+CLOUDFLARE_AUTH_USE_KEYRING=false cf auth create club && export CF_PROFILE=club
 ```
 
 ### 4. Get the code
