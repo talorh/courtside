@@ -24,8 +24,8 @@ ${table(["Step", "What"], [
 below tell the agent to read it either way.</p>
 <h3>The agent's instructions</h3>
 <p>The repository's ${code("docs/agent-setup.md")}, as it stands: how the agent checks it's set up, what it reads (the
-sections of this Documentation for each kind of task), how it works, what needs your yes, what it does when something
-goes wrong, and how it reports back.</p>
+sections of this Documentation for each kind of task), how it works (starting from Courtside's latest updates and fixes
+on GitHub), what needs your yes, what it does when something goes wrong, and how it reports back.</p>
 <div class="docs-copy"><button class="btn primary" type="button" data-copy="agent-md">Copy the instructions</button><span class="small">Then paste them into your AI coding tool.</span></div>
 <pre class="docs-cmd docs-agent" id="agent-md"><code>${AGENT_SETUP}</code></pre>
 <h3>What it may do, and what it asks you</h3>

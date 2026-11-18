@@ -8,6 +8,10 @@ was wrong), the area in bold, then a plain sentence saying what changed for the 
 where ..."). Every deploy adds its lines at the top of today's date, and the deploy (`npm run release`, then Workers
 Builds) sends the top line, in plain words, as its message.
 
+## 19 Nov 2026
+
+- [Enhancement] **Documentation:** The AI coding agent's instructions now start every change by pulling Courtside's latest updates and fixes from GitHub into staging, and say what to do with what comes in: conflicts, failed checks, and updates that need a migration, a new setting or the club's own values.
+
 ## 18 Nov 2026
 
 - [Enhancement] **Platform:** The site is now built and deployed with Cloudflare's cf command line 1.0 release candidate (1.0.0-rc.1) and its Vite plugin 2.0.0-rc.1, and the scripts and setup steps keep the Cloudflare login in its own file, out of the system's keyring, where the scripts can read it.

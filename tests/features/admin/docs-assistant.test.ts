@@ -105,4 +105,11 @@ describe("the AI coding agent's instructions", () => {
 			.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
 		expect(shown).toBe(readFileSync("docs/agent-setup.md", "utf8"));
 	});
+	it("bring in Courtside's latest updates and fixes from GitHub into staging before planning a change", async () => {
+		const { readFileSync } = await import("node:fs");
+		const md = readFileSync("docs/agent-setup.md", "utf8");
+		const work = md.slice(md.indexOf("## 4. How to work"), md.indexOf("## 5."));
+		expect(work).toContain("git pull --no-rebase --no-edit https://github.com/talorh/courtside.git main");
+		expect(work.indexOf("git pull --no-rebase")).toBeLessThan(work.indexOf("git switch -c feature/<name> staging"));
+	});
 });

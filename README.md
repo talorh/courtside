@@ -12,7 +12,7 @@
 <p align="center">
   <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-2F6FDB"></a>
   <img alt="Runs on Cloudflare" src="https://img.shields.io/badge/runs%20on-Cloudflare-14274E">
-  <img alt="2,190 unit tests passing" src="https://img.shields.io/badge/unit%20tests-2%2C190%20passing-2F6FDB">
+  <img alt="2,191 unit tests passing" src="https://img.shields.io/badge/unit%20tests-2%2C191%20passing-2F6FDB">
   <img alt="219 browser tests passing" src="https://img.shields.io/badge/browser%20tests-219%20passing-2F6FDB">
   <img alt="Node 26" src="https://img.shields.io/badge/node-26-14274E">
   <img alt="Infrastructure as code: Terraform, optional" src="https://img.shields.io/badge/IaC-Terraform%20(optional)-14274E">
@@ -223,7 +223,7 @@ Good places to start:
 - [AGENTS.md](AGENTS.md), the rules every change follows
 - [Terraform](docs/runbooks/terraform.md), for a club that manages its Cloudflare account with it
 
-Every change has to pass all 2,190 unit tests and 219 browser tests before it ships. The unit tests include two teams
+Every change has to pass all 2,191 unit tests and 219 browser tests before it ships. The unit tests include two teams
 going through every page to prove neither can see the other's. The browser tests run Go live on Android, iPhone and
 Firefox.
 

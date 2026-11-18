@@ -78,6 +78,41 @@ to do:
 which is what's live: never commit there, and never switch it to another branch. `courtside-staging` is a git worktree
 of the same repository: you work there, on `staging` and on your own branches.
 
+**Start from the latest Courtside.** Courtside's updates and fixes land on GitHub, at github.com/talorh/courtside, and
+this copy has them only once you bring them in. Before you plan any change, pull them into `staging`, in
+`courtside-staging`, from a clean `git status --short` (the admin's work in progress: ask first):
+
+```bash
+git switch staging
+git pull --no-rebase --no-edit https://github.com/talorh/courtside.git main   # Courtside's latest, into staging
+npm ci && npm run check                                                       # Courtside's packages as locked, then every check
+```
+
+- "Already up to date" means there's nothing new. Otherwise read what came in (`git log --oneline ORIG_HEAD..staging`,
+  `git diff --stat ORIG_HEAD HEAD` and the new lines at the top of `CHANGELOG.md`) and plan against it: what you're
+  asked for may already be done, or the code you'd change may have moved. Tell the admin what came in, since it goes
+  live with the next release, and what it needs beyond the code: a new file in `migrations/` (the live database, step
+  7 below), a change under `join/` (`npm run join -- image`, with their yes), a new secret or setting, or a new field
+  in `src/club.ts` or `deploy.config.ts`, which arrives with the example's value: ask them for the club's. On staging,
+  try what came in as well as your own change.
+- A conflict in the club's own files keeps the club's: `src/club.ts` and `deploy.config.ts` keep its values and add any
+  new fields; the images Branding lists in `public/` take `git checkout --ours -- <file>`;
+  `src/ui/club-mark-inline.ts` and `maintenance/logo.ts` come from `npm run club -- mark`. `CHANGELOG.md` keeps both
+  sets of lines: dates newest first, one heading a day, and on a shared day the club's lines first. `skills-lock.json`
+  takes Courtside's (`git checkout --theirs -- skills-lock.json`, then `npm run skills`); `README.md` takes
+  Courtside's, with the test counts set to the totals `npm run check` prints; `package.json` and `.gitignore` keep
+  both sides' tool names. Then `git add` those files and `git commit --no-edit`. Any other conflict:
+  `git merge --abort`, tell the admin, and ask whether to go on without the update.
+- If `npm run check` fails after the pull, undo it (`git reset --keep ORIG_HEAD && npm ci`, before anything else is
+  committed) and tell the admin what failed. Don't fix Courtside's code unasked.
+- "refusing to merge unrelated histories" means this copy didn't start from Courtside's: stop and tell the admin. Never
+  `--allow-unrelated-histories`.
+- Pull into `staging` only, never into `courtside-prod`'s `main`: Courtside's updates go live like any other change,
+  through staging and the release. Already on your own branch? Commit, pull into `staging`, then `git merge staging`
+  into the branch. Skip the pull for a fix that must go live on a game day; if `git log --oneline main..staging` shows
+  earlier updates not yet live, tell the admin they'd go live with it. If GitHub can't be reached, say so, and ask the
+  admin whether to go on without it.
+
 1. Branch off `staging`: `git switch -c feature/<name> staging` (or `fix/<name>` for a repair).
 2. **Tests first.** Write the test, run it, watch it fail for the right reason, then write the code. Every bug fix
    starts with a test that reproduces it.
@@ -97,7 +132,7 @@ of the same repository: you work there, on `staging` and on your own branches.
 6. `npm run staging` deploys `staging` to the staging site (it applies staging's database migrations too). Test the
    change there, signed in: the pages it touches, and Go live, an upload or the jobs if it touches them. If your tool
    can drive a browser, do it yourself at the staging address; otherwise ask the admin to try it on their phone.
-7. Release, only once the admin wants it live: in `../courtside-prod`, `git merge --ff-only staging`, then
+7. Release, only once the admin wants it live: in `../courtside-prod`, `git merge --ff-only staging`, then `npm ci`,
    `npm run release -- --check-only`, then `npm run release`. It runs every check and the browser suite, then pushes
    `main` to Cloudflare, where Workers Builds deploys it. A release with a new migration needs the migration applied to
    the live database first: `npx cf d1 migrations apply <live database id> --dir migrations --dry-run` (production's
