@@ -96,21 +96,25 @@ const HISTORY = [
 	new RegExp(`\\b(?:until|since) (?:about )?\\d{1,2} ${MONTH}\\w* 20\\d\\d`),
 ];
 const COMMENT = /(?:^|\s)(?:\/\/|\/\*+|\*|--)\s(.*)$|\b(?:it|describe)\("([^"]*)"/;
+// Terraform's comments start with #.
+const HCL_COMMENT = /(?:^|\s)#\s(.*)$/;
 
-/** The folders whose source files keep to the line caps (check-loc.mjs): the site, its page scripts, the Back soon page
- * and the video joiner. Tests, docs, migrations and scripts aren't counted. */
-export const LOC_ROOTS = ["src", "public", "maintenance", "join"];
+/** The folders whose source files keep to the line caps (check-loc.mjs): the site, its page scripts, the Back soon page,
+ * the video joiner and the Terraform config (infra/terraform). Tests, docs, migrations and scripts aren't counted. */
+export const LOC_ROOTS = ["src", "public", "maintenance", "join", "infra"];
 /** Every folder of code, tests, scripts and migrations, for the comment rules (check-rules.mjs). */
-export const COMMENT_DIRS = ["src", "public", "scripts", "tests", "migrations", "maintenance", "join"];
+export const COMMENT_DIRS = ["src", "public", "scripts", "tests", "migrations", "maintenance", "join", "infra"];
 /** The config files at the repo's root, for the comment rules too. */
 export const COMMENT_FILES = ["cloudflare.config.ts", "vite.config.ts", "vitest.config.ts"];
-/** A file the line caps apply to: TypeScript or JavaScript (the joiner's plain Node .mjs too), not a declaration file. */
-export const isCodeFile = (name) => /\.(ts|js|mjs)$/.test(name) && !name.endsWith(".d.ts");
+/** A file the line caps apply to: TypeScript or JavaScript (the joiner's plain Node .mjs too), not a declaration file, or
+ * Terraform. */
+export const isCodeFile = (name) => /\.(ts|js|mjs|tf)$/.test(name) && !name.endsWith(".d.ts");
 
 /** Comments (and test names) that say who asked for something or when, in any file of code, tests or migrations. */
 export function commentProblems(path, text) {
+	const comment = /\.(tf|hcl)$/.test(path) ? HCL_COMMENT : COMMENT;
 	return text.split("\n").flatMap((line, i) => {
-		const m = COMMENT.exec(line);
+		const m = comment.exec(line);
 		const said = m && (m[1] ?? m[2]);
 		return said && HISTORY.some((r) => r.test(said)) ? [`${path}:${i + 1}: a comment or test name says who asked or when (development standards §1)`] : [];
 	});

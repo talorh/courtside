@@ -2,6 +2,7 @@
   "description": "<domain> cache rules",
   "rules": [
     {
+      "ref": "<worker>_browser_ttl",
       "description": "<worker>: browsers keep the site's own caching headers, so a deploy's new scripts aren't held for hours (the zone-wide Browser Cache TTL, for a zone the site shares)",
       "expression": "(http.host eq \"<domain>\")",
       "action": "set_cache_settings",

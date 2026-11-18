@@ -17,7 +17,7 @@ const sources = walk("src", (name) => name.endsWith(".ts") && !name.endsWith(".d
 const scripts = walk("public", (name) => name.endsWith(".js"));
 // Every file of code, tests, scripts and migrations (the video joiner's too), and the root's configs, for its comments.
 const code = [...COMMENT_DIRS.flatMap((dir) =>
-	walk(dir, (name) => /\.(ts|js|mjs|css|sql)$/.test(name) && !name.endsWith(".d.ts") && name !== "stream-sdk.js")), ...COMMENT_FILES];
+	walk(dir, (name) => /\.(ts|js|mjs|css|sql|tf|hcl)$/.test(name) && !name.endsWith(".d.ts") && name !== "stream-sdk.js")), ...COMMENT_FILES];
 const problems = [
 	...sources.flatMap((path) => sourceProblems(path, readFileSync(path, "utf8"))),
 	...scripts.flatMap((path) => scriptProblems(path, readFileSync(path, "utf8"))),

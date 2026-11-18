@@ -12,13 +12,15 @@
 <p align="center">
   <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-2F6FDB"></a>
   <img alt="Runs on Cloudflare" src="https://img.shields.io/badge/runs%20on-Cloudflare-14274E">
-  <img alt="2,146 unit tests passing" src="https://img.shields.io/badge/unit%20tests-2%2C146%20passing-2F6FDB">
+  <img alt="2,184 unit tests passing" src="https://img.shields.io/badge/unit%20tests-2%2C184%20passing-2F6FDB">
   <img alt="219 browser tests passing" src="https://img.shields.io/badge/browser%20tests-219%20passing-2F6FDB">
   <img alt="Node 26" src="https://img.shields.io/badge/node-26-14274E">
+  <img alt="Infrastructure as code: Terraform, optional" src="https://img.shields.io/badge/IaC-Terraform%20(optional)-14274E">
 </p>
 
 <p align="center">
   <a href="INSTALL.md"><b>Set it up for your club</b></a> &nbsp;|&nbsp;
+  <a href="docs/runbooks/terraform.md"><b>Manage it with Terraform</b></a> &nbsp;|&nbsp;
   <a href="docs/admin/README.md"><b>Documentation</b></a>
 </p>
 
@@ -170,6 +172,13 @@ you own everything.
 [INSTALL.md](INSTALL.md) walks you through it with an AI coding assistant. It asks for your club's name, colours, logo
 and email, then sets things up one step at a time, checking with you before each one.
 
+**Prefer infrastructure as code?** The site's Cloudflare setup can be managed with Terraform instead. The installer
+asks which you'd like at the start, gets your computer ready for Terraform if you say yes, and then builds the
+databases, storage, sign-in check, image sizes, mail records and edge security rules from a Terraform plan you read
+and approve first. The site's code still deploys through Workers Builds either way, and an existing install
+can move to Terraform later. See
+[Managing it with Terraform](docs/runbooks/terraform.md).
+
 You can be up and running in a couple of hours, or about four and a half beers.
 
 It's affordable to run. Cloudflare is cost effective, and many of the products the site uses have generous free
@@ -212,8 +221,9 @@ Good places to start:
 - [What it does](docs/spec.md), page by page
 - [Why it's built this way](docs/admin/30-technology-decisions.md)
 - [AGENTS.md](AGENTS.md), the rules every change follows
+- [Terraform](docs/runbooks/terraform.md), for a club that manages its Cloudflare account with it
 
-Every change has to pass all 2,146 unit tests and 219 browser tests before it ships. The unit tests include two teams
+Every change has to pass all 2,184 unit tests and 219 browser tests before it ships. The unit tests include two teams
 going through every page to prove neither can see the other's. The browser tests run Go live on Android, iPhone and
 Firefox.
 

@@ -31,7 +31,11 @@ ls ../courtside-prod/.secrets.production.json ../courtside-prod/.secrets.staging
 podman --version                      # the browser test suite runs in podman
 npm run check                         # types, every unit test, line limits and rules: all pass on a clean checkout
 npm run skills                        # the agents' skills, fetched and brought up to date (skills-lock.json)
+grep cloudflareSetup deploy.config.ts  # "cf", or "terraform": then npm run terraform -- setup too, with the admin's yes
 ```
+
+`npm run terraform -- setup` installs cf-terraforming in `~/.local/bin` and says whether Terraform is ready. If it
+shows commands to install Terraform, show them to the admin and run them only on their yes (they need sudo).
 
 If `node_modules` is missing, `npm install` is yours to run, in each folder.
 
@@ -118,9 +122,9 @@ of the same repository: you work there, on `staging` and on your own branches.
   site's rules match its own hostname and go beside the club's, never in place of them.
 - Use the `cf` CLI, never wrangler. Find a command with `cf cli search "<what you want to do>"`.
 
-**Skills.** The agents' skills come from Cloudflare's own repositories, as dependencies: `skills-lock.json` names each
-one and the commit it's at, and `npm run skills` fetches them into `.agents/skills/`, then updates them to Cloudflare's
-latest. Commit `skills-lock.json` when it changes. Never copy a skill into the repository. They work in any popular AI
+**Skills.** The agents' skills come from Cloudflare's and HashiCorp's own repositories, as dependencies:
+`skills-lock.json` names each one and the commit it's at, and `npm run skills` fetches them into `.agents/skills/`,
+then updates them to the latest. Commit `skills-lock.json` when it changes. Never copy a skill into the repository. They work in any popular AI
 coding tool: OpenCode, Codex, Cursor, GitHub Copilot, Gemini CLI, Amp, Cline, Warp and Zed read `.agents/skills/`
 itself, and `npm run skills` links them into the folders Claude Code, Windsurf, Roo Code, Kiro, Goose, Junie, Augment
 and Continue read (all git-ignored). For another tool, add its name (from `npx skills add --help` and the skills CLI's
@@ -129,6 +133,9 @@ agent list) to the `skills` script in `package.json` and its folder to `.gitigno
 - `security-audit` (github.com/cloudflare/security-audit-skill): security questions, focused reviews and full audits.
 - `workers-best-practices`, `cloudflare`, `cf-cli` and `cloudflare-email-service` (github.com/cloudflare/skills):
   Cloudflare's best practices for Workers, the platform's products, the `cf` CLI and Email Sending.
+- `terraform-style-guide` and `terraform-test` (github.com/hashicorp/agent-skills): HashiCorp's style and
+  `terraform test`, for `infra/terraform/` (`docs/runbooks/terraform.md`). The project's §12 rules win over them: one
+  root module, values from `infra/` and `deploy.config.ts`, tests on a mock provider.
 
 Where a skill and this project's rules differ (`cf`, never wrangler; `cloudflare.config.ts`, not a Wrangler file), the
 project's rules win. Your tool may load the skills by itself; if it doesn't, read the skill's `SKILL.md` first.
@@ -146,6 +153,7 @@ or Cloudflare to test a finding. Each confirmed finding is fixed like any other 
 | Read anything; run tests, `npm run check` and the browser suite | Deleting anything: videos, photos, data, teams, branches someone else made |
 | Branch, commit, merge into `staging`, `npm run staging` | Releasing to production, unless the admin already asked for this change to go live |
 | Read-only `cf` commands (lists, gets, logs, whoami, `--dry-run`) | Any Cloudflare change: DNS, zone rules, secrets, tokens, plans, billing, Email Routing |
+| `npm run terraform -- check`, `-- plan`, `-- adopt` and `-- drift` (they change nothing) | `npm run terraform -- apply` of the saved plan, after the admin has read it |
 | Apply a migration to staging's database (`npm run staging` does) | Applying a migration to the live database |
 | Test on the staging site with its test data | Anything on the live site's data, or emailing anyone |
 

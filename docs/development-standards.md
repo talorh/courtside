@@ -2,7 +2,7 @@
 
 The rules the code in this repo follows. Each one was taken from the code as it stood, names the files it comes from, and is
 kept current as the code moves on. Every rule is a **must**. Code found breaking one is fixed, or listed as work to do
-until it is; the rule still stands. Code comments point at these sections by number (§1 to §11), so the numbers stay
+until it is; the rule still stands. Code comments point at these sections by number (§1 to §12), so the numbers stay
 put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 
 ## 1. Layout and naming
@@ -17,8 +17,8 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
 - File names are `kebab-case.ts`. Types and interfaces are `PascalCase`; functions and variables `camelCase`;
  module constants `UPPER_SNAKE_CASE` (`JOIN_TRIES` in `live/join-service.ts`, `LIVE_PART_SIZE` in
  `browser-live-service.ts`, `STORAGE_CACHE_MS` in `platform/storage-cache.ts`).
-- Source files in `src/`, `public/`, `maintenance/` and `join/` (the video joiner's plain Node `.mjs` too) are 140 lines
- at most, 160 as a hard cap (`scripts/check-loc.mjs`, run by `npm run check`; the folders are `LOC_ROOTS` in
+- Source files in `src/`, `public/`, `maintenance/`, `join/` (the video joiner's plain Node `.mjs` too) and
+ `infra/terraform/` (`.tf`) are 140 lines at most, 160 as a hard cap (`scripts/check-loc.mjs`, run by `npm run check`; the folders are `LOC_ROOTS` in
  `scripts/rules.mjs`). Tests, docs, migrations, scripts, `.d.ts` files and the vendored `public/stream-sdk.js` are not
  counted. A file over the cap is split by responsibility (as `playhq-service.ts`, `playhq-repository.ts` and
  `playhq-alert.ts` are), never by line range.
@@ -428,3 +428,72 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
   `workers-best-practices` and `security-audit` skills (`npm run skills`), the second a fresh read asking whether it can
  break Go live, an upload or a page. Layout changes get a WebKit check at iPhone
  sizes.
+
+## 12. Terraform (`infra/terraform/`)
+
+The optional Terraform config for the club's Cloudflare setup (`docs/runbooks/terraform.md`). These rules come from
+Cloudflare's Terraform best practices (developers.cloudflare.com/terraform/advanced-topics/best-practices), HashiCorp's
+style guide (developer.hashicorp.com/terraform/language/style) and the provider's own docs. The `terraform-style-guide`
+and `terraform-test` skills (`skills-lock.json`) carry the style guide; where they differ from this section, this
+section wins.
+
+**Layout**
+- One root module, no child modules and no `dynamic` blocks. Cloudflare advises against both: they make a plan harder
+ to read and a problem harder to reproduce. The files are split by subject: `terraform.tf` (versions), `providers.tf`,
+ `variables.tf`, `locals.tf`, `outputs.tf`, `imports.tf`, then one file a product (`d1.tf`, `r2.tf`, `turnstile.tf`,
+ `images.tf`, `zone.tf`, `dns.tf`). Tests are `tests/*.tftest.hcl`.
+- A second root module, with its own state, is only for a second zone or account. That keeps what one apply can touch
+ to one zone.
+- `.tf` files keep the same line caps as source files (§1, `LOC_ROOTS`), and their `#` comments keep the same comment
+ rules. `terraform fmt` decides the layout.
+
+**One source for each value**
+- The rules, lifecycles, variants and records live in `infra/`'s JSON files, which the `cf` commands send too.
+ Terraform reads them with `jsondecode(file())` and fills the same placeholders. A rule is never written out in HCL.
+ `tests/infra/terraform.test.ts` fails when a file in `infra/` isn't read, unless it's named there with why.
+- No id, name or address of a club's in a `.tf` file. Every one comes from `deploy.config.ts` or `src/club.ts`, which
+ `npm run terraform` writes into the git-ignored `courtside.auto.tfvars.json`. Account, zone and record ids are never
+ hard-coded, and a test checks for them.
+- Every zone rule has a `ref` (`<worker>_<what>`), so editing one keeps its id. Without one, Terraform gives every rule
+ a new id on each change.
+
+**Names and values**
+- Resources are nouns in `snake_case` that don't repeat their type (`cloudflare_r2_bucket.site`, not
+ `cloudflare_r2_bucket.r2_bucket`). Several of one kind use `for_each` over a map keyed by name (`live`, `staging`),
+ never `count` with an index. `count` is only for one-or-none (`cloudflare_bot_management.zone`).
+- A conditional set of instances is a filtered `for` (`{ for k, v in x : k => v if cond }`), so both outcomes keep one
+ type.
+- Every variable has a `description` and a `type`, and a `validation` where a wrong value would reach Cloudflare (ids,
+ hostnames). Every output has a `description`. One that holds a secret is `sensitive = true`, which only keeps it off
+ the screen: it's still in the state.
+- Comments say what and why, as §1 says: why a resource is guarded, why a value is what it is.
+
+**Versions**
+- HashiCorp's Terraform only, `required_version = ">= 1.10.0"`. The provider is constrained to a minor
+ release (`~> 5.29`), and `.terraform.lock.hcl` is committed with every platform's checksums. Only
+ `npm run terraform -- upgrade` changes it. The diff and the provider's changelog are read before it's committed.
+
+**State and credentials**
+- The state, plans, `.terraform/` and the variables file are never committed (`.gitignore`). The state holds the
+ Turnstile secrets in plain text, so it's kept as a secret. Shared state goes in R2 with Terraform's `s3` backend and
+ `use_lockfile`, its key set in the shell.
+- The token comes from `CLOUDFLARE_API_TOKEN` or the `cf` login, set by `npm run terraform`. `provider "cloudflare" {}`
+ stays empty, and no key goes in HCL, `-backend-config` or a committed file.
+
+**Changes**
+- `npm run terraform -- check` (`fmt -check`, `validate`, the tests) passes before every commit that touches
+ `infra/`, whichever way the club sets Cloudflare up, as both read those files. It needs no token: the tests run against `mock_provider "cloudflare"`, with `command = plan` unless a test
+ needs computed values. A mock provider can't import, so the adopt test stands each imported resource in with
+ `override_resource`. A mocked nested list is written as one object.
+- Every apply is of a plan saved by `npm run terraform -- plan` and read with the site owner, on their yes. Never
+ `apply -auto-approve`, never a fresh plan at apply time.
+- Data is guarded: the databases and buckets have `prevent_destroy`, and the attributes that would replace one
+ (`primary_location_hint`, `location`) are in `ignore_changes`. Taking something out of management without deleting it
+ is a `removed` block with `destroy = false`. A rename is a `moved` block, never a destroy and create.
+- Existing resources come in through `import` blocks (`imports.tf`, behind `var.adopt`), never `terraform import`. A
+ plan to adopt must show imports alone, or each change explained, before it's applied.
+- `npm run terraform -- drift` shows whether Cloudflare still matches `infra/`. A drift is settled by changing `infra/`
+ or applying it, never by editing the dashboard to match.
+- A resource is managed by Terraform or by `cf`, never both. `deploy.config.ts` `cloudflareSetup` records which, and
+ `npm run terraform` won't plan or apply while it's `"cf"`. The provider's delete does nothing for zone settings, bot
+ management, and R2's lifecycle and lock rules, so removing one from the config leaves it in Cloudflare as it was.

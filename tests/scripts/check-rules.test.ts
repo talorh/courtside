@@ -5,10 +5,18 @@ import { COMMENT_DIRS, COMMENT_FILES, commentProblems, isCodeFile, LOC_ROOTS, sc
 
 describe("the rules npm run check enforces", () => {
 	it("covers the video joiner's folder too: its plain Node .mjs files keep to the line caps and the comment rules", () => {
-		expect(LOC_ROOTS).toEqual(["src", "public", "maintenance", "join"]);
+		expect(LOC_ROOTS).toEqual(expect.arrayContaining(["src", "public", "maintenance", "join"]));
 		expect(COMMENT_DIRS).toContain("join");
 		expect(["pipeline.mjs", "index.ts", "watch.js"].map(isCodeFile)).toEqual([true, true, true]);
 		expect(["worker.d.ts", "test-a.mp4", "Dockerfile"].map(isCodeFile)).toEqual([false, false, false]);
+	});
+	it("covers the Terraform config too: its .tf files keep to the line caps, and its # comments to the comment rules", () => {
+		expect(LOC_ROOTS).toContain("infra");
+		expect(COMMENT_DIRS).toContain("infra");
+		expect(["r2.tf", "r2-cors.json", "setup.tftest.hcl"].map(isCodeFile)).toEqual([true, false, false]);
+		expect(commentProblems("infra/terraform/r2.tf", "# Magic, 3 Nov 2026: keep the backups\n")).toEqual(["infra/terraform/r2.tf:1: a comment or test name says who asked or when (development standards §1)"]);
+		expect(commentProblems("infra/terraform/r2.tf", "# The backups are locked for 14 days.\n")).toEqual([]);
+		expect(commentProblems("src/a.ts", "const tag = '# Magic, 3 Nov 2026: x';\n")).toEqual([]);
 	});
 	it("reads the config files at the repo's root for the comment rules too, and they keep to them", () => {
 		expect(COMMENT_FILES).toEqual(["cloudflare.config.ts", "vite.config.ts", "vitest.config.ts"]);

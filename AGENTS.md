@@ -16,7 +16,8 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
 
 - `README.md`: the site for people opening the repo.
 - `skills-lock.json`: the agents' skills, imported from Cloudflare's repositories (security-audit,
-  workers-best-practices, cloudflare, cf-cli, cloudflare-email-service). Run `npm run skills` first: it fetches and
+  workers-best-practices, cloudflare, cf-cli, cloudflare-email-service) and HashiCorp's (terraform-style-guide,
+  terraform-test, for `infra/terraform/`). Run `npm run skills` first: it fetches and
   updates them, never a copy in the repo, into `.agents/skills/` and each tool's own skills folder, so OpenCode,
   Claude Code, Codex, Cursor and the rest all find them. Every commit is checked against `workers-best-practices` and
   `security-audit` first (`docs/agent-setup.md` §4).
@@ -27,6 +28,7 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
   same text as Markdown, written by `npm run docs`) documents the site and its Cloudflare setup as they stand: a change
   to either updates it, and runs `npm run docs`, in the same commit.
 - `docs/runbooks/cloudflare-setup.md`: the pieces, checking and changing them, deploys, rollback, local development;
+  `docs/runbooks/terraform.md` for a club that applies them with Terraform instead;
   `docs/runbooks/staging.md` and `docs/runbooks/maintenance.md`; `docs/runbooks/incident.md` when something's broken.
 - **Branches:** each change is built on its own branch, `feature/<name>` or `fix/<name>`, off `staging`. When it's
   ready it's merged into `staging`, which is the staging environment's branch (`npm run staging` deploys only
@@ -60,6 +62,13 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
   account-level (deleting videos or data, buying plans, DNS, Email Routing, zone rules, secrets) needs an explicit yes
   for that step. Read-only `cf` commands, `cf dev`, `cf build`, `cf workers types` and `--local` are always fine.
   `--dry-run` first.
+- **Terraform plans first, and applies only the saved plan, on the owner's yes.** `npm run terraform -- check` runs
+  before every commit that touches `infra/`, wherever Terraform is installed (it needs no token). For a club whose
+  `deploy.config.ts` `cloudflareSetup` is `"terraform"` (INSTALL.md asks; `npm run terraform` refuses otherwise):
+  `npm run terraform -- plan`, read with the owner, then `-- apply` on their yes. Never `terraform apply` by hand or
+  `-auto-approve`. Never print, paste or commit the state, the saved plan file or `courtside.auto.tfvars.json`: they
+  hold secrets. A resource Terraform manages is changed in `infra/` and applied, never with `cf` or the dashboard.
+  `docs/development-standards.md` §12.
 - **A zone the club shares is the club's.** When the site is on a subdomain (`CLUB.domain` isn't `CLUB.zone`, INSTALL.md
   section 8), never change a zone-wide setting, or a rule that isn't the site's, without the club's yes. The site's
   rules each match its own hostname and are added beside the club's (a phase's update replaces all its rules).
@@ -94,7 +103,7 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
 | Install | `npm install` |
 | Dev server (needs `.dev.vars`, see `.dev.vars.example`) | `npm run dev` |
 | Types + tests + line limits + rules | `npm run check` |
-| The agents' skills, from `skills-lock.json`, fetched and updated to Cloudflare's latest | `npm run skills` |
+| The agents' skills, from `skills-lock.json`, fetched and updated to the latest | `npm run skills` |
 | One test file | `npx vitest run tests/path/file.test.ts` |
 | Browser suite (podman Playwright; must pass before any deploy) | `npm run e2e` (`npm run e2e -- upright` for one scenario, `PHONES=iphone npm run e2e`) |
 | The admin Documentation as Markdown, and the agent instructions as a constant | `npm run docs` (after a change to either; commit the result) |
@@ -105,6 +114,7 @@ site's own email-code sign-in, all in the club's own Cloudflare account. The clu
 | The video joiner's image, after `join/` changes (then commit `join/image-tag.txt` and release) | `npm run join -- image` (`-- dry-run`, `-- deploy` by hand) |
 | Another site admin, when the admin area isn't to hand (the first ones are `deploy.config.ts` `firstAdmins`, made by the first deploy) | `npm run admin -- add <email>` |
 | The live site's log lines, newest first: the last hour's warnings and errors by default (`docs/runbooks/incident.md`) | `npm run logs` (`-- --since 3h --team <id> --event job_failed --game <id> --video <id> --ray <ref> --request <id> --joiner --staging --all`) |
+| The Cloudflare setup with Terraform (`docs/runbooks/terraform.md`): this computer made ready, the checks (no token), a plan, the saved plan applied on the owner's yes | `npm run terraform -- setup`, `-- check`, `-- plan`, `-- adopt` (an install `cf` made), `-- apply`, `-- drift`, `-- upgrade` |
 | Restore a nightly backup into a new, empty D1 | `npm run restore-d1 -- <file.sql> <db-id> --account <id>` (`--sqlite <file.db>` to drill it locally) |
 
 The deploy (`npm run deploy:builds` in Workers Builds) passes `--message` (the newest `CHANGELOG.md` line) and `--tag`
@@ -119,7 +129,8 @@ Workers have their own Builds triggers on `main`, which build only when their fo
 scripts: `upload*.js`, `golive*.js`, `watch.js`, `whep.js`, `photos.js`, `admin.js` and `admin.css` (the admin area;
 `docs.js`, `docs-search.js` and `docs.css` for its Documentation), `help-search.js`, `desktop.css` and `view.js` (the
 desktop view); on every page `webapp.js` for the Home Screen app, `pull-refresh.js` and `signout.js`), `migrations/`
-(D1), `infra/` (JSON bodies for `cf` provisioning, with placeholders), `tests/` (Vitest on Node with a `node:sqlite` D1
+(D1), `infra/` (JSON bodies for `cf` provisioning, with placeholders; `infra/terraform/` applies the same files with
+Terraform), `tests/` (Vitest on Node with a `node:sqlite` D1
 shim; `tests/isolation/`: two teams, every route; `tests/e2e/`: the browser suite), `docs/` (`docs/admin/` is the
 exported Documentation), `join/` (the video joiner), `maintenance/` (the Back soon page's Worker) and `scripts/`.
 

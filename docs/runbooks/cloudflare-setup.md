@@ -5,6 +5,9 @@ development; the video joiner; and the club's branding. `INSTALL.md` walks a new
 order, with an AI coding agent; this is the reference each of its steps points to. The ids and names of a club's own
 setup live in `deploy.config.ts` (never here), and its keys in Worker secrets and the git-ignored `.secrets.*.json`.
 
+A club that manages its account with Terraform applies the same `infra/` files with `npm run terraform` instead
+(`docs/runbooks/terraform.md`, which says what it covers); the checks in §2 hold either way.
+
 Rules: the site owner's go-ahead for anything that changes Cloudflare, `--dry-run` first, read-only `cf` any time
 (`docs/cloudflare-standards.md`). `cf` shows different commands depending on the folder it's run from; discover them
 with `cf cli search "<task>"` (anonymous: no names or ids). Never paste a secret's value into this file. A computer
@@ -113,19 +116,22 @@ Each should match `cloudflare.config.ts`, `deploy.config.ts`, `infra/` and the t
 
 ## 3. Changing it
 
-Dry run, the owner's yes, then for real; then update `infra/` (or this file) in the same commit.
+Dry run, the owner's yes, then for real; then update `infra/` (or this file) in the same commit. With Terraform, the
+file first, then `npm run terraform -- plan` and `-- apply` (`docs/runbooks/terraform.md` §3).
 
 ```bash
 d=infra/zone
 cf rulesets entrypoint update http_request_firewall_managed -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/waf-managed.json)" --dry-run
 cf rulesets entrypoint update http_request_firewall_custom -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/waf-custom-rules.json)" --dry-run
 cf rulesets entrypoint update http_ratelimit -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/rate-limit-rules.json)" --dry-run
-cf rulesets entrypoint update http_request_dynamic_redirect -z $z --body "$(sed "s/<domain>/$DOMAIN/g" $d/redirect-rules.json)" --dry-run
+cf rulesets entrypoint update http_request_dynamic_redirect -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/redirect-rules.json)" --dry-run
 cf rulesets entrypoint update http_request_cache_settings -z $z --body "$(sed "s/<domain>/$DOMAIN/g; s/<worker>/$WORKER/g" $d/cache-rules.json)" --dry-run   # a subdomain only
 cf bot-management update -z $z --body "$(cat $d/bot-management.json)" --dry-run   # send enable_js too: a bare update turns it on
 cf zones settings edit security_header -z $z --body "$(cat $d/security-header.json)" --dry-run
 cf zones settings edit min_tls_version -z $z --body "$(cat $d/min-tls.json)" --dry-run
-cf zones settings edit browser_cache_ttl -z $z --body '{"value":0}' --dry-run
+cf zones settings edit browser_cache_ttl -z $z --body "$(cat $d/browser-cache-ttl.json)" --dry-run
+cf zones settings edit always_use_https -z $z --body "$(cat $d/always-use-https.json)" --dry-run
+cf zones settings edit email_obfuscation -z $z --body "$(cat $d/email-obfuscation.json)" --dry-run
 cf r2 buckets lifecycle update <worker>-originals --rules @infra/r2-lifecycle.json --dry-run
 cf r2 buckets cors update <worker>-originals --rules "$(sed "s/<domain>/$DOMAIN/g" infra/r2-cors.json)" --dry-run
 cf r2 buckets locks update <worker>-originals --body "$(cat infra/r2-lock.json)" --dry-run   # replaces the lock rules: --force to confirm
@@ -142,7 +148,8 @@ take a Time Travel bookmark (§5) before a migration that rewrites rows.
 
 A zone-level ruleset update replaces every rule in that phase, so merge with the file first (in a zone the site
 shares, the club's own rules stay as they are: On a subdomain, above). The zone-wide settings above (`bot-management`,
-`security_header`, `browser_cache_ttl`) are for a domain of the site's own only. The nightly backups'
+`security_header`, `browser_cache_ttl`, `always_use_https`, `email_obfuscation`) are for a domain of the site's own
+only. The nightly backups'
 lock means nothing can delete or overwrite one in its first 14 days; the lifecycle rule deletes each at 14 days. So
 one backup is kept a day: a second run the same day finds the day's file stored intact and counts as done.
 

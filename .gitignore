@@ -28,3 +28,13 @@ join/node_modules
 .junie/skills/
 .augment/skills/
 .continue/skills/
+
+# Terraform (infra/terraform, docs/runbooks/terraform.md): its working folder, the state (it holds the Turnstile
+# secrets), saved plans and the variables npm run terraform writes. .terraform.lock.hcl is committed.
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/*.tfplan
+infra/terraform/*.auto.tfvars.json
+infra/terraform/backend.tf
+crash.log

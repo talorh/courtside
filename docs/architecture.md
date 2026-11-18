@@ -1166,6 +1166,10 @@ There's no team in the config: each request and job step gets its team (`TeamDep
 - **Staging:** `STAGING=1` marks it (`docs/runbooks/staging.md`): the same code as its own Worker, `staging-courtside`
  (the config built with `--mode staging`), on its own database and bucket, behind the same sign-in. It labels what it makes in the shared Stream and
  Images (`site-label.ts`), shows a strip on every page and puts `[Staging]` on its emails.
+- **The account's own setup** (databases, buckets, widgets, variants, mail records, the zone's rules) is made from the
+ JSON bodies in `infra/`, by the setup runbook's `cf` commands or, for a club whose `deploy.config.ts`
+ `cloudflareSetup` is `"terraform"`, by `infra/terraform/` from the same files (`npm run terraform`,
+ `docs/runbooks/terraform.md`). Either way the Worker itself deploys through Workers Builds.
 - **Local development** uses `.dev.vars` (git-ignored) with `DEV_AUTH_EMAIL`, which only works when the request's host
  is `localhost`.
 - **Observability:** Workers Logs, with query strings hidden (signed links carry credentials in them), traces (each
@@ -1217,11 +1221,11 @@ public/ app.css and admin.css, the page scripts (upload*.js, golive*.js, watch.j
  page, manifest.webmanifest, fonts/, images
 migrations/ 0001_init.sql onwards, one a change
 infra/ JSON bodies for cf provisioning (R2 lifecycle and CORS, Images variants, the zone's rules,
- staging/)
+ staging/), and terraform/: the same files applied with Terraform (one root module, tests/ on a mock provider)
 scripts/ release.mjs (+ release-checks.mjs, release-push.mjs), staging.mjs (+ staging-steps.mjs),
  deploy-from-builds.mjs (Workers Builds' deploy step: the site, or maintenance | join), e2e.mjs, check-loc.mjs, check-rules.mjs
  (+ rules.mjs), restore-d1.mjs, maintenance.mjs (+ maintenance-steps.mjs, maintenance-logo.mjs),
- join-clips.mjs, live-real.mjs, make-court.py
+ terraform.mjs (+ terraform-steps.mjs, terraform-setup.mjs), join-clips.mjs, live-real.mjs, make-court.py
 tests/ helpers/ (the D1 stand-in on node:sqlite, fakes, seed, two-teams), e2e/ (the browser suite), isolation/
  (two teams, every route), and folders that mirror src/
 ```

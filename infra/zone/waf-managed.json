@@ -2,6 +2,7 @@
   "description": "<domain> managed WAF (Free plan default, made explicit)",
   "rules": [
     {
+      "ref": "<worker>_managed_free",
       "description": "<worker>: Cloudflare Managed Free Ruleset on the site's own hostname (the Free plan default, made explicit)",
       "expression": "(http.host eq \"<domain>\")",
       "action": "execute",

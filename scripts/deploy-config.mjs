@@ -2,7 +2,8 @@
 // scripts are plain Node and don't load TypeScript). Tested in tests/scripts/release-checks.test.ts.
 import { readFileSync } from "node:fs";
 
-const field = (text, name) => new RegExp(`\\b${name}:\\s*"([^"]*)"`).exec(text)?.[1];
+/** A quoted field's value in a config file's text. */
+export const field = (text, name) => new RegExp(`\\b${name}:\\s*"([^"]*)"`).exec(text)?.[1];
 
 /** The deploy settings: the account, zone, Worker name, the live database and bucket, and staging's (and its address); and the first
  * admins' emails, checked only where it's used (scripts/first-admin.mjs). */

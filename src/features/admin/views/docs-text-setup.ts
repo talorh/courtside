@@ -17,6 +17,7 @@ ${table(["Tool", "Why", "How"], [
 		["git", "The code, its branches and the second folder", "The system's own package"],
 		["podman", "The browser test suite runs Playwright in a container, and the release won't run without it", "On Fedora, sudo dnf install podman; on a Mac, brew install podman, then podman machine init and podman machine start"],
 		[html`The ${code("cf")} command line`, "Cloudflare's own CLI: staging deploys, the release's tokens, reading the account", html`${code("npm install -g cf")} (with sudo where npm's global folder needs it). The project's own copy in node_modules is what the scripts run`],
+		["Terraform and cf-terraforming (only for a club that uses Terraform)", html`The Cloudflare setup as Terraform, with ${code("npm run terraform")} (Cloudflare setup, With Terraform)`, html`${code("npm run terraform -- setup")} installs cf-terraforming from Cloudflare's releases, checked against their published checksums, and shows the commands for Terraform 1.10 or later from HashiCorp's own packages on this system`],
 	])}
 <h3>3. Log in to Cloudflare</h3>
 <p>Logging in opens the browser to sign in to Cloudflare and approve the command line; then check it answers with your

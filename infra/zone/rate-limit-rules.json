@@ -2,6 +2,7 @@
   "description": "<worker> rate limiting",
   "rules": [
     {
+      "ref": "<worker>_rate_limit",
       "description": "<worker>: limit API and form posts per IP",
       "expression": "(http.host eq \"<domain>\" and (starts_with(http.request.uri.path, \"/api/\") or http.request.method eq \"POST\"))",
       "action": "block",

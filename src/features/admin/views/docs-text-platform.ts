@@ -93,6 +93,14 @@ ${table(["Secret", "What it unlocks"], [
 		[code("CF_INSIGHTS_TOKEN"), "Read-only analytics and billing: Platform's Cloudflare figures, the Worker's errors on Insights' Alerts, and for Costs Stream's minutes watched by video and Cloudflare's bill (token courtside-insights-read, with Billing Read). The Worker's figures are those of the Worker its WORKER_NAME setting names, so staging's are its own"],
 		[code("TURNSTILE_SECRET"), "Checking the sign-in page's Turnstile tokens with Cloudflare (staging has its own widget and secret)"],
 	])}
+<h3>With Terraform</h3>
+<p>A club that manages its Cloudflare account with Terraform can apply this setup that way instead of with ${code("cf")}:
+${code("infra/terraform")} makes the databases, buckets and their rules, the Turnstile widgets, the Images variants, the
+mail records and, on a domain of the site's own, the zone's rules and settings, from the same files in ${code("infra/")}.
+${code("npm run terraform -- plan")} shows what would change; the owner reads it and says yes before
+${code("npm run terraform -- apply")}. The Workers, their secrets and the database's tables stay with ${code("cf")} and
+the release. One resource has one tool: ${code("deploy.config.ts")} ${code("cloudflareSetup")} says which this club uses,
+and ${code("npm run terraform -- setup")} gets a computer ready for it. The repository's ${code("docs/runbooks/terraform.md")} has the details.</p>
 <h3>Cloudflare's own alerts</h3>
 <p>Cloudflare emails the owner when the month's spend passes US$50 and US$100, when the Worker starts failing in a new
 way, when it stops an HTTP DDoS attack, when the certificate changes, and if someone reports abuse. These work even if

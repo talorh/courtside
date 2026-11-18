@@ -19,6 +19,11 @@ disagree, unless a rule here says otherwise). The commands and ids are in `docs/
 - Every mutating `cf` command is run with `--dry-run` first, then for real. Record resulting IDs in
  `docs/runbooks/cloudflare-setup.md`.
 - Nothing is created, changed or deployed on Cloudflare without the site owner's explicit go-ahead for that step.
+- A club may apply its setup with **Terraform** instead (`infra/terraform/`, `docs/runbooks/terraform.md`): the same
+ `infra/` files, a saved plan in place of `--dry-run`, and the owner's yes before each apply. One resource has one
+ tool, recorded in `deploy.config.ts` `cloudflareSetup`: a club that adopts Terraform stops changing those resources
+ with `cf`. Workers, secrets and D1 migrations stay
+ with `cf` either way. The code rules are `docs/development-standards.md` §12.
 - Worker config lives in `cloudflare.config.ts` (`cf/config`), not `wrangler.jsonc`. Regenerate runtime types
  with `npm run typecheck` (runs `cf workers types`) after changing bindings.
 

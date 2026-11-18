@@ -28,7 +28,8 @@
 		"maintenance": "node --no-warnings scripts/maintenance.mjs",
 		"staging": "node scripts/staging.mjs",
 		"logs": "node --no-warnings scripts/logs.mjs",
-		"join": "node scripts/join.mjs"
+		"join": "node scripts/join.mjs",
+		"terraform": "node --no-warnings scripts/terraform.mjs"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "2.0.0-beta.v.12",

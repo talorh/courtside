@@ -33,6 +33,7 @@ ${table(["On its own", "Only after your yes to that step"], [
 		["Read anything; run the tests and the browser suite", "Delete anything: videos, photos, data, teams"],
 		["Branch, commit, merge into staging, deploy staging", "Release to production, unless you asked for that change to go live"],
 		["Read-only Cloudflare commands, and dry runs", "Change Cloudflare: DNS, zone rules, secrets, tokens, plans, billing"],
+		["Terraform's checks and plans, which change nothing", "Apply a Terraform plan, once you've read it"],
 		["Apply a migration to staging's database", "Apply a migration to the live database, or touch the live site's data"],
 	])}
 <p>When something goes wrong it looks first, read-only (Insights, Platform, the Worker's logs, the build), tells you

@@ -16,6 +16,7 @@ The account's owner adds your email as a member of the club's Cloudflare account
 | git | The code, its branches and the second folder | The system's own package |
 | podman | The browser test suite runs Playwright in a container, and the release won't run without it | On Fedora, sudo dnf install podman; on a Mac, brew install podman, then podman machine init and podman machine start |
 | The `cf` command line | Cloudflare's own CLI: staging deploys, the release's tokens, reading the account | `npm install -g cf` (with sudo where npm's global folder needs it). The project's own copy in node_modules is what the scripts run |
+| Terraform and cf-terraforming (only for a club that uses Terraform) | The Cloudflare setup as Terraform, with `npm run terraform` (Cloudflare setup, With Terraform) | `npm run terraform -- setup` installs cf-terraforming from Cloudflare's releases, checked against their published checksums, and shows the commands for Terraform 1.10 or later from HashiCorp's own packages on this system |
 
 ### 3. Log in to Cloudflare
 

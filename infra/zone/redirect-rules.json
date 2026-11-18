@@ -2,6 +2,7 @@
   "description": "<domain> single redirects",
   "rules": [
     {
+      "ref": "<worker>_https",
       "description": "<worker>: always HTTPS (independent of the zone-wide Always Use HTTPS setting)",
       "expression": "(http.host eq \"<domain>\" and not ssl)",
       "action": "redirect",

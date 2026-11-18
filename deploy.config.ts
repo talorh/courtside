@@ -20,6 +20,12 @@ export const DEPLOY = {
 	streamCustomerCode: "REPLACE_WITH_STREAM_CUSTOMER_CODE",
 	/** The sign-in page's Turnstile widget for the site. */
 	turnstileSiteKey: "REPLACE_WITH_TURNSTILE_SITE_KEY",
+	/** How the club sets its Cloudflare account up: "cf" (the setup runbook's commands, the usual way) or "terraform"
+	 * (infra/terraform with npm run terraform, docs/runbooks/terraform.md). INSTALL.md asks; agents follow it. */
+	cloudflareSetup: "cf",
+	/** The local part of the zone's DMARC Management address (its reports go to <this>@dmarc-reports.cloudflare.net):
+	 * Terraform's DMARC record (infra/zone/dns-dmarc.json). The cf commands fill the same address in by hand. */
+	dmarcReports: "REPLACE_WITH_DMARC_REPORTS_ADDRESS",
 	/** The site admins' emails, comma-separated: the site's first admins. npm run staging and npm run release make them
 	 * admins while the site has never had one (a new install), never after, so an admin removed in the admin area stays
 	 * removed; later admins are added on the Admins page. */

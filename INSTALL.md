@@ -4,6 +4,18 @@ This guide is written for an AI coding agent to follow with you. You answer its 
 that changes your Cloudflare account; it does the rest. It takes an afternoon. If you'd rather do it by hand, the same
 steps are here in order, and `docs/runbooks/cloudflare-setup.md` has each command.
 
+There are two ways to the same site, and the agent does the work either way:
+
+- **The agent sets everything up with Cloudflare's `cf` command line.** This is the usual way, and the one to pick if
+  you've never heard of Terraform.
+- **The agent sets up what it can with Terraform**, for a club that already manages its Cloudflare account with
+  Terraform. The databases, storage, sign-in check, image sizes, mail records and, on a domain of its own, the zone's
+  rules are then Terraform's from the start, made from the same files and changed the same way as the rest of your Terraform. Everything else is the
+  same as the first way.
+
+The agent asks which you'd like before anything else, and if it's Terraform it gets your computer ready for it too.
+Nothing else changes for you.
+
 When it's done, the whole site runs on Cloudflare and nothing else: the Worker, its database, storage, video, images,
 AI and email, the code itself in Cloudflare Artifacts, and the deploys through Workers Builds. GitHub is only where
 Courtside is published; your club's copy of the code lives in your own Cloudflare account.
@@ -50,6 +62,11 @@ cf auth whoami                 # your email, and your club's account
 cf cli search "list zones"     # how to find any cf command: describe the task, never a name or an id
 ```
 
+Using Terraform? The agent gets the computer ready for it with `npm run terraform -- setup`. That installs Cloudflare's
+`cf-terraforming` (checked against a pinned checksum) and, if Terraform isn't there yet, shows the commands for
+HashiCorp's own packages on your system. Those need your password (sudo), so the agent runs them only with your yes, or
+you run them yourself.
+
 If the computer already has a Cloudflare login for another account, make a named one for the club and tell the
 scripts about it: `cf auth create club` and `export CF_PROFILE=club` (put it in your shell's profile).
 
@@ -72,10 +89,12 @@ that changes your account, nothing about your club or your account outside two f
 message:
 
 > Set up Courtside for my club. Follow INSTALL.md in this repository step by step: read AGENTS.md and
-> docs/agent-setup.md first, check the computer is ready (section 2), ask me everything in section 4 before you change
-> anything, then do each step in section 5 in order. Show me every `cf` command as a dry run and wait for my yes before
-> anything that changes my Cloudflare account. Never print a secret or a token. When you're done, go through section 6
-> with me.
+> docs/agent-setup.md first, and check the computer is ready (section 2). Then ask me whether we'll manage Cloudflare
+> with cf or with Terraform; if Terraform, run npm run terraform -- setup with my yes. Ask me everything else in
+> section 4 before you change anything, then do each step in section 5 in order. Show me every `cf` command as a dry
+> run and wait for my yes before anything that changes my Cloudflare account. If we use Terraform, make what it covers
+> with npm run terraform instead (section 5, With Terraform), and show me each plan before you apply it. Never print a
+> secret or a token. When you're done, go through section 6 with me.
 
 The agent may ask you to do a few things only you can: approve a login in the browser, pay for the domain, or add a
 card. Everything else it does itself, telling you what it's about to run.
@@ -90,6 +109,7 @@ The agent fills both from your answers:
 
 | It asks | Goes in | Example |
 | --- | --- | --- |
+| First: cf or Terraform, for setting up and changing the Cloudflare account. If you're not sure, it's cf | `deploy.config.ts` `cloudflareSetup` (section 5, With Terraform) | cf |
 | The site's name, as the top bar and the Home Screen icon say it | `siteName` | Courtside, or your own |
 | The club's name, as its teams are named on Home | `name` | Saints |
 | The short name, for the top bar and the singlet: a plural nickname works best | `nickname` | Saints |
@@ -117,7 +137,8 @@ The agent fills both from your answers:
 ## 5. What the agent does
 
 Each step names the section of `docs/runbooks/cloudflare-setup.md` with the exact commands. Every `cf` command runs as
-a dry run first, then for real after your yes. Read-only commands need no yes.
+a dry run first, then for real after your yes. Read-only commands need no yes. With Terraform, the steps marked
+(Terraform) are made by Terraform instead, as the end of this section says.
 
 1. **The club** (`src/club.ts`): fills in your answers, then `npm run check` to be sure everything still passes with
    your names. If you have no logo, `npm run club -- placeholder`; otherwise your files go in `public/` at the sizes the
@@ -128,19 +149,19 @@ a dry run first, then for real after your yes. Read-only commands need no yes.
    when the database doesn't; with the example address left there, nobody gets through.
 2. **The domain** (§1): registers it through Cloudflare Registrar, or adds the existing zone, with DNSSEC on. Records
    the zone id in `deploy.config.ts`. On a subdomain, nothing to register: the club's zone's id (section 8).
-3. **The databases** (§1, §3): D1 `courtside` (live) and `courtside-staging`, in the region nearest you; applies
+3. **The databases** (§1, §3; Terraform): D1 `courtside` (live) and `courtside-staging`, in the region nearest you; applies
    `migrations/` to both; records both ids.
-4. **The buckets** (§1, §3): R2 `courtside-originals` and `courtside-staging`, with the CORS, lifecycle and lock
+4. **The buckets** (§1, §3; Terraform, all but the R2 token): R2 `courtside-originals` and `courtside-staging`, with the CORS, lifecycle and lock
    rules from `infra/` (the domain filled in); an R2 token scoped to the originals bucket for the phones' pre-signed
    uploads.
 5. **Stream** (§1): a signing key for playback links, and a token with Stream Edit for uploads, clips and live inputs;
    records the account's customer code in `deploy.config.ts`.
-6. **Turnstile** (§1): a widget for the site and one for staging's address; the site keys go in `deploy.config.ts`.
+6. **Turnstile** (§1; Terraform): a widget for the site and one for staging's address; the site keys go in `deploy.config.ts`.
    Staging's address, `staging-<worker>.<the account's workers.dev subdomain>.workers.dev` (Workers & Pages in the
    dashboard shows the subdomain), goes in `deploy.config.ts` `staging.host`: it's the only address staging answers on.
-7. **Email** (§1; on a subdomain, section 8): Email Sending onboarded for the domain (its DNS records added), the sender `alerts@<domain>`;
+7. **Email** (§1; on a subdomain, section 8; Terraform, the SPF and DMARC records): Email Sending onboarded for the domain (its DNS records added), the sender `alerts@<domain>`;
    Email Routing forwarding `security@<domain>` to you; the SPF and DMARC records from `infra/zone/`.
-8. **The zone's protections** (§3; on a subdomain, section 8): the WAF rules, rate limit, redirects, security headers and bot settings from
+8. **The zone's protections** (§3; on a subdomain, section 8; Terraform, on a domain of its own): the WAF rules, rate limit, redirects, security headers and bot settings from
    `infra/zone/`, each applied with the domain filled in.
 9. **A read-only token** (Secrets) for the admin area's Platform and Costs pages: account analytics, the zone's
    analytics, Security Center insights and billing read.
@@ -165,6 +186,24 @@ a dry run first, then for real after your yes. Read-only commands need no yes.
     attack, emailed to you. These work even when the site doesn't. And, with your yes, a Workers spending limit
     (Billing, Spend Management; US$20 a billing period, say), which stops the site if Workers usage ever runs away.
 
+**With Terraform** (`docs/runbooks/terraform.md` has the details). The agent does the same steps in the same order,
+except that the ones marked (Terraform) come from one plan:
+
+1. `deploy.config.ts` `cloudflareSetup` is `"terraform"`, and `npm run terraform -- setup` says the computer is ready.
+2. Steps 1 and 2 as above, then staging's address in `deploy.config.ts` `staging.host` (step 6 says where it comes
+   from).
+3. `npm run terraform -- plan`. The agent shows you the plan; after your yes, `npm run terraform -- apply`. The apply
+   writes the databases' ids and the two site keys into `deploy.config.ts`, and the Turnstile secrets into the
+   secrets files, without showing them.
+4. The migrations applied to both databases, then everything else as above, in order: the R2 token, Stream, Email
+   Sending and Routing, the read-only token, the secrets, Artifacts, the joiner, the first deploy and the alerts.
+5. Once Email Routing is on, the zone's DMARC Management page shows its reports address. Its first part goes in
+   `deploy.config.ts` `dmarcReports`, then a second plan and apply add the DMARC record.
+
+After that, a change to anything Terraform made is a change to its file in `infra/`, then a plan and an apply. A club
+that started with `cf` can move to Terraform later: `cloudflareSetup` to `"terraform"`, `npm run terraform -- setup`,
+then `npm run terraform -- adopt` takes over what's there.
+
 ## 6. Checking it's right
 
 With the agent, after the last step:
@@ -176,6 +215,7 @@ With the agent, after the last step:
 - Upload a short video. Add a photo. Cut a clip.
 - The admin area's Platform page shows every piece green, and Costs reads Cloudflare's bill.
 - The admin area's Documentation reads right for your club, and `docs/admin/` matches it (`npm run docs`).
+- With Terraform: `npm run terraform -- drift` says Cloudflare matches `infra/`.
 
 ## 7. Keeping it generic in your copy
 

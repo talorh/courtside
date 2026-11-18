@@ -62,6 +62,10 @@ Secrets are stored on the Worker, never in the code. Most services are bindings 
 | `CF_INSIGHTS_TOKEN` | Read-only analytics and billing: Platform's Cloudflare figures, the Worker's errors on Insights' Alerts, and for Costs Stream's minutes watched by video and Cloudflare's bill (token courtside-insights-read, with Billing Read). The Worker's figures are those of the Worker its WORKER_NAME setting names, so staging's are its own |
 | `TURNSTILE_SECRET` | Checking the sign-in page's Turnstile tokens with Cloudflare (staging has its own widget and secret) |
 
+### With Terraform
+
+A club that manages its Cloudflare account with Terraform can apply this setup that way instead of with `cf`: `infra/terraform` makes the databases, buckets and their rules, the Turnstile widgets, the Images variants, the mail records and, on a domain of the site's own, the zone's rules and settings, from the same files in `infra/`. `npm run terraform -- plan` shows what would change; the owner reads it and says yes before `npm run terraform -- apply`. The Workers, their secrets and the database's tables stay with `cf` and the release. One resource has one tool: `deploy.config.ts` `cloudflareSetup` says which this club uses, and `npm run terraform -- setup` gets a computer ready for it. The repository's `docs/runbooks/terraform.md` has the details.
+
 ### Cloudflare's own alerts
 
 Cloudflare emails the owner when the month's spend passes US$50 and US$100, when the Worker starts failing in a new way, when it stops an HTTP DDoS attack, when the certificate changes, and if someone reports abuse. These work even if the Worker itself is down, alongside the site's own alerts on Platform and Insights. A Workers spending limit (Billing, Spend Management; US$20 of Workers usage in a billing period, say) blocks the Worker's requests past it, so a runaway bill can't happen there, but reaching it stops the site until the next billing period; Stream, R2 and Images aren't in it.
