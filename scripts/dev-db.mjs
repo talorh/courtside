@@ -2,7 +2,10 @@
 // migration applied to it. The database is known to cf by the id in deploy.config.ts, so the same command works before
 // and after the install fills the id in. Run once, and after a new migration; `rm -rf .cloudflare/state` starts over.
 import { execFileSync } from "node:child_process";
-import { deployConfig } from "./deploy-config.mjs";
+import { deployConfig, keepLoginInFile } from "./deploy-config.mjs";
+
+// Every cf command below keeps the login in its plaintext file, out of the keyring.
+keepLoginInFile();
 
 export const LOCAL_STATE = ".cloudflare/state";
 

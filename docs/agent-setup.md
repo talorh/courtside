@@ -26,6 +26,7 @@ pwd                                   # .../courtside-staging (you work here; co
 git worktree list                     # two lines: courtside-prod [main] and courtside-staging [staging or a branch]
 git status --short                    # empty, or the admin's own work in progress: ask before touching it
 node --version                        # the version in .node-version
+grep -l CLOUDFLARE_AUTH_USE_KEYRING=false ~/.bashrc ~/.zshrc 2>/dev/null   # one of them: keeps the cf login in its file, out of the keyring
 cf auth whoami                        # the admin's email, and the club's account (with --profile $CF_PROFILE if set)
 ls ../courtside-prod/.secrets.production.json ../courtside-prod/.secrets.staging.json   # both there (never print them)
 podman --version                      # the browser test suite runs in podman

@@ -1,6 +1,7 @@
 // What the scripts need to know about where the site runs, read from deploy.config.ts and src/club.ts as text (the
 // scripts are plain Node and don't load TypeScript). Tested in tests/scripts/release-checks.test.ts.
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 /** A quoted field's value in a config file's text. */
 export const field = (text, name) => new RegExp(`\\b${name}:\\s*"([^"]*)"`).exec(text)?.[1];
@@ -30,19 +31,37 @@ export function readDomain(text) {
 /** `--profile <name>` when CF_PROFILE names the cf login to use (a computer with several accounts), else nothing. */
 export const profileArgs = () => (process.env.CF_PROFILE ? ["--profile", process.env.CF_PROFILE] : []);
 
-/** The cf login's OAuth token on this computer, for the few API calls cf has no command for. It's read from cf's
- * plaintext login file; a login in the OS keyring (cf's default for a new login) has none, so this says how to log in
- * again without it. The message never quotes the file. */
-export function cfToken(home) {
-	const name = process.env.CF_PROFILE ?? "default";
-	const again = `Log in again with: cf auth login${name === "default" ? "" : ` --profile ${name}`} --force --no-use-keyring`;
+/** Every cf command this process runs from here on keeps the login in its plaintext file, where cfToken reads it: cf can
+ * keep a login in the OS keyring instead (an encrypted file, the plaintext one deleted), which the scripts can't read. */
+export function keepLoginInFile(env = process.env) {
+	env.CLOUDFLARE_AUTH_USE_KEYRING = "false";
+}
+
+/** cf's own folder: XDG_CONFIG_HOME's, else ~/Library/Preferences on a Mac, else ~/.config (as cf works it out). */
+export function cfConfigDir(home, env = process.env, platform = process.platform) {
+	const base = env.XDG_CONFIG_HOME || (platform === "darwin" ? join(home, "Library", "Preferences") : join(home, ".config"));
+	return join(base, "cloudflare");
+}
+
+/** The cf login's OAuth token on this computer (CF_PROFILE's, else the default login), for the few API calls cf has no
+ * command for. No message quotes the file. */
+export function cfToken(home, { env = process.env, platform = process.platform } = {}) {
+	const name = env.CF_PROFILE ?? "default";
+	const again = `Log in again, kept out of the keyring: CLOUDFLARE_AUTH_USE_KEYRING=false npx cf auth ${name === "default" ? "login --force" : `create ${name}`}`;
+	let text;
+	try {
+		text = readFileSync(join(cfConfigDir(home, env, platform), "config", `${name}.json`), "utf8");
+	} catch {
+		throw new Error(`cf's ${name} login has no plaintext file (cf may have moved it into the OS keyring, which the scripts can't read). ${again}`);
+	}
 	let login;
 	try {
-		login = JSON.parse(readFileSync(`${home}/.config/cloudflare/config/${name}.json`, "utf8"));
+		login = JSON.parse(text);
 	} catch {
-		throw new Error(`cf's ${name} login isn't in its plaintext file (it may be in the OS keyring, which these scripts can't read). ${again}`);
+		// Not passed on: JSON.parse's message quotes the file, which holds the token.
+		throw new Error(`cf's ${name} login file couldn't be read as JSON. ${again}`);
 	}
-	if (typeof login.oauth_token !== "string" || !login.oauth_token) throw new Error(`cf's ${name} login has no token. ${again}`);
+	if (typeof login?.oauth_token !== "string" || !login.oauth_token) throw new Error(`cf's ${name} login has no token. ${again}`);
 	return login.oauth_token;
 }
 

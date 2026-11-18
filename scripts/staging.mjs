@@ -10,10 +10,13 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import { cfToken, profileArgs } from "./deploy-config.mjs";
+import { cfToken, keepLoginInFile, profileArgs } from "./deploy-config.mjs";
 import { firstAdminEmails } from "./first-admin.mjs";
 import { headMoved, siteFromConfig, STAGING_REF } from "./release-checks.mjs";
 import { deployedSince, deployEnv, deployPlan, liveWorkerChecks, parseArgs, removeOnExit, setupCalls, stagingFromConfig, stagingSecrets, switchRefusal } from "./staging-steps.mjs";
+
+// Every cf command below keeps the login in its plaintext file, out of the keyring.
+keepLoginInFile();
 
 const say = (text) => console.log(`staging: ${text}`);
 const fail = (text) => {
@@ -44,7 +47,7 @@ let token = null;
 async function api(method, path, { contentType, body } = {}) {
 	if (!token) {
 		execFileSync("npx", ["cf", "auth", "whoami", ...profileArgs()], { stdio: "ignore", env });
-		token = cfToken(homedir());
+		try { token = cfToken(homedir()); } catch (e) { fail(e.message); }
 	}
 	const headers = { Authorization: `Bearer ${token}`, ...(contentType ? { "Content-Type": contentType } : {}) };
 	const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });

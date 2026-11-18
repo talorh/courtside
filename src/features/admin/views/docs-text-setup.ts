@@ -22,9 +22,10 @@ ${table(["Tool", "Why", "How"], [
 <h3>3. Log in to Cloudflare</h3>
 <p>Logging in opens the browser to sign in to Cloudflare and approve the command line; then check it answers with your
 email and the club's account. A computer that works with several Cloudflare accounts makes a named profile instead and
-tells the scripts about it with ${code("CF_PROFILE")}. The login is kept in its own file, not the system's keyring,
-because the release and staging scripts read its token from there.</p>
-${cmd("cf auth login --no-use-keyring\ncf auth whoami\n# Or, with several accounts on this computer:\nCLOUDFLARE_AUTH_USE_KEYRING=false cf auth create club && export CF_PROFILE=club")}
+tells the scripts about it with ${code("CF_PROFILE")}. The login stays in its own file, not the system's keyring, because
+the release and staging scripts read its token from there: put the export line in your shell profile (~/.bashrc, or
+~/.zshrc on a Mac) as well, so no cf command moves it later.</p>
+${cmd("export CLOUDFLARE_AUTH_USE_KEYRING=false\ncf auth login\ncf auth whoami\n# Or, with several accounts on this computer:\ncf auth create club && export CF_PROFILE=club")}
 <h3>4. Get the code</h3>
 <p>Clone the club's own repository (its copy of Courtside, wherever it keeps it) into a folder named for the Worker with
 ${code("-prod")} on the end. The release pushes ${code("main")} to a second place, the Cloudflare Artifacts repository in

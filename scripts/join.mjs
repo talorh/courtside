@@ -7,8 +7,11 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { deployConfig, profileArgs } from "./deploy-config.mjs";
+import { deployConfig, keepLoginInFile, profileArgs } from "./deploy-config.mjs";
 import { ffmpegIsPinned, imagePlan, imageTag, pinnedFfmpeg, selfTestPassed } from "./join-steps.mjs";
+
+// Every cf command below keeps the login in its plaintext file, out of the keyring.
+keepLoginInFile();
 
 const say = (text) => console.log(`join: ${text} (${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })})`);
 const NAME = `${deployConfig().worker}-join`;

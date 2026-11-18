@@ -15,7 +15,7 @@ import { readFileSync } from "node:fs";
 import { availableParallelism, homedir, loadavg } from "node:os";
 import { newestChange } from "../src/features/changelog/changelog.ts";
 import { createPresigner } from "../src/platform/r2-presigner.ts";
-import { cfToken } from "./deploy-config.mjs";
+import { cfToken, keepLoginInFile } from "./deploy-config.mjs";
 import { firstAdminEmails, firstAdminSql } from "./first-admin.mjs";
 import { listRoutes, maintenanceRoutes } from "./maintenance-steps.mjs";
 import {
@@ -24,6 +24,9 @@ import {
 	SEGMENTS_SQL, STAGING_REF, stagingDiffArgs, stagingProblem, UPLOADING_SQL, JOINING_SQL, withLastParts,
 } from "./release-checks.mjs";
 import { pushMain, waitForBuild, workerTag } from "./release-push.mjs";
+
+// Every cf command below keeps the login in its plaintext file, out of the keyring.
+keepLoginInFile();
 
 const step = (what) => console.log(`\nrelease: ${what}`);
 const fail = (why) => {
@@ -83,7 +86,8 @@ for (const db of databasesFromConfig(config)) {
 const behindMaintenance = process.argv.includes("--maintenance");
 if (behindMaintenance) {
 	step("the maintenance page is on (--maintenance)");
-	const token = cfToken(homedir());
+	let token;
+	try { token = cfToken(homedir()); } catch (e) { fail(e.message); }
 	if (!maintenanceRoutes(await listRoutes({ token, fetch })).length) stop("--maintenance, but the maintenance page is off: npm run maintenance -- on first.");
 }
 const quietMinutes = behindMaintenance ? MAINTENANCE_QUIET_MINUTES : QUIET_MINUTES;

@@ -9,9 +9,12 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { cfToken, profileArgs } from "./deploy-config.mjs";
+import { cfToken, keepLoginInFile, profileArgs } from "./deploy-config.mjs";
 import { setUp } from "./terraform-setup.mjs";
 import { applyRefusal, parseArgs, PLAN_FILE, planArgs, PLATFORMS, setupRefusal, terraformVars, withOutputs } from "./terraform-steps.mjs";
+
+// Every cf command below keeps the login in its plaintext file, out of the keyring.
+keepLoginInFile();
 
 // The state, saved plans and variables hold secrets and ids: readable by this user alone.
 process.umask(0o077);
@@ -64,7 +67,7 @@ try {
 let token = process.env.CLOUDFLARE_API_TOKEN;
 if (!token) {
 	execFileSync("npx", ["cf", "auth", "whoami", ...profileArgs()], { stdio: "ignore" });
-	token = cfToken(homedir());
+	try { token = cfToken(homedir()); } catch (e) { fail(e.message); }
 }
 const env = { ...process.env, CLOUDFLARE_API_TOKEN: token };
 must(["init", "-input=false", "-lockfile=readonly"], env);

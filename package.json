@@ -7,7 +7,7 @@
 		"node": ">=26.12.0"
 	},
 	"scripts": {
-		"dev": "cf dev",
+		"dev": "CLOUDFLARE_AUTH_USE_KEYRING=false cf dev",
 		"skills": "export DISABLE_TELEMETRY=1; skills install -a claude-code -a opencode -a windsurf -a roo -a kiro-cli -a goose -a junie -a augment -a continue && skills update -p -y && skills list",
 		"dev:db": "node scripts/dev-db.mjs",
 		"dev:seed": "node scripts/dev-seed.mjs",

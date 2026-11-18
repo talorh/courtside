@@ -3,8 +3,11 @@
 // logs-steps.mjs for the rest.
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { deployConfig, profileArgs } from "./deploy-config.mjs";
+import { deployConfig, keepLoginInFile, profileArgs } from "./deploy-config.mjs";
 import { describeEvent, logsBody, parseLogsArgs } from "./logs-steps.mjs";
+
+// Every cf command below keeps the login in its plaintext file, out of the keyring.
+keepLoginInFile();
 
 const deploy = deployConfig();
 const timeZone = /\btimeZone:\s*"([^"]+)"/.exec(readFileSync("src/club.ts", "utf8"))?.[1] ?? "UTC";

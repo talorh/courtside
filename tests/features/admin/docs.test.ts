@@ -177,7 +177,7 @@ describe("the admin area's Documentation", () => {
 	it("sets up a computer by hand, step by step, then hands over to an AI coding agent with its instructions to copy", async () => {
 		const html = await page();
 		const setup = html.split('id="setup" aria-labelledby')[1]!.split('<section class="panel docsec"')[0]!;
-		for (const words of ["cf auth login --no-use-keyring", "CLOUDFLARE_AUTH_USE_KEYRING=false cf auth create club", "CF_PROFILE", "git worktree add ../courtside-staging staging",
+		for (const words of ["export CLOUDFLARE_AUTH_USE_KEYRING=false", "cf auth login", "cf auth create club", "your shell profile", "CF_PROFILE", "git worktree add ../courtside-staging staging",
 			"courtside-prod</code></pre>",
 			".secrets.production.json", "podman"]) expect(setup, words).toContain(words);
 		const agent = html.split('id="agent" aria-labelledby')[1]!.split('<section class="panel docsec"')[0]!;

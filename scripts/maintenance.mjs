@@ -5,8 +5,11 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync, symlinkSync } from "node:fs";
 import { homedir } from "node:os";
-import { cfToken, profileArgs } from "./deploy-config.mjs";
+import { cfToken, keepLoginInFile, profileArgs } from "./deploy-config.mjs";
 import { deleteRoute, listRoutes, maintenanceRoutes, parseArgs, planCommands } from "./maintenance-steps.mjs";
+
+// Every cf command below keeps the login in its plaintext file, out of the keyring.
+keepLoginInFile();
 
 const say = (text) => console.log(`maintenance: ${text} (${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })})`);
 const fail = (text) => {
@@ -19,7 +22,8 @@ if (args.error) fail(args.error);
 
 // cf's own login, refreshed first; the token is only ever sent to Cloudflare's API, never printed.
 execFileSync("npx", ["cf", "auth", "whoami", ...profileArgs()], { stdio: "ignore" });
-const token = cfToken(homedir());
+let token;
+try { token = cfToken(homedir()); } catch (e) { fail(e.message); }
 const routeIds = async () => maintenanceRoutes(await listRoutes({ token, fetch })).map((r) => r.id);
 const on = (await routeIds()).length > 0;
 say(`maintenance is ${on ? "ON: the site shows the maintenance page to everyone but admins" : "off"}`);

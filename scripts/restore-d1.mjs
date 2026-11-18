@@ -9,6 +9,10 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { restorePlan } from "../src/jobs/backup-sql.ts";
+import { keepLoginInFile } from "./deploy-config.mjs";
+
+// Every cf command below keeps the login in its plaintext file, out of the keyring.
+keepLoginInFile();
 
 const args = process.argv.slice(2);
 const option = (name) => { const i = args.indexOf(name); return i < 0 ? undefined : args.splice(i, 2)[1]; };

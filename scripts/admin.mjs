@@ -2,8 +2,11 @@
 // first deploy: scripts/first-admin.mjs): a row in the admins table of the live database (or staging's), through cf's
 // D1 query. Someone removed before comes back. The site reads the table on their next request, so there's nothing to deploy.
 import { execFileSync } from "node:child_process";
-import { deployConfig, profileArgs } from "./deploy-config.mjs";
+import { deployConfig, keepLoginInFile, profileArgs } from "./deploy-config.mjs";
 import { EMAIL } from "./first-admin.mjs";
+
+// Every cf command below keeps the login in its plaintext file, out of the keyring.
+keepLoginInFile();
 
 const [command, email, ...rest] = process.argv.slice(2);
 const fail = (text) => {
