@@ -363,7 +363,7 @@ families scoring, one on lollies and one on video. There's no video duty when ev
  names, slides sideways on a narrow screen and opens at this week (`public/roster.js`). Percentage rings and duty-mix
  bars were tried and dropped.
 - **The WhatsApp message**:
- the match day message for the team chat in the site owner's layout ("Opponent: …", the venue and time, arrive 30 minutes early, and the uniform, from the club's list in
+ the match day message for the team chat in the site owner's layout ("Please see below game details.", then "Opponent: …", the venue and time, and the uniform, from the club's list in
  `src/club.ts`: chosen each time when there's more than one, packing the other, the clash uniform, "Navy uniform, pack
  White just in case."; a club with one kit or a reversible singlet gets "Uniform: Reversible singlet." and no choice), then 💻 Scorers, 🍬 Lollies and 🎥 Video
  from the roster, with **Copy** and **Open WhatsApp**.

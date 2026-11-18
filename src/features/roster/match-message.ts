@@ -4,8 +4,8 @@ import type { Game } from "../games/games-repository.ts";
 import { ALL_DUTIES, type RosterDuties } from "./roster-duties.ts";
 import type { Slot } from "./roster-plan.ts";
 
-// The match day message for the team's WhatsApp chat, one for each game: the opponent, the venue and when, arrive 30
-// minutes early, which of the club's uniforms to wear (packing the other, the clash uniform, when the club has more
+// The match day message for the team's WhatsApp chat, one for each game: the game details (the opponent, the venue
+// and when), which of the club's uniforms to wear (packing the other, the clash uniform, when the club has more
 // than one), and who's on duty, with the family on video told how to film it on the site.
 
 /** One of CLUB.uniforms, as written there. */
@@ -43,8 +43,8 @@ export function matchMessage(o: { site: string; game: Game; slots: Slot[]; names
 		...(o.video && !g.noVideo && duties.video ? [`🎥 Video: ${who("video")} (${filming})`] : []),
 	];
 	return [
-		"Hi Team.", "Please see below match day details.", [`Opponent: ${known(g.opponent) || "TBC"}`, known(g.venue) || "Venue TBC", longDate(g.startsAt)].join("\n"),
-		"Please arrive 30 mins before start time.", uniformLine(o.uniform),
+		"Hi Team.", "Please see below game details.", [`Opponent: ${known(g.opponent) || "TBC"}`, known(g.venue) || "Venue TBC", longDate(g.startsAt)].join("\n"),
+		uniformLine(o.uniform),
 		duty.join("\n"),
 	].join("\n\n");
 }

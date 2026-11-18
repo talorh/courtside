@@ -44,17 +44,15 @@ describe("match day message", () => {
 		expect(html).toContain('<script type="module" src="/match-message.js"></script>');
 		expect(html).toContain("Change anything in the message before you copy or send it. Update message starts it again from the roster.");
 	});
-	it("is laid out like a team's WhatsApp match-day message", () => {
+	it("is laid out like a team's WhatsApp message: the game details, then the uniform, with no arrival time", () => {
 		expect(longDate("2026-10-23T18:30")).toBe("Friday 23 October, 6:30pm");
 		expect(matchMessage({ site: "https://saints.example", game: game({}), slots, names, video: true, uniform: "White" })).toBe(`Hi Team.
 
-Please see below match day details.
+Please see below game details.
 
 Opponent: Northside 2
 Saints Stadium Court 1
 Friday 23 October, 6:30pm
-
-Please arrive 30 mins before start time.
 
 White uniform, pack Navy just in case.
 

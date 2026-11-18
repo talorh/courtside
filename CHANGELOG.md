@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 18 Nov 2026
 
+- [Enhancement] **Roster:** The WhatsApp message now says "Please see below game details" rather than match day details, and no longer asks families to arrive 30 minutes early.
 - [Feature] **Cloudflare setup:** A club that manages its Cloudflare account with Terraform can now apply the site's setup that way (npm run terraform), from the same files as the cf commands, with a plan the owner reads before each apply and a way to take over an install cf made.
 - [Fix] **Documentation:** Fixed an issue where the Documentation said a join never encodes anything again: the parts are copied as they are, and encoded again only as a fallback when they don't line up. The request diagram now starts with the check that a request came to the site's own address.
 - [Enhancement] **Video joiner:** Building the joiner's image (npm run join -- image) now runs it with no network before pushing it, and pushes it only once its ffmpeg is the pinned version and its own self-test joins.
