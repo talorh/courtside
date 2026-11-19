@@ -11,8 +11,8 @@ const TEAM_GROUPS: Array<{ title: string; tables: string[] }> = [
 	{ title: "Requests", tables: ["removal_requests", "clip_removal_requests", "photo_removal_requests", "activity"] },
 ];
 
-const SITE_WIDE = ["admins", "sessions", "sign_in_codes", "sign_in_events", "sign_in_holds", "view_weeks", "support_requests", "support_messages",
-	"platform_alerts", "server_errors", "problems", "email_months", "admin_log", "docs_ask_counts", "cost_views", "cost_months", "exchange_rates", "billed_usage"];
+const SITE_WIDE = ["admins", "sessions", "sign_in_codes", "sign_in_events", "sign_in_holds", "locked_people", "view_weeks", "support_requests", "support_messages",
+	"platform_alerts", "server_errors", "problems", "email_months", "admin_log", "docs_ask_counts", "cost_views", "cost_months", "exchange_rates", "billed_usage", "stream_bought"];
 
 /** A card: its heading, then a table name a line. */
 const card = (x: number, y: number, w: number, title: string, lines: string[], kind: string) => html`<g class="dg-box k-${kind}"><rect x="${x}" y="${y}" width="${w}" height="${34 + lines.length * 17}" rx="10"/>
@@ -24,7 +24,7 @@ export function dataDiagram(): SafeHtml {
 	const site = [0, 5, 10, 15].map((at) => SITE_WIDE.slice(at, at + 5));
 	return figure("data", {
 		w: 760, h: 456, min: 640, title: "The database's tables",
-		desc: "One teams table, with every team's own tables grouped as people, games, video, photos and roster, and requests, each row carrying its team. Below them the site-wide tables: admins, the sign-in's sessions, codes, events and holds, the devices a week by view, support tickets and messages, platform alerts, server errors, problems (anything that failed, for the admin Log), the month's emails, the admin log, the Documentation assistant's questions, and Costs' minutes watched, exchange rate and Cloudflare's bill.",
+		desc: "One teams table, with every team's own tables grouped as people, games, video, photos and roster, and requests, each row carrying its team. Below them the site-wide tables: admins, the sign-in's sessions, codes, events and holds, the people locked, the devices a week by view, support tickets and messages, platform alerts, server errors, problems (anything that failed, for the admin Log), the month's emails, the admin log, the Documentation assistant's questions, and Costs' minutes watched, exchange rate, Cloudflare's bill and Stream's storage bought each month.",
 		caption: "Every team table carries a team_id, and every query names it, so one team can never read another's rows. The site-wide tables belong to no team.",
 	}, html`${d.box({ x: 290, y: 16, w: 180, h: 52, title: "teams", sub: "one row a team", kind: "store" })}
 ${TEAM_GROUPS.map((g, i) => html`${card(x(i), 110, 148, g.title, g.tables, "step")}${d.arrow([[380, 68], [x(i) + 74, 108]])}`)}

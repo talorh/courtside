@@ -561,3 +561,40 @@ textarea.msg{font-size:14px;line-height:1.5;border-style:dashed;resize:vertical}
 .rkind .n{font-size:12px;font-weight:700;color:var(--muted)}
 .rnotes{margin:0;padding-left:20px;display:grid;gap:6px;max-width:80ch;line-height:1.5}
 .rnotes b{font-weight:800}
+
+/* Users: the dashboard's figures lead to the people they count; each team's people beside how many used it this month. */
+a.unit{color:inherit;text-decoration:none}
+.usersdash .units{grid-template-columns:repeat(auto-fit,minmax(min(100%,135px),1fr))}
+.ut-team a{color:inherit}
+a.unit:hover,a.unit:focus-visible{border-color:var(--club)}
+.usersdash .chips{flex-wrap:wrap}
+.ut-active{white-space:nowrap}
+.ut-meter{display:inline-block;width:6em;margin-right:8px;vertical-align:middle}
+.ut-meter svg.fmeter{width:100%;height:6px;display:block}
+.users th a{color:inherit;text-decoration:none}
+.users tr.locked td{color:var(--muted)}
+.u-acts{white-space:nowrap}
+.u-acts .u-tags{display:inline-flex;gap:6px;margin-right:8px;vertical-align:middle}
+.u-acts .rowmenu{display:inline-block;vertical-align:middle}
+.u-acts .menu .confirm summary{width:100%}
+@media (max-width:640px){
+  .users tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name role" "email email" "team seen" "acts acts"}
+  .u-name{grid-area:name}
+  .u-role{grid-area:role;justify-self:end;font-size:13px;font-weight:700}
+  .u-email{grid-area:email;font-size:14px;overflow-wrap:anywhere}
+  .u-team{grid-area:team;font-size:13px;color:var(--muted)}
+  .u-seen{grid-area:seen;justify-self:end;font-size:13px;color:var(--muted)}
+  .u-acts{grid-area:acts;border-top:1px solid var(--line);padding-top:10px;white-space:normal;position:relative}
+  .u-acts .rowmenu{position:static}
+  .u-acts .rowmenu .menu{left:0;right:0;min-width:0;max-width:none}
+  .userteams tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"team people" "active active" "never mgrs"}
+  .ut-team{grid-area:team}
+  .ut-people{grid-area:people;justify-self:end;font-weight:700}
+  .ut-people::after{content:" people";font-weight:400;color:var(--muted)}
+  .ut-active{grid-area:active;font-size:14px}
+  .ut-active::after{content:" used it this month";color:var(--muted)}
+  .ut-never{grid-area:never;font-size:13px}
+  .ut-never::before{content:"Not opened it yet: ";color:var(--muted)}
+  .ut-mgrs{grid-area:mgrs;justify-self:end;font-size:13px}
+  .ut-mgrs::before{content:"Team managers: ";color:var(--muted)}
+}

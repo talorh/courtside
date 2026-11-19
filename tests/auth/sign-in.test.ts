@@ -211,6 +211,46 @@ describe("checking a code", () => {
 		// The earlier email's code is the easy mistake with two in the inbox, so a wrong code points to the newest email.
 		expect(SIGN_IN_MESSAGES.wrong).toBe("That code isn't right. Use the code in the newest email: asking for a new code stops the earlier ones working.");
 	});
+	it("keeps the code in the inbox working when a new one's email doesn't go", async () => {
+		const { deps, later } = clocked();
+		await requestCode(deps, MANAGER, "1.2.3.4");
+		const first = sentCode(deps);
+		later(2 * 60_000);
+		deps.email.failNext = "E_INTERNAL";
+		await expect(requestCode(deps, MANAGER, "1.2.3.4")).rejects.toThrow();
+		expect(await verifyCode(deps, MANAGER, first, "1.2.3.4", "x")).toMatchObject({ token: expect.any(String) });
+	});
+	it("keeps the code in the inbox working while a new one's email is still on its way", async () => {
+		const { deps } = clocked();
+		await requestCode(deps, MANAGER, "1.2.3.4");
+		const first = sentCode(deps);
+		let deliver = () => {};
+		const send = deps.email.send.bind(deps.email);
+		deps.email.send = (e) => new Promise((done) => { deliver = () => void send(e).then(done); });
+		const asking = requestCode(deps, MANAGER, "1.2.3.4");
+		await new Promise((r) => setTimeout(r, 20));
+		expect(await verifyCode(deps, MANAGER, first, "1.2.3.4", "x")).toMatchObject({ token: expect.any(String) });
+		deliver();
+		await asking;
+	});
+
+	it("still says sent, and the code still works, when its email went but marking it sent didn't; a pending code counts after a minute", async () => {
+		const { deps, later } = clocked();
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		// Once the email has gone, the next two batches (marking it sent, and its try again) fail.
+		const batch = deps.db.batch.bind(deps.db), send = deps.email.send.bind(deps.email);
+		let fail = 0;
+		deps.email.send = async (e) => { await send(e); fail = 2; };
+		deps.db.batch = ((s: D1PreparedStatement[]) => (fail-- > 0 ? Promise.reject(new Error("D1 blip")) : batch(s))) as typeof deps.db.batch;
+		expect(await requestCode(deps, MANAGER, "1.2.3.4")).toBe("sent");
+		deps.db.batch = batch;
+		const code = sentCode(deps);
+		later(30_000);
+		expect(await verifyCode(deps, MANAGER, code, "1.2.3.4", "x")).toBe("expired");
+		later(31_000);
+		expect(await verifyCode(deps, MANAGER, code, "1.2.3.4", "x")).toMatchObject({ token: expect.any(String) });
+	});
+
 	it("a code is good for its own email only", async () => {
 		const { deps } = clocked();
 		await addMember(deps.db, deps.team.id, "family@x.com", "watcher");

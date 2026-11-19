@@ -28,4 +28,5 @@ export const ICON_CHECK = line("M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12.5l2.7 
 // Switch team, under the team's name for someone in two or more teams.
 export const ICON_SWAP = line("M17 4l3 3-3 3M20 7H7M7 14l-3 3 3 3M4 17h13");
 export const ICON_COINS = line("M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM14.8 8.6c-.5-.8-1.5-1.3-2.8-1.3-1.7 0-2.8.9-2.8 2.1 0 2.9 5.8 1.6 5.8 4.6 0 1.3-1.2 2.2-3 2.2-1.4 0-2.5-.6-3-1.5M12 5.5v1.8M12 16.2V18");
+export const ICON_USER = line("M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21a7.5 7.5 0 0 1 15 0");
 export const ICON_LOCK = line("M5 11h14v10H5zM8 11V7.5a4 4 0 0 1 8 0V11");

@@ -3,8 +3,9 @@
 import type { AppDeps } from "../app/deps.ts";
 import { isEmail } from "../features/members/members-service.ts";
 import { randomToken, sameText, sha256Hex, sixDigitCode } from "./crypto.ts";
+import { isLocked } from "./locks-repository.ts";
 import { insertSession } from "./session-repository.ts";
-import { claimTry, countSignInEvents, forgetSignInEvent, insertCode, latestLiveCode, markCodeUsed, recordSignInEvent, type SignInEvent, voidCode, voidCodes } from "./sign-in-codes-repository.ts";
+import { claimTry, codeSent, countSignInEvents, forgetSignInEvent, insertCode, latestLiveCode, markCodeUsed, recordSignInEvent, type SignInEvent, voidCode } from "./sign-in-codes-repository.ts";
 import { holdIfWrongLimit, isHeld, LIMITS, overCodeLimit, overWrongLimit, since } from "./sign-in-limits.ts";
 import { CODE_MINUTES, sendCodeEmail } from "./sign-in-mail.ts";
 import { loadViewer } from "./viewer.ts";
@@ -62,9 +63,14 @@ export async function requestCode(deps: AppDeps, rawEmail: string, ip: string): 
 		over = await overCodeLimit(deps, email, ip, codeId);
 		if (!over) {
 			const code = sixDigitCode();
-			await voidCodes(deps.db, email, at);
-			await insertCode(deps.db, { email, codeHash: await hashOf(email, code), ip, createdAt: at, expiresAt: new Date(deps.now().getTime() + CODE_MINUTES * MINUTE).toISOString() });
-			await sendCodeEmail(deps, email, code);
+			const id = await insertCode(deps.db, { email, codeHash: await hashOf(email, code), ip, createdAt: at, expiresAt: new Date(deps.now().getTime() + CODE_MINUTES * MINUTE).toISOString() });
+			// It works, and the older codes go, only once its email has: until then, and if it doesn't go, the code in the
+			// inbox is the one that works.
+			await sendCodeEmail(deps, email, code).catch(async (err: unknown) => { await voidCode(deps.db, id, at); throw err; });
+			// Its email has gone, so it's sent whatever happens next: tried twice, and if neither takes, it counts as sent
+			// a minute after it was made (latestLiveCode).
+			await codeSent(deps.db, email, id, at).catch(() => codeSent(deps.db, email, id, at))
+				.catch((err: unknown) => console.error(JSON.stringify({ event: "signin_code_sent_unmarked", teamId: null, email: maskEmail(email), error: String(err) })));
 		}
 	} catch (err) {
 		await forgetSignInEvent(deps.db, codeId);
@@ -103,6 +109,11 @@ export async function verifyCode(deps: AppDeps, rawEmail: string, code: string, 
 		await holdIfWrongLimit(deps.db, email, now);
 		log("signin_checked", email, { ok: false, tries: tryNumber });
 		return "wrong";
+	}
+	// A code sent as the address was being locked signs nobody in.
+	if (await isLocked(deps.db, email)) {
+		await voidCode(deps.db, live.id, at);
+		return "expired";
 	}
 	if (!(await markCodeUsed(deps.db, live.id, at))) return "expired";
 	await note("signed_in");

@@ -10,7 +10,8 @@ import { type ApiErrors, firstError } from "./api-failure.ts";
 export interface BilledRow { day: string; service: string; family: string; quantity: number; billable: number; unit: string; billed: number; periodStart: string }
 
 export interface CloudflareBilling {
-	/** The current billing period's days so far, or the days `from` to `to` ('YYYY-MM-DD', a whole period). */
+	/** With no range, Cloudflare's own choice of days: the current billing period's so far and the period before's. With a
+	 * range, the days `from` up to the day before `to` ('YYYY-MM-DD'). */
 	usage(range?: { from: string; to: string }): Promise<BilledRow[]>;
 }
 

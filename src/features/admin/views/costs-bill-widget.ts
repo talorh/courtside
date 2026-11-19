@@ -1,11 +1,12 @@
 // Costs' "Cloudflare's bill" widget: the billing period's bill as Cloudflare has it (actual): the usage it charged so far,
 // the plan's fees each period (Workers Paid, the Images and Stream bundle, Stream storage bought past it), and each
 // product's use against its free allowance, nearest the allowance first, as a meter (amber from 80%, red past it), with
-// what it cost. Cloudflare's US dollars, shown in the page's currency.
+// what it cost; storage billed by the GB-month also says where it will be by the period's end. Cloudflare's US dollars,
+// shown in the page's currency.
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { formatGameDate, localTime, MONTHS } from "../../../shared/time.ts";
 import type { Bill } from "../costs-bill.ts";
-import { periodProducts, type Product } from "../costs-bill-summary.ts";
+import { periodEnd, periodProducts, type Product, projected } from "../costs-bill-summary.ts";
 import { type Currency, money } from "../costs-currency.ts";
 import { PRICES } from "../costs-prices.ts";
 import { thousands } from "./costs-words.ts";
@@ -18,12 +19,16 @@ const level = (s: number): Level => (s > 1 ? "over" : s >= 0.8 ? "warn" : "ok");
 /** "16 Oct", from 'YYYY-MM-DD'. */
 const dayMonth = (date: string) => `${Number(date.slice(8, 10))} ${MONTHS[Number(date.slice(5, 7)) - 1]}`;
 
-function product(p: Product, m: (n: number) => string): SafeHtml {
-	const use = p.allowance === null ? `${amount(p.used)}, ${p.billed ? `${m(p.billed)} charged` : "charged nothing so far"}` : `${amount(p.used)} of ${amount(p.allowance)} free`;
+/** A stored product's meter is amber once the period's end looks past what's free, before its use so far gets there. */
+function product(p: Product, m: (n: number) => string, periodStart: string): SafeHtml {
+	const ahead = projected(p, periodStart);
+	const by = ahead === null ? "" : `, about ${amount(ahead)} by ${dayMonth(periodEnd(periodStart))}`;
+	const use = p.allowance === null ? `${amount(p.used)}, ${p.billed ? `${m(p.billed)} charged` : "charged nothing so far"}` : `${amount(p.used)} of ${amount(p.allowance)} free${by}`;
+	const lvl = level(share(p)) === "ok" && ahead !== null && p.allowance !== null && ahead > p.allowance ? "warn" : level(share(p));
 	// Its family where Cloudflare's name doesn't say it ("Workers AI: Regular Twitch Neurons").
 	const name = !p.family || p.name.toLowerCase().includes(p.family.toLowerCase().replace(/s$/, "")) ? p.name : `${p.family}: ${p.name}`;
 	const charged = p.billed > 0 && p.allowance !== null ? html`<span class="kval billed">${m(p.billed)}</span>` : "";
-	return html`<li><span class="kname"><b>${name}</b></span><span class="kval">${use}</span>${charged}${p.allowance === null ? "" : meter(share(p), level(share(p)), "fmeter")}</li>`;
+	return html`<li><span class="kname"><b>${name}</b></span><span class="kval">${use}</span>${charged}${p.allowance === null ? "" : meter(share(p), lvl, "fmeter")}</li>`;
 }
 
 /** `bought`: Stream's storage bought now (null when it didn't say); `localPerUsd`: the day's rate, for the club's currency. */
@@ -44,6 +49,6 @@ export function billWidget(bill: Bill, o: { cur: Currency; localPerUsd: number; 
 	return html`<figure class="chart billw">${head(`Billing period from ${dayMonth(p.periodStart!)}, billed to ${dayMonth(p.lastDay!)}`)}
 <div class="billhead">${pill(ACTUAL)}<p class="small">Cloudflare's own figures, from the records its invoices are made from. Everything after the last day billed is estimated.</p></div>
 <div class="units">${unit(m(usage), "Usage charged", "Past the free allowances, this period so far")}${unit(m(fees), "Plan fees, each period", `Workers Paid, the Images and Stream bundle${blocks > 1 ? ", Stream storage bought" : ""}`)}${unit(m(usage + fees), "This period so far", "Fees and usage, before tax")}</div>
-<h3 class="billsub">Free allowances, this period</h3><ul class="kindlist freelist">${order.map((x) => product(x, m))}</ul>
+<h3 class="billsub">Free allowances, this period</h3><ul class="kindlist freelist">${order.map((x) => product(x, m, p.periodStart!))}</ul>
 <p class="small">Each product against what the plan includes a period, as Cloudflare names it; past that, Cloudflare charges, and what it charged shows beside it. ${bill.read === "failed" ? `Cloudflare didn't answer just now: this is its bill as read ${read}.` : `Read ${read}.`}</p></figure>`;
 }

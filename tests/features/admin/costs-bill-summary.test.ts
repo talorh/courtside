@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowanceOf, billedMonths, freeWatchMinutes, periodProducts } from "../../../src/features/admin/costs-bill-summary.ts";
+import { allowanceOf, billedMonths, freeWatchMinutes, periodEnd, periodProducts, projected } from "../../../src/features/admin/costs-bill-summary.ts";
 import type { BilledRow } from "../../../src/platform/cloudflare-billing.ts";
 
 // Cloudflare's bill as Costs reads it: each product's free allowance (from its name, as Cloudflare words it), the billing
@@ -52,10 +52,26 @@ describe("Cloudflare's bill, summed up", () => {
 		expect(p.periodStart).toBe("2026-10-16");
 		expect(p.lastDay).toBe("2026-10-21");
 		expect(p.products).toEqual([
-			{ service: "Workers Standard Requests (first 10M are included)", name: "Workers Standard Requests", family: "Workers", used: 40_026, allowance: 10_000_000, unit: "Count", billed: 0 },
-			{ service: WATCH, name: "Stream Bundle Basic Minutes of Video Viewed", family: "Stream", used: 1150, allowance: null, unit: "Count", billed: 0 },
+			{ service: "Workers Standard Requests (first 10M are included)", name: "Workers Standard Requests", family: "Workers", used: 40_026, allowance: 10_000_000, unit: "Count", billed: 0, lastDay: "2026-10-21", last: 10_026 },
+			{ service: WATCH, name: "Stream Bundle Basic Minutes of Video Viewed", family: "Stream", used: 1150, allowance: null, unit: "Count", billed: 0, lastDay: "2026-10-16", last: 1150 },
 		]);
 		expect(periodProducts([]).products).toEqual([]);
+	});
+
+	it("works out where storage will be by the period's end: a GB-month a day at its last day's rate, nothing else", () => {
+		const R2 = "R2 Data Storage (First 10GB-Month included)";
+		const p = periodProducts([row({ service: R2, unit: "GB-months", day: "2026-11-16", quantity: 0.5, periodStart: "2026-11-16" }),
+			row({ service: R2, unit: "GB-months", day: "2026-11-17", quantity: 0.6, periodStart: "2026-11-16" }),
+			row({ service: "Workers CPU ms (first 30M are included)", day: "2026-11-17", quantity: 900, periodStart: "2026-11-16" })]);
+		expect(periodEnd("2026-11-16")).toBe("2026-12-15");
+		expect(periodEnd("2027-01-31")).toBe("2027-02-27");
+		// 1.1 so far, and 0.6 for each of the 28 days from 18 Nov to 15 Dec.
+		expect(projected(p.products[0]!, p.periodStart!)).toBeCloseTo(17.9, 6);
+		expect(projected(p.products[1]!, p.periodStart!)).toBeNull();
+		// Storage whose row for the bill's last day hasn't come yet goes on from its own last day.
+		const late = periodProducts([row({ service: R2, unit: "GB-months", day: "2026-11-17", quantity: 0.6, periodStart: "2026-11-16" }),
+			row({ service: "Workers CPU ms (first 30M are included)", day: "2026-11-18", quantity: 900, periodStart: "2026-11-16" })]);
+		expect(projected(late.products[0]!, late.periodStart!)).toBeCloseTo(0.6 + 0.6 * 28, 6);
 	});
 
 	it("sums the bill by calendar month: watching, R2 and the rest, and the days it covers", () => {

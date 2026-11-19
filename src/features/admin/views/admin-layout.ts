@@ -4,15 +4,16 @@ import { CLUB } from "../../../club.ts";
 // Support tickets waiting; light or dark and sign out stay at hand (no team name).
 import type { AdminFrame } from "../../../app/admin-router.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";
-import { ICON_BOOK, ICON_CHART, ICON_CLOCK, ICON_COINS, ICON_DOOR, ICON_INBOX, ICON_LIST, ICON_PEOPLE, ICON_SERVER, ICON_SHIELD } from "../../../ui/icons.ts";
+import { ICON_BOOK, ICON_CHART, ICON_CLOCK, ICON_COINS, ICON_DOOR, ICON_INBOX, ICON_LIST, ICON_PEOPLE, ICON_SERVER, ICON_SHIELD, ICON_USER } from "../../../ui/icons.ts";
 import { layout, viewSwitch } from "../../../ui/layout.ts";
 import type { AdminNav } from "../admin-nav-repository.ts";
 
-export type AdminNavKey = "insights" | "teams" | "support" | "platform" | "costs" | "admins" | "changelog" | "log" | "docs";
+export type AdminNavKey = "insights" | "teams" | "users" | "support" | "platform" | "costs" | "admins" | "changelog" | "log" | "docs";
 
 // The day-to-day sections, then the ones used now and then, in one list.
 const NAV: Array<{ key: AdminNavKey; href: string; label: string; icon: SafeHtml }> = [
 	{ key: "insights", href: "/admin", label: "Insights", icon: ICON_CHART }, { key: "teams", href: "/admin/teams", label: "Teams", icon: ICON_PEOPLE },
+	{ key: "users", href: "/admin/users", label: "Users", icon: ICON_USER },
 	{ key: "support", href: "/admin/support", label: "Support", icon: ICON_INBOX },
 	{ key: "platform", href: "/admin/platform", label: "Platform", icon: ICON_SERVER }, { key: "costs", href: "/admin/costs", label: "Costs", icon: ICON_COINS },
 	{ key: "admins", href: "/admin/admins", label: "Admins", icon: ICON_SHIELD }, { key: "changelog", href: "/admin/changelog", label: "Changelog", icon: ICON_LIST },

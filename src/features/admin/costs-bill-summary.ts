@@ -29,7 +29,24 @@ function allowanceScale(service: string, unit: string): number {
 	return allowed && counted ? SECONDS[allowed]! / SECONDS[counted]! : 1;
 }
 
-export interface Product { service: string; name: string; family: string; used: number; allowance: number | null; unit: string; billed: number }
+/** `lastDay` and `last`: its own last day billed and its use that day (a day of storage, for a product billed by the
+ * GB-month): one product's row can come in a day after another's. */
+export interface Product { service: string; name: string; family: string; used: number; allowance: number | null; unit: string; billed: number; lastDay: string; last: number }
+
+/** The billing period's last day ('YYYY-MM-DD'): the day before the same date a month on (the month's end, past it). */
+export function periodEnd(start: string): string {
+	const [y, m, d] = start.split("-").map(Number) as [number, number, number];
+	const next = new Date(Date.UTC(y, m, Math.min(d, new Date(Date.UTC(y, m + 1, 0)).getUTCDate())));
+	return new Date(next.getTime() - 86_400_000).toISOString().slice(0, 10);
+}
+
+/** Where a product billed by the GB-month will be by the period's end: each day after its own last day billed stores
+ * what that day did. Null for any other product, whose use doesn't carry from one day to the next. */
+export function projected(p: Product, periodStart: string): number | null {
+	if (p.unit !== "GB-months") return null;
+	const days = Math.max(0, Math.round((Date.parse(periodEnd(periodStart)) - Date.parse(p.lastDay)) / 86_400_000));
+	return p.used + p.last * days;
+}
 
 /** The newest billing period's products, in the order Cloudflare first listed them; and the period's first and last day. */
 export function periodProducts(rows: BilledRow[]): { periodStart: string | null; lastDay: string | null; products: Product[] } {
@@ -38,8 +55,10 @@ export function periodProducts(rows: BilledRow[]): { periodStart: string | null;
 	const products = new Map<string, Product>();
 	for (const r of mine) {
 		const allowance = allowanceOf(r.service);
-		const p = products.get(r.service) ?? { service: r.service, name: nameOf(r.service), family: r.family, used: 0, allowance: allowance === null ? null : allowance * allowanceScale(r.service, r.unit), unit: r.unit, billed: 0 };
+		const p = products.get(r.service) ?? { service: r.service, name: nameOf(r.service), family: r.family, used: 0, allowance: allowance === null ? null : allowance * allowanceScale(r.service, r.unit), unit: r.unit, billed: 0, lastDay: r.day, last: 0 };
 		p.used += r.quantity;
+		if (r.day > p.lastDay) Object.assign(p, { lastDay: r.day, last: 0 });
+		if (r.day === p.lastDay) p.last += r.quantity;
 		p.billed += r.billed;
 		products.set(r.service, p);
 	}

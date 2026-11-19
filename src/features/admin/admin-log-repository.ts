@@ -9,7 +9,7 @@ export type TeamAction = typeof TEAM_ACTIONS[number];
 
 export type AdminAction = "team_onboarded" | "team_edited" | "team_closed" | "team_reopened" | "delete_scheduled" | "delete_cancelled"
 	| "team_deleted" | "team_opened" | "view_as" | "support_done" | "test_email" | "admin_added" | "admin_removed"
-	| "support_replied" | "support_assigned" | "support_status" | TeamAction;
+	| "support_replied" | "support_assigned" | "support_status" | "user_locked" | "user_unlocked" | TeamAction;
 
 /** `device`: the request's (AppDeps.device); the site's own lines (`adminEmail` "site") are written without one. */
 export interface AdminLogEntry { adminEmail: string; teamId: string | null; action: AdminAction; detail?: string; at: string; device: string }

@@ -22,7 +22,7 @@ export const TEAMS_MESSAGES: Record<string, string> = {
 };
 
 /** "Today", "Yesterday", else the day ("Thu 1 Oct 2026"), local time; "Never" when nobody has opened it yet. */
-function lastUsed(iso: string | null, now: Date): string {
+export function lastUsed(iso: string | null, now: Date): string {
 	if (!iso) return "Never";
 	const day = localDate(new Date(iso));
 	if (day === localDate(now)) return "Today";

@@ -71,6 +71,13 @@ describe("Costs: actual and estimated", () => {
 		expect(bill.indexOf("Emails Sent")).toBeLessThan(bill.indexOf("Standard Requests"));
 	});
 
+	it("says where storage billed by the GB-month will be by the period's end, amber when that's past what's free", async () => {
+		const R2 = { service: "R2 Data Storage (First 10GB-Month included)", family: "R2", unit: "GB-months", periodStart: "2026-11-16" };
+		const html = await page([row({ ...R2, day: "2026-11-16", quantity: 0.55 }), row({ ...R2, day: "2026-11-17", quantity: 0.55 })], "/admin/costs?cur=usd");
+		const bill = html.slice(html.indexOf("<b>Cloudflare's bill</b>"), html.indexOf("</figure>", html.indexOf("<b>Cloudflare's bill</b>")));
+		expect(bill).toMatch(/R2 Data Storage<\/b><\/span><span class="kval">1\.1 of 10 free, about 16\.5 by 15 Dec<\/span>[^]*?class="fill warn"/);
+	});
+
 	it("shows Cloudflare's dollars as Australian ones by default", async () => {
 		const html = await page(BILL);
 		const bill = html.slice(html.indexOf("<b>Cloudflare's bill</b>"));

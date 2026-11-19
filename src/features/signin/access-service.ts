@@ -1,6 +1,7 @@
 // Request access (the sign-in page's "Can't get in?"): someone not on a team's list gives their name, their team and
 // their email, and the site's admins get a ticket on the support desk, emailed to them like every ticket, to add them.
 // Nothing is ever emailed to the address typed: once they're on a list, they sign in with it as everyone does.
+import { isLocked } from "../../auth/locks-repository.ts";
 import { z } from "zod";
 import type { AppDeps } from "../../app/deps.ts";
 import { countSignInEvents, recordSignInEvent } from "../../auth/sign-in-codes-repository.ts";
@@ -43,6 +44,8 @@ export async function requestAccess(deps: AppDeps, form: AccessForm, ip: string)
 	}
 	if (!name || !team || !email) return "missing";
 	if (!isEmail(email)) return "notEmail";
+	// A locked address hears what anyone does, and no ticket is made: locking isn't undone from the sign-in page.
+	if (await isLocked(deps.db, email)) return "sent";
 	const viewer = await loadViewer(deps.db, email, deps.now());
 	if (viewer.isAdmin || viewer.memberships.length > 0) return "onList";
 	if (await hasOpenAccessRequest(deps.db, email)) return "already";

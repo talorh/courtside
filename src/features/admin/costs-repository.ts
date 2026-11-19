@@ -89,3 +89,14 @@ export const savedRate = (db: D1Database) =>
 
 export const saveRate = (db: D1Database, rate: number, date: string, fetchedAt: string) => db.prepare(`INSERT INTO exchange_rates (pair, rate, rate_date, fetched_at)
 	VALUES (?, ?, ?, ?) ON CONFLICT (pair) DO UPDATE SET rate = excluded.rate, rate_date = excluded.rate_date, fetched_at = excluded.fetched_at`).bind(RATE_PAIR, rate, date, fetchedAt).run();
+
+/** Stream's storage bought, each month Costs saw it ('YYYY-MM' to minutes): the most it saw that month. */
+export async function boughtByMonth(db: D1Database): Promise<Map<string, number>> {
+	const { results } = await db.prepare("SELECT month, minutes FROM stream_bought").all<{ month: string; minutes: number }>();
+	return new Map(results.map((r) => [r.month, r.minutes]));
+}
+
+/** What Stream has bought now, as this month's (kept if it was more earlier in the month: bought is billed). */
+export const noteBought = (db: D1Database, month: string, minutes: number, nowIso: string) => db
+	.prepare(`INSERT INTO stream_bought (month, minutes, seen_at) VALUES (?, ?, ?)
+		ON CONFLICT (month) DO UPDATE SET minutes = MAX(minutes, excluded.minutes), seen_at = excluded.seen_at`).bind(month, minutes, nowIso).run();

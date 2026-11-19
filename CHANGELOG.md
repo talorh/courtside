@@ -10,6 +10,11 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 19 Nov 2026
 
+- [Feature] **Users:** A new Users page in the admin area lists everyone on every team, with a dashboard of who uses the site and each team's people, filters and sorting, and lets an admin lock someone, take them off a team or add them to one.
+- [Fix] **Costs:** Fixed an issue where a month that's over counted every minute Stream held during it, test videos that came and went included, so it could show a block of storage that was never bought; it's now priced by the storage bought that month (noted each time Costs opens), or before there's a note by the most Stream held at once, and the months ahead build on what's kept now.
+- [Fix] **Costs:** Fixed an issue where the 3am job's read of Cloudflare's bill gave up after 5 seconds in a new billing period's first days; when Cloudflare doesn't answer, Costs now asks again 15 minutes later instead of on every page.
+- [Fix] **Sign-in:** Fixed an issue where asking for a new code stopped the one already in the inbox working before the new code's email had arrived, or when it didn't go.
+- [Fix] **Costs:** Fixed an issue where Cloudflare's bill counted the previous billing period's days twice, so the previous period's usage and charges showed doubled; and R2's and the database's storage now say where they'll be by the period's end, amber once that's past what's free.
 - [Enhancement] **Documentation:** The AI coding agent's instructions now start every change by pulling Courtside's latest updates and fixes from GitHub into staging, and say what to do with what comes in: conflicts, failed checks, and updates that need a migration, a new setting or the club's own values.
 
 ## 18 Nov 2026

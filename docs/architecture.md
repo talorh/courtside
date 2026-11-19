@@ -162,7 +162,9 @@ flowchart TD
  (script and frame). The live site and staging each have their own widget and secret (`TURNSTILE_SITE_KEY`,
  `TURNSTILE_SECRET`); `cf dev` uses Cloudflare's always-passes test keys.
 - **Who gets a code** (`auth/sign-in-service.ts` `requestCode`): an address on any team's list that isn't deleted (a
- closed team's too, for its videos) or in the admins table. Anyone else is told it isn't on a list and gets nothing. The limits (`auth/sign-in-limits.ts`) make that slow to probe: 10 codes an
+ closed team's too, for its videos) or in the admins table, and not locked: `locked_people` (the admin Users page,
+  `auth/locks-repository.ts`) makes `loadViewer` give a locked address no teams and no admin, so it gets no code and
+  no page, and locking ends its sessions and voids its codes in the same batch. Anyone else is told it isn't on a list and gets nothing. The limits (`auth/sign-in-limits.ts`) make that slow to probe: 10 codes an
  hour for one address, then none for 15 minutes, and again while the hour still has 10; 20 codes a day, and 15 wrong
  codes a day from any IP addresses, then none for a day, 30 in 15 minutes from one IP address (a
  gym's Wi-Fi, or a phone company's shared address, is many families), 10 addresses on no list in 15 minutes from one
@@ -193,7 +195,9 @@ flowchart TD
  problem, and opens one site ticket (`alert_kind` `bounced:<email>`, topic members, "Emails to <email> are
  bouncing"), emailed to the admins, one open an address. Hotmail and Outlook soft-bounce a new sender's mail at times.
 - **The code** (`sign_in_codes`): six digits, hashed with the email (so a code is good for its own address only),
- 10 minutes, five wrong tries, and voided when a newer one is asked for. The page's Send a new code waits a minute
+ 10 minutes, five wrong tries, and voided once a newer one's email has gone (a new code is pending until then, so the
+  code in the inbox keeps working while it's on its way, and if it never arrives; one still pending a minute on counts
+  as sent, as its email can't take longer). The page's Send a new code waits a minute
  (`public/signin.js`). The email (`auth/sign-in-mail.ts`, the one email to an address a visitor typed, after the check
  above) carries the code in its subject, so a phone shows it without opening the email, and large in the email itself
  (`auth/sign-in-email.ts`, in the site's style like the welcome).
@@ -1123,12 +1127,14 @@ erDiagram
 | support_messages | request_id, team_id (the ticket's; null for the site's own), kind (reply/note/event), member_id or admin_email (neither: the site), body, email_to (admins, manager, an admin's email, or none), emailed_at, created_at | A ticket's conversation after its first message; private notes only by admins |
 | sessions | id (the cookie token's SHA-256), email, device, created_at, expires_at (30 days), last_seen_at, ended_at, view (desktop/mobile, from the `courtside_view` cookie `public/view.js` sets), counted_week | One row a signed-in device (the site's own sign-in) |
 | view_weeks | week (its Monday), view, devices | The devices that opened the site in each view each week, each session counted once a week (`auth/session-view.ts`); Insights' Mobile and desktop; 12 weeks |
-| sign_in_codes | email, code_hash (of email and code), ip, created_at, expires_at (10 minutes), tries, used_at, voided_at | A code sent by email; the newest live one is the one that counts |
+| sign_in_codes | email, code_hash (of email and code), ip, created_at, expires_at (10 minutes), tries, used_at, voided_at, pending | A code sent by email; the newest live one whose email has gone is the one that counts |
 | sign_in_events | kind (code_sent/unknown_email/limited/wrong/signed_in/robot/desktop_view/mobile_view/access), email, ip, device, at | What happened at the sign-in page, for its limits, Platform's Sign-ins row and the admin Log, and which view a device uses when first seen or changed; a month (31 days, the 3am job) |
 | problems | team_id (no foreign key; null when it's no team's), kind (server_error/job_failed/email_failed/golive_problem/upload_problem/photo_problem/stream_problem/ai_failed/site_problem), who (an email, or "site"), what, detail, device, times, first_at, at | Anything that failed, for the admin Log's Problems; the same one again within 30 minutes counts on its line. A month (the 3am job); a deleted team's go with it |
 | cost_views | month (UTC), team_id ('' for no team's), minutes (Stream's minutes watched), saved_at | Costs' minutes watched, from Cloudflare by video; kept when a team is deleted |
 | cost_months | month (UTC), team_id, storage, viewing, uploads, shared (US$), billed (0 to 1), billed_days, stored, gb_months, watched, saved_at | Each team's spent month as Costs showed it, saved by the 3am job a week after the month ends (`costs-saved.ts`) and read in place of working it out again; kept when a team is deleted |
 | billed_usage | day (UTC), service, family, quantity, billable, unit, billed (US$), period_start, saved_at | Cloudflare's own bill, day by day (its billable usage): read every night and when Costs's copy is 20 hours old, each read replacing the days it returns; kept 400 days. The days it covers are actual on Costs (`costs-bill.ts`, `costs-reconcile.ts`) |
+| stream_bought | month (UTC), minutes, seen_at | Stream's storage bought as Costs saw it each month, the most it saw: a month that's over is priced by it, or by the most Stream held at once if that was more (`costs-model.ts`) |
+| locked_people | email, locked_by, locked_at | People a site admin has locked on the Users page: no code and no page on any team until unlocked (`auth/locks-repository.ts`) |
 | exchange_rates | pair ('USD/<the club's currency code>'), rate, rate_date (the European Central Bank's day), fetched_at | Costs' club currency; read again after six hours |
 | platform_alerts | kind (stream_storage/images/daily_job/sync_job/database/site_errors/email/email_allowance/budget/ai_models/joiner/game_day), level (ok/warn/urgent), detail, since, failures, checked_at, ticket_id (its latest) | One row a kind: where it stands, and its ticket |
 | server_errors | hour (UTC, `YYYY-MM-DDTHH`), n | The 5xx answers the site gave, for the "site failing" alert; kept two days |

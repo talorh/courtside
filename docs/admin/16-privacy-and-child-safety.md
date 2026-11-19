@@ -8,7 +8,7 @@ The site holds footage of children, so privacy isn't a setting: it's how the sit
 | --- | --- |
 | Nothing is public | The only open pages are the sign-in and security.txt. Every page says noindex, AI crawlers are blocked at the edge, and videos, clips and photos are only ever reached through short-lived signed links. |
 | Each team sees only its own | Every row carries its team, every query names it, every write is refused for another team, and a two-team test of every route proves it on each change. |
-| Only the team's own people get in | Codes go only to addresses on a team's list or an admin's; the lists are checked on every request, so removal is instant. |
+| Only the team's own people get in | Codes go only to addresses on a team's list or an admin's, never to someone locked; the lists are checked on every request, so removal and locking take effect on their next page (a video link already handed out runs its few hours). |
 | Game footage only | One video a game; photos of the team's games and events; no training, no other teams, no chat, comments or stats. |
 | Families can say no | Any family can ask for a video, clip or photo to be removed, or that their child isn't filmed or shown; requests go to the team manager and are logged. |
 | Nothing is kept for keeps | Everything a team puts up is deleted at the end of 31 December of the year its season ends; the download log is kept longer, two years, and the Log's record of who changed what for good. |

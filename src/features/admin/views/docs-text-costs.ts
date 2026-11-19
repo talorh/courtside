@@ -28,7 +28,9 @@ a season (with a month and this month under it), and the minutes Stream is stori
 stacked by kind of cost beside where the money goes (this month and the season) and what the teams used this month
 (minutes stored and watched, originals kept, games with a video); then Cloudflare's bill for the billing period (the
 usage it charged so far, the plan's fees each period, and each product's use against its free allowance, a meter that's
-amber from 80% and red past it); then the season's running total against the budgets
+amber from 80% and red past it; storage billed by the GB-month, R2's originals and the database, also says where it
+will be by the period's end, each day to come storing what the last day billed did, and its meter is amber once that's
+past what's free); then the season's running total against the budgets
 beside each team's season on one scale (spent, the rest estimated, its budget a tick); then Team by team, every team
 month by month in one grid (each cell its dollars, the darker the dearer, the months to come lighter, every team's
 total under them); then each team as a row. A
@@ -38,15 +40,22 @@ way, with its budget beside its running total.</p>
 <h3>Actual and estimated</h3>
 <p>Every night at 3am, and whenever Costs opens and its copy is 20 hours old, the site reads Cloudflare's billable usage:
 the day-by-day records Cloudflare's own invoices are made from, with each product's use, the part past its free allowance
-and what that cost. It needs Billing Read on the read-only token (courtside-insights-read). For every day the bill covers,
+and what that cost. It needs Billing Read on the read-only token (courtside-insights-read). Cloudflare's read brings the
+period before's days too, and in a new period's first three days the site reads that period again for its late days:
+a day both bring is counted once. For every day the bill covers,
 what Cloudflare charged for watching and for R2 stands in place of the site's own figures, shared out between the teams
 as before (by minutes watched, by GB of originals), and anything else it charged is shared like the fees. The plan's
-fees and the storage bought aren't in that bill: they're charged at their price, so they count as actual too. The days
+fees and the storage bought aren't in that bill: they're charged at their price, so they count as actual too. This
+month's storage is what Stream has bought now, noted as the month's; a month that's over is priced by what was noted
+for it (bought is billed, however little was stored; the most Stream held at once if that was more), or, before
+there's a note, by the most Stream held at once in
+it, so a test video that came and went buys no block. The days
 the bill hasn't reached yet (it runs about a day behind) and the months to come are estimated, and the estimate leaves
 out as many minutes of watching a billing period as the bill shows were free.
 Each month to come counts at least the Stream storage bought now (it's billed until it's lowered), and another
-block once the minutes stored need it. A month on the chart says which it is.
-When the bill can't be read, the 3am job raises its ticket and Costs shows the copy last read.</p>
+block once the minutes stored need it, building on what's kept now. A month on the chart says which it is.
+When the bill can't be read, the 3am job raises its ticket and Costs shows the copy last read, asking Cloudflare again
+15 minutes later, not on every page in between. A page waits 5 seconds for it; the 3am job up to 15 seconds for each read.</p>
 <h3>How Costs works it out</h3>
 <p>In short below; where each figure comes from, and how it's kept, is in The admin area and its figures.</p>
 <ul class="docs-points">

@@ -9,21 +9,28 @@ export interface LiveCode { id: number; codeHash: string; tries: number }
  * view a device uses (first seen, or changed). */
 export type SignInEvent = "code_sent" | "unknown_email" | "limited" | "wrong" | "signed_in" | "robot" | "desktop_view" | "mobile_view" | "access";
 
-export async function insertCode(db: D1Database, c: { email: string; codeHash: string; ip: string; createdAt: string; expiresAt: string }): Promise<void> {
-	await db.prepare("INSERT INTO sign_in_codes (email, code_hash, ip, created_at, expires_at) VALUES (?, ?, ?, ?, ?)")
-		.bind(c.email.toLowerCase(), c.codeHash, c.ip, c.createdAt, c.expiresAt).run();
+/** The new code, pending until its email has gone (codeSent): its id. */
+export async function insertCode(db: D1Database, c: { email: string; codeHash: string; ip: string; createdAt: string; expiresAt: string }): Promise<number> {
+	return (await db.prepare("INSERT INTO sign_in_codes (email, code_hash, ip, created_at, expires_at, pending) VALUES (?, ?, ?, ?, ?, 1)")
+		.bind(c.email.toLowerCase(), c.codeHash, c.ip, c.createdAt, c.expiresAt).run()).meta.last_row_id;
 }
 
-/** A newer code was asked for: the older ones are void from now. */
-export async function voidCodes(db: D1Database, email: string, nowIso: string): Promise<void> {
-	await db.prepare("UPDATE sign_in_codes SET voided_at = ? WHERE email = ? AND used_at IS NULL AND voided_at IS NULL").bind(nowIso, email.toLowerCase()).run();
+/** Its email has gone: the code works from now, and the ones made before it are void, together, so two asked for
+ * together leave the newer working. */
+export async function codeSent(db: D1Database, email: string, id: number, nowIso: string): Promise<void> {
+	await db.batch([
+		db.prepare("UPDATE sign_in_codes SET pending = 0 WHERE id = ?").bind(id),
+		db.prepare("UPDATE sign_in_codes SET voided_at = ? WHERE email = ? AND used_at IS NULL AND voided_at IS NULL AND id < ?").bind(nowIso, email.toLowerCase(), id),
+	]);
 }
 
-/** The one code that can still sign this email in: the newest that's unused, not voided and not past its 10 minutes. */
+/** The one code that can still sign this email in: the newest whose email has gone that's unused, not voided and not
+ * past its 10 minutes. One still pending a minute after it was made counts as gone: its email outlasts no send. */
 export async function latestLiveCode(db: D1Database, email: string, nowIso: string): Promise<LiveCode | null> {
+	const minuteAgo = new Date(Date.parse(nowIso) - 60_000).toISOString();
 	return db.prepare(`SELECT id, code_hash AS codeHash, tries FROM sign_in_codes
-		WHERE email = ? AND used_at IS NULL AND voided_at IS NULL AND expires_at > ? ORDER BY created_at DESC LIMIT 1`)
-		.bind(email.toLowerCase(), nowIso).first<LiveCode>();
+		WHERE email = ? AND (pending = 0 OR created_at <= ?) AND used_at IS NULL AND voided_at IS NULL AND expires_at > ? ORDER BY id DESC LIMIT 1`)
+		.bind(email.toLowerCase(), minuteAgo, nowIso).first<LiveCode>();
 }
 
 /** Takes one of the code's tries, in the statement that checks one is left, so guesses sent at the same moment can't
@@ -40,7 +47,7 @@ export async function voidCode(db: D1Database, id: number, nowIso: string): Prom
 
 /** The code signs a device in once: true if this request used it, false if another had already. */
 export async function markCodeUsed(db: D1Database, id: number, nowIso: string): Promise<boolean> {
-	return (await db.prepare("UPDATE sign_in_codes SET used_at = ? WHERE id = ? AND used_at IS NULL").bind(nowIso, id).run()).meta.changes === 1;
+	return (await db.prepare("UPDATE sign_in_codes SET used_at = ? WHERE id = ? AND used_at IS NULL AND voided_at IS NULL").bind(nowIso, id).run()).meta.changes === 1;
 }
 
 /** `device`: the browser that asked ("iPhone, Safari": shared/device.ts). */

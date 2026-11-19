@@ -74,13 +74,14 @@ export interface BillForCosts { months: Map<string, BilledMonth>; freeMinutes: n
 const daysSoFar = (month: string, thisMonth: string, now: Date) =>
 	month < thisMonth ? Math.round((Date.parse(monthSpan(month).end) - Date.parse(monthSpan(month).start)) / 86_400_000) : now.getUTCDate();
 
-type CostsInput = { teams: CostTeam[]; items: StoredItem[]; views: SavedViews[]; now: Date; minutesBoughtNow: number | null; bill?: BillForCosts; saved?: SavedMonths };
+/** `bought`: Stream's storage bought, each month Costs saw it (costs-repository.ts boughtByMonth). */
+type CostsInput = { teams: CostTeam[]; items: StoredItem[]; views: SavedViews[]; now: Date; minutesBoughtNow: number | null; bought?: Map<string, number>; bill?: BillForCosts; saved?: SavedMonths };
 
 /** The months so far: each saved once it was over (costs-saved.ts) as it was saved; the rest worked out, and put right
  * by Cloudflare's bill. */
 function spentMonths(p: CostsInput, past: string[], thisMonth: string): Map<string, MonthCost>[] {
 	const fresh = past.filter((m) => !p.saved?.has(m));
-	const worked = actualMonths({ months: fresh, teams: p.teams, items: p.items, views: p.views, thisMonth, minutesBoughtNow: p.minutesBoughtNow, freeMinutes: p.bill?.freeMinutes ?? 0 })
+	const worked = actualMonths({ months: fresh, teams: p.teams, items: p.items, views: p.views, thisMonth, minutesBoughtNow: p.minutesBoughtNow, bought: p.bought, freeMinutes: p.bill?.freeMinutes ?? 0 })
 		.map((m, i) => reconcile(m, p.bill?.months.get(fresh[i]!), daysSoFar(fresh[i]!, thisMonth, p.now)));
 	const byMonth = new Map(fresh.map((m, i) => [m, worked[i]!]));
 	return past.map((m) => byMonth.get(m) ?? savedFor(m, p.teams, p.saved!.get(m)!));
@@ -99,11 +100,13 @@ export function teamCosts(p: CostsInput): TeamCosts[] {
 	const owns = new Map(p.teams.map((t) => [t.id, ownFigures(t, p.items, p.views, seasonMonths(t.seasonStart), thisMonth)]));
 	const teams = teamsAverage([...owns.values()]);
 	const basis = new Map([...owns].map(([id, own]) => [id, { games: own.games, perGame: perGame(own, teams) }]));
-	// Each running team's games left, a month, over its months left; and what it stores this month, to build on.
+	// Each running team's games left, a month, over its months left; and what it keeps now, to build on (not what passed
+	// through this month: a test video gone since isn't stored next month).
 	const ahead = new Map(p.teams.map((t) => {
 		const left = seasonMonths(t.seasonStart).filter((m) => m > thisMonth);
 		const games = t.status === "active" && left.length ? Math.max(0, BASELINE.games - basis.get(t.id)!.games) / left.length : 0;
-		return [t.id, { left, games, stored: actual.at(-1)?.get(t.id)?.use.stored ?? 0 }];
+		const kept = p.items.filter((i) => i.teamId === t.id && !i.deletedAt).reduce((s, i) => s + i.minutes, 0);
+		return [t.id, { left, games, stored: kept }];
 	}));
 	const future = months.filter((m) => m > thisMonth).map((month) => {
 		const uses = new Map<string, Usage>();

@@ -561,6 +561,13 @@ counts beside Insights (alerts that aren't ok) and Support (tickets waiting). An
  Watch and film, coach or team manager, Edit, **End season and close team**, Reopen, and Delete tonight.
  Each running team's setup ("3 of 4" and what's still to add, as Manage team's checklist), and when it closes by
  itself ("Closes by itself after Fri 31 Dec 2027"). Every season reads as its label, 2026/27, here and on Edit.
+- **Users** (`/admin/users`): a dashboard (people on teams, each counted once; how many used the site this week and
+  this month; not signed in yet; on more than one team; locked; people by role; each team's people beside how many
+  used it this month), then everyone on every team, a row for each team they're on (name, email, team, role, last
+  seen), filtered by team, role, status or words and sorted by any column. Each row's More **locks** or unlocks the
+  person (signed out on every device and refused a code on every team until unlocked; never a site admin or yourself)
+  or takes them off that team (never its last team manager); **Add someone** puts a person on a running team with a
+  role. Each change is a line in the Log.
 - **Support** (`/admin/support`): a ticket queue (what needs an answer, yours, waiting on the team manager, resolved,
  all), each ticket's conversation, reply, private notes, owner and status, and the site's own tickets from its
  monitoring.

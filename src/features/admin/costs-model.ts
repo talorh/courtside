@@ -4,7 +4,7 @@
 // December; next season's team can upload early). The site's fixed costs (Workers Paid, the bundle, the domain) and
 // minutes watched that no team has are shared between the teams running that month in their own season, by the days
 // each ran in it.
-import { addMs, fixedAMonth, PRICES, seasonMonths, shareOfMonth } from "./costs-prices.ts";
+import { addMs, fixedAMonth, monthSpan, PRICES, seasonMonths, shareOfMonth } from "./costs-prices.ts";
 import type { CostTeam, SavedViews, StoredItem } from "./costs-repository.ts";
 
 /** One team's use in a month: minutes stored at any time in it, GB-months of originals, minutes watched. */
@@ -32,19 +32,39 @@ function usageIn(month: string, teamId: string, items: StoredItem[], views: Save
 	return { stored, gbMonths, watched };
 }
 
+/** The most Stream held at once in `month`, every team's: what was there when it began, then each video or clip in and
+ * out (one going as another comes isn't both). What had to be bought, where "stored at any time" counts a test video
+ * that came and went on top of the rest. */
+export function peakStored(month: string, items: StoredItem[]): number {
+	const s = Date.parse(monthSpan(month).start), e = Date.parse(monthSpan(month).end);
+	const changes: Array<[number, number]> = [];
+	let now = 0;
+	for (const i of items) {
+		const a = Date.parse(i.createdAt), b = i.deletedAt ? Date.parse(i.deletedAt) : Infinity;
+		if (b <= s || a >= e) continue;
+		if (a <= s) now += i.minutes;
+		else changes.push([a, i.minutes]);
+		if (b < e) changes.push([b, -i.minutes]);
+	}
+	let peak = now;
+	for (const [, d] of changes.sort((x, y) => x[0] - y[0] || x[1] - y[1])) peak = Math.max(peak, (now += d));
+	return peak;
+}
+
 /** How much of `month` the team ran in, 0 to 1: from when it was onboarded to when it closed. */
 export const runningShare = (month: string, t: CostTeam) => shareOfMonth(month, t.createdAt, t.closedAt);
 
 /**
  * A month's bill shared out. `uses`: each team's use; `running`: the teams that share the fixed costs, each by how much
  * of the month it ran (1: all of it); `unmatched`: minutes watched no team has; `minutesBought`: Stream's storage bought
- * (null: as much as the month's minutes need); `freeMinutes`: minutes of watching the plan includes a month (as
+ * (a month that's over: as Costs saw it then; null: no record, so as much as `peak`, the most it held at once, needs,
+ * else its minutes); `freeMinutes`: minutes of watching the plan includes a month (as
  * Cloudflare's bill shows them, costs-bill-summary.ts), which cost nothing.
  */
-export function allocate(month: string, o: { uses: Map<string, Usage>; running: Map<string, number>; unmatched: number; minutesBought: number | null; estimate: boolean; freeMinutes?: number }): Map<string, MonthCost> {
+export function allocate(month: string, o: { uses: Map<string, Usage>; running: Map<string, number>; unmatched: number; minutesBought: number | null; peak?: number; estimate: boolean; freeMinutes?: number }): Map<string, MonthCost> {
 	const all = [...o.uses.values()];
 	const stored = all.reduce((s, u) => s + u.stored, 0), gb = all.reduce((s, u) => s + u.gbMonths, 0);
-	const blocks = Math.max(1, Math.ceil((o.minutesBought ?? stored) / PRICES.bundleMinutes));
+	const blocks = Math.max(1, Math.ceil((o.minutesBought === null ? o.peak ?? stored : Math.max(o.minutesBought, o.peak ?? 0)) / PRICES.bundleMinutes));
 	const extraStorage = (blocks - 1) * PRICES.streamStoredPer1000;
 	const r2 = Math.max(0, gb - PRICES.r2FreeGb) * PRICES.r2GbMonth;
 	const days = [...o.running.values()].reduce((s, w) => s + w, 0);
@@ -69,14 +89,14 @@ const sharing = (month: string, teams: CostTeam[]) => new Map(teams.filter((t) =
 
 /** Each team's months so far: every month any team's season has to this one, and the months after a season while its
  * footage is kept. */
-export function actualMonths(p: { months: string[]; teams: CostTeam[]; items: StoredItem[]; views: SavedViews[]; thisMonth: string; minutesBoughtNow: number | null; freeMinutes?: number }): Map<string, MonthCost>[] {
+export function actualMonths(p: { months: string[]; teams: CostTeam[]; items: StoredItem[]; views: SavedViews[]; thisMonth: string; minutesBoughtNow: number | null; bought?: Map<string, number>; freeMinutes?: number }): Map<string, MonthCost>[] {
 	return p.months.map((month) => {
 		const uses = new Map(p.teams.map((t) => [t.id, usageIn(month, t.id, p.items, p.views)]));
 		// A deleted team's minutes stay its own (and off the page); only those no team ever had are shared.
 		const unmatched = p.views.filter((v) => v.month === month && v.teamId === "").reduce((s, v) => s + v.minutes, 0);
 		return allocate(month, {
 			uses, unmatched, estimate: false, running: sharing(month, p.teams),
-			minutesBought: month === p.thisMonth ? p.minutesBoughtNow : null, freeMinutes: p.freeMinutes ?? 0,
+			minutesBought: month === p.thisMonth ? p.minutesBoughtNow : p.bought?.get(month) ?? null, peak: peakStored(month, p.items), freeMinutes: p.freeMinutes ?? 0,
 		});
 	});
 }

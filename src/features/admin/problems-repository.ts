@@ -25,6 +25,12 @@ export async function countReported(db: D1Database, teamId: string, who: string,
 		.bind(teamId, who, sinceIso, ...kinds).first<number>("n")) ?? 0;
 }
 
+/** When the site's own problem (no team) last happened with these words, or null: for a read that waits before trying
+ * again. */
+export async function lastSiteProblemAt(db: D1Database, what: string): Promise<string | null> {
+	return db.prepare("SELECT MAX(at) AS at FROM problems WHERE team_id IS NULL AND what = ?").bind(what).first<string | null>("at");
+}
+
 /** The newest `limit` lines of the days, newest first, by when each last happened. */
 export async function listProblems(db: D1Database, range: LogRange, limit: number): Promise<ProblemLine[]> {
 	const { results } = await db.prepare(`SELECT p.kind, p.who, p.what, p.detail, p.device, p.times, p.first_at, p.at, t.code, t.season_start

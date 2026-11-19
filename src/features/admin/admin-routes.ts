@@ -11,11 +11,13 @@ import { platformRoutes } from "./platform-routes.ts";
 import { supportAdminRoutes } from "./support-admin-routes.ts";
 import { teamLifecycleRoutes } from "./team-lifecycle-routes.ts";
 import { teamsAdminRoutes } from "./teams-admin-routes.ts";
+import { usersRoutes } from "./users-routes.ts";
 
 export function buildAdminRouter(): AdminRouter {
 	const router = new AdminRouter();
 	teamsAdminRoutes(router);
 	teamLifecycleRoutes(router);
+	usersRoutes(router);
 	insightsRoutes(router);
 	platformRoutes(router);
 	logRoutes(router);

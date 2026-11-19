@@ -15,6 +15,7 @@ const CROSS_TEAM = new Set([
 	"src/features/admin/activity-admin-repository.ts", "src/features/admin/server-errors-repository.ts", "src/features/admin/problems-repository.ts",
 	// The sign-in: a person's sessions and codes, before any team is known.
 	"src/auth/session-repository.ts", "src/auth/sign-in-codes-repository.ts", "src/auth/device-view-repository.ts",
+	"src/auth/locks-repository.ts",
 	"src/features/signin/access-repository.ts",
 	// The jobs' reads across every team at once (which teams are busy; what every team's records know of, for the sweep).
 	"src/jobs/all-teams-repository.ts",
@@ -22,6 +23,8 @@ const CROSS_TEAM = new Set([
 	"src/features/admin/game-day-repository.ts",
 	// The month's emails, for the allowance alert.
 	"src/features/admin/email-count-repository.ts",
+	// The Users page: every team's people, for site admins.
+	"src/features/admin/users-repository.ts",
 	// The Documentation AI assistant's questions a day, by admin.
 	"src/features/admin/docs-ask-repository.ts",
 	// The Costs page's figures, and Health's: what every team stores and does, for site admins.

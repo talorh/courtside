@@ -50,10 +50,20 @@ describe("Cloudflare's bill, kept for Costs", () => {
 	it("reads the period before too in a new period's first three days, as its last days come in late", async () => {
 		const b = billing([row({ day: "2026-11-16", periodStart: "2026-11-16" })], [row({ day: "2026-11-15" })]);
 		await loadBill({ ...at("2026-11-17T00:00:00Z"), billing: b.port });
-		expect(b.asked).toEqual([undefined, { from: "2026-10-16", to: "2026-11-15" }]);
+		expect(b.asked).toEqual([undefined, { from: "2026-10-16", to: "2026-11-16" }]);
 		const quiet = billing([row({ day: "2026-11-20", periodStart: "2026-11-16" })]);
 		await loadBill({ ...at("2026-11-21T00:00:00Z"), billing: quiet.port });
 		expect(quiet.asked).toEqual([undefined]);
+	});
+
+	it("counts a day once when both reads bring it back: Cloudflare's own read goes back into the period before", async () => {
+		const current = [row({ day: "2026-11-14", quantity: 0.5358 }), row({ day: "2026-11-15", quantity: 0.5358 }), row({ day: "2026-11-16", quantity: 0.563, periodStart: "2026-11-16" })];
+		// Its `to` is the day after the last: the period before ends on 15 Nov.
+		const before = [row({ day: "2026-11-13", quantity: 0.5358 }), row({ day: "2026-11-14", quantity: 0.5358 }), row({ day: "2026-11-15", quantity: 0.5358 })];
+		const b = billing(current, before);
+		const saved = await loadBill({ ...at("2026-11-18T16:00:00Z"), billing: b.port });
+		expect(b.asked).toEqual([undefined, { from: "2026-10-16", to: "2026-11-16" }]);
+		expect(saved.rows.map((r) => [r.day, r.quantity])).toEqual([["2026-11-13", 0.5358], ["2026-11-14", 0.5358], ["2026-11-15", 0.5358], ["2026-11-16", 0.563]]);
 	});
 
 	it("shows what's saved, and says so, when Cloudflare doesn't answer", async () => {
@@ -64,6 +74,43 @@ describe("Cloudflare's bill, kept for Costs", () => {
 		const failed = await loadBill({ ...deps, billing: down }, { force: true });
 		expect(failed).toMatchObject({ read: "failed", savedAt: "2026-11-05T00:00:00.000Z" });
 		expect(failed.rows).toHaveLength(1);
+	});
+
+	it("gives the 3am job's read as long as Cloudflare takes, each call within its own time; a page waits 5 seconds", async () => {
+		vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+		try {
+			const slow: CloudflareBilling = { usage: () => new Promise((done) => setTimeout(() => done([row({})]), 6_000)) };
+			const night = loadBill({ ...at("2026-11-05T00:00:00Z"), billing: slow }, { force: true });
+			await vi.advanceTimersByTimeAsync(6_000);
+			expect((await night).read).toBe("now");
+			vi.spyOn(console, "error").mockImplementation(() => {});
+			const page = loadBill({ ...at("2026-11-06T09:00:00Z"), billing: slow });
+			await vi.advanceTimersByTimeAsync(6_000);
+			expect((await page).read).toBe("failed");
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("asks Cloudflare again 15 minutes after it didn't answer, not on every page in between", async () => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		let asked = 0;
+		const down: CloudflareBilling = { usage: async () => { asked++; throw new Error("Cloudflare's bill (503): busy"); } };
+		const deps = at("2026-11-05T00:00:00Z");
+		expect((await loadBill({ ...deps, billing: down })).read).toBe("failed");
+		expect((await loadBill({ ...deps, now: () => new Date("2026-11-05T00:14:00Z"), billing: down })).read).toBe("failed");
+		expect(asked).toBe(1);
+		await loadBill({ ...deps, now: () => new Date("2026-11-05T00:16:00Z"), billing: down });
+		expect(asked).toBe(2);
+		// The 3am job asks whatever.
+		await loadBill({ ...deps, now: () => new Date("2026-11-05T00:17:00Z"), billing: down }, { force: true });
+		expect(asked).toBe(3);
+	});
+
+	it("asks for the period before from the same date a month back, the month's last day where it's shorter", async () => {
+		const b = billing([row({ day: "2027-03-31", periodStart: "2027-03-31" })], []);
+		await loadBill({ ...at("2027-04-01T00:00:00Z"), billing: b.port });
+		expect(b.asked).toEqual([undefined, { from: "2027-02-28", to: "2027-03-31" }]);
 	});
 
 	it("keeps 400 days", async () => {

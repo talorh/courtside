@@ -25,6 +25,9 @@ People says so beside Add a person, and the team manager's Help says it where it
 team always keeps at least one team manager, and a team manager can't remove themselves.</li>
 <li><b>Removing someone</b> works at once: every request checks the list, so their next page no longer lets them
 into this team.</li>
+<li><b>Across every team</b>, a site admin's Users page lists everyone, a row for each team they're on: it adds someone
+to any running team, takes them off one, and <b>locks</b> someone, which signs them out on every device and refuses them
+a sign-in code on every team until they're unlocked. Their teams, videos and photos stay as they were.</li>
 <li><b>Waiting to sign in</b> appears at the top while anyone on the team is held by the sign-in's limits (too many
 codes, or too many wrong ones), with when they can ask again and <b>Let them sign in</b>, which ends the wait now.</li>
 <li><b>Who's using the site</b> counts the people by role and by when they last opened the site (in the last 7 days, 8

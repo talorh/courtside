@@ -25,7 +25,7 @@ export const EVENTS: Record<LogEvent, { name: string; tone: Tone; kind: LogKind 
 		team_deleted: ["Team deleted", "warn"], team_opened: ["Team first opened", "plain"], view_as: ["Viewed as", "plain"],
 		support_done: ["Support done", "plain"], support_replied: ["Support answered", "plain"], support_assigned: ["Support owner", "plain"],
 		support_status: ["Support status", "plain"], test_email: ["Test email", "plain"], admin_added: ["Admin added", "plain"],
-		admin_removed: ["Admin removed", "warn"],
+		admin_removed: ["Admin removed", "warn"], user_locked: ["Person locked", "warn"], user_unlocked: ["Person unlocked", "plain"],
 	}),
 	...each("teams", {
 		member_added: ["Person added", "plain"], member_changed: ["Person changed", "plain"], member_removed: ["Person removed", "plain"],
