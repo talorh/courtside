@@ -10,6 +10,10 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 19 Nov 2026
 
+- [Fix] **Go live:** Fixed an issue where ending a game while the camera had stopped or during a pause could make the whole game's video fail to process, as the iPhone wrote a frame with an impossible length; the phone now puts every such frame right before the recording is kept or sent.
+- [Fix] **Go live:** Fixed an issue where footage left on a phone overnight after Save couldn't be sent once its upload link had run out, and End game after Carry on didn't count what an earlier part still had to send.
+- [Fix] **Videos:** Fixed an issue where a video that failed to process lost its original as soon as the game's video was replaced; the original is now kept until 30 days after its upload, so the game can still be saved.
+- [Fix] **Video joiner:** Fixed an issue where a game whose parts had to be re-encoded to join could run out of time; the joiner re-encodes faster and allows 90 minutes. Build its image again with npm run join -- image.
 - [Fix] **Costs:** Fixed an issue where a deleted team's minutes watched moved onto the teams still running when Costs read the month again; the Stream storage figure is now Stream's own count of every team's minutes, not the season shown.
 - [Feature] **Users:** A new Users page in the admin area lists everyone on every team, with a dashboard of who uses the site and each team's people, filters and sorting, and lets an admin lock someone, take them off a team or add them to one.
 - [Fix] **Costs:** Fixed an issue where a month that's over counted every minute Stream held during it, test videos that came and went included, so it could show a block of storage that was never bought; it's now priced by the storage bought that month (noted each time Costs opens), or before there's a note by the most Stream held at once, and the months ahead build on what's kept now.

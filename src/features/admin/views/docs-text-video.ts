@@ -23,7 +23,9 @@ before one under way that nobody is streaming), else the next one coming up.</li
 <li><b>The camera stopping ends nothing.</b> The phone locks, a call comes or another app takes the camera: families see
 the Game Break card and the recording waits (on a laptop, another tab does the same). A camera that comes back carries on
 by itself. One the phone switched off for good comes back with <b>Resume camera</b>, a tap on every phone, as an iPhone
-starts a camera only from one. It's the same video, with the gap left out.</li>
+starts a camera only from one. It's the same video, with the gap left out. End game while it waits (or during a
+Pause) is fine too: Safari can then write a frame with an impossible length, which would make Stream refuse the whole
+video as too long, so the phone puts every such frame right before anything is kept or sent.</li>
 <li><b>Why a new camera can take over:</b> the phone records the preview drawn onto a canvas and the microphone through
 Web Audio, not the camera itself. The recording is always landscape, whichever way the phone was held when the camera
 started. A recording that hands over nothing for 20 seconds says so on the camera screen with Reload and carry on, and

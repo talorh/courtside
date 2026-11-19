@@ -6,8 +6,8 @@
 // told once, then forgotten: a failed one begins again on the next ask that may start it. Plain Node, so the tests run
 // it without a container (tests/join/jobs.test.ts).
 
-// A whole game joins in well under this; the site's links last longer.
-const LIMIT_MS = 40 * 60_000;
+// A whole game joins in well under this, re-encoded too (superfast, on half a CPU); the site's links last longer (2 hours).
+const LIMIT_MS = 90 * 60_000;
 // A join that failed is an error line in the Worker's logs; the rest, the usual line.
 const logLine = (line) => (line.event === "join_failed" ? console.error : console.log)(JSON.stringify(line));
 

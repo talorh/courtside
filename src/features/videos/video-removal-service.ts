@@ -12,12 +12,14 @@ export type DeleteReason = "admin" | "removal_request" | "retention" | "upload_c
 // Undo by clearing deleted_at, deleted_reason and purge_after on the row before then.
 const KEPT_A_DAY: ReadonlySet<DeleteReason> = new Set(["admin", "removal_request"]);
 
-/** Takes the video off the site; its media goes now, or a day later for a person's delete (the cron calls purgeMedia). */
+/** Takes the video off the site; its media goes now, or a day later for a person's delete (the cron calls purgeMedia).
+ * A failed video moved out of the way (replaced, say) keeps its original, the only copy of the game: R2 lets it go 30
+ * days after its upload (infra/r2-lifecycle.json), time to save what it can. */
 export async function deleteVideo(deps: TeamDeps, video: Video, reason: DeleteReason): Promise<void> {
 	const now = deps.now();
 	if (KEPT_A_DAY.has(reason)) await softDeleteVideo(deps.db, deps.team.id, video.id, now.toISOString(), reason, addDays(now, 1).toISOString());
 	else {
-		await purgeMedia(deps, video);
+		await purgeMedia(deps, video, { keepOriginal: video.status === "failed" && reason !== "retention" });
 		await softDeleteVideo(deps.db, deps.team.id, video.id, now.toISOString(), reason);
 	}
 	// Its parts couldn't be joined and the admins were alerted: deleting it deals with that, as Keep the first part does.
@@ -25,9 +27,14 @@ export async function deleteVideo(deps: TeamDeps, video: Video, reason: DeleteRe
 }
 
 /** Deletes the clips and the media (Stream copy, R2 original or unfinished multipart, a carried-on recording's
- * segments). Media failures abort. */
-export async function purgeMedia(deps: TeamDeps, video: Video): Promise<void> {
+ * segments; `keepOriginal`: all but what's in R2). Media failures abort. */
+export async function purgeMedia(deps: TeamDeps, video: Video, o: { keepOriginal?: boolean } = {}): Promise<void> {
 	await deleteClipsForVideo(deps, video.id);
+	if (o.keepOriginal) {
+		await deleteSegmentRows(deps.db, deps.team.id, video.id);
+		if (video.streamUid) await deps.stream.deleteVideo(video.streamUid);
+		return;
+	}
 	for (const s of await listSegments(deps.db, deps.team.id, video.id)) {
 		if (s.r2UploadId) await deps.originals.abort(s.r2Key, s.r2UploadId);
 		else await deps.originals.remove(s.r2Key);

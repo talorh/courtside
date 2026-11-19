@@ -281,7 +281,8 @@ sequenceDiagram
 1. `POST /api/uploads` checks the game has no video yet, starts an R2 multipart upload (through the binding) and adds
  the video's row as `uploading`. A failed video, the same person's own unfinished upload, or anyone else's upload
  started more than 24 hours ago (however recently a part arrived) is cleared out of the way first; another filmer
- can't take over a newer one.
+ can't take over a newer one. A failed video cleared that way (or by Go live or an app's stream) keeps its R2
+ original, the only copy of the game, until R2's lifecycle takes it 30 days after its upload.
 2. The browser asks for pre-signed part links 24 at a time and puts 16 MiB parts straight into R2, up to six at once
  (fewer after a dropped connection). It remembers finished parts in `localStorage`, so choosing the same file again
  carries on where it stopped.
@@ -326,6 +327,13 @@ sequenceDiagram
  record a tall segment that plays squashed once joined to a wide one. The recording is cut into 8 MiB parts (R2 wants equal parts) and uploaded through the
  normal part link and complete endpoints, retrying through any outage. Safari can hold on to recorded data, so
  `golive-rec.js` calls `requestData` when nothing has arrived for 4 seconds.
+ Safari can write a frame with a length below zero (a number near 2^32, so the file reads as 82 days and Stream
+ refuses it with ERR_DURATION_TOO_LONG) when its recorder is paused or stopped as the camera stops: every piece the
+ phone hands over goes through `golive-frames.js` first: in each fragment, track by track, a default length below zero
+ (Safari stores one when a run's frames share a length) becomes the shortest good length the track has (else its last
+ good default), and each frame below zero takes the default, else that, the size unchanged, before it's kept on the
+ phone or sent. A box split across two pieces waits for the rest (16 MB at most); anything it can't read goes on
+ unchanged, and a piece that fails never stops the ones after it.
 - **Pause** (`golive-pause.js`): `MediaRecorder.pause`, so the break is left out of the file. The live picture
  switches to a canvas card (`golive-slate.js`, redrawn each second so viewers' players don't think it has stalled) and
  silence.
@@ -417,7 +425,7 @@ sequenceDiagram
  by this ask, `started`, or still going), `done` or `failed` (told once, then forgotten), or `none`. An ask may begin a
  join (`start`) only when none has been tried or ten minutes have passed since the last began, and fewer than six have
  been; a try is counted when a join begins, or when a due ask is refused or not answered. In the container
- (`server.mjs`), `jobs.mjs` keeps the jobs by the output link's path, runs one at a time and stops one at 40 minutes,
+ (`server.mjs`), `jobs.mjs` keeps the jobs by the output link's path, runs one at a time and stops one at 90 minutes (a re-encode is x264 superfast, VP9 realtime),
  taking the waiting ones one team at a time in turn (the team, and the bucket, so staging's are their own, from the
  output's key), each with the links of the latest ask for it, as the first ask's may have run out by its turn;
  ffmpeg (`pipeline.mjs`) re-wraps each MP4 segment by stream copy into one transport stream (a cut-off last frame

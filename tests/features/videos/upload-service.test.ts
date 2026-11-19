@@ -119,6 +119,14 @@ describe("upload service", () => {
 		expect(deps.stream.deleted).toEqual(["bad"]);
 		expect(await getVideo(deps.db, deps.team.id, third.videoId)).toMatchObject({ status: "uploading" });
 	});
+	it("keeps a failed video's original when a new upload replaces it, so the footage can still be saved (R2 lets it go after 30 days)", async () => {
+		const { deps, sam, gameId } = await setup();
+		const failed = await seedVideo(deps, { gameId, streamUid: "bad", status: "failed", r2Key: "originals/b12.1-2026/u1/game.mov" });
+		await startUpload(deps, sam, file(gameId));
+		expect(deps.stream.deleted).toEqual(["bad"]);
+		expect(deps.originals.removed).not.toContain("originals/b12.1-2026/u1/game.mov");
+		expect(await getVideo(deps.db, deps.team.id, failed)).toBeNull();
+	});
 	it("keeps a practice game's video from before the season as long as its team's others", async () => {
 		const { deps, sam } = await setup();
 		const practice = await seedGame(deps, { startsAt: "2026-09-20T10:00", competition: "Practice match", opponent: "Practice" });

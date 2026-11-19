@@ -245,7 +245,7 @@ image` wherever podman or Docker is, and the new tag is committed and released. 
 same way (`docs/runbooks/maintenance.md`).
 
 **How a join goes:** the site never waits on one. A 5-minute run asks the joiner to begin (`POST /join`, answered at
-once), the container's `jobs.mjs` runs it (one at a time, those waiting one team at a time in turn with their latest ask's links, stopped at 40 minutes) and PUTs the joined file to R2, and a
+once), the container's `jobs.mjs` runs it (one at a time, those waiting one team at a time in turn with their latest ask's links, stopped at 90 minutes) and PUTs the joined file to R2, and a
 later run finds that file and makes it the video. The file in R2 is the only proof the site trusts; a join that
 failed or was lost (the container restarted) is begun again ten minutes after the last began, six times at most. The
 container sleeps ten minutes after the last ask, and the site asks every run while a video waits, so it stays awake

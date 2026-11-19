@@ -23,4 +23,9 @@ describe("the Saving panel's words", () => {
 		saving.progress({ totalParts: 40, uploadedParts: 39, waitingBytes: 8_000_000 });
 		expect(text.innerHTML).toBe("<b>Saving the video…</b> Keep this page open. 8 MB to go.");
 	});
+	it("after Carry on: what an earlier part still has to send counts in what's to go", () => {
+		const { saving, text } = panel();
+		saving.progress({ totalParts: 40, uploadedParts: 40, waitingBytes: 0, earlierBytes: 12_000_000 });
+		expect(text.innerHTML).toBe("<b>Saving the video…</b> Keep this page open. 12 MB to go.");
+	});
 });

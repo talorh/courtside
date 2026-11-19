@@ -19,8 +19,10 @@ export function savingPanel(card) {
 			if (finished || !p?.totalParts) return;
 			bar.max = p.totalParts;
 			bar.value = p.uploadedParts;
-			const waiting = p.waitingBytes > 0 ? ` ${Math.ceil(p.waitingBytes / 1e6)} MB to go.` : "";
-			const behind = onPhoneMinutes({ waitingBytes: p.waitingBytes });
+			// After Carry on, what an earlier part still has to send is to go too.
+			const toGo = p.waitingBytes + (p.earlierBytes ?? 0);
+			const waiting = toGo > 0 ? ` ${Math.ceil(toGo / 1e6)} MB to go.` : "";
+			const behind = onPhoneMinutes({ waitingBytes: p.waitingBytes, earlierBytes: p.earlierBytes });
 			// On a weak signal: what's still to send is only on this phone (kept there if the page closes). End game told the
 			// site so, and it waits 12 hours for them before saving what reached it by itself (recording-save-service.ts).
 			text.innerHTML = behind >= BEHIND_MINUTES

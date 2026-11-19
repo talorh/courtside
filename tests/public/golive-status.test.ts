@@ -27,6 +27,9 @@ describe("statusText (Go live's camera screen)", () => {
 		expect(onPhoneMinutes({ waitingBytes: 495_000_000 })).toBe(25);
 		expect(onPhoneMinutes({ waitingBytes: 10_000_000 })).toBe(0);
 		expect(onPhoneMinutes(null)).toBe(0);
+		// After Carry on: what an earlier segment still has to send counts too, any part of a minute as a minute.
+		expect(onPhoneMinutes({ waitingBytes: 10_000_000, earlierBytes: 1_000_000 })).toBe(1);
+		expect(onPhoneMinutes({ waitingBytes: 495_000_000, earlierBytes: 39_000_000 })).toBe(27);
 	});
 
 	it("the camera stopped (a lock, a call, another app): it says so, and that Resume camera carries on, over a break too", () => {

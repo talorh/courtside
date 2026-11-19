@@ -15,7 +15,7 @@ export async function ticketFailedVideo(deps: TeamDeps, video: Video, reason: st
 	const title = `A video couldn't be processed: ${name.title}`;
 	const about = [name.when, by ? `uploaded by ${by}` : ""].filter(Boolean).join(", ");
 	const message = `${title}.\n${about ? `${about}.\n` : ""}Stream said: ${reason || "no reason given"}`
-		+ `\n\nThe game's page says it couldn't be processed and that an alert has been raised. The original upload is kept (R2: ${video.r2Key ?? "none"},`
+		+ `\n\nThe game's page says it couldn't be processed and that an alert has been raised. The original upload is kept, for 30 days after it was uploaded even if the game's video is replaced (R2: ${video.r2Key ?? "none"},`
 		+ ` Stream video ${video.streamUid ?? "none"}, site video ${video.id}).\n\nWhat to do: the original can be looked at to save what it can.`
 		+ " Otherwise, ask the parent to upload the video again from their phone.";
 	const id = await insertSiteTicket(deps.db, { alertKind: kind, title, message, nowIso: deps.now().toISOString(), topic: "videos" });

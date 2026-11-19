@@ -4,6 +4,7 @@
 // What's uploaded so far is remembered (which segment this is, how many minutes the earlier segments hold), and what
 // hasn't reached storage yet is kept on the phone (golive-store.js), so a page closed by mistake loses nothing recorded:
 // the next page sends it (golive-kept.js), and saves or carries on (golive-recover.js).
+import { frameFixer } from "./golive-frames.js";
 import { keeper } from "./golive-store.js";
 import { api, keepTrying, putPart } from "./upload-net.js";
 import { forget, save } from "./upload-state.js";
@@ -19,10 +20,6 @@ const STOP_WAIT_MS = 10_000;
 
 const sortedParts = (etags) => Object.entries(etags).map(([n, etag]) => ({ partNumber: Number(n), etag })).sort((a, b) => a.partNumber - b.partNumber);
 
-export async function complete(videoId, etags, hint, segment = 1) {
-	return keepTrying(() => api(`/api/uploads/${videoId}/complete`, { parts: sortedParts(etags), segment }), hint);
-}
-
 /**
  * Starts recording `media`. onProgress(p) as parts go; hint(text) for connection trouble; onFatal(err) if the upload is
  * refused; onStopped() if the phone's recorder stops by itself (what it recorded still saves at stop()). Returns
@@ -37,12 +34,7 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 	const key = stateKey(gameId);
 	save(key, state);
 	const kept = keeper(videoId, segment); // the phone's own copy of what hasn't reached storage
-	let buffer = new Blob([], { type: mime });
-	let next = 1;
-	let waitingBytes = 0;
-	let queue = Promise.resolve();
-	let failed = null;
-	let totalParts = null;
+	let buffer = new Blob([], { type: mime }), next = 1, waitingBytes = 0, queue = Promise.resolve(), failed = null, totalParts = null;
 	let recordedBytes = 0, sentBytes = 0, lastChunkAt = Date.now(), first = null, stopping = false, sealed = false;
 	// How long it has recorded, pauses left out (End game tells the site, for its under-a-minute test rule).
 	let recordedMs = 0, runningSince = Date.now();
@@ -53,7 +45,8 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 		return putPart(urls[n], body, undefined, PART_TIMEOUT_MS);
 	}, hint);
 
-	const report = () => onProgress({ uploadedParts: Object.keys(state.etags).length, totalParts, waitingBytes, recordedBytes, sentBytes });
+	let earlierLeft = () => 0; // after Carry on: what earlier segments still have to send (before())
+	const report = () => onProgress({ uploadedParts: Object.keys(state.etags).length, totalParts, waitingBytes, recordedBytes, sentBytes, earlierBytes: earlierLeft() });
 	function send(part) {
 		const n = next++;
 		if (n === 1) first = part;
@@ -85,16 +78,18 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 		for (const p of parts) send(p.blob);
 	}
 
+	// Each piece is put right (golive-frames.js) before it's kept or sent, one at a time and in order.
+	const fixer = frameFixer(mime);
+	let taking = Promise.resolve();
+	const take = (piece) => { if (piece.size > 0) { buffer = new Blob([buffer, piece], { type: mime }); kept.chunk(piece); cut(false); report(); } };
 	const recorder = new MediaRecorder(media, { mimeType: mime, videoBitsPerSecond: 2_500_000, audioBitsPerSecond: 128_000 });
 	recorder.ondataavailable = (e) => {
 		if (sealed) return; // after the last part was cut: a recorder that stopped late
 		if (e.data.size === 0) return; // asked for what it has, and it had nothing: still quiet
 		lastChunkAt = Date.now();
 		recordedBytes += e.data.size;
-		buffer = new Blob([buffer, e.data], { type: mime });
-		kept.chunk(e.data);
-		cut(false);
-		report();
+		// A piece that fails here mustn't stop the ones after it.
+		taking = taking.then(() => fixer.push(e.data)).then((piece) => { if (!sealed) take(piece); }).catch((err) => console.warn(`recording: ${err}`));
 	};
 	// The phone can stop its recorder by itself (under pressure, or on an error) while the live picture carries on.
 	recorder.addEventListener("error", (e) => hint(`recorder error: ${e.error?.name ?? "unknown"}`));
@@ -115,13 +110,18 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 			if (holds.size === 0 && recorder.state === "paused") { recorder.resume(); runningSince = lastChunkAt = Date.now(); }
 		},
 		recordedSeconds: () => Math.round((recordedMs + (runningSince === null ? 0 : Date.now() - runningSince)) / 1000),
-		/** stop() completes the recording only once `sending` is over: an earlier segment's parts must be in storage first. */
-		before(sending) { beforeComplete = sending.catch((err) => console.warn(`earlier part: ${err}`)); },
+		/** stop() completes the recording only once `sending` is over: an earlier segment's parts must be in storage first.
+		 * Its left() counts in the progress, reported at once and again when it settles (sent, or refused: nothing more). */
+		before(sending) {
+			earlierLeft = sending.left ?? earlierLeft;
+			beforeComplete = sending.catch((err) => console.warn(`earlier part: ${err}`)).finally(() => { earlierLeft = () => 0; report(); });
+			report();
+		},
 		quietFor: () => Date.now() - lastChunkAt,
 		state: () => recorder.state,
 		/** A test thrown away by the server: stop recording and uploading, and forget it. */
 		cancel() {
-			stopping = true;
+			stopping = sealed = true;
 			clearInterval(nudge);
 			failed = new Error("Thrown away as a test");
 			if (recorder.state !== "inactive") recorder.stop();
@@ -136,6 +136,8 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 				recorder.stop();
 				if (!(await Promise.race([stopped, new Promise((resolve) => setTimeout(resolve, STOP_WAIT_MS, false))]))) hint("recorder didn't stop: saving what it handed over");
 			}
+			await taking;
+			take(fixer.flush());
 			sealed = true;
 			cut(true);
 			totalParts = next - 1;
@@ -149,7 +151,7 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 			const fixed = await upright(first);
 			if (fixed !== first) state.etags[1] = await upload(1, fixed);
 			await beforeComplete;
-			await complete(videoId, state.etags, hint, segment);
+			await keepTrying(() => api(`/api/uploads/${videoId}/complete`, { parts: sortedParts(state.etags), segment }), hint);
 			forget(key);
 			kept.clear();
 		},

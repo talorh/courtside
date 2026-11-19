@@ -42,7 +42,7 @@ export const tsArgs = (segment) => [
 /** The transport stream to the MP4: stream copy (its index at the front), or a re-encode when the streams don't line up. */
 export const muxArgs = (tsPath, outPath, reencode) => [
 	...COMMON, "-i", tsPath,
-	...(reencode ? ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac"] : ["-c", "copy", "-bsf:a", "aac_adtstoasc"]),
+	...(reencode ? ["-c:v", "libx264", "-preset", "superfast", "-crf", "23", "-c:a", "aac"] : ["-c", "copy", "-bsf:a", "aac_adtstoasc"]),
 	"-movflags", "+faststart", outPath,
 ];
 
@@ -52,7 +52,7 @@ export const muxArgs = (tsPath, outPath, reencode) => [
  * realtime settings, as libvpx's defaults take hours for a game on the joiner's half a CPU. */
 export const concatArgs = (listPath, outPath, reencode, matroska = false) => {
 	const mp4 = outPath.endsWith(".mp4");
-	const encode = mp4 ? ["-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-c:a", "aac"] : ["-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-row-mt", "1", "-c:a", "libopus"];
+	const encode = mp4 ? ["-c:v", "libx264", "-preset", "superfast", "-crf", "23", "-c:a", "aac"] : ["-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8", "-row-mt", "1", "-c:a", "libopus"];
 	const copy = ["-c", "copy", ...(matroska ? ["-f", "matroska"] : [])];
 	return [...COMMON, "-format_whitelist", `concat,${DEMUXER[mp4 ? "mp4" : "webm"]}`, "-safe", "0", "-f", "concat", "-i", listPath, ...(reencode ? encode : copy), ...(mp4 ? ["-movflags", "+faststart"] : []), outPath];
 };

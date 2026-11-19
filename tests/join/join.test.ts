@@ -79,6 +79,10 @@ describe("the joiner's ffmpeg commands", () => {
 	it("wraps the transport stream into the MP4 by stream copy, or re-encoded", () => {
 		expect(muxArgs("/tmp/all.ts", "/tmp/out.mp4", false)).toEqual([...COMMON, "-i", "/tmp/all.ts", "-c", "copy", "-bsf:a", "aac_adtstoasc", "-movflags", "+faststart", "/tmp/out.mp4"]);
 		expect(muxArgs("/tmp/all.ts", "/tmp/out.mp4", true)).toContain("libx264");
+		// A whole game re-encoded at veryfast can't finish inside the join's limit on the joiner's half a CPU: superfast
+		// does a 90-minute 720p game in about 18 minutes of a whole core.
+		expect(muxArgs("/tmp/all.ts", "/tmp/out.mp4", true).join(" ")).toContain("-preset superfast");
+		expect(concatArgs("/tmp/list.txt", "/tmp/out.mp4", true).join(" ")).toContain("-preset superfast");
 	});
 	it("joins WebM through the concat demuxer, each segment read only as WebM, by stream copy or re-encoded", () => {
 		expect(concatArgs("/tmp/list.txt", "/tmp/out.webm", false)).toEqual([...COMMON, "-format_whitelist", "concat,matroska", "-safe", "0", "-f", "concat", "-i", "/tmp/list.txt", "-c", "copy", "/tmp/out.webm"]);

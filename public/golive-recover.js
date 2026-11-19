@@ -97,7 +97,8 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 			const answer = await askUntilReady(`/api/live/${gameId}/continue`, { videoId: Number(recording), mimeType: carryOn.mime }, btn("continue"), "Carrying on", "Getting ready to carry on streaming…", tell).finally(() => others(false));
 			// What the old page kept goes up while the game streams again; End game waits for it before saving.
 			const k = await kept;
-			const sending = k?.bytes > 0 ? k.send(carryOn.say, true).then(() => carryOn.say("")) : Promise.resolve();
+			// It says how much it still has to send, so End game and the Saving panel count it (golive-rec.js before()).
+			const sending = Object.assign(k?.bytes > 0 ? k.send(carryOn.say, true).then(() => carryOn.say("")) : Promise.resolve(), { left: () => k?.left() ?? 0 });
 			// The camera next (the phone may ask for it again); the panel goes once it's there, or says why it isn't.
 			await carryOn.ready(answer, (state.minutesBefore ?? 0) + minutesOf(Object.keys(state.etags ?? {}).length * (state.partSize ?? 0)) + minutesOf(k?.own ?? 0), sending);
 			panel.hidden = true;

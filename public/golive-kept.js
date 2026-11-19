@@ -37,7 +37,7 @@ export async function dropKept(gameId) {
  * What this phone still holds for the recording in the game's note (`state`) and for its earlier segments. `bytes`: all
  * of it; `own`: the noted segment's share. `send(tell, movingOn)` sends it, earliest segment first, each part noted as
  * it lands; asked twice, it's sent once. `movingOn`: a new segment is about to take the game's note, so this one is
- * noted with the earlier ones first. `clear()` drops it all.
+ * noted with the earlier ones first. `left()`: the bytes not yet in storage. `clear()` drops it all.
  */
 export async function keptOnPhone(gameId, state, mime) {
 	const store = await openStore();
@@ -66,8 +66,11 @@ export async function keptOnPhone(gameId, state, mime) {
 			for (let next; (next = plan.parts[0] ?? plan.tail); ) {
 				const { n, blob } = next;
 				tell(`Sending what was still on this phone: part ${++i} of ${count}…`);
-				const { urls } = await keepTrying(() => api(`/api/uploads/${s.videoId}/part-urls`, { partNumbers: [n], segment: segmentOf(s) }), () => {});
-				s.etags[n] = await keepTrying(() => putPart(urls[n], blob, undefined, PART_TIMEOUT_MS), () => {});
+				// A fresh link each try: one from before a night's wait has run out (403).
+				s.etags[n] = await keepTrying(async () => {
+					const { urls } = await api(`/api/uploads/${s.videoId}/part-urls`, { partNumbers: [n], segment: segmentOf(s) });
+					return putPart(urls[n], blob, undefined, PART_TIMEOUT_MS);
+				}, () => {});
 				if (earlier.includes(s)) noteEarlier();
 				else save(stateKey(gameId), s);
 				await store.delPart(storeKey(s), n);
@@ -84,6 +87,7 @@ export async function keptOnPhone(gameId, state, mime) {
 	return {
 		bytes, own: plans.get(state).bytes,
 		send: (tell, movingOn = false) => (going ??= sendAll(tell, movingOn).finally(() => { going = null; })),
+		left: () => [...plans.values()].reduce((sum, p) => sum + p.parts.reduce((s, x) => s + x.blob.size, 0) + (p.tail?.blob.size ?? 0), 0),
 		clear: () => Promise.all([...plans.keys()].map((s) => store?.clear(storeKey(s)))),
 	};
 }
