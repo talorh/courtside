@@ -44,7 +44,7 @@ function teamRow(c: TeamCosts, thisMonth: string, cur: Currency): SafeHtml {
 
 /** The season's teams (`costs`), among the seasons any team was onboarded for (`seasons`, newest first). `thisSeason`:
  * the one plain /admin/costs shows. */
-export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: Viewing; minutesBought: number | null; now: Date; season: number; seasons: number[]; thisSeason: number; cur: Currency; rate: Rate; bill: Bill }): SafeHtml {
+export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: Viewing; minutesBought: number | null; minutesStored: number | null; now: Date; season: number; seasons: number[]; thisSeason: number; cur: Currency; rate: Rate; bill: Bill }): SafeHtml {
 	const months = shownMonths(p.costs, p.season), nowMonth = monthOf(p.now.toISOString());
 	// A past season's months are all spent, its footage's kept months too: its last month stands where this month does.
 	const { over, past, thisMonth } = seasonStanding(months, p.season, nowMonth);
@@ -53,7 +53,7 @@ export function costsPage(p: { frame: AdminFrame; costs: TeamCosts[]; viewing: V
 	// team's once the season's own months are over.
 	const budgeted = over ? p.costs : p.costs.filter((c) => c.team.status === "active");
 	const budget = budgeted.length ? sum(budgeted, (c) => c.team.budget) : null;
-	const board = costTiles({ costs: p.costs, budgeted, bars, thisMonth, past, cur: p.cur, minutesBought: p.minutesBought, billed: p.bill.rows.length > 0 });
+	const board = costTiles({ costs: p.costs, budgeted, bars, thisMonth, past, cur: p.cur, minutesBought: p.minutesBought, minutesStored: p.minutesStored, billed: p.bill.rows.length > 0 });
 	const report = `/admin/costs/report.xlsx?season=${p.season}${p.cur === "usd" ? "&cur=usd" : ""}`;
 	const seasons = html`<div class="costbar"><nav class="chips" aria-label="Season">${p.seasons.map((s) => html`<a class="chip" href="${costsHref(s, p.thisSeason, p.cur)}"${s === p.season ? html` aria-current="true"` : ""}>${seasonLabel(s)}</a>`)}</nav>
 <a class="btn" href="${report}" download>Download for Excel</a></div>`;

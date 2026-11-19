@@ -40,10 +40,11 @@ stores. A clip counts until it or its video goes.</li>
 <li><b>Uploads</b> are each team's originals in R2 (kept 30 days each), from their sizes on the database's rows, past
 the free 10 GB, by each team's share.</li>
 <li><b>Watching</b> comes from Cloudflare's analytics, minutes viewed by video and day; each video is put to its team
-(through its row, or its live input's), and the minutes are saved by month in ${code("cost_views")}. This month and
+(through its row, or its live input's, or for a deleted team the record kept of which team it was), and the minutes are saved by month in ${code("cost_views")}. This month and
 last are read again once they're over an hour old (last month's last days come in late), any other month of the season
 only until it's saved, one query a month. Saved months are kept when a team is deleted, so a season's costs stay
-right. Minutes no team has are shared like the fixed costs.</li>
+right. Minutes no team has are shared like the fixed costs; a deleted team's stay its own, off the page, and are never
+shared.</li>
 <li><b>Fixed costs</b> (Workers Paid, the Images and Stream bundle, the domain) are shared between the teams running
 each month by the days each ran in it, so a team that joined mid-month pays only from then.</li>
 <li><b>Cloudflare's bill</b> (its billable usage, day by day) is read with the same read-only token, which has Billing

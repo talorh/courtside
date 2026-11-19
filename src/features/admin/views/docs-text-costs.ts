@@ -24,7 +24,7 @@ site's fixed costs are about US$10 a month however many teams run.</p>
 switch says which). Every figure says whether it's <b>Actual</b> (Cloudflare's own bill) or <b>Estimated</b>. Along the
 top, the figures as tiles: this month (with the months as a small bar chart and the change on last month), the season so
 far (and how much of the estimate that is), the season estimated (and how much of it is actual), the running teams' budgets (and where the estimate lands against them), a player
-a season (with a month and this month under it), and the minutes Stream is storing against the 1,000 the bundle includes. Under them: every team's months
+a season (with a month and this month under it), and the minutes Stream is storing now, every team's and season's by Stream's own count, against what's bought. Under them: every team's months
 stacked by kind of cost beside where the money goes (this month and the season) and what the teams used this month
 (minutes stored and watched, originals kept, games with a video); then Cloudflare's bill for the billing period (the
 usage it charged so far, the plan's fees each period, and each product's use against its free allowance, a meter that's

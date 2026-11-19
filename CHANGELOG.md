@@ -10,6 +10,7 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 19 Nov 2026
 
+- [Fix] **Costs:** Fixed an issue where a deleted team's minutes watched moved onto the teams still running when Costs read the month again; the Stream storage figure is now Stream's own count of every team's minutes, not the season shown.
 - [Feature] **Users:** A new Users page in the admin area lists everyone on every team, with a dashboard of who uses the site and each team's people, filters and sorting, and lets an admin lock someone, take them off a team or add them to one.
 - [Fix] **Costs:** Fixed an issue where a month that's over counted every minute Stream held during it, test videos that came and went included, so it could show a block of storage that was never bought; it's now priced by the storage bought that month (noted each time Costs opens), or before there's a note by the most Stream held at once, and the months ahead build on what's kept now.
 - [Fix] **Costs:** Fixed an issue where the 3am job's read of Cloudflare's bill gave up after 5 seconds in a new billing period's first days; when Cloudflare doesn't answer, Costs now asks again 15 minutes later instead of on every page.

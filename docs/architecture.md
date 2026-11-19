@@ -776,7 +776,8 @@ team nobody closed is closed by the 3am job once that date has passed, so it's d
 run (Stream's also come out of the run's 200 outside calls), so a big team's deletion never holds up a game night:
 
 1. Its photos' images, each photo's row marked deleted as it goes.
-2. Every Stream copy its videos and clips have, deleted ones too, each row's `stream_uid` cleared as it goes.
+2. Every Stream copy its videos and clips have, deleted ones too, each row's `stream_uid` cleared as it goes and kept
+   with its team in `stream_uid_teams` (its live inputs' too, as its rows go), for Costs' minutes watched.
 3. Every original or unfinished upload its videos have in R2, then anything else under `originals/<team id>/` (the
  whole folder, every page of R2's list followed to its end, as a page can be short while more remain).
 4. Once nothing of it is left in Images, Stream or R2: its rows, child first, in one batch (all or nothing). The team
@@ -963,7 +964,7 @@ section and keeps one More menu open at a time.
  this month, its season so far and its season estimated, against its season's budget, laid out as a dashboard as
  cloud cost tools do (server-side SVG; `views/costs-widgets.ts` for the smaller widgets): the figures as a row of
  tiles (this month with its months as a sparkline and the change on last month, the season so far against its
- estimate, the season estimated, the budgets, a player a season (with a month and this month), Stream's storage against the bundle), every team's
+ estimate, the season estimated, the budgets, a player a season (with a month and this month), Stream's storage now, by Stream's own count, against what's bought), every team's
  months stacked by kind of cost (estimated months shaded) beside where the money goes (this month and the season) and
  what the teams used this month, the running teams' total against their budgets beside every team's season on one
  scale, Team by team (`views/costs-team-months.ts`: every team month by month in one grid, shaded by cost, with every
@@ -998,7 +999,7 @@ section and keeps one More menu open at a time.
  (`costs-saved.ts`): a video or team deleted later changes nothing in it (a team onboarded after a saved month, even
  with a deleted team's id, has nothing in it). Minutes watched come from Cloudflare's analytics
  by video (`minutesByVideo`), each put to its team and saved by month in `cost_views` (read again when over an hour
- old; kept when a team is deleted). The estimate: 30 games a season spread over the months left, each 60 minutes of
+ old; kept when a team is deleted, and a deleted team's videos still put to it by `stream_uid_teams`). The estimate: 30 games a season spread over the months left, each 60 minutes of
  video, three clips and 9 families each watching it twice, until the team has three games still on the site; till then
  the other teams' own figures, averaged game for game, stand in, and the baseline only while no team has any
  (`costs-estimate.ts`). Each month to come counts at least the Stream storage bought now (billed until it's lowered),
@@ -1130,7 +1131,8 @@ erDiagram
 | sign_in_codes | email, code_hash (of email and code), ip, created_at, expires_at (10 minutes), tries, used_at, voided_at, pending | A code sent by email; the newest live one whose email has gone is the one that counts |
 | sign_in_events | kind (code_sent/unknown_email/limited/wrong/signed_in/robot/desktop_view/mobile_view/access), email, ip, device, at | What happened at the sign-in page, for its limits, Platform's Sign-ins row and the admin Log, and which view a device uses when first seen or changed; a month (31 days, the 3am job) |
 | problems | team_id (no foreign key; null when it's no team's), kind (server_error/job_failed/email_failed/golive_problem/upload_problem/photo_problem/stream_problem/ai_failed/site_problem), who (an email, or "site"), what, detail, device, times, first_at, at | Anything that failed, for the admin Log's Problems; the same one again within 30 minutes counts on its line. A month (the 3am job); a deleted team's go with it |
-| cost_views | month (UTC), team_id ('' for no team's), minutes (Stream's minutes watched), saved_at | Costs' minutes watched, from Cloudflare by video; kept when a team is deleted |
+| cost_views | month (UTC), team_id ('' for no team's, shared; 'gone' for a deleted team's once nothing of it is left, off the page and not shared), minutes (Stream's minutes watched), saved_at | Costs' minutes watched, from Cloudflare by video; kept when a team is deleted |
+| stream_uid_teams | uid, team_id (no foreign key; 'gone' once nothing of the team is left) | Which team each Stream video, clip and live input of a deleted team was, kept as its copies and rows go, so Costs' re-read of a month still puts its minutes watched on it; once nothing of the team is left they're marked 'gone': kept as a deleted team's, off every team and not shared, so its minutes watched never land on the running teams and a new team with its id inherits none |
 | cost_months | month (UTC), team_id, storage, viewing, uploads, shared (US$), billed (0 to 1), billed_days, stored, gb_months, watched, saved_at | Each team's spent month as Costs showed it, saved by the 3am job a week after the month ends (`costs-saved.ts`) and read in place of working it out again; kept when a team is deleted |
 | billed_usage | day (UTC), service, family, quantity, billable, unit, billed (US$), period_start, saved_at | Cloudflare's own bill, day by day (its billable usage): read every night and when Costs's copy is 20 hours old, each read replacing the days it returns; kept 400 days. The days it covers are actual on Costs (`costs-bill.ts`, `costs-reconcile.ts`) |
 | stream_bought | month (UTC), minutes, seen_at | Stream's storage bought as Costs saw it each month, the most it saw: a month that's over is priced by it, or by the most Stream held at once if that was more (`costs-model.ts`) |

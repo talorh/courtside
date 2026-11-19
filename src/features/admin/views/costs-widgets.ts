@@ -27,12 +27,13 @@ export function meter(share: number, level: Level = "ok", cls = "tmeter"): SafeH
 export const tiles = (ts: Tile[]) =>
 	html`<section class="scoreboard costtiles" aria-label="The figures">${ts.map((t) => html`<div class="sb"><b>${t.value}</b><span>${t.label}</span>${t.pill ? pill(t.pill) : ""}${t.pic ?? ""}<span class="delta">${t.note}</span></div>`)}</section>`;
 
-/** Stream's storage this month, every team's, against what's bought (the bundle's, unless more is). */
-export function storageTile(costs: TeamCosts[], bought: number | null): Tile {
-	const stored = costs.reduce((s, c) => s + (c.thisMonth?.use.stored ?? 0), 0);
+/** Stream's storage now, against what's bought (the bundle's, unless more is): Stream's own figure, every team's and
+ * every season's; when Stream doesn't say, the site's count of this month's, estimated. */
+export function storageTile(costs: TeamCosts[], bought: number | null, used: number | null): Tile {
+	const stored = used ?? costs.reduce((s, c) => s + (c.thisMonth?.use.stored ?? 0), 0);
 	const cap = Math.max(PRICES.bundleMinutes, bought ?? 0);
 	return {
-		value: `${thousands(stored)} min`, label: "Stream storage", pill: ACTUAL, pic: meter(stored / cap, stored > cap ? "over" : stored > cap * 0.8 ? "warn" : "ok"),
+		value: `${thousands(Math.round(stored))} min`, label: "Stream storage", pill: used === null ? ESTIMATED : ACTUAL, pic: meter(stored / cap, stored > cap ? "over" : stored > cap * 0.8 ? "warn" : "ok"),
 		note: `of ${thousands(cap)} ${cap > PRICES.bundleMinutes ? "bought" : "in the bundle"}`,
 	};
 }

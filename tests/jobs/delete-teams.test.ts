@@ -1,3 +1,4 @@
+import { streamUidTeams } from "../../src/features/admin/costs-repository.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { currentTeam } from "../../src/app/current-team.ts";
 import { adminLogStatement, listAdminLog } from "../../src/features/admin/admin-log-repository.ts";
@@ -69,7 +70,7 @@ async function untilDeleted(deps: TestDeps, max = 10) {
 const GONE = ["clip_players", "favourites", "video_views", "win_seen", "coach_notes", "game_scores", "removal_requests", "clip_removal_requests",
 	"photo_removal_requests", "recording_segments", "clips", "live_streams", "activity", "ask_counts", "roster_slots", "roster_weeks", "roster_duties", "roster_families", "players",
 	"playhq_fixtures", "photos", "support_messages", "support_requests", "game_lines", "problems"];
-const KEPT = ["admin_log", "cost_months", "cost_views", "downloads", "games", "media_downloads", "members", "videos"];
+const KEPT = ["admin_log", "cost_months", "cost_views", "stream_uid_teams", "downloads", "games", "media_downloads", "members", "videos"];
 
 describe("deleting a closed team once its date has passed", () => {
 	it("has a say over every table with a team's rows: a new one goes in GONE or KEPT", async () => {
@@ -287,6 +288,21 @@ describe("deleting a closed team once its date has passed", () => {
 		for (const table of ["media_downloads", "members"]) expect(await count(deps, table), table).toBe(0);
 		expect(await status(deps)).toBeNull();
 	});
+	it("keeps which team each of its Stream videos, clips and live inputs was, for Costs' minutes watched, marked gone once nothing of it is left", async () => {
+		const { deps } = await closedG14();
+		quiet();
+		await untilDeleted(deps);
+		const teams = await streamUidTeams(deps.db);
+		expect([teams.get("stream-g"), teams.get("clip-g"), teams.get("input-g")]).toEqual([G, G, G]);
+		expect(teams.get("stream-b")).toBe("b12.1-2026");
+		// Nothing left of it: its watching stays off the running teams, and a new team with its id inherits none.
+		await deps.db.prepare("DELETE FROM downloads WHERE team_id = ?").bind(G).run();
+		await runSync(deps);
+		expect(await status(deps)).toBeNull();
+		const gone = await streamUidTeams(deps.db);
+		expect([gone.get("stream-g"), gone.get("clip-g"), gone.get("input-g")]).toEqual(["gone", "gone", "gone"]);
+	});
+
 	it("deletes the row of a team nobody downloaded from straight after, so its id is free; the Log keeps its name", async () => {
 		const { deps } = await closedG14();
 		quiet();
@@ -298,7 +314,8 @@ describe("deleting a closed team once its date has passed", () => {
 		await untilDeleted(deps);
 		await runSync(deps);
 		expect(await status(deps)).toBeNull();
-		for (const table of ["admin_log", "cost_views", "cost_months"]) expect(await count(deps, table), table).toBe(0);
+		for (const table of ["admin_log", "cost_views", "cost_months", "stream_uid_teams"]) expect(await count(deps, table), table).toBe(0);
+		expect(await count(deps, "stream_uid_teams", "gone")).toBe(3);
 		const lines = (await listAdminLog(deps.db, 50)).filter((l) => l.action === "team_onboarded" || l.action === "team_deleted");
 		expect(lines.map((l) => [l.action, l.team])).toEqual([["team_deleted", { code: "g14.5", seasonStart: 2026 }], ["team_onboarded", { code: "g14.5", seasonStart: 2026 }]]);
 		// B12.1 untouched.

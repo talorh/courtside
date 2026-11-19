@@ -35,9 +35,10 @@ export async function storedItems(db: D1Database): Promise<StoredItem[]> {
 	return results;
 }
 
-/** Each Stream uid the site made, and its team: videos, clips and live inputs. */
+/** Each Stream uid the site made, and its team: videos, clips and live inputs, and those of a deleted team, kept. */
 export async function streamUidTeams(db: D1Database): Promise<Map<string, string>> {
-	const { results } = await db.prepare(`SELECT stream_uid AS uid, team_id AS teamId FROM videos WHERE stream_uid IS NOT NULL
+	const { results } = await db.prepare(`SELECT uid, team_id AS teamId FROM stream_uid_teams
+		UNION ALL SELECT stream_uid, team_id FROM videos WHERE stream_uid IS NOT NULL
 		UNION ALL SELECT stream_uid, team_id FROM clips WHERE stream_uid IS NOT NULL
 		UNION ALL SELECT live_input_uid, team_id FROM live_streams`).all<{ uid: string; teamId: string }>();
 	return new Map(results.map((r) => [r.uid, r.teamId]));

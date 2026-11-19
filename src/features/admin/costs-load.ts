@@ -15,8 +15,9 @@ import { byMonth } from "./costs-saved.ts";
 import { type Viewing, viewing } from "./costs-viewing.ts";
 import { streamStorage } from "./platform-routes.ts";
 
-/** `saved`: the months saved once they were over (costs-saved.ts). */
-export interface Costs { costs: TeamCosts[]; viewing: Viewing; minutesBought: number | null; rate: Rate; bill: Bill; saved: Set<string> }
+/** `saved`: the months saved once they were over (costs-saved.ts); `minutesStored`: Stream's own, now (null when it
+ * didn't say). */
+export interface Costs { costs: TeamCosts[]; viewing: Viewing; minutesBought: number | null; minutesStored: number | null; rate: Rate; bill: Bill; saved: Set<string> }
 
 /** Every team's costs in the club's currency, as its budget is set: what the budget alert checks. */
 export const inLocal = (c: Costs) => inCurrency(c.costs, "local", c.rate.localPerUsd);
@@ -32,5 +33,5 @@ export async function loadCosts(deps: AppDeps): Promise<Costs> {
 	}
 	const billed = bill.rows.length ? { months: billedMonths(bill.rows), freeMinutes: freeWatchMinutes(bill.rows) } : undefined;
 	const saved = byMonth(kept);
-	return { viewing: watched, minutesBought, rate, bill, saved: new Set(saved.keys()), costs: teamCosts({ teams, items, views: watched.views, now, minutesBoughtNow: minutesBought, bought, bill: billed, saved }) };
+	return { viewing: watched, minutesBought, minutesStored: storage?.usedMinutes ?? null, rate, bill, saved: new Set(saved.keys()), costs: teamCosts({ teams, items, views: watched.views, now, minutesBoughtNow: minutesBought, bought, bill: billed, saved }) };
 }

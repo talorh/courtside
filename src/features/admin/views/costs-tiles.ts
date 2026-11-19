@@ -18,7 +18,7 @@ const sum = (costs: TeamCosts[], f: (c: TeamCosts) => number) => costs.reduce((s
 /** A team's month (`month`, 'YYYY-MM'), when it ran in it: a past season's last month, as well as this one. */
 export const teamMonth = (c: TeamCosts, month: string): MonthCost | undefined => c.months.find((m) => m.month === month);
 
-export function costTiles(o: { costs: TeamCosts[]; budgeted: TeamCosts[]; bars: MonthBar[]; thisMonth: string; past: boolean; cur: Currency; minutesBought: number | null; billed: boolean }): Tile[] {
+export function costTiles(o: { costs: TeamCosts[]; budgeted: TeamCosts[]; bars: MonthBar[]; thisMonth: string; past: boolean; cur: Currency; minutesBought: number | null; minutesStored: number | null; billed: boolean }): Tile[] {
 	const m = money(o.cur), spent = o.billed ? ACTUAL : NOT_BILLED;
 	const month = sum(o.costs, (c) => teamMonth(c, o.thisMonth)?.total ?? 0), soFar = sum(o.costs, (c) => c.soFar), estimate = sum(o.costs, (c) => c.estimate);
 	const budget = o.budgeted.length ? sum(o.budgeted, (c) => c.team.budget) : null, budgetEstimate = sum(o.budgeted, (c) => c.estimate);
@@ -38,6 +38,6 @@ export function costTiles(o: { costs: TeamCosts[]; budgeted: TeamCosts[]; bars: 
 		{ value: m(estimate), label: "The season, estimated", pill: ESTIMATED, note: `${m(soFar)} ${o.billed ? "actual" : "spent"} and ${m(estimate - soFar)} estimated` },
 		budgets,
 		{ value: perPlayer(squadsSeason, players, o.cur), label: "A player a season", pill: ESTIMATED, note: players ? `${perPlayer(squadsSeason / 12, players, o.cur)} a month, ${perPlayer(squadsMonth, players, o.cur)} this month` : "Once a running team has a squad" },
-		storageTile(o.costs, o.minutesBought),
+		storageTile(o.costs, o.minutesBought, o.minutesStored),
 	];
 }

@@ -35,11 +35,17 @@ describe("the Costs dashboard", () => {
 		// Only B12.1 has a squad, so a player a season is its own: the other team's costs aren't put on B12.1's players.
 		const rows = [...html.matchAll(/<td class="c-game">\$([\d,.]+) a season/g)].map((r) => r[1]);
 		expect(rows).toEqual([player![1]]);
-		// The video's 47 minutes are all Stream stores, against the 1,100 the fake Stream says are bought.
-		expect(tiles).toMatch(/<b>47 min<\/b><span>Stream storage<\/span>[^]*?of 1,100 bought/);
+		// Stream's own figure, every team's and every season's: the fake Stream's 65 of its 1,100 bought.
+		expect(tiles).toMatch(/<b>65 min<\/b><span>Stream storage<\/span><span class="pill actual">Actual<\/span>[^]*?of 1,100 bought/);
 		expect(tiles).toMatch(/<span class="delta">\d+% of the season&#39;s estimate<\/span>/);
 		// Not billed yet (no bill read in this test): what's spent and what's estimated of the season.
 		expect(tiles).toMatch(/<span class="delta">\$[\d.]+ spent and \$[\d,.]+ estimated<\/span>/);
+	});
+
+	it("falls back to the site's own count of Stream's storage, estimated, when Stream doesn't say", () => {
+		const costs = [{ thisMonth: { use: { stored: 47 } } }, { thisMonth: { use: { stored: 3 } } }] as unknown as TeamCosts[];
+		expect(storageTile(costs, null, null)).toMatchObject({ value: "50 min", pill: { cls: "est" } });
+		expect(storageTile(costs, 2000, 1234)).toMatchObject({ value: "1,234 min", note: "of 2,000 bought" });
 	});
 
 	it("shows a past season without the estimate or Stream's storage, which are about now", async () => {
@@ -101,9 +107,9 @@ describe("the Costs dashboard", () => {
 
 	it("measures Stream's storage against the bundle's 1,000 minutes until more is bought, amber past 80% and red past it", () => {
 		const storing = (stored: number) => ({ thisMonth: { use: { stored } } }) as unknown as TeamCosts;
-		expect(storageTile([storing(500)], null)).toMatchObject({ value: "500 min", note: "of 1,000 in the bundle" });
-		expect(storageTile([storing(500), storing(350)], null).pic?.__html).toContain('class="fill warn" width="85.0"');
-		expect(storageTile([storing(1200)], 1000).pic?.__html).toContain('class="fill over" width="100.0"');
-		expect(storageTile([storing(1200)], 2000)).toMatchObject({ note: "of 2,000 bought" });
+		expect(storageTile([storing(500)], null, null)).toMatchObject({ value: "500 min", note: "of 1,000 in the bundle" });
+		expect(storageTile([storing(500), storing(350)], null, null).pic?.__html).toContain('class="fill warn" width="85.0"');
+		expect(storageTile([storing(1200)], 1000, null).pic?.__html).toContain('class="fill over" width="100.0"');
+		expect(storageTile([storing(1200)], 2000, null)).toMatchObject({ note: "of 2,000 bought" });
 	});
 });

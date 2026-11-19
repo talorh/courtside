@@ -21,9 +21,12 @@ export async function streamCopiesLeft(db: D1Database, teamId: string, limit: nu
 	return results;
 }
 
-export const forgetStreamCopy = (db: D1Database, teamId: string, copy: StreamCopy) => db
-	.prepare(`UPDATE ${copy.kind === "clip" ? "clips" : "videos"} SET stream_uid = NULL WHERE team_id = ? AND id = ? AND stream_uid = ?`)
-	.bind(teamId, copy.id, copy.uid).run();
+/** Its Stream copy is gone: the row forgets it, and which team it was is kept, for Costs' minutes watched. */
+export const forgetStreamCopy = (db: D1Database, teamId: string, copy: StreamCopy) => db.batch([
+	db.prepare("INSERT INTO stream_uid_teams (uid, team_id) VALUES (?, ?) ON CONFLICT (uid) DO NOTHING").bind(copy.uid, teamId),
+	db.prepare(`UPDATE ${copy.kind === "clip" ? "clips" : "videos"} SET stream_uid = NULL WHERE team_id = ? AND id = ? AND stream_uid = ?`)
+		.bind(teamId, copy.id, copy.uid),
+]);
 
 /** Originals (or unfinished uploads) the team's videos still have in R2. */
 export async function originalsLeft(db: D1Database, teamId: string, limit: number): Promise<Array<{ id: number; r2Key: string; r2UploadId: string | null }>> {
@@ -70,6 +73,8 @@ export async function deleteLeftovers(db: D1Database, teamId: string): Promise<b
 		db.prepare(`UPDATE admin_log SET team_code = (SELECT code FROM teams WHERE id = ?1), team_season = (SELECT season_start FROM teams WHERE id = ?1),
 			team_id = NULL WHERE team_id = ?1 AND ${NOTHING_LEFT}`).bind(teamId),
 		db.prepare(`DELETE FROM cost_views WHERE team_id = ?1 AND ${NOTHING_LEFT}`).bind(teamId),
+		// Its uids stay known, as no team's: Costs' re-read of the months it watched in keeps them off the running teams.
+		db.prepare(`UPDATE stream_uid_teams SET team_id = 'gone' WHERE team_id = ?1 AND ${NOTHING_LEFT}`).bind(teamId),
 		db.prepare(`DELETE FROM cost_months WHERE team_id = ?1 AND ${NOTHING_LEFT}`).bind(teamId),
 		db.prepare(`DELETE FROM teams WHERE id = ?1 AND ${NOTHING_LEFT}`).bind(teamId),
 	]);
@@ -82,6 +87,11 @@ export interface DeletedRows { photos: number; clips: number; videos: number; ga
  * team marked deleted, all in one batch: all or nothing. Its media must be gone first. */
 export async function deleteTeamRows(db: D1Database, teamId: string, nowIso: string): Promise<DeletedRows> {
 	const results = await db.batch([
+		// Which team each of its Stream uids was, for Costs' minutes watched after its rows have gone: its live inputs
+		// (its videos' and clips' were kept as their copies went, forgetStreamCopy).
+		db.prepare(`INSERT INTO stream_uid_teams (uid, team_id) SELECT stream_uid, team_id FROM videos WHERE team_id = ?1 AND stream_uid IS NOT NULL
+			UNION SELECT stream_uid, team_id FROM clips WHERE team_id = ?1 AND stream_uid IS NOT NULL
+			UNION SELECT live_input_uid, team_id FROM live_streams WHERE team_id = ?1 ON CONFLICT (uid) DO NOTHING`).bind(teamId),
 		...CHILD_ROWS.map((table) => db.prepare(`DELETE FROM ${table} WHERE team_id = ?`).bind(teamId)),
 		...leftovers(db, teamId),
 		db.prepare("UPDATE videos SET deleted_at = COALESCE(deleted_at, ?), deleted_reason = COALESCE(deleted_reason, 'retention'), purge_after = NULL WHERE team_id = ?").bind(nowIso, teamId),
@@ -91,7 +101,8 @@ export async function deleteTeamRows(db: D1Database, teamId: string, nowIso: str
 		db.prepare(`SELECT (SELECT COUNT(*) FROM videos WHERE team_id = ?1) AS videos, (SELECT COUNT(*) FROM games WHERE team_id = ?1) AS games,
 			(SELECT COUNT(*) FROM members WHERE team_id = ?1) AS people`).bind(teamId),
 	]);
-	const changed = (i: number) => results[i]?.meta.changes ?? 0;
+	// After the uids' line: the child tables, then the leftovers' videos, games and people.
+	const changed = (i: number) => results[i + 1]?.meta.changes ?? 0;
 	const kept = (results.at(-1)?.results?.[0] ?? { videos: 0, games: 0, people: 0 }) as DeletedRows["kept"];
 	const at = CHILD_ROWS.length;
 	return { photos: changed(CHILD_ROWS.indexOf("photos")), clips: changed(CHILD_ROWS.indexOf("clips")), videos: changed(at), games: changed(at + 1), people: changed(at + 2), kept };
