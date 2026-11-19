@@ -25,6 +25,8 @@ export interface Video {
 	joinTries: number;
 	joinTriedAt: string | null;
 	joinFailedAt: string | null;
+	/** When a Go live recording Stream refused was sent to be repaired (live/repair-service.ts); null if never. */
+	repairTriedAt: string | null;
 }
 
 interface VideoRow {
@@ -32,10 +34,11 @@ interface VideoRow {
 	r2_upload_id: string | null; original_name: string | null; original_bytes: number | null; duration_seconds: number | null;
 	failure_reason: string | null; uploaded_by: number | null; delete_after: string; created_at: string; hd_ready_at: string | null;
 	hd_failed_at: string | null; processing_at: string | null; join_tries: number; join_tried_at: string | null; join_failed_at: string | null;
+	repair_tried_at: string | null;
 }
 
 const COLUMNS = `id, team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes,
-	duration_seconds, failure_reason, uploaded_by, delete_after, created_at, hd_ready_at, hd_failed_at, processing_at, join_tries, join_tried_at, join_failed_at`;
+	duration_seconds, failure_reason, uploaded_by, delete_after, created_at, hd_ready_at, hd_failed_at, processing_at, join_tries, join_tried_at, join_failed_at, repair_tried_at`;
 const ACTIVE = "team_id = ? AND deleted_at IS NULL";
 
 const toVideo = (r: VideoRow): Video => ({
@@ -43,7 +46,7 @@ const toVideo = (r: VideoRow): Video => ({
 	r2UploadId: r.r2_upload_id, originalName: r.original_name, originalBytes: r.original_bytes,
 	durationSeconds: r.duration_seconds, failureReason: r.failure_reason, uploadedBy: r.uploaded_by,
 	deleteAfter: r.delete_after, createdAt: r.created_at, hdReadyAt: r.hd_ready_at, hdFailedAt: r.hd_failed_at, processingAt: r.processing_at,
-	joinTries: r.join_tries, joinTriedAt: r.join_tried_at, joinFailedAt: r.join_failed_at,
+	joinTries: r.join_tries, joinTriedAt: r.join_tried_at, joinFailedAt: r.join_failed_at, repairTriedAt: r.repair_tried_at,
 });
 
 async function one(db: D1Database, where: string, ...params: unknown[]): Promise<Video | null> {

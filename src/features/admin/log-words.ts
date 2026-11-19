@@ -10,6 +10,9 @@ import { activityWords } from "./log-activity.ts";
 import { EVENTS, type LogEvent, type LogKind } from "./log-events.ts";
 import { photoWords, problemWords } from "./log-photos.ts";
 
+// A repaired recording's line (live/join-service.ts) says so, in place of "joined the parts".
+const REPAIRED = "Stream refused it, so the joiner copied it";
+
 /** A line of the Log, from any source, to sort together. A run of photo lines is one (log-photos.ts): `n` of them, the
  * oldest at `from`. */
 export type LogEntry = { at: string; admin: AdminLogLine; n?: number; from?: string } | { at: string; signIn: SignInLogLine } | { at: string; activity: ActivityLogLine }
@@ -68,7 +71,7 @@ const WHAT: Record<AdminAction, (t: string, d: string, line: AdminLogLine) => st
 	live_test: (t, d) => `had the live stream of ${t}'s game ${d}, so it was thrown away as a test`,
 	live_saved: (t, d) => `saved the live stream of ${t}'s game ${d}`,
 	live_continued: (t, d) => `carried on the live stream of ${t}'s game ${d}`,
-	video_joined: (t, d) => `joined the parts of ${t}'s game ${d}`,
+	video_joined: (t, d) => `${d.includes(REPAIRED) ? "repaired the recording of" : "joined the parts of"} ${t}'s game ${d}`,
 	join_failed: (t, d) => `couldn't join the parts of ${t}'s game ${d}`,
 	first_part_kept: (t, d) => `kept the first part of ${t}'s game ${d}`,
 	photo_added: (t, _d, l) => photoWords(l, t), photo_deleted: (t, _d, l) => photoWords(l, t), photo_kept: (t, _d, l) => photoWords(l, t),

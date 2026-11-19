@@ -10,14 +10,17 @@ import type { TeamDeps } from "../../app/deps.ts";
 import type { JoinAnswer } from "../../platform/joiner.ts";
 import type { StoredObject } from "../../platform/r2-originals.ts";
 import { runEach } from "../../shared/run-each.ts";
+import { record } from "../activity/activity-service.ts";
 import { setAlert } from "../admin/alerts-service.ts";
 import { logProblem } from "../admin/problem-log.ts";
 import { requestStreamCopy } from "../videos/upload-finish.ts";
-import { countJoinTry, setJoinFailed } from "../videos/video-writes-repository.ts";
+import { ticketFailedVideo } from "../videos/failed-video-ticket.ts";
+import { countJoinTry, markRepairFailed, setJoinFailed } from "../videos/video-writes-repository.ts";
 import type { Video } from "../videos/videos-repository.ts";
 import { withoutLinkQueries } from "../../shared/redact.ts";
 import { logLive } from "./live-log.ts";
 import { joinedKey, listSegments, replaceSegmentsWith } from "./recording-segments-repository.ts";
+import { isRepairing, repairedKey } from "./repair-service.ts";
 
 export const JOIN_TRIES = 6;
 const TRY_AGAIN_MS = 10 * 60_000;
@@ -25,26 +28,40 @@ const TRY_AGAIN_MS = 10 * 60_000;
 const LINK_TTL_SECONDS = 2 * 3600;
 
 async function gaveUp(deps: TeamDeps, video: Video, parts: number, reason: string): Promise<void> {
+	// A repair that didn't work: the video fails as any does, Stream's reason first, with its ticket and its Log lines
+	// (there's no first part to keep).
+	if (isRepairing(video)) {
+		const why = `${video.failureReason ?? "Stream couldn't process it."} It couldn't be repaired: ${reason}`.slice(0, 300);
+		if (!(await markRepairFailed(deps.db, deps.team.id, video.id, video.r2Key!, why))) return;
+		console.error(JSON.stringify({ event: "video_repair_failed", teamId: deps.team.id, videoId: video.id, gameId: video.gameId, reason }));
+		await record(deps, { kind: "video_failed", gameId: video.gameId, memberId: video.uploadedBy, detail: why });
+		await logProblem(deps, { kind: "stream_problem", teamId: deps.team.id, what: "A Go live recording Stream refused couldn't be repaired by the joiner: it's failed", detail: reason });
+		return ticketFailedVideo(deps, video, why);
+	}
 	await setJoinFailed(deps.db, deps.team.id, video.id, deps.now().toISOString());
 	await logProblem(deps, { kind: "stream_problem", teamId: deps.team.id, what: "A streamed game's parts couldn't be joined (its team manager is offered Keep the first part)", detail: reason });
 	await logLive(deps, null, "join_failed", video.gameId, `${parts} parts, ${JOIN_TRIES} tries: ${reason}`.slice(0, 300));
 	await setAlert(deps, "joiner", "urgent", `A game's video couldn't be joined after ${JOIN_TRIES} tries: ${reason}`.slice(0, 300));
 }
 
-/** The joined file is in R2: it's the video's original now, the segments go, and Stream is asked for its copy. */
+/** The joined file is in R2: it's the video's original now, the segments go, and Stream is asked for its copy. A
+ * repaired one keeps the file Stream refused until the repaired copy plays (or the video is deleted), in case the
+ * repair is no better. */
 async function finish(deps: TeamDeps, video: Video, keys: string[], written: StoredObject): Promise<void> {
+	const repair = isRepairing(video);
 	await replaceSegmentsWith(deps.db, deps.team.id, video.id, written.key);
-	for (const k of keys) await deps.originals.remove(k);
+	if (!repair) for (const k of keys) await deps.originals.remove(k);
 	const minutes = video.joinTriedAt ? Math.round((Date.parse(written.uploaded) - Date.parse(video.joinTriedAt)) / 60_000) : NaN;
 	const took = minutes >= 0 ? `, ${Math.max(1, minutes)} min` : "";
-	await logLive(deps, null, "video_joined", video.gameId, `${keys.length} parts joined into one video (${Math.round(written.size / 1e6)} MB${took})`);
+	const size = `${Math.round(written.size / 1e6)} MB${took}`;
+	await logLive(deps, null, "video_joined", video.gameId, repair ? `Stream refused it, so the joiner copied it into a fresh file and sent it again (${size})` : `${keys.length} parts joined into one video (${size})`);
 	await requestStreamCopy(deps, { ...video, r2Key: written.key, status: "processing", r2UploadId: null });
 }
 
 /** One waiting video's turn. True once its joined file is the video. */
 async function joinOne(deps: TeamDeps, video: Video): Promise<boolean> {
 	const keys = [video.r2Key!, ...(await listSegments(deps.db, deps.team.id, video.id)).map((s) => s.r2Key)];
-	const output = joinedKey(video.r2Key!);
+	const output = isRepairing(video) ? repairedKey(video.r2Key!) : joinedKey(video.r2Key!);
 	const stored = async () => (await deps.originals.list(output)).find((o) => o.key === output && o.size > 0);
 	const written = await stored();
 	if (written) {

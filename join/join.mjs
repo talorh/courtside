@@ -10,11 +10,12 @@ import { Readable } from "node:stream";
 // once, each about the segments' sum.
 const MOST_BYTES = 3 * 1024 ** 3;
 
-/** A request's fields, checked: at least two https (or, for the self-test, file:) segments, an https output, mp4 or
- * webm. `start` false only asks how a join already begun went. */
+/** A request's fields, checked: one or more https (or, for the self-test, file:) segments (one is a repair: a recording
+ * Stream refused, copied into a fresh file), an https output, mp4 or webm. `start` false only asks how a join already
+ * begun went. */
 export function parseJoinRequest(body, { allowFiles = false } = {}) {
 	const segments = Array.isArray(body?.segments) ? body.segments : [];
-	if (segments.length < 2) throw new Error("at least two segments are needed");
+	if (segments.length < 1) throw new Error("at least one segment is needed");
 	const ok = (s) => typeof s === "string" && (s.startsWith("https://") || (allowFiles && s.startsWith("file:")));
 	if (!segments.every(ok)) throw new Error("every segment must be an https link");
 	if (body.output !== "" && (typeof body.output !== "string" || !body.output.startsWith("https://"))) throw new Error("the output must be an https link");

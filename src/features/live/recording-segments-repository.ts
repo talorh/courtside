@@ -68,3 +68,9 @@ export async function replaceSegmentsWith(db: D1Database, teamId: string, videoI
 	]);
 	assertChanged(video!, "video");
 }
+
+/** Whether the video is a Go live recording from the phone's camera (an external app's stream isn't one of its files). */
+export async function isGoLiveRecording(db: D1Database, teamId: string, videoId: number): Promise<boolean> {
+	return (await db.prepare("SELECT 1 AS n FROM live_streams WHERE team_id = ? AND recording_video_id = ? AND source = 'camera' LIMIT 1")
+		.bind(teamId, videoId).first<number>("n")) !== null;
+}

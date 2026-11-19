@@ -3,6 +3,7 @@ import { addDays } from "../../shared/time.ts";
 import { deleteClipsForVideo } from "../clips/clips-service.ts";
 import { joinDealtWith } from "../live/join-alert.ts";
 import { deleteSegmentRows, listSegments } from "../live/recording-segments-repository.ts";
+import { refusedKey } from "../live/repair-service.ts";
 import { softDeleteVideo } from "./video-writes-repository.ts";
 import type { Video } from "./videos-repository.ts";
 
@@ -43,4 +44,6 @@ export async function purgeMedia(deps: TeamDeps, video: Video, o: { keepOriginal
 	if (video.streamUid) await deps.stream.deleteVideo(video.streamUid);
 	if (video.r2Key && video.r2UploadId) await deps.originals.abort(video.r2Key, video.r2UploadId);
 	else if (video.r2Key) await deps.originals.remove(video.r2Key);
+	// A repaired recording: the file Stream refused, kept beside it until it played, goes too.
+	if (video.repairTriedAt && video.r2Key?.includes(".repaired.")) await deps.originals.remove(refusedKey(video.r2Key));
 }

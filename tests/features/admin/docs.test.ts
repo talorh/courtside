@@ -118,7 +118,7 @@ describe("the admin area's Documentation", () => {
 		const html = await page();
 		const sections: Record<string, string[]> = {
 			overview: ["courtside-join", "Cloudflare Containers"],
-			cloudflare: ["Cloudflare Containers", "standard-1", "4 GiB of memory", "8 GB of disk", "sleeps after ten quiet minutes", "JOINER"],
+			cloudflare: ["Cloudflare Containers", "standard-1", "4 GiB of memory", "8 GB of disk", "sleeps after thirty quiet minutes", "JOINER"],
 			video: ["<h3>If the page closes mid-game</h3>", "<h3>How the parts become one video</h3>", "Carry on streaming", "Cloudflare Containers", "about ten minutes longer",
 				"golive-kept.js", "recording_segments", "Keep the first part", "tried again every ten minutes", "read back from R2", "video_joined"],
 			jobs: ["<th scope=\"row\">Joins</th>", "<th scope=\"row\">The video joiner</th>", "two small test files", "join given up on after six tries", "<h3>The game check</h3>", "150 minutes free for each game checked", "8 hours before each game's tip-off"],

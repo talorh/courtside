@@ -51,6 +51,8 @@ describe("the Users page", () => {
 		expect(await get(deps, "/admin/users?sort=seen")).toContain('aria-sort="descending"><a href="/admin/users?sort=seen&amp;dir=desc">Last seen<span aria-hidden="true"> ▼</span></a>');
 		expect(page).toMatch(/<label>Sort by<select name="sort">[^]*?<option value="email" selected>Email<\/option>/);
 		expect(page).toMatch(/<label>Order<select name="dir"><option value="asc">Usual<\/option><option value="desc" selected>Reversed<\/option><\/select><\/label>/);
+		// Last seen says when, to the minute, the club's time: 11am yesterday.
+		expect(await get(deps, "/admin/users?q=steph")).toContain('<td class="u-seen">Yesterday, 11:00am</td>');
 		// Each row says whether that team's been opened.
 		await deps.db.prepare("UPDATE members SET last_seen_at = NULL WHERE email = 'steph@example.com' AND team_id = ?").bind(G14_5.id).run();
 		expect(await get(deps, "/admin/users?q=steph")).toMatch(/Saints G14\.5<\/td><td class="u-role">Watch and film<\/td><td class="u-seen">Hasn&#39;t opened this team yet/);

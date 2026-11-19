@@ -5,7 +5,8 @@ import { Container, type StopParams } from "@cloudflare/containers";
 
 export class Joiner extends Container {
 	defaultPort = 8080;
-	sleepAfter = "10m";
+	// Asleep after 30 minutes with no ask: a long re-encode outlives two late 5-minute runs in a row.
+	sleepAfter = "30m";
 
 	// The container's stops and failures as lines in this Worker's logs (the library's own is a plain "Container error").
 	// Going to sleep is a signal; exiting by itself, other than cleanly, is a crash.

@@ -334,6 +334,13 @@ sequenceDiagram
  good default), and each frame below zero takes the default, else that, the size unchanged, before it's kept on the
  phone or sent. A box split across two pieces waits for the rest (16 MB at most); anything it can't read goes on
  unchanged, and a piece that fails never stops the ones after it.
+ A Go live recording Stream still refuses is repaired once (`live/repair-service.ts`): `repair_tried_at` is set, its
+ refused copy deleted and the video is processing again with no Stream copy, so the 5-minute job's join step asks the
+ joiner for it as one part into `<key>.repaired.mp4` (the transport stream's copy gives it one clock again), then asks
+ Stream for that; the refused file stays in R2 until the repaired copy plays or the video is deleted. Both writes are
+ guarded (`startRepairWrite`, `markCopyFailed`, `markRepairFailed`), so two runs at once can't fail it and repair it
+ too. Refused again, or the repair given up after its six tries, it fails with Stream's reason, its ticket and its
+ `video_failed` line (no Keep the first part: there's no first part).
 - **Pause** (`golive-pause.js`): `MediaRecorder.pause`, so the break is left out of the file. The live picture
  switches to a canvas card (`golive-slate.js`, redrawn each second so viewers' players don't think it has stalled) and
  silence.
@@ -1110,7 +1117,7 @@ erDiagram
 | playhq_fixtures | team_id, competition (the league or Tournament), playhq_team_id, url, name, auto_check, game_count, checked_at, last_error, no_video | Hard delete on Remove (its games stay) |
 | recording_segments | team_id, video_id, n (2 up), r2_key, r2_upload_id (NULL once complete), created_at, completed_at: a carried-on recording's later segments; videos also carry join_tries, join_tried_at, join_failed_at |
 | live_streams | team_id, game_id, live_input_uid, started_by, status (open/saved/cancelled), source (camera/app), last_live_at, end_requested_at, end_kept_minutes (minutes still only on the phone at End game, as its page said), recording_video_id, cancel_reason, created_at, finished_at | One open per game (unique index); a test's row is reopened for the next Go live, with its input; closed rows are kept. started_by is whoever's phone is streaming (set when it starts; until then whoever opened Go live for the game) |
-| videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after, hd_ready_at, hd_failed_at, processing_at | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
+| videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after, hd_ready_at, hd_failed_at, processing_at, join_tries, join_tried_at, join_failed_at, repair_tried_at (a Go live recording Stream refused, sent to be repaired once) | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
 | downloads | team_id, video_id, member_id, kind (hd/original), created_at | Audit log, hard-deleted after 2 years |
 | media_downloads | team_id, member_id, kind (photo/clip), item_id (no foreign key: the log outlives the photo or clip), name (the file it came as), created_at | The download log's other half: every photo (each in a zip too) and clip downloaded, with who took it; kept two years, and its people with it when the team is deleted, as `downloads` keeps its own |
 | removal_requests | team_id, video_id, member_id, reason, status (open/video_deleted/kept), note, resolved_by, resolved_at | Kept |

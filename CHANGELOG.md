@@ -10,6 +10,9 @@ Builds) sends the top line, in plain words, as its message.
 
 ## 19 Nov 2026
 
+- [Feature] **Go live:** A Go live recording that Stream can't process is now repaired once by the video joiner, copied into a fresh file and sent to Stream again, before it's failed. Build the joiner's image again with npm run join -- image.
+- [Enhancement] **Users:** Last seen now says the time as well as the day.
+- [Fix] **Insights:** Fixed an issue where an upload that failed still raised the Uploads failed warning after it was deleted or replaced.
 - [Fix] **Go live:** Fixed an issue where ending a game while the camera had stopped or during a pause could make the whole game's video fail to process, as the iPhone wrote a frame with an impossible length; the phone now puts every such frame right before the recording is kept or sent.
 - [Fix] **Go live:** Fixed an issue where footage left on a phone overnight after Save couldn't be sent once its upload link had run out, and End game after Carry on didn't count what an earlier part still had to send.
 - [Fix] **Videos:** Fixed an issue where a video that failed to process lost its original as soon as the game's video was replaced; the original is now kept until 30 days after its upload, so the game can still be saved.

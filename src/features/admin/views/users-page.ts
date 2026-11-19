@@ -5,6 +5,7 @@
 import type { AdminFrame } from "../../../app/admin-router.ts";
 import { ROLE_LABELS, ROLES } from "../../../auth/permissions.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";
+import { formatClock, localTime } from "../../../shared/time.ts";
 import { notice, selectOptions } from "../../../ui/components.ts";
 import { confirmButton } from "../../../ui/confirm.ts";
 import type { Lock } from "../../../auth/locks-repository.ts";
@@ -36,6 +37,9 @@ function labeller(rows: UserRow[]): (t: { code: string; seasonStart: number }) =
 	for (const r of rows) seasons.set(r.code, (seasons.get(r.code) ?? new Set()).add(r.seasonStart));
 	return (t) => teamLabel(t, { season: (seasons.get(t.code)?.size ?? 0) > 1 });
 }
+
+/** "Today, 6:05pm", "Yesterday, 9:10am" or "Wed 18 Nov 2026, 9:10am", the club's time. */
+const seenAt = (iso: string, now: Date) => `${lastUsed(iso, now)}, ${formatClock(localTime(new Date(iso)).slice(11, 16))}`;
 
 const SORTS: Array<[UserSort, string]> = [["name", "Name"], ["email", "Email"], ["team", "Team"], ["role", "Role"], ["seen", "Last seen"]];
 
@@ -80,7 +84,7 @@ function actions(r: UserRow, you: string, label: (t: UserRow) => string): SafeHt
 function row(r: UserRow, p: Shown): SafeHtml {
 	const tags = [r.locked && html`<span class="t warn">Locked</span>`, r.isAdmin && html`<span class="t src">Site admin</span>`, r.teamStatus !== "active" && html`<span class="t">Season over</span>`].filter(Boolean);
 	return html`<tr${r.locked ? html` class="locked"` : ""}><td class="u-name"><b>${r.name || "No name"}</b></td><td class="u-email">${r.email}</td>
-<td class="u-team">${p.label(r)}</td><td class="u-role">${ROLE_LABELS[r.role]}</td><td class="u-seen">${r.lastSeenAt ? lastUsed(r.lastSeenAt, p.now) : "Hasn't opened this team yet"}</td>
+<td class="u-team">${p.label(r)}</td><td class="u-role">${ROLE_LABELS[r.role]}</td><td class="u-seen">${r.lastSeenAt ? seenAt(r.lastSeenAt, p.now) : "Hasn't opened this team yet"}</td>
 <td class="u-acts"><span class="u-tags">${tags}</span>${actions(r, p.you, p.label)}</td></tr>`;
 }
 

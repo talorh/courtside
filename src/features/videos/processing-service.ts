@@ -4,11 +4,12 @@ import { record } from "../activity/activity-service.ts";
 import { dropShortTest } from "../live/browser-live-stop.ts";
 import { ticketFailedVideo } from "./failed-video-ticket.ts";
 import { requestStreamCopy } from "./upload-finish.ts";
-import { dropStreamCopy, markFailed, markHdFailed, markHdReady, markReady } from "./video-writes-repository.ts";
+import { dropStreamCopy, markCopyFailed, markFailed, markHdFailed, markHdReady, markReady } from "./video-writes-repository.ts";
 import { listVideosAwaitingHd, listVideosByStatus, type Video } from "./videos-repository.ts";
 import { logProblem } from "../admin/problem-log.ts";
 import { videosWithSegments } from "../live/recording-segments-repository.ts";
 import { joinRecordings } from "../live/join-service.ts";
+import { isRepairing, refusedKey, tryRepair } from "../live/repair-service.ts";
 
 // A run has 200 outside calls for every step and every team (src/index.ts); each video costs up to 3.
 const BATCH = 12;
@@ -25,7 +26,9 @@ const OWN_ASK_MS = 2 * 60_000;
 export async function retryStreamCopies(deps: TeamDeps) {
 	const asking = (v: Video) => v.processingAt !== null && deps.now().getTime() - Date.parse(v.processingAt) < OWN_ASK_MS;
 	const uncopied = (await listVideosByStatus(deps.db, deps.team.id, "processing")).filter((v) => !v.streamUid && !asking(v));
+	// A recording sent to be repaired joins as one part (live/repair-service.ts).
 	const joining = uncopied.length ? await videosWithSegments(deps.db, deps.team.id) : new Set<number>();
+	for (const v of uncopied) if (isRepairing(v)) joining.add(v.id);
 	const pending = uncopied.filter((v) => !joining.has(v.id)).slice(0, BATCH);
 	const result = await runEach(pending, (video) => requestStreamCopy(deps, video), (v) => ({ videoId: v.id, gameId: v.gameId }));
 	const joins = await joinRecordings(deps, uncopied.filter((v) => joining.has(v.id)));
@@ -56,11 +59,18 @@ async function advance(deps: TeamDeps, video: Video, counts: { ready: number; fa
 		const duration = state.durationSeconds >= 0 ? state.durationSeconds : null;
 		if (duration !== null && await dropShortTest(deps, video, duration)) return;
 		await markReady(deps.db, deps.team.id, video.id, duration);
+		// A repaired recording plays: the file Stream refused is no use now.
+		if (video.repairTriedAt && video.r2Key?.includes(".repaired.")) {
+			await deps.originals.remove(refusedKey(video.r2Key)).catch((err: unknown) => console.warn(JSON.stringify({ event: "refused_file_kept", teamId: deps.team.id, videoId: video.id, error: String(err) })));
+		}
 		counts.ready++;
 		await record(deps, { kind: "video_ready", gameId: video.gameId, memberId: video.uploadedBy });
 		await requestHd(deps, uid, { videoId: video.id });
 	} else if (state.state === "error") {
-		await markFailed(deps.db, deps.team.id, video.id, state.errorReason || "Stream could not process this video");
+		const reason = state.errorReason || "Stream could not process this video";
+		if (await tryRepair(deps, video, uid, reason)) return;
+		// Another run may have got there first: only the one that failed it says so.
+		if (!(await markCopyFailed(deps.db, deps.team.id, video.id, uid, reason))) return;
 		console.error(JSON.stringify({ event: "video_failed", teamId: deps.team.id, videoId: video.id, gameId: video.gameId, streamUid: uid, reason: state.errorReason }));
 		counts.failed++;
 		await record(deps, { kind: "video_failed", gameId: video.gameId, memberId: video.uploadedBy, detail: state.errorReason || null });

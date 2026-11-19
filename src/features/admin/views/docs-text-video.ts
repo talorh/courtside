@@ -88,6 +88,12 @@ the phone recorded. Parts that aren't H.264 (a browser that records VP8, as Fire
 the other instead, still copied. WebM parts whose picture is H.264, as some Android browsers record, are copied into a
 Matroska file, which Stream reads the same way. Only when the parts don't line up for a copy (a different size or
 codec partway through, say) is the video encoded again, as a fallback, so the join still makes one video.</li>
+<li><b>A recording Stream refuses is repaired once.</b> If Stream can't process a Go live recording (the iPhone can write
+a frame with an impossible length, which makes Stream read the video as days long), the joiner copies it, as one part,
+into a fresh file, and Stream is asked again: the Log's Problems says so, and the ${code("video_joined")} line says it was
+repaired. The file Stream refused is kept until the repaired copy plays (or the video is deleted). Refused again, or
+not repaired, the video fails as any does, Stream's reason first, with its ticket for the admins and its line in the
+Log. An upload, a phone's own file, isn't repaired.</li>
 <li><b>Every team gets its turn.</b> The joiner runs one join at a time for every team. Those waiting take turns by
 team, so one team's games can't hold up another's, and each starts with the newest links the site sent.</li>
 <li><b>Each part is read only as video.</b> ffmpeg reads every part as the recording's own kind of file (MP4 or WebM),

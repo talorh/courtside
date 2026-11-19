@@ -45,6 +45,28 @@ export const markReady = (db: D1Database, teamId: string, id: number, durationSe
 export const markFailed = (db: D1Database, teamId: string, id: number, reason: string) =>
 	update(db, "UPDATE videos SET status = 'failed', failure_reason = ? WHERE team_id = ? AND id = ?", [reason, teamId, id]);
 
+/** Sent to be repaired (live/repair-service.ts): processing again with no Stream copy, its join bookkeeping fresh,
+ * Stream's `reason` kept. Only from the processing copy Stream refused, and only once: true if this ask did it. */
+export async function startRepairWrite(db: D1Database, teamId: string, id: number, uid: string, reason: string, nowIso: string): Promise<boolean> {
+	return (await db.prepare(`UPDATE videos SET stream_uid = NULL, failure_reason = ?, repair_tried_at = ?, join_tries = 0, join_tried_at = NULL,
+		join_failed_at = NULL WHERE team_id = ? AND id = ? AND stream_uid = ? AND status = 'processing' AND deleted_at IS NULL AND repair_tried_at IS NULL`)
+		.bind(reason, nowIso, teamId, id, uid).run()).meta.changes > 0;
+}
+
+/** A repair given up (live/join-service.ts): failed, true if this ask did it. Only while the video is still on the file
+ * Stream refused (`r2Key`): another run that has just finished the repair has moved it on, and it isn't failed. */
+export async function markRepairFailed(db: D1Database, teamId: string, id: number, r2Key: string, reason: string): Promise<boolean> {
+	return (await db.prepare(`UPDATE videos SET status = 'failed', failure_reason = ? WHERE team_id = ? AND id = ? AND status = 'processing'
+		AND stream_uid IS NULL AND repair_tried_at IS NOT NULL AND r2_key = ?`).bind(reason, teamId, id, r2Key).run()).meta.changes > 0;
+}
+
+/** Stream refused the copy `uid` the video is processing on: failed, true if this ask did it (another run, or a
+ * repair begun, got there first otherwise). */
+export async function markCopyFailed(db: D1Database, teamId: string, id: number, uid: string, reason: string): Promise<boolean> {
+	return (await db.prepare("UPDATE videos SET status = 'failed', failure_reason = ? WHERE team_id = ? AND id = ? AND stream_uid = ? AND status = 'processing'")
+		.bind(reason, teamId, id, uid).run()).meta.changes > 0;
+}
+
 /** Fails with a UNIQUE constraint error if the target game already has a video. */
 export const moveVideo = (db: D1Database, teamId: string, id: number, gameId: number) =>
 	update(db, "UPDATE videos SET game_id = ? WHERE team_id = ? AND id = ? AND deleted_at IS NULL", [gameId, teamId, id]);

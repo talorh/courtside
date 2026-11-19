@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, statSync, symlinkSync } from "node:fs";
+import { existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -12,11 +12,20 @@ import { concatArgs, joinSegments, muxArgs, runFailed, tooSmall, tsArgs, why } f
 
 const COMMON = ["-hide_banner", "-loglevel", "error", "-y", "-protocol_whitelist", "file,https,tls,tcp,pipe", "-fflags", "+discardcorrupt"];
 
+describe("the joiner's container", () => {
+	// It stays up while asked: a long re-encode outlives two late 5-minute runs in a row.
+	it("sleeps only after 30 minutes with no ask", () => {
+		expect(readFileSync("join/index.ts", "utf8")).toMatch(/sleepAfter = "30m";/);
+	});
+});
+
 describe("the joiner's request", () => {
 	it("reads a request and refuses a bad one", () => {
 		expect(parseJoinRequest({ segments: ["https://a/1", "https://a/2"], output: "https://a/out", container: "mp4" })).toEqual({ segments: ["https://a/1", "https://a/2"], output: "https://a/out", container: "mp4", start: true });
 		expect(parseJoinRequest({ segments: ["https://a/1", "https://a/2"], output: "https://a/out", container: "mp4", start: false }).start).toBe(false);
-		expect(() => parseJoinRequest({ segments: ["https://a/1"], output: "https://a/out", container: "mp4" })).toThrow("at least two segments");
+		// One part is a repair: a recording Stream refused, copied into a fresh file.
+		expect(parseJoinRequest({ segments: ["https://a/1"], output: "https://a/out", container: "mp4" }).segments).toEqual(["https://a/1"]);
+		expect(() => parseJoinRequest({ segments: [], output: "https://a/out", container: "mp4" })).toThrow("at least one segment");
 		expect(() => parseJoinRequest({ segments: ["http://a/1", "https://a/2"], output: "https://a/out", container: "mp4" })).toThrow("https");
 		expect(() => parseJoinRequest({ segments: ["file:/app/a.mp4", "file:/app/b.mp4"], output: "", container: "mp4" })).toThrow("https");
 		expect(parseJoinRequest({ segments: ["file:/app/a.mp4", "file:/app/b.mp4"], output: "", container: "mp4" }, { allowFiles: true }).output).toBe("");
@@ -148,6 +157,26 @@ describe.skipIf(!hasFfmpeg)("the join itself", () => {
 		expect(probe(out)).toBeGreaterThan(4.5);
 		expect(probe(out)).toBeLessThan(5.5);
 		expect(execFileSync("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name", "-of", "csv=p=0", out], { encoding: "utf8" }).trim()).toBe("vp9");
+	}, 60_000);
+	// A repair: Safari's fragmented MP4 with a default frame length below zero in its last fragment reads as days long,
+	// and Stream refuses it; copied through the joiner as one part, it comes out its own length.
+	it.skipIf(!hasX264)("repairs one fragmented MP4 whose last fragment's frame length is below zero, as Safari writes it", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "join-test-"));
+		const bad = join(dir, "live.mp4"), out = join(dir, "live.repaired.mp4");
+		execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "testsrc=duration=3:size=160x120:rate=10", "-f", "lavfi", "-i", "sine=duration=3",
+			"-c:v", "libx264", "-g", "10", "-c:a", "aac", "-movflags", "frag_keyframe+empty_moov+default_base_moof", bad]);
+		// The video track's (id 1) last fragment header, whose runs carry no lengths of their own: its default is theirs.
+		const bytes = readFileSync(bad);
+		let at = bytes.length;
+		do at = bytes.lastIndexOf(Buffer.from("tfhd"), at - 1) - 4; while (bytes.readUInt32BE(at + 12) !== 1);
+		const flags = bytes.readUInt32BE(at + 8) & 0xffffff;
+		const spot = at + 16 + (flags & 0x01 ? 8 : 0) + (flags & 0x02 ? 4 : 0);
+		if (flags & 0x08) bytes.writeUInt32BE(2 ** 32 - 309, spot);
+		writeFileSync(bad, bytes);
+		expect(probe(bad)).toBeGreaterThan(1000);
+		const result = await joinSegments([`file:${bad}`], out, "mp4", [statSync(bad).size], dir);
+		expect(result).toMatchObject({ ok: true });
+		expect(probe(out)).toBeLessThan(5);
 	}, 60_000);
 	// Chrome's webm;codecs=h264 recording: H.264 in a Matroska file named .webm, which a WebM can't hold.
 	it.skipIf(!hasX264)("joins WebM segments whose picture is H.264 by stream copy into Matroska, never re-encoding it", async () => {
