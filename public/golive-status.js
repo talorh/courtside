@@ -2,12 +2,15 @@
 
 const mb = (bytes) => Math.round((bytes ?? 0) / 1e6);
 
-// A minute of recording (golive-rec.js: 2.5 Mbps picture, 128 kbps sound).
-const BYTES_A_MINUTE = (2_500_000 + 128_000) / 8 * 60;
+// A minute of recording at what golive-rec.js asks for (2.5 Mbps picture, 128 kbps sound): until the phone's own rate
+// is known (`bytesPerMinute`, after a minute of it), as phones record at their own (an iPhone's is nearer 4.5 Mbps).
+export const BYTES_A_MINUTE = (2_500_000 + 128_000) / 8 * 60;
 /** Whole minutes of the game recorded but not yet sent: on a weak signal they wait on the phone, lost if its page goes. */
 // After Carry on, what an earlier segment still has to send (earlierBytes) counts too, any part of a minute as one.
-export const onPhoneMinutes = (p) => Math.floor(Math.max((p?.recordedBytes ?? 0) - (p?.sentBytes ?? 0), p?.waitingBytes ?? 0) / BYTES_A_MINUTE)
-	+ Math.ceil((p?.earlierBytes ?? 0) / BYTES_A_MINUTE);
+export function onPhoneMinutes(p) {
+	const minute = p?.bytesPerMinute || BYTES_A_MINUTE;
+	return Math.floor(Math.max((p?.recordedBytes ?? 0) - (p?.sentBytes ?? 0), p?.waitingBytes ?? 0) / minute) + Math.ceil((p?.earlierBytes ?? 0) / minute);
+}
 // Below this the sending is keeping up, near enough.
 export const BEHIND_MINUTES = 2;
 

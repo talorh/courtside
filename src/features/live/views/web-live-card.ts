@@ -24,7 +24,8 @@ records again. The game saves as one video, without the minutes the page was clo
 moment; it can't carry on streaming. <b>Game still going?</b> Record the rest with the phone's Camera app and send it to
 ${ask} afterwards.</p>
 <p data-recover-other hidden><b>Your recording of this game isn't on this phone</b>: it was started on another phone or tab, or its
-start didn't finish. If nothing's filming it now, save what was recorded, or delete it and start again from here.</p>
+start didn't finish. Anything that phone hadn't sent yet is only on it, so save from that phone if you can. If nothing's
+filming it now, save what was recorded, or delete it and start again from here.</p>
 <button class="btn livebtn bigpick" type="button" data-act="continue" hidden>Carry on streaming</button>
 <button class="btn" type="button" data-act="save">Save what was recorded</button>
 <button class="btn quiet" type="button" data-act="discard">Delete it and start again</button>
@@ -32,7 +33,8 @@ start didn't finish. If nothing's filming it now, save what was recorded, or del
 What was recorded of this game is gone for good, and streaming starts again from nothing.</p>
 <button class="btn danger" type="button" data-act="discardyes">Yes, delete it</button>
 <button class="btn" type="button" data-act="discardno">Keep it</button></div>
-<p class="small" data-recover-msg role="status"></p></div>
+<p class="small" data-recover-msg role="status"></p>
+<progress data-recover-bar max="1" value="0" hidden></progress></div>
 <ol class="steps"><li>Phone <b>sideways</b> on the tripod, with <b>Portrait Orientation Lock off</b> (Android:
 <b>Auto-rotate</b> on). Tap <b>Start camera</b>, then <b>Allow</b> the camera and the microphone.</li>
 <li>Tap <b>Go live</b> during the warm-up. Phone still upright? It waits until you turn it sideways.
@@ -57,5 +59,7 @@ Only at the final buzzer: the stream can't be started again.</p>
 <button class="btn livebtn bigpick" type="button" data-act="camera" hidden>Start camera</button>
 <p class="small" data-msg role="status"></p>
 <noscript><p class="small">This needs JavaScript turned on in the browser.</p></noscript>
-<p class="small">Use <b>Safari</b> (or Chrome) on iPhone, <b>Chrome</b> on Android: not the Home Screen app. Uses 2 to 3 GB of mobile data a game. Plug into a power bank.</p></section>`;
+<p class="small">Use <b>Safari</b> (or Chrome) on iPhone, <b>Chrome</b> on Android: not the Home Screen app. Uses 2 to 3 GB of mobile data a game. Plug into a power bank.
+<b>Phones get hot</b> filming a whole game: take it out of its case, keep it out of the sun and turn the brightness down.
+Getting hot? Stop charging it until it cools.</p></section>`;
 }

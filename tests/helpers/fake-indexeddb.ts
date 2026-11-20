@@ -9,12 +9,21 @@ function request<T>(result: T) {
 	return req;
 }
 
-function objectStore(rows: Map<string, Row>) {
+type Hooks = { failGets: boolean; failDeletes: boolean };
+
+function objectStore(rows: Map<string, Row>, hooks: Hooks = { failGets: false, failDeletes: false }) {
 	const matching = (field: string, value: unknown) => [...rows.values()].filter((r) => r[field] === value);
 	return {
 		createIndex: () => {},
 		put: (row: Row) => request(void rows.set(row.k, row)),
-		delete: (k: string) => request(void rows.delete(k)),
+		delete: (k: string) => {
+			if (hooks.failDeletes) throw new DOMException("The database connection is closing.", "InvalidStateError");
+			return request(void rows.delete(k));
+		},
+		get: (k: string) => {
+			if (hooks.failGets) throw new DOMException("The database connection is closing.", "InvalidStateError");
+			return request(rows.get(k));
+		},
 		index: (field: string) => ({
 			getAll: (value: unknown) => request(matching(field, value)),
 			getAllKeys: (value: unknown) => request(matching(field, value).map((r) => r.k)),
@@ -23,15 +32,17 @@ function objectStore(rows: Map<string, Row>) {
 }
 
 /** `rows(name)`: what an object store holds now, in key order. `transactions`: the stores each transaction was opened
- * over, in order. */
+ * over, in order. `failGets`, `failDeletes`: every single-row read, or delete, fails, as when the browser lets go of
+ * its database part way. */
 export function fakeIndexedDb() {
 	const stores = new Map<string, Map<string, Row>>();
 	const transactions: string[][] = [];
+	const hooks: Hooks = { failGets: false, failDeletes: false };
 	const db = {
-		createObjectStore: (name: string) => { stores.set(name, new Map()); return objectStore(stores.get(name)!); },
+		createObjectStore: (name: string) => { stores.set(name, new Map()); return objectStore(stores.get(name)!, hooks); },
 		transaction: (names: string | string[]) => {
 			transactions.push([names].flat());
-			return { objectStore: (name: string) => objectStore(stores.get(name)!) };
+			return { objectStore: (name: string) => objectStore(stores.get(name)!, hooks) };
 		},
 	};
 	return {
@@ -41,6 +52,10 @@ export function fakeIndexedDb() {
 			return req;
 		},
 		transactions,
+		get failGets() { return hooks.failGets; },
+		set failGets(on: boolean) { hooks.failGets = on; },
+		get failDeletes() { return hooks.failDeletes; },
+		set failDeletes(on: boolean) { hooks.failDeletes = on; },
 		rows: (name: string) => [...(stores.get(name)?.values() ?? [])].sort((a, b) => a.k.localeCompare(b.k)),
 	};
 }

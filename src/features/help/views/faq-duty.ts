@@ -20,6 +20,7 @@ ${intro(h)}
 <b>Live stream</b> (from the Go live page, so families can watch from home) or <b>No video</b>.</li>
 <li><b>Before game day</b>, check you can see <b>Upload video</b> and <b>Go live</b> on ${CLUB.domain}. If not, ask
 ${h.c.ask}. Live streaming? Do a test at home first, under a minute, so it's thrown away.</li>
-<li><b>Bring</b> your phone (charged, a few GB free), a tripod and a power bank.</li>
+<li><b>Bring</b> your phone (charged, a few GB free), a tripod and a power bank. Take the phone out of its case for the
+game: phones get hot filming.</li>
 <li><b>At the game</b>, phone sideways, up high near halfway, so the whole court is in shot.</li>
 <li><b>That night</b>, check the game is in <b>Watch games</b>. If it isn't, let ${h.c.ask} know.</li></ol>`);

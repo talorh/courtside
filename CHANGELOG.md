@@ -8,6 +8,13 @@ was wrong), the area in bold, then a plain sentence saying what changed for the 
 where ..."). Every deploy adds its lines at the top of today's date, and the deploy (`npm run release`, then Workers
 Builds) sends the top line, in plain words, as its message.
 
+## 20 Nov 2026
+
+- [Fix] **Go live:** Fixed an issue where Save what was recorded could save a game without the minutes still on the filming phone: it sends them first, one part at a time, or saves nothing and says so if the phone's copy can't be read.
+- [Enhancement] **Go live:** Save what was recorded says "Checking what's on this phone…" at once, then shows a progress bar while it sends what the phone kept.
+- [Enhancement] **Go live:** The minutes of a game still only on the phone are counted at the phone's own recording rate.
+- [Enhancement] **Help:** How to stop the phone getting hot while filming a whole game, in Help and on the Go live page.
+
 ## 19 Nov 2026
 
 - [Feature] **Go live:** A Go live recording that Stream can't process is now repaired once by the video joiner, copied into a fresh file and sent to Stream again, before it's failed. Build the joiner's image again with npm run join -- image.

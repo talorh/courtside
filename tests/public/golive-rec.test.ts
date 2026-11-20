@@ -105,7 +105,46 @@ describe("Go live's recording at End game: the last piece is kept as a part of i
 		const parts = idb.rows("parts").map((r) => ({ n: r.n as number, blob: new Blob([r.bytes as ArrayBuffer]) }));
 		const tail = idb.rows("tail").map((r) => new Blob([r.bytes as ArrayBuffer]));
 		expect(Object.keys(note.etags)).toEqual(["1", "2", "3"]);
-		expect(recoveryPlan({ parts, tail }, note.etags, "video/mp4")).toEqual({ parts: [], tail: null, bytes: 0 });
+		expect(recoveryPlan({ parts, tail }, note.etags, "video/mp4", 1000)).toEqual({ parts: [], tail: null, bytes: 0 });
+	});
+});
+
+describe("Go live's recording: what a page reopened later needs to know", () => {
+	afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+
+	it("counts the recording's own rate, once it has a minute of it, and remembers it for the next page", async () => {
+		vi.useFakeTimers();
+		vi.stubGlobal("MediaRecorder", FakeRecorder);
+		vi.stubGlobal("indexedDB", fakeIndexedDb());
+		const notes = new Map<string, string>();
+		vi.stubGlobal("localStorage", { getItem: (k: string) => notes.get(k) ?? null, setItem: (k: string, v: string) => notes.set(k, v), removeItem: (k: string) => notes.delete(k) });
+		const seen: Array<{ bytesPerMinute?: number }> = [];
+		record({}, { videoId: 41, partSize: 8_000_000, mime: "video/mp4", gameId: 7 }, { onProgress: (p: { bytesPerMinute?: number }) => seen.push(p), hint: () => {}, onFatal: () => {} });
+		await vi.advanceTimersByTimeAsync(0);
+		const phone = FakeRecorder.made;
+		await vi.advanceTimersByTimeAsync(30_000);
+		phone.hand(1000);
+		await vi.advanceTimersByTimeAsync(0);
+		expect(seen.at(-1)?.bytesPerMinute).toBeUndefined(); // under a minute: too soon to say
+		await vi.advanceTimersByTimeAsync(90_000);
+		phone.hand(2000);
+		await vi.advanceTimersByTimeAsync(0);
+		expect(seen.at(-1)?.bytesPerMinute).toBe(1500); // 3,000 bytes in 2 minutes
+		expect(JSON.parse(notes.get("courtside-live:7")!).bytesPerMinute).toBe(1500);
+	});
+	it("notes whether the phone's storage is keeping the recording, for a page reopened later", async () => {
+		vi.stubGlobal("MediaRecorder", FakeRecorder);
+		const notes = new Map<string, string>();
+		vi.stubGlobal("localStorage", { getItem: (k: string) => notes.get(k) ?? null, setItem: (k: string, v: string) => notes.set(k, v), removeItem: (k: string) => notes.delete(k) });
+		vi.stubGlobal("indexedDB", fakeIndexedDb());
+		record({}, { videoId: 41, partSize: 8_000_000, mime: "video/mp4", gameId: 7 }, { onProgress: () => {}, hint: () => {}, onFatal: () => {} });
+		await new Promise((r) => setTimeout(r, 20));
+		expect(JSON.parse(notes.get("courtside-live:7")!).keeps).toBe(true);
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		vi.stubGlobal("indexedDB", { open: () => { throw new Error("storage didn't open"); } });
+		record({}, { videoId: 42, partSize: 8_000_000, mime: "video/mp4", gameId: 8 }, { onProgress: () => {}, hint: () => {}, onFatal: () => {} });
+		await new Promise((r) => setTimeout(r, 20));
+		expect(JSON.parse(notes.get("courtside-live:8")!).keeps).toBe(false);
 	});
 });
 

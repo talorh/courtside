@@ -58,7 +58,9 @@ parts to send), or after 12 quiet hours where End game said minutes of the game 
 mid-game with no End game, so a phone has the night to reach Wi-Fi or better signal. Each save's outcome is a ${code("live_save")} line in Workers Logs.</li>
 <li><b>What the closed page hadn't sent is kept.</b> What a page has recorded but not yet sent sits on the phone
 (IndexedDB, ${code("golive-store.js")}). The reopened page sends it while the game streams again, and keeps it through
-a second close too (${code("golive-kept.js")}).</li>
+a second close too (${code("golive-kept.js")}). It reads one part at a time, and Save shows a progress bar. If the
+phone's storage can't be read, Save saves nothing and says so, as saving would leave that footage behind
+(${code("golive-kept-read.js")}).</li>
 <li><b>Each start is its own part.</b> The recording after Carry on is a new part of the same video (a segment: a row
 in ${code("recording_segments")}, with its own upload in R2 beside the first). A game can have several.</li>
 <li><b>End game</b> completes every part. A part nothing reached R2 for is dropped, and if only one part has anything in

@@ -18,6 +18,11 @@ describe("the Saving panel's words", () => {
 		saving.progress({ totalParts: 40, uploadedParts: 20, waitingBytes: 200_000_000 });
 		expect(text.innerHTML).toBe("<b>Saving the video…</b> Keep this page open until it says Saved: about 10 minutes of the game are still only on this phone. 200 MB to go. On Wi-Fi it's quicker. Page closed before then? Open Go live on this phone again within 12 hours of End game and tap <b>Save what was recorded</b>: they're sent first.");
 	});
+	it("counts those minutes at the phone's own rate when it's known", () => {
+		const { saving, text } = panel();
+		saving.progress({ totalParts: 40, uploadedParts: 20, waitingBytes: 200_000_000, bytesPerMinute: 34_000_000 });
+		expect(text.innerHTML).toContain("about 5 minutes of the game are still only on this phone.");
+	});
 	it("sending keeping up: just keep the page open", () => {
 		const { saving, text } = panel();
 		saving.progress({ totalParts: 40, uploadedParts: 39, waitingBytes: 8_000_000 });

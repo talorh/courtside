@@ -18,8 +18,9 @@ async function keepOnPhone(t, key, { parts, tail }) {
 const keptOnPhone = (t, key) => t.page.evaluate(async (key) => {
 	const { openStore } = await import("/golive-store.js");
 	const store = await openStore();
-	const parts = await store.listParts(key), tail = await store.listTail(key);
-	return parts.reduce((sum, p) => sum + p.blob.size, 0) + tail.reduce((sum, b) => sum + b.size, 0);
+	let bytes = (await store.listTail(key)).reduce((sum, b) => sum + b.size, 0);
+	for (const { n } of await store.listParts(key)) bytes += (await store.getPart(key, n))?.size ?? 0;
+	return bytes;
 }, key);
 
 const ALL = ["android", "iphone", "firefox"];
@@ -812,6 +813,7 @@ export const scenarios = [
 			await t.until(async () => /still on this phone/.test(await t.text(SEL.recoverMsg)), "the page to say what the closed page kept");
 			await t.tap(SEL.save);
 			await t.until(async () => /^Saved\./.test(await t.text(SEL.recoverMsg)), "Saved", 30_000);
+			t.check(await t.visible("[data-recover-bar]"), "a progress bar showed the kept parts going");
 			t.check(t.harness.parts.get(2)?.length === 131072 && t.harness.parts.get(3)?.length === 40000, "the kept part and the tail reached storage");
 			const saves = t.harness.calls(`POST /api/live/${GAME_ID}/save`), puts = t.harness.calls("PUT /r2/41/3");
 			t.check(saves.length === 1 && puts.length === 1 && saves[0].at > puts[0].at, "the site asked to save it once the kept parts were up");
@@ -819,19 +821,39 @@ export const scenarios = [
 		},
 	},
 	{
-		name: "Save what was recorded when the phone's own storage can't be read: it still saves what reached the site",
+		name: "Save what was recorded when the phone's own storage can't be read: nothing is saved, so what it kept isn't left behind",
 		phones: ["iphone", "android"],
 		init: () => {
-			try { if (location.port === "8799") localStorage.setItem("courtside-live:7", JSON.stringify({ videoId: 41, partSize: 131072, etags: { 1: '"e1"' }, segment: 1 })); } catch { /* about:blank */ }
+			try { if (location.port === "8799") localStorage.setItem("courtside-live:7", JSON.stringify({ videoId: 41, partSize: 131072, etags: { 1: '"e1"' }, segment: 1, keeps: true })); } catch { /* about:blank */ }
 			// The browser lets go of its database part way (Safari can): every read of it fails.
 			IDBIndex.prototype.getAll = () => { throw new DOMException("The database connection is closing.", "InvalidStateError"); };
+			IDBIndex.prototype.getAllKeys = IDBIndex.prototype.getAll;
 		},
 		async run(t) {
 			await t.openGoLive({ recordingVideoId: VIDEO_ID, ended: true });
 			await t.until(() => t.visible(SEL.save), "Save what was recorded");
 			await t.tap(SEL.save);
-			await t.until(async () => /^Saved\./.test(await t.text(SEL.recoverMsg)), "Saved", 30_000);
-			t.check(t.harness.calls(`POST /api/live/${GAME_ID}/save`).length === 1, "the site asked to save it");
+			await t.until(async () => /couldn't be read just now, so nothing has been saved yet/.test(await t.text(SEL.recoverMsg)), "the page to say so", 30_000);
+			t.check(t.harness.calls(`POST /api/live/${GAME_ID}/save`).length === 0, "the site wasn't asked to save it");
+			t.check(t.harness.calls(`POST /api/live/${GAME_ID}/events`).length > 0, "the site's log heard of it");
+			t.check(!(await t.page.locator(SEL.save).isDisabled()), "Save can be tapped again");
+		},
+	},
+	{
+		name: "Save what was recorded when the phone's storage never answers: tried again, then nothing is saved and the page says so",
+		phones: ["iphone"],
+		init: () => {
+			try { if (location.port === "8799") localStorage.setItem("courtside-live:7", JSON.stringify({ videoId: 41, partSize: 131072, etags: { 1: '"e1"' }, segment: 1, keeps: true })); } catch { /* about:blank */ }
+			// A phone just back from a crash: its storage doesn't answer the open at all.
+			IDBFactory.prototype.open = () => ({});
+		},
+		async run(t) {
+			await t.openGoLive({ recordingVideoId: VIDEO_ID, ended: true });
+			await t.until(() => t.visible(SEL.save), "Save what was recorded");
+			await t.tap(SEL.save);
+			t.check(/Checking what's on this phone/.test(await t.text(SEL.recoverMsg)), "it says it's checking at once");
+			await t.until(async () => /couldn't be read just now, so nothing has been saved yet/.test(await t.text(SEL.recoverMsg)), "the page to say so", 45_000);
+			t.check(t.harness.calls(`POST /api/live/${GAME_ID}/save`).length === 0, "the site wasn't asked to save it");
 		},
 	},
 	{

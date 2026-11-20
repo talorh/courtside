@@ -1,19 +1,18 @@
 // Go live from the browser: records the camera on the phone (full quality, whatever the signal) and uploads it to
-// storage in equal parts while the game goes on. Parts wait in memory through a dropped signal and go when it's
-// back. End game sends the last part and completes the upload, which then becomes the game video like any upload.
+// storage in equal parts while the game goes on (golive-parts.js). Through a dropped signal they wait on the phone and
+// go when it's back. End game sends the last part and completes the upload, which then becomes the game video like any upload.
 // What's uploaded so far is remembered (which segment this is, how many minutes the earlier segments hold), and what
 // hasn't reached storage yet is kept on the phone (golive-store.js), so a page closed by mistake loses nothing recorded:
 // the next page sends it (golive-kept.js), and saves or carries on (golive-recover.js).
 import { frameFixer } from "./golive-frames.js";
+import { partQueue } from "./golive-parts.js";
 import { keeper } from "./golive-store.js";
-import { api, keepTrying, putPart } from "./upload-net.js";
+import { api, keepTrying } from "./upload-net.js";
 import { forget, save } from "./upload-state.js";
 import { upright } from "./golive-upright.js";
 
 export const stateKey = (gameId) => `courtside-live:${gameId}`;
 
-// An 8 MB part that hasn't gone in 5 minutes has stalled (it would need under 0.25 Mbps): try it again.
-const PART_TIMEOUT_MS = 5 * 60_000;
 // A recorder hands over its last piece and stops within a second or two. One that never does mustn't leave Saving up
 // for good: after this long, what it has handed over is saved.
 const STOP_WAIT_MS = 10_000;
@@ -33,37 +32,36 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 	const state = { videoId, partSize, etags: {}, segment, minutesBefore };
 	const key = stateKey(gameId);
 	save(key, state);
-	const kept = keeper(videoId, segment); // the phone's own copy of what hasn't reached storage
-	let buffer = new Blob([], { type: mime }), next = 1, waitingBytes = 0, queue = Promise.resolve(), failed = null, totalParts = null;
+	// The phone's own copy of what hasn't reached storage; its failures go to the site's log.
+	const kept = keeper(videoId, segment, (err) => hint(`recording store: ${err?.message ?? err}`));
+	kept.opened.then((keeps) => { if (!stopping) save(key, Object.assign(state, { keeps })); }); // for a reopened page (golive-recover.js)
+	let buffer = new Blob([], { type: mime }), next = 1, waitingBytes = 0, totalParts = null;
 	let recordedBytes = 0, sentBytes = 0, lastChunkAt = Date.now(), first = null, stopping = false, sealed = false;
 	// How long it has recorded, pauses left out (End game tells the site, for its under-a-minute test rule).
 	let recordedMs = 0, runningSince = Date.now();
 	const holds = new Set();
 	let beforeComplete = Promise.resolve(); // what an earlier page kept, still going up (golive-recover.js)
-	const upload = (n, body) => keepTrying(async () => {
-		const { urls } = await api(`/api/uploads/${videoId}/part-urls`, { partNumbers: [n], segment });
-		return putPart(urls[n], body, undefined, PART_TIMEOUT_MS);
-	}, hint);
-
+	const recordedSeconds = () => Math.round((recordedMs + (runningSince === null ? 0 : Date.now() - runningSince)) / 1000);
+	// This phone's own rate (Safari records well above the 2.5 Mbps asked), once there's a minute of it: what the bytes
+	// still on the phone are worth in minutes, here and on the next page (the note).
+	const perMinute = () => (recordedSeconds() >= 60 ? Math.round(recordedBytes / (recordedSeconds() / 60)) : undefined);
 	let earlierLeft = () => 0; // after Carry on: what earlier segments still have to send (before())
-	const report = () => onProgress({ uploadedParts: Object.keys(state.etags).length, totalParts, waitingBytes, recordedBytes, sentBytes, earlierBytes: earlierLeft() });
+	function report() {
+		const bytesPerMinute = perMinute();
+		// Noted when it moves by more than a twentieth, not on every piece.
+		if (bytesPerMinute && !(Math.abs(bytesPerMinute - (state.bytesPerMinute ?? 0)) <= bytesPerMinute / 20)) save(key, Object.assign(state, { bytesPerMinute }));
+		onProgress({ uploadedParts: Object.keys(state.etags).length, totalParts, waitingBytes, recordedBytes, sentBytes, earlierBytes: earlierLeft(), bytesPerMinute });
+	}
+	const sender = partQueue({ videoId, segment, hint }, {
+		onSent(n, etag, size) { state.etags[n] = etag; save(key, state); kept.sent(n); sentBytes += size; },
+		onFailed: (err) => onFatal(err),
+		onSettled(size) { waitingBytes -= size; report(); },
+	});
 	function send(part) {
 		const n = next++;
 		if (n === 1) first = part;
 		waitingBytes += part.size;
-		queue = queue.then(async () => {
-			if (failed) return;
-			try {
-				state.etags[n] = await upload(n, part);
-				save(key, state);
-				kept.sent(n);
-				sentBytes += part.size;
-			} catch (err) {
-				if (!failed) onFatal((failed = err));
-			}
-			waitingBytes -= part.size;
-			report();
-		});
+		sender.send(n, part);
 	}
 	// Equal parts (storage needs every part but the last the same size), and at End game what's left as the last. Each
 	// is kept on the phone as its own numbered part until it's up, so a later page never sends it again as one more.
@@ -109,7 +107,7 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 			holds.delete(why);
 			if (holds.size === 0 && recorder.state === "paused") { recorder.resume(); runningSince = lastChunkAt = Date.now(); }
 		},
-		recordedSeconds: () => Math.round((recordedMs + (runningSince === null ? 0 : Date.now() - runningSince)) / 1000),
+		recordedSeconds,
 		/** stop() completes the recording only once `sending` is over: an earlier segment's parts must be in storage first.
 		 * Its left() counts in the progress, reported at once and again when it settles (sent, or refused: nothing more). */
 		before(sending) {
@@ -123,7 +121,7 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 		cancel() {
 			stopping = sealed = true;
 			clearInterval(nudge);
-			failed = new Error("Thrown away as a test");
+			sender.halt(new Error("Thrown away as a test"));
 			if (recorder.state !== "inactive") recorder.stop();
 			forget(key);
 			kept.clear();
@@ -143,13 +141,13 @@ export function record(media, { videoId, partSize, mime, gameId, segment = 1, mi
 			totalParts = next - 1;
 			onRecorded?.(totalParts);
 			report();
-			await queue;
-			if (failed) throw failed;
+			await sender.idle();
+			if (sender.failed()) throw sender.failed();
 			if (next === 1) throw new Error("Nothing was recorded.");
 			// iPhone labels the video as turned (golive-upright.js): part 1 is fixed and sent again once recording has
 			// stopped, so nothing reads the recording while the phone is still making it.
 			const fixed = await upright(first);
-			if (fixed !== first) state.etags[1] = await upload(1, fixed);
+			if (fixed !== first) state.etags[1] = await sender.upload(1, fixed);
 			await beforeComplete;
 			await keepTrying(() => api(`/api/uploads/${videoId}/complete`, { parts: sortedParts(state.etags), segment }), hint);
 			forget(key);

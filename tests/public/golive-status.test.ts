@@ -31,6 +31,12 @@ describe("statusText (Go live's camera screen)", () => {
 		expect(onPhoneMinutes({ waitingBytes: 10_000_000, earlierBytes: 1_000_000 })).toBe(1);
 		expect(onPhoneMinutes({ waitingBytes: 495_000_000, earlierBytes: 39_000_000 })).toBe(27);
 	});
+	it("counts the minutes at the phone's own rate once it knows it (an iPhone records well above the 2.5 Mbps asked)", () => {
+		// 780 MB at an iPhone's 34 MB a minute (4.5 Mbps) is 23 minutes, not the 39 it would be at 2.5 Mbps.
+		expect(onPhoneMinutes({ waitingBytes: 780_000_000, bytesPerMinute: 34_000_000 })).toBe(22);
+		expect(onPhoneMinutes({ waitingBytes: 780_000_000 })).toBe(39);
+		expect(onPhoneMinutes({ waitingBytes: 34_000_000, earlierBytes: 1_000_000, bytesPerMinute: 34_000_000 })).toBe(2);
+	});
 
 	it("the camera stopped (a lock, a call, another app): it says so, and that Resume camera carries on, over a break too", () => {
 		const said = '⏸ CAMERA STOPPED · Families see "Game break". Tap Resume camera to carry on.';

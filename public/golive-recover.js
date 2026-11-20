@@ -2,40 +2,14 @@
 // closed pages kept on the phone (golive-kept.js: the parts storage never got, and the tail) is sent first, so nothing
 // recorded is lost.
 import { keepAwake } from "./awake.js";
-import { dropKept, forgetNotes, keptOnPhone, minutesOf } from "./golive-kept.js";
+import { dropKept, earlierNoted, minutesOf } from "./golive-kept.js";
+import { CHECKING, UNREADABLE, holdingPage, readKept, reportProblem, sendWhileStreaming, withBar } from "./golive-kept-read.js";
 import { stateKey } from "./golive-rec.js";
+import { askUntilReady } from "./golive-ask.js";
 import { buttonRunner } from "./golive-run.js";
 import { api } from "./upload-net.js";
 import { load } from "./upload-state.js";
 import { askName } from "./team.js";
-
-// The site's "wait" answers (Save, Carry on): a part arrived in the last two minutes, or Stream still sees a phone.
-const WAITING = {
-	sending: "The last of the recording is still arriving (the site waits two minutes after the last part, in case the old page is still sending). Keep this page open.",
-	streaming: "The stream from the closed page is still finishing: this takes a minute or two. Keep this page open. (If someone else is now filming this game from another phone, don't carry on.)",
-};
-const sleep = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-const clock = (seconds) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-
-/** Asks the site until it's no longer "wait": the answer. Meanwhile the button counts the wait down ("Carrying on in 1:20…")
- * or says it's getting ready (`readying`), and the panel says why. */
-async function askUntilReady(path, body, button, doing, readying, tell) {
-	const was = button.textContent;
-	try {
-		for (;;) {
-			const answer = await api(path, body);
-			if (!(answer.status in WAITING)) return answer;
-			tell(WAITING[answer.status]);
-			let left = answer.waitLeft ?? answer.retryIn;
-			for (let i = 0; i < answer.retryIn; i++) {
-				button.textContent = answer.status === "sending" ? `${doing} in ${clock(Math.max(1, left - i))}…` : readying;
-				await sleep(1);
-			}
-		}
-	} finally {
-		button.textContent = was;
-	}
-}
 
 /** Scrolls the least that puts the panel on screen, clear of the bar that stays at the top of a phone's page. Where the
  * screen is too short for all of it, its top goes just under the bar, or lower if that's what keeps `first`, its first
@@ -73,13 +47,22 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 		const run = buttonRunner(tell);
 		const canCarryOn = here && !ended;
 		const state = here ? { gameId, ...remembered } : null;
-		// What closed pages kept on this phone, if anything: said as soon as it's known.
-		const kept = here ? keptOnPhone(gameId, state, carryOn.mime ?? "video/mp4").then((k) => {
-			const minutes = minutesOf(k.bytes);
+		// What closed pages kept on this phone, if anything: said as soon as it's known. Storage that can't be read is
+		// read again when Save or Carry on is tapped: what it holds is never passed over.
+		const readAgain = () => readKept(gameId, state, carryOn.mime ?? "video/mp4");
+		let kept = here ? readAgain().then((k) => {
+			const minutes = minutesOf(k.bytes ?? 0, state.bytesPerMinute);
 			if (k.bytes > 0) tell(`${minutes > 0 ? `About ${minutes} ${minutes === 1 ? "minute" : "minutes"}` : "The last moments"} of the recording were still on this phone when the page closed: that's sent when you save or carry on.`);
 			return k;
-		// A phone whose storage can't be read has nothing kept to send: Save and Carry on still go ahead with what reached the site.
-		}).catch((err) => { console.warn(`recording store: ${err}`); return null; }) : Promise.resolve(null);
+		}) : Promise.resolve(null);
+		const keptNow = async () => {
+			if ((await kept)?.failed) kept = readAgain();
+			return kept;
+		};
+		// Storage that can't be read could be hiding footage, unless it never opened while this segment recorded and no
+		// earlier segment is noted as having any.
+		const mayHold = () => state.keeps !== false || earlierNoted(gameId);
+		const bar = panel.querySelector("[data-recover-bar]");
 		panel.hidden = false;
 		panel.querySelector("[data-recover-carry]").hidden = !canCarryOn;
 		panel.querySelector("[data-recover-here]").hidden = !(here && ended);
@@ -94,29 +77,60 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 		const asking = (on) => { ask.hidden = !on; btn("discard").hidden = on; };
 		btn("continue").onclick = () => run(btn("continue"), async () => {
 			others(true);
+			// What the old page kept is read first, with the buttons off, so a second tap can't ask for another part.
+			let read;
+			try {
+				tell(CHECKING);
+				read = await keptNow();
+			} catch (err) {
+				others(false);
+				throw err;
+			}
 			const answer = await askUntilReady(`/api/live/${gameId}/continue`, { videoId: Number(recording), mimeType: carryOn.mime }, btn("continue"), "Carrying on", "Getting ready to carry on streaming…", tell).finally(() => others(false));
-			// What the old page kept goes up while the game streams again; End game waits for it before saving.
-			const k = await kept;
+			// What the old page kept goes up while the game streams again; End game waits for it before saving. Storage
+			// that can't be read doesn't stop the game streaming, but those minutes are lost, and the filmer is told.
+			const k = read?.failed ? null : read;
+			if (read?.failed && mayHold()) carryOn.say("What the closed page kept on this phone couldn't be read, so those minutes can't be sent and won't be in the video.");
 			// It says how much it still has to send, so End game and the Saving panel count it (golive-rec.js before()).
-			const sending = Object.assign(k?.bytes > 0 ? k.send(carryOn.say, true).then(() => carryOn.say("")) : Promise.resolve(), { left: () => k?.left() ?? 0 });
+			const sending = sendWhileStreaming(gameId, k, carryOn.say);
 			// The camera next (the phone may ask for it again); the panel goes once it's there, or says why it isn't.
-			await carryOn.ready(answer, (state.minutesBefore ?? 0) + minutesOf(Object.keys(state.etags ?? {}).length * (state.partSize ?? 0)) + minutesOf(k?.own ?? 0), sending);
+			const minutes = (bytes) => minutesOf(bytes, state.bytesPerMinute);
+			await carryOn.ready(answer, (state.minutesBefore ?? 0) + minutes(Object.keys(state.etags ?? {}).length * (state.partSize ?? 0)) + minutes(k?.own ?? 0), sending);
 			panel.hidden = true;
 		});
 		btn("save").onclick = () => run(btn("save"), async () => {
 			others(true);
 			// Sending what this phone kept, then the site's wait, can take minutes: a locked phone would pause them.
 			const awake = keepAwake();
+			// Something on screen at once: reading what the phone kept can take a while, and a tap that seems to do nothing
+			// gets tapped again, or the page refreshed.
+			const label = btn("save").textContent;
+			btn("save").textContent = CHECKING;
+			tell(CHECKING);
 			let status;
 			try {
-				// What this phone kept goes up first; then the site saves what reached it (waiting its two minutes after the
-				// last part, in case a page of this recording is still alive and sending).
-				const k = await kept;
-				if (k?.bytes > 0) await k.send(tell);
-				status = (await askUntilReady(`/api/live/${gameId}/save`, {}, btn("save"), "Saving", "Getting ready to save…", tell)).status;
+				// What this phone kept goes up first, with the page holding on until it has; then the site saves what reached
+				// it (waiting its two minutes after the last part, in case a page of this recording is still alive and
+				// sending). If the phone's copy can't be read, nothing is saved: saving would leave it behind for good.
+				const read = await keptNow();
+				if (read?.failed && mayHold()) return tell(UNREADABLE);
+				const k = read?.failed ? null : read;
+				btn("save").textContent = "Saving…";
+				status = await holdingPage(async () => {
+					if (k?.bytes > 0) await k.send(withBar(tell, bar));
+					return (await askUntilReady(`/api/live/${gameId}/save`, {}, btn("save"), "Saving", "Getting ready to save…", tell)).status;
+				}).catch((err) => {
+					// The phone's storage failing part way: nothing is saved, and the next tap reads it afresh.
+					if (!err?.storage) throw err;
+					kept = Promise.resolve({ failed: err });
+					reportProblem(gameId, `recording store failed while sending: ${err.message ?? err}`);
+					return null;
+				});
+				if (status === null) return tell(UNREADABLE);
 			} finally {
 				others(false);
 				awake.release();
+				btn("save").textContent = label;
 			}
 			dropKept(gameId).catch((err) => console.warn(`recording store: ${err}`));
 			ask.hidden = btn("save").hidden = btn("discard").hidden = btn("continue").hidden = true;
@@ -128,8 +142,8 @@ export function recordingInTheWay(card, { btn, say, carryOn }) {
 		btn("discardyes").onclick = () => run(btn("discardyes"), async () => {
 			others(true);
 			await api(`/api/uploads/${recording}/abort`, {}).finally(() => others(false));
-			forgetNotes(gameId);
-			await (await kept)?.clear();
+			// What the notes say this phone kept goes, then the notes.
+			await dropKept(gameId).catch((err) => console.warn(`recording store: ${err}`));
 			// Start afresh: the page sets up the camera controls for a game with nothing recorded yet.
 			location.reload();
 		});

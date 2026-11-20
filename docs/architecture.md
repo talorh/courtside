@@ -411,6 +411,21 @@ sequenceDiagram
  going up when the page carries on is noted beside it (`courtside-live:<game>:kept`) with each part as it lands. A page
  closed again part way, or at the camera's prompt before the next segment starts, still knows which parts went, so
  the rest goes up under its own segment and the tail is numbered after the parts already sent, never over one.
+ **What a reopened page sends is never passed over.**
+ On a slow signal the parts waiting to go can be most of a game. The reopened page lists the kept parts by number and
+ reads each one as it's sent, never all at once (`listParts`, `getPart`). Storage that won't open or can't be read is
+ an error, not an empty phone (`openStore({ strict })`). Save tries it three times (`public/golive-kept-read.js`), then
+ saves nothing, says so, and keeps the note and the footage, unless nothing could be on the phone: the note says its
+ storage never opened while this segment recorded (`keeps: false`, written by `golive-rec.js`) and no earlier segment
+ is noted. A storage failure reading a part while sending does the same, and the next tap reads it afresh; one clearing a part
+ that has landed is only logged, so nothing is read again and sent twice. Carry on reads
+ it before asking the site, carries on even if it can't be read or fails part way, and says those minutes are lost. Each failure goes to
+ the site's log as a `golive_events` problem, as does a store that fails while recording and a kept part found gone.
+ Save says "Checking what's on this phone…" at once, then "Saving…" with a progress bar, and asks before the page is
+ left where the browser allows it (`beforeunload`; iPhone Safari doesn't ask). Minutes still on the phone are shown at
+ the phone's own rate (`bytesPerMinute`, in the progress and the note, after a minute's recording; an iPhone records at
+ about 4.5 Mbps whatever the 2.5 Mbps asked), but End game's `keptMinutes` stays at 2.5 Mbps, as before, so the
+ site waits its 12 hours once about 20 MB or more is still on the phone.
  Families' player (`whep.js`, `whep-wait.js`) asks the game's page whether the stream is over once no frame has come
  for 3 seconds, and again every 5 seconds for the first 20 (and every minute, and when the page is looked at
  again): End game reloads it to the Full time card within seconds. Otherwise, from 5 seconds

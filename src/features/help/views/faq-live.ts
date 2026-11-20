@@ -42,8 +42,13 @@ says <b>Saved</b>. The game is in Watch games about 20 to 25 minutes later, and 
 behind the game: if the page says minutes of the game are only on this phone, keep the page open after the final
 buzzer until it says <b>Saved</b> (on Wi-Fi if you can). Closed it before then? Those minutes are kept on the phone:
 open <b>Go live</b> again on that phone within 12 hours of End game and tap <b>Save what was recorded</b>, and they're
-sent first (the site waits that long for them before it saves what reached it by itself). Closed the page just as it
+sent first, with a bar showing how far it's got: keep the page open until it says <b>Saved</b> (the site waits that
+long for them before it saves what reached it by itself). Closed the page just as it
 said Saving, with nothing left on the phone? It saves itself half an hour later, and the video turns up in Watch games as usual.</li>
+<li><b>Phone getting hot?</b> A whole game of streaming and recording warms a phone up, more so in a case, in the sun
+or while it charges. Before the game, take it out of its case, keep it out of direct sun and turn the screen brightness
+down. Getting hot anyway? Unplug the power bank until it cools. If it says it needs to cool down, let it, then tap
+<b>Resume camera</b>, or open <b>Go live</b> again on that phone and tap <b>Carry on streaming</b> if the page closed.</li>
 <li><b>Safari's bars back over the picture?</b> They can come back if the phone turns or locks. On an iPhone, tap the
 button at the left of the address and choose <b>Hide Toolbar</b> (on older iPhones it's under <b>aA</b>). The stream and
 the recording carry on either way.${SAFARI_BARS}</li>

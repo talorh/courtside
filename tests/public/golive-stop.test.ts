@@ -35,6 +35,9 @@ describe("End game tells the site what's still on this phone", () => {
 			path: "/api/live/7/end", body: { recordedSeconds: 3600, cause: "tapped", keptMinutes: 10 },
 		});
 	});
+	it("counted at 2.5 Mbps for the site, whatever the phone's own rate, so a few parts left still has it wait", async () => {
+		expect((await endGame({ recordedBytes: 900_000_000, sentBytes: 870_000_000, waitingBytes: 30_000_000, bytesPerMinute: 34_000_000 })).body).toMatchObject({ keptMinutes: 1 });
+	});
 	it("sending keeping up, or nothing reported yet: keptMinutes 0, so the site keeps its half hour", async () => {
 		expect((await endGame({ recordedBytes: 900_000_000, sentBytes: 895_000_000, waitingBytes: 5_000_000 })).body).toMatchObject({ keptMinutes: 0 });
 		expect((await endGame(null, 30)).body).toEqual({ recordedSeconds: 30, cause: "tapped", keptMinutes: 0 });
