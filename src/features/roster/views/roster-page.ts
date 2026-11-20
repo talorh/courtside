@@ -1,13 +1,13 @@
 import { hasRole } from "../../../auth/permissions.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";
-import { formatClock, formatShortDate } from "../../../shared/time.ts";
+import { compareIso, formatClock, formatShortDate } from "../../../shared/time.ts";
 import { notice, pageHead } from "../../../ui/components.ts";
 import { layout, type PageFrame } from "../../../ui/layout.ts";
 import { gameTitle } from "../../games/game-format.ts";
 import type { Member } from "../../members/members-repository.ts";
 import type { Credit } from "../roster-away.ts";
 import { dutiesOn, dutyLabel, dutySentence, dutyWords, type RosterDuties } from "../roster-duties.ts";
-import { DUTIES, type Duty, type Slot, slotsFor, type Wanted } from "../roster-plan.ts";
+import { DUTIES, type Duty, type Slot, type Wanted, wantedFor } from "../roster-plan.ts";
 import type { RosterFamily } from "../roster-repository.ts";
 import { needOf, type RosterWeek } from "../roster-service.ts";
 import { dutiesPanel, familiesPanel, weekEditor } from "./roster-admin.ts";
@@ -34,14 +34,19 @@ export interface RosterPageProps {
 	/** The team's duties (lollies and video can be off); a week before this one shows the ones it holds. */
 	duties: RosterDuties;
 	thisWeek: string;
+	/** The club's local time now, as a game's tip-off is kept ("2026-10-16T18:40"). */
+	now: string;
 	season: string;
 	message: string | null;
 }
 
-/** The family whose surname is the member's last name, if any ("Sam Smith" → Smith). */
+/** The family whose surname the member's name ends with, if any ("Sam Smith" → Smith); of two, the longer ("Sam Van
+ * Dyke" → Van Dyke, not Dyke). */
 const familyOf = (member: Member, families: RosterFamily[]) => {
-	const last = member.name.trim().split(/\s+/).at(-1)?.toLowerCase();
-	return families.find((f) => f.surname.toLowerCase() === last) ?? null;
+	const words = (s: string) => s.trim().toLowerCase().split(/\s+/).join(" ");
+	const name = words(member.name);
+	const ends = families.filter((f) => { const s = words(f.surname); return s !== "" && (name === s || name.endsWith(` ${s}`)); });
+	return ends.sort((a, b) => words(b.surname).length - words(a.surname).length)[0] ?? null;
 };
 
 // The next six weeks (this one included) show; later ones fold away under Later weeks, as a season runs to 40 or more.
@@ -66,9 +71,14 @@ function weekCard(p: RosterPageProps, w: RosterWeek, mine: number | null): SafeH
 		const s = held.find((h) => h.duty === x.duty && h.position === x.position && h.gameId === x.gameId);
 		return s ? html`<span class="${s.familyId === mine ? "duty-fam mine" : "duty-fam"}">${p.names.get(s.familyId) ?? "?"}</span>` : html`<span class="duty-fam empty">Not set</span>`;
 	};
-	// A week before this one shows what was done: of the extra duty and video, the ones it holds, whatever the team has now.
-	const has = w.week >= p.thisWeek ? p.duties : { ...p.duties, lollies: held.some((s) => s.duty === "lollies"), video: held.some((s) => s.duty === "video") };
-	const wanted = slotsFor(needOf(w), has);
+	// A week before this one shows what was done: of the extra duty and video, the ones it holds, whatever the team has
+	// now. A game that's been played (every game of an earlier week) shows every slot it holds as well.
+	const past = w.week < p.thisWeek;
+	const started = new Set(w.games.filter((g) => past || g.game.startsAt <= p.now).map((g) => g.game.id));
+	const playedHolds = (duty: Duty) => held.some((s) => s.duty === duty && started.has(s.gameId));
+	const has = past ? { ...p.duties, lollies: playedHolds("lollies"), video: playedHolds("video") }
+		: { ...p.duties, lollies: p.duties.lollies || playedHolds("lollies"), video: p.duties.video || playedHolds("video") };
+	const wanted = wantedFor(needOf(w), past ? has : p.duties, held, (id) => started.has(id));
 	const names = (xs: Wanted[]) => xs.map((x, i) => html`${i ? ", " : ""}${name(x)}`);
 	// A weekend with several games: each game's own duties sit under that game; below them, what the weekend has none
 	// of (No lollies, No video).
@@ -92,7 +102,7 @@ function weekCard(p: RosterPageProps, w: RosterWeek, mine: number | null): SafeH
 	const venue = (i: number) => (w.games[i]!.game.venue && w.games[i]!.game.venue !== w.games[i - 1]?.game.venue ? html`<span class="small">${w.games[i]!.game.venue}</span>` : "");
 	return html`<li class="panel duty-week" id="w${w.week}"><ul class="duty-games">${w.games.map(({ game }, i) => html`<li><b>${formatShortDate(game.startsAt)}, ${formatClock(game.startsAt.slice(11))} · ${gameTitle(game)}</b>${i === 0 ? now : ""}
 ${venue(i)}${game.noVideo ? html`<span class="small">No video</span>` : ""}${gameDuties(game.id)}</li>`)}</ul>
-<div class="duties">${weekDuties}</div>${admin ? setByHand(w, held, p.duties) : ""}${admin ? weekEditor(w, held, p.families, p.names, has, w.week < p.thisWeek) : ""}</li>`;
+<div class="duties">${weekDuties}</div>${admin ? setByHand(w, held, p.duties) : ""}${admin ? weekEditor(w, held, wanted, p.families, p.names, has, past) : ""}</li>`;
 }
 
 /** Roster: who's on each of the team's duties each week, and how fair it is. The team manager runs it. */
@@ -100,7 +110,10 @@ export function rosterPage(p: RosterPageProps): SafeHtml {
 	const mine = familyOf(p.frame.member, p.families);
 	const upcoming = p.weeks.filter((w) => w.week >= p.thisWeek), earlier = p.weeks.filter((w) => w.week < p.thisWeek).reverse();
 	const later = upcoming.slice(UPCOMING_SHOWN);
-	const next = mine ? p.slots.find((s) => s.familyId === mine.id && s.week >= p.thisWeek) : undefined;
+	// The family's next duty: the first by tip-off at a game that hasn't started.
+	const tipOff = new Map(p.weeks.flatMap((w) => w.games.map(({ game }) => [game.id, game.startsAt] as const)));
+	const next = mine ? p.slots.filter((s) => s.familyId === mine.id && (tipOff.get(s.gameId) ?? "") > p.now)
+		.sort((a, b) => compareIso(tipOff.get(a.gameId)!, tipOff.get(b.gameId)!))[0] : undefined;
 	// On a weekend with several games, which game it's at.
 	const nextWeek = next ? p.weeks.find((w) => w.week === next.week) : undefined;
 	const at = next && nextWeek && nextWeek.games.length > 1 && next.gameId ? ` at the ${gameWhen(nextWeek, next.gameId)} game` : "";

@@ -25,7 +25,8 @@ server error is counted by the hour for Platform's alert.</li></ul>`});
 
 export const signIn = (): DocSection => ({ id: "signin", title: "Signing in", body: html`
 <p>There are no passwords. Someone types their email, gets a six-digit code by email, types it, and stays signed in for
-30 days on that device. A code is only ever sent to an address on a team's list, or a site admin's, never to someone a site admin has locked
+30 days on that device. A code signs in one device, once: it's spent only when that device's sign-in is saved, so a
+sign-in that fails part way leaves the same code working for another try. A code is only ever sent to an address on a team's list, or a site admin's, never to someone a site admin has locked
 (Users), and only once
 Cloudflare Turnstile says a person, not a script, asked: the check is invisible unless Cloudflare wants a tap. If
 Cloudflare can't be reached, or has trouble of its own (a server error, or it's too busy), the code still goes, with the
@@ -90,7 +91,8 @@ and sent after the first goes alone, so a refusal that would stop them all (sign
 three at once if the first was in within 5 seconds, or else one at a time, and one at a time for the rest after any
 dropped connection: on a weak signal three at once share it, and none may be in before it drops. A dropped connection
 is waited out and tried again; one the site turns down is listed and the rest carry on, unless it's the day's limit
-(below), which stops them there and says when there's room again. A page left before they're all
+(below), which stops them there and says when there's room again. Once they're all in, Photos with its thank-you takes
+the page's place, so Back goes to the page before it. A page left before they're all
 sent says how many weren't, the next time Photos is opened on that phone (kept in its browser for a day).</li>
 <li><b>In the Worker:</b> 10 MB at most, checked as a whole JPEG with any metadata left taken out. Its row is saved
 first, out of sight, so the photo has its number; then Images keeps it privately, named as it downloads
@@ -113,6 +115,7 @@ them together, all or none, offered only when every one is the member's own (or 
 <li><b>Deleting:</b> whoever added a photo, or a team manager, deletes it, Images first; anyone else asks for it to be
 removed.</li>
 <li><b>Every download is logged</b> with who took it, a photo's alone or each one in a zip, and kept two years.</li>
-<li><b>Saving on an iPhone</b> goes through the share menu, so photos and clips land in Photos rather than Files.</li></ul>
+<li><b>Saving on an iPhone</b> goes through the share menu, so photos and clips land in Photos rather than Files. A second
+tap while it's getting them, or with the menu open, does nothing.</li></ul>
 <p>Everything a team keeps (videos, clips and photos) is deleted with the team at the end of 31 December of the year
 its season ends, ${code("delete_after")} on each row.</p>`});

@@ -1,9 +1,9 @@
 import { html, type SafeHtml } from "../../../shared/html.ts";
 import { postButton } from "../../../ui/components.ts";
 import { dutyLabel, type RosterDuties } from "../roster-duties.ts";
-import { type Slot, slotsFor, type Wanted } from "../roster-plan.ts";
+import type { Slot, Wanted } from "../roster-plan.ts";
 import type { RosterFamily } from "../roster-repository.ts";
-import { needOf, pickName, type RosterWeek } from "../roster-service.ts";
+import { pickName, type RosterWeek } from "../roster-service.ts";
 import { gameWhen } from "./roster-page.ts";
 import { confirmButton } from "../../../ui/confirm.ts";
 
@@ -11,9 +11,10 @@ import { confirmButton } from "../../../ui/confirm.ts";
  * Team manager: change who does what in one week, switch video off for it, or make it Scorers only (a tournament with
  * nothing to bring and no filming). Each duty is a family picked by hand (Generate roster keeps it)
  * or Roster's pick, with the family the roster chose. `past`: a week before this one, which holds what was done, so
- * nothing is shared out for it: a duty with no family says Not set, and stays that way until one is picked.
+ * nothing is shared out for it: a duty with no family says Not set, and stays that way until one is picked. `wanted`:
+ * the week's slots, as its card shows them.
  */
-export function weekEditor(w: RosterWeek, held: Slot[], families: RosterFamily[], names: Map<number, string>, duties: RosterDuties, past = false): SafeHtml {
+export function weekEditor(w: RosterWeek, held: Slot[], wanted: Wanted[], families: RosterFamily[], names: Map<number, string>, duties: RosterDuties, past = false): SafeHtml {
 	// One field a slot; on a weekend with several games, each says which game.
 	const select = (x: Wanted) => {
 		const slot = held.find((s) => s.duty === x.duty && s.position === x.position && s.gameId === x.gameId);
@@ -36,7 +37,7 @@ export function weekEditor(w: RosterWeek, held: Slot[], families: RosterFamily[]
 		: html`<a class="btn quiet" href="/roster/week/${w.week}/message">WhatsApp message</a>`;
 	return html`<div class="duty-admin">${messages}
 <details class="duty-edit"><summary class="btn quiet">Change</summary>
-<form method="post" action="/roster/week/${w.week}" class="stack"><div class="duty-picks">${slotsFor(needOf(w), duties).map(select)}</div>
+<form method="post" action="/roster/week/${w.week}" class="stack"><div class="duty-picks">${wanted.map(select)}</div>
 <p class="small">${past ? html`Pick a family to put right who did a duty: a family can only do one duty a game. An earlier week keeps what was
 done, so nothing is shared out for it: a duty left alone stays as it is.` : html`Pick a family to set a duty by hand: Generate roster keeps it, and a family can only do one duty a game. Leave
 Roster's pick and the roster shares that duty out fairly. Same family every week? Set it once in <a href="#duties">Team duties</a>.`}</p>

@@ -28,7 +28,7 @@ const BUTTONS: Record<string, (s: Seeded, today: number) => string | [string, Re
 	Roster: () => "/roster", "Take off": () => "/roster", "Add families": () => "/roster", "Save duties": () => "/roster", "Generate roster": () => "/roster", Change: () => "/roster", "Save week": () => "/roster",
 	"WhatsApp message": () => "/roster", "Copy message": (s) => `/roster/week/${s.week}/message`, "Open WhatsApp": (s) => `/roster/week/${s.week}/message`,
 	"Update message": (s) => `/roster/week/${s.week}/message`,
-	"Move video": (s) => `/games/${s.gameId}`, "Save score": (s) => `/games/${s.gameId}`, "Team manager": (s) => `/games/${s.gameId}`, "Hide scores": () => "/games",
+	"Move video": (s) => `/games/${s.gameId}`, "Save score": (s) => `/games/${s.gameId}`, "Clear score": (s) => `/games/${s.gameId}`, "Yes, clear it": (s) => `/games/${s.gameId}`,"Team manager": (s) => `/games/${s.gameId}`, "Hide scores": () => "/games",
 	"Go live": () => "/live", "End game": (_s, today) => `/live?game=${today}`, "Yes, end game": (_s, today) => `/live?game=${today}`,
 	"Save what was recorded": (_s, today) => `/live?game=${today}`, "Carry on streaming": (_s, today) => `/live?game=${today}`, Help: () => "/help",
 	"Keep the first part": (s) => `/games/${s.gameId}`,

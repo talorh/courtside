@@ -1,4 +1,5 @@
 import type { Role } from "../../auth/permissions.ts";
+import { conflict } from "../../app/errors.ts";
 import { assertChanged } from "../../shared/d1.ts";
 
 export interface Member {
@@ -79,15 +80,15 @@ export async function countActiveManagers(db: D1Database, teamId: string): Promi
 /**
  * Inserts new emails and reactivates removed ones (keeping their old name when the new one is blank). An admin's hidden
  * membership becomes a real one with the role given (losing its "Site admin" name). Active real members are never
- * touched here: names and roles change only through updateMemberDetails.
+ * touched here: names and roles change only through updateMemberDetails. Which inputs it added, in order.
  */
-export async function upsertMembers(db: D1Database, teamId: string, inputs: MemberInput[]): Promise<void> {
+export async function upsertMembers(db: D1Database, teamId: string, inputs: MemberInput[]): Promise<boolean[]> {
 	const sql = `INSERT INTO members (team_id, email, name, role) VALUES (?, ?, ?, ?)
 		ON CONFLICT (team_id, email) DO UPDATE SET
 			name = CASE WHEN excluded.name <> '' THEN excluded.name WHEN members.hidden = 1 THEN '' ELSE members.name END,
 			role = excluded.role, removed_at = NULL, hidden = 0
 		WHERE members.removed_at IS NOT NULL OR members.hidden = 1`;
-	await db.batch(inputs.map((i) => db.prepare(sql).bind(teamId, i.email, i.name, i.role)));
+	return (await db.batch(inputs.map((i) => db.prepare(sql).bind(teamId, i.email, i.name, i.role)))).map((r) => r.meta.changes === 1);
 }
 
 /** A brand-new team's first member (onboarding), to batch with the team itself. */
@@ -96,6 +97,7 @@ export const newMemberStatement = (db: D1Database, teamId: string, m: MemberInpu
 	.bind(teamId, m.email, m.name, m.role);
 
 // In the same statement as the change, so two team managers demoting or removing each other at once can't leave none.
+export const LAST_MANAGER = "The team needs at least one team manager.";
 const KEEPS_A_MANAGER = `(role <> 'manager' OR EXISTS (SELECT 1 FROM members o WHERE o.team_id = members.team_id AND o.id <> members.id
 	AND o.role = 'manager' AND o.hidden = 0 AND o.removed_at IS NULL))`;
 
@@ -104,7 +106,7 @@ export async function updateMemberDetails(db: D1Database, teamId: string, id: nu
 		.prepare(`UPDATE members SET name = ?, role = ? WHERE team_id = ? AND id = ? AND removed_at IS NULL AND (? = 'manager' OR ${KEEPS_A_MANAGER})`)
 		.bind(details.name, details.role, teamId, id, details.role)
 		.run();
-	assertChanged(result, "member");
+	await assertMemberChanged(db, teamId, id, result);
 }
 
 export async function markMemberRemoved(db: D1Database, teamId: string, id: number, nowIso: string): Promise<void> {
@@ -112,6 +114,13 @@ export async function markMemberRemoved(db: D1Database, teamId: string, id: numb
 		.prepare(`UPDATE members SET removed_at = ? WHERE team_id = ? AND id = ? AND removed_at IS NULL AND ${KEEPS_A_MANAGER}`)
 		.bind(nowIso, teamId, id)
 		.run();
+	await assertMemberChanged(db, teamId, id, result);
+}
+
+/** No change while the member is still on the team: the guard kept the team's last team manager (a race the services'
+ * own check missed), refused in words as they refuse it. Otherwise the member had gone. */
+async function assertMemberChanged(db: D1Database, teamId: string, id: number, result: D1Result): Promise<void> {
+	if (result.meta.changes === 0 && (await getActiveMember(db, teamId, id))) throw conflict(LAST_MANAGER);
 	assertChanged(result, "member");
 }
 

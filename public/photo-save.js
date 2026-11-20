@@ -27,15 +27,20 @@ export function setUpSave() {
 	}
 	button.firstChild.textContent = "Save photo ";
 	say("Opens the share menu: tap Save Image to put it in Photos.");
-	let file = null;
+	// One save at a time: a double tap would get the photo twice and open the share menu over itself.
+	let file = null, busy = false;
 	button.addEventListener("click", async (e) => {
 		e.preventDefault();
+		if (busy) return;
+		busy = true;
 		try {
 			file ??= await photoFile(button);
 			if (await share(file) === "tap again") say("It's ready now: tap Save photo again.");
 		} catch (err) {
 			console.warn(`save photo: ${err}`);
 			say(err.show ? err.message : "Couldn't get the photo just now. Check your connection and try again.");
+		} finally {
+			busy = false;
 		}
 	});
 }

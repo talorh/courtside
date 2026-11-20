@@ -3,12 +3,26 @@
 import { readFileSync } from "node:fs";
 import { cleanJpeg } from "../../src/features/photos/jpeg.ts";
 import { exifApp1, hasExif } from "../helpers/jpeg.ts";
-import { PHOTO, photoPage, photosPage } from "./pages.mjs";
+import { homeStub, PHOTO, photoPage, photosPage } from "./pages.mjs";
 
 // The phone's share menu, standing in for the real one: notes the files it was given (WebKit here has none).
 const shareMenu = () => {
 	Object.defineProperty(navigator, "canShare", { configurable: true, value: (data) => Boolean(data?.files?.length) });
 	Object.defineProperty(navigator, "share", { configurable: true, value: async (data) => { window.shared = data.files.map((f) => ({ name: f.name, type: f.type, size: f.size })); } });
+};
+// Safari's share menu as it behaves: open for a moment, and asked again while it's open, it refuses (InvalidStateError).
+const slowShareMenu = () => {
+	Object.defineProperty(navigator, "canShare", { configurable: true, value: (data) => Boolean(data?.files?.length) });
+	let open = false;
+	window.shares = 0;
+	Object.defineProperty(navigator, "share", { configurable: true, value: async (data) => {
+		if (open) throw new DOMException("An earlier share has not yet completed.", "InvalidStateError");
+		open = true;
+		window.shares++;
+		await new Promise((resolve) => setTimeout(resolve, 1_000));
+		open = false;
+		window.shared = data.files.map((f) => ({ name: f.name, type: f.type, size: f.size }));
+	} });
 };
 const noShareMenu = () => {
 	Object.defineProperty(navigator, "canShare", { configurable: true, value: undefined });
@@ -401,6 +415,56 @@ export const scenarios = [
 			t.check(!(await t.visible("[data-save-photo]")), "no button that would open a page with no way back");
 			const hint = await t.text("[data-save-hint]");
 			t.check(hint === "To save it, press and hold the photo, then tap Save to Photos.", `how to save it (said "${hint}")`);
+		},
+	},
+	{
+		name: "Save photo tapped twice on an iPhone: the photo is got once and the share menu opens once, with no word of trouble",
+		phones: ["iphone"],
+		init: [slowShareMenu],
+		async run(t) {
+			const jpeg = servePhoto(t);
+			let gets = 0;
+			t.harness.page(`/photos/${PHOTO.id}/download`, async () => {
+				gets++;
+				await new Promise((resolve) => setTimeout(resolve, 300));
+				return { headers: { "Content-Type": "image/jpeg" }, body: jpeg };
+			});
+			await t.page.goto(`${t.harness.url}/photo`);
+			await t.page.evaluate(() => { const save = document.querySelector("[data-save-photo]"); save.click(); save.click(); });
+			await t.until(() => t.page.evaluate(() => window.shared), "the share menu to open with the photo");
+			// A third tap, once the menu has closed, opens it again with the photo it already has.
+			await t.page.evaluate(() => document.querySelector("[data-save-photo]").click());
+			await t.page.waitForTimeout(1_500);
+			const shares = await t.page.evaluate(() => window.shares), hint = await t.text("[data-save-hint]");
+			t.check(gets === 1 && shares === 2, `the photo got once, and the menu opened once for the double tap and once for the third (got ${gets}, opened ${shares})`);
+			t.check(!/Couldn't/.test(hint), `no word of trouble (said "${hint}")`);
+		},
+	},
+	{
+		name: "after adding photos, Back goes to the page before Photos, not to one still stuck adding them",
+		phones: ["android", "iphone", "firefox"],
+		async run(t) {
+			t.harness.page("/", homeStub);
+			t.harness.page("/photos", photosPage);
+			await t.page.goto(`${t.harness.url}/`);
+			await t.page.goto(`${t.harness.url}/photos`);
+			await t.page.setInputFiles("#photo-files", [{ name: "IMG_0001.JPG", mimeType: "image/jpeg", buffer: await photo(t.page, 800, 600) }]);
+			await t.until(() => t.page.url().includes("done=added"), "the Photos page once it's in", 30_000);
+			await t.page.goBack();
+			await t.until(() => new URL(t.page.url()).pathname === "/", `Back at the page before Photos (at ${t.page.url()})`, 10_000);
+		},
+	},
+	{
+		name: "a scroll that starts on Choose photos lets the screen sleep again, so the page can still be pulled to refresh",
+		phones: ["android", "iphone"],
+		async run(t) {
+			t.harness.page("/photos", photosPage);
+			await t.page.goto(`${t.harness.url}/photos`);
+			const busy = () => t.page.evaluate(() => document.documentElement.classList.contains("busy"));
+			await t.page.dispatchEvent("#photo-files", "pointerdown", { pointerType: "touch", isPrimary: true });
+			t.check(await busy(), "the screen kept on from the touch");
+			await t.page.dispatchEvent("#photo-files", "pointercancel", { pointerType: "touch", isPrimary: true });
+			t.check(!(await busy()), "the page no longer busy once the touch became a scroll");
 		},
 	},
 ];

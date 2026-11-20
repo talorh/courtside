@@ -68,6 +68,15 @@ describe("the Users page", () => {
 		expect(await requestCode(deps, "steph@example.com", "1.2.3.4")).toBe("sent");
 	});
 
+	it("counts in its Locked tile only the locked people its filter shows: someone locked on no team is listed apart", async () => {
+		const { deps } = await setup();
+		await post(deps, "/admin/users/lock", { email: "steph@example.com", confirm: "yes" });
+		await deps.db.prepare("INSERT INTO locked_people (email, locked_by, locked_at) VALUES ('gone@example.com', ?, 'x')").bind(MANAGER).run();
+		const page = await get(deps);
+		expect(page).toContain('<a class="unit" href="/admin/users?status=locked"><b>1</b><span>Locked</span>');
+		expect(page).toMatch(/<h2>Locked, on no team<\/h2>[^]*?gone@example\.com/);
+	});
+
 	it("needs the confirm step to lock, unlock or take someone off a team", async () => {
 		const { deps, steph } = await setup();
 		expect((await post(deps, "/admin/users/lock", { email: "steph@example.com" })).status).toBe(400);
@@ -89,7 +98,7 @@ describe("the Users page", () => {
 		const { deps } = await setup();
 		const res = await post(deps, "/admin/users", { email: "magic@example.com", name: "Magic", team: G14_5.id, role: "coach" });
 		expect(res.headers.get("Location")).toBe("/admin/users?done=added");
-		const again = await post(deps, "/admin/users", { email: "magic@example.com", name: "Magic", team: G14_5.id, role: "coach" });
+		const again = await post(deps, "/admin/users", { email: "magic@example.com", name: "Magic", team: G14_5.id, role: "watcher" });
 		expect(again.status).toBe(409);
 		expect(await again.text()).toMatch(/<div class="note warn" role="alert">They&#39;re already on the list[^]*?value="magic@example.com"/);
 	});

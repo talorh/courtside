@@ -44,7 +44,7 @@ export function welcomePage(p: { frame: AdminFrame; team: Team; manager: Member 
 	const body = p.manager
 		? html`${went}<section class="panel stack"><p>The welcome ${who} gets by email, from ${mailFrom()}. Copy it to send another way too, a text, say.</p>
 <textarea id="welcome" class="msg" rows="20" readonly>${welcomeMessage({ team: p.team, manager: p.manager, origin: p.origin, byEmail: false })}</textarea>
-<div class="row-actions"><button class="btn" type="button" data-copy="welcome">Copy</button><form method="post" action="/admin/teams/${p.team.id}/welcome"><button class="btn">Email it again</button></form></div></section>`
+<div class="row-actions"><button class="btn" type="button" data-copy="welcome">Copy</button><form method="post" action="/admin/teams/${p.team.id}/welcome" data-once><button class="btn">Email it again</button></form></div></section>`
 		: html`<div class="note warn" role="status">${label} has no team manager yet. Open it and add one on Manage team.</div>`;
 	return adminLayout({ title: `${label} is ready`, current: "teams", frame: p.frame, back: { href: "/admin/teams", label: "Teams" }, scripts: ["/copy.js"] },
 		html`${body}<div class="row-actions">${openTeamForm(p.team, "btn", `Open ${label}`)}<a class="btn quiet" href="/admin/teams">Back to Teams</a></div>`);

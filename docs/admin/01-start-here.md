@@ -14,7 +14,7 @@ Courtside is a private website where each Saints team keeps its game videos and 
 
 | Page | What it's for | When you look |
 | --- | --- | --- |
-| Insights | Is the site all right, in one answer, with every check as a light and what needs an admin (tickets waiting, removal requests, a team without a manager); then the whole site in numbers over 12 weeks, mobile against desktop, and the teams side by side. Counts only, never anyone's email. On a new install, before the first team, it says how to get started. | Whenever you open the admin area: it's the landing page |
+| Insights | Is the site all right, in one answer, with every check as a light and what needs an admin (support tickets waiting, feature requests waiting, removal requests, a team without a manager); then the whole site in numbers over 12 weeks, mobile against desktop, and the teams side by side. Counts only, never anyone's email. | Whenever you open the admin area: it's the landing page |
 | Teams | Onboard a team; open any team as its team manager, or view it as any role; each running team's setup progress; end a season, reopen, or delete a team tonight. | A new team, or a team manager asking for help |
 | Users | Everyone on every team in one list, a row for each team they're on, with how many use the site, who hasn't signed in yet and each team's people; filter and sort it, lock someone, take them off a team or add them to one. | Someone to find, add, take off a team or lock; who isn't using the site |
 | Support | Team managers' questions and the site's own monitoring tickets, with replies, private notes and status. | Daily, and whenever an email says a ticket's waiting |

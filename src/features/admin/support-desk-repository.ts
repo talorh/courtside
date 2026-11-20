@@ -85,10 +85,12 @@ export const getMessage = async (db: D1Database, id: number) => {
 	return row ? toMessage(row) : null;
 };
 
-/** An admin's reply, note or event on a ticket (or the site's own: no admin); its id. `emailTo` null: no email. */
-export function messageStatement(db: D1Database, m: { ticket: Ticket; kind: MessageKind; adminEmail: string | null; body: string; emailTo: string | null; nowIso: string }) {
-	return db.prepare("INSERT INTO support_messages (request_id, team_id, kind, admin_email, body, email_to, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
-		.bind(m.ticket.id, m.ticket.teamId, m.kind, m.adminEmail, m.body, m.emailTo, m.nowIso);
+/** An admin's reply, note or event on a ticket (or the site's own: no admin); its id. `emailTo` null: no email.
+ * `onceSince`: not when the same admin wrote the same one on the ticket since then (a second tap). */
+export function messageStatement(db: D1Database, m: { ticket: Ticket; kind: MessageKind; adminEmail: string | null; body: string; emailTo: string | null; nowIso: string; onceSince?: string }) {
+	return db.prepare(`INSERT INTO support_messages (request_id, team_id, kind, admin_email, body, email_to, created_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7
+		WHERE ?8 IS NULL OR NOT EXISTS (SELECT 1 FROM support_messages WHERE request_id = ?1 AND kind = ?3 AND admin_email = ?4 AND body = ?5 AND created_at > ?8)`)
+		.bind(m.ticket.id, m.ticket.teamId, m.kind, m.adminEmail, m.body, m.emailTo, m.nowIso, m.onceSince ?? null);
 }
 
 /** The site's own ticket's name now (its alert got worse), and news: it moves up the queue. */
@@ -99,12 +101,19 @@ export const retitleStatement = (db: D1Database, id: number, title: string, nowI
 export const stageStatement = (db: D1Database, id: number, kind: TicketKind, stage: FeatureStage | null, nowIso: string) =>
 	db.prepare("UPDATE support_requests SET kind = ?, stage = ?, updated_at = ? WHERE id = ?").bind(kind, stage, nowIso, id);
 
-/** A ticket's status, owner and when it last changed, all in one; resolving says who and when. */
-export function ticketStatement(db: D1Database, id: number, t: { status: TicketStatus; assignedTo: string | null; by: string; nowIso: string }) {
+/** A ticket's status, owner and when it last changed, all in one; resolving says who and when. `afterChange`: only if the
+ * statement before it in the batch changed a row (`changes()` is that statement's). */
+export function ticketStatement(db: D1Database, id: number, t: { status: TicketStatus; assignedTo: string | null; by: string; nowIso: string }, afterChange = false) {
 	return db.prepare(`UPDATE support_requests SET status = ?2, assigned_to = ?3, updated_at = ?5,
-		resolved_at = CASE WHEN ?2 = 'resolved' THEN COALESCE(resolved_at, ?5) END, resolved_by = CASE WHEN ?2 = 'resolved' THEN COALESCE(resolved_by, ?4) END WHERE id = ?1`)
-		.bind(id, t.status, t.assignedTo, t.by, t.nowIso);
+		resolved_at = CASE WHEN ?2 = 'resolved' THEN COALESCE(resolved_at, ?5) END, resolved_by = CASE WHEN ?2 = 'resolved' THEN COALESCE(resolved_by, ?4) END
+		WHERE id = ?1 AND (?6 = 0 OR changes() = 1)`)
+		.bind(id, t.status, t.assignedTo, t.by, t.nowIso, afterChange ? 1 : 0);
 }
+
+/** Resolves a ticket that isn't yet (a statement for a batch: what follows it can check it changed). */
+export const resolveOnceStatement = (db: D1Database, id: number, by: string, nowIso: string) => db.prepare(`UPDATE support_requests
+	SET status = 'resolved', assigned_to = COALESCE(assigned_to, ?2), updated_at = ?3, resolved_at = COALESCE(resolved_at, ?3),
+	resolved_by = COALESCE(resolved_by, ?2) WHERE id = ?1 AND status <> 'resolved'`).bind(id, by, nowIso);
 
 /** The site's open ticket about one of its alerts, if any (at most one: a unique index). */
 export const findOpenSiteTicket = async (db: D1Database, alertKind: string) => {

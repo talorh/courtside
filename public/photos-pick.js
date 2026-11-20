@@ -63,9 +63,12 @@ function setUp() {
 		for (const box of chosen()) del.append(Object.assign(document.createElement("input"), { type: "hidden", name: "id", value: box.value }));
 	});
 	if (!shareableMany()) return;
-	let ready = null, readyFor = "";
+	// One save at a time: a double tap would get the photos twice and open the share menu over itself.
+	let ready = null, readyFor = "", busy = false;
 	form.addEventListener("submit", async (e) => {
 		e.preventDefault();
+		if (busy) return;
+		busy = true;
 		const picked = chosen();
 		const key = picked.map((box) => box.value).join(",");
 		try {
@@ -79,6 +82,8 @@ function setUp() {
 		} catch (err) {
 			console.warn(`save photos: ${err}`);
 			say(err.show ? err.message : "Couldn't get the photos just now. Check your connection and try again.");
+		} finally {
+			busy = false;
 		}
 	});
 	$("pick-download").textContent = "Save to Photos";

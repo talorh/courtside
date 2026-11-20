@@ -44,7 +44,12 @@ A few ideas hold the whole thing together:
 - **Polling, not webhooks.** A job every 5 minutes asks Stream how things are going, so nothing outside needs a
  public way in.
 - **Everything is safe to run twice.** Jobs read the current state each time, and the phone's retries are answered as
- done when they already worked.
+ done when they already worked. So is a double tap: the same form from the same person again within a minute (Add
+ game, Support's Send, a reply on a ticket, an admin's reply or note, Email it again for a team's welcome, Add a
+ person) is answered as done, with no second game, ticket, reply, email or Log line, each checked in the statement
+ that writes it (`teams.welcome_sent_at` for the welcome). Add a person for someone already on the list just as asked
+ is done too; any other role is still refused. On the page, `public/confirm.js` posts a question's Yes, and every form
+ marked `data-once`, once, however many taps.
 
 ## What happens on a request
 
@@ -203,7 +208,9 @@ flowchart TD
  (`auth/sign-in-email.ts`, in the site's style like the welcome).
 - **The session** (`sessions`, `auth/session.ts`): the cookie `courtside_session` holds a random token (HttpOnly, Secure,
  SameSite=Lax, 30 days); the row holds its SHA-256, the email, a device label ("iPhone, Safari") and when it ends. A
- fixed 30 days from the code, per device, several devices at once. Each request looks the row up and
+ fixed 30 days from the code, per device, several devices at once. The code is marked used, the
+ session written and its `signed_in` event logged in one batch, the session only if that request used the code: a
+ session that can't be saved leaves the code working, and a code sent twice at once signs in one device. Each request looks the row up and
  then the viewer from the teams' lists, as before; last seen is written at most hourly, after the response has gone
  (`ctx.waitUntil`, cloudflare-standards.md). Which view the device uses
  (`view.js` sets the `courtside_view` cookie from desktop.css's media query, or the chosen mobile view) is noted on the row
@@ -284,8 +291,14 @@ sequenceDiagram
  can't take over a newer one. A failed video cleared that way (or by Go live or an app's stream) keeps its R2
  original, the only copy of the game, until R2's lifecycle takes it 30 days after its upload.
 2. The browser asks for pre-signed part links 24 at a time and puts 16 MiB parts straight into R2, up to six at once
- (fewer after a dropped connection). It remembers finished parts in `localStorage`, so choosing the same file again
- carries on where it stopped.
+  (fewer after a dropped connection). It remembers finished parts in `localStorage`, so choosing the same file again
+  carries on where it stopped. A dropped connection, a timeout, a server error, throttling or storage's own 403 (a
+  part's signed link run out: a `StorageError` from `putPart`) is waited out and tried again (`upload-net.js`); any
+  other refusal from the site, its 403 included ("This upload belongs to someone else", or the not-on-a-team page,
+  served as a web page even at an `/api/` address), isn't, there or in Go live. The site's own calls give up after 30
+  seconds and are tried again (`net-timeout.js`; a phone with `AbortSignal.timeout` but not `AbortSignal.any`, iOS
+  16.4 to 17.3, joins the timeout and the upload's cancel by hand); a file's parts have no timeout, as they can take a
+  while.
 3. `POST /api/uploads/:id/complete` completes the upload (now `processing`), then asks Stream to copy the file from a
  pre-signed R2 link. If Stream can't take it just then, the 5-minute job tries again.
 
@@ -325,7 +338,9 @@ sequenceDiagram
  tracks never end, so a new camera can carry on in the same recording. The canvas is always landscape, the camera's
  longer side across: a camera started while the phone was upright (Carry on tapped before turning it) would otherwise
  record a tall segment that plays squashed once joined to a wide one. The recording is cut into 8 MiB parts (R2 wants equal parts) and uploaded through the
- normal part link and complete endpoints, retrying through any outage. Safari can hold on to recorded data, so
+ normal part link and complete endpoints, retrying through any outage (`keepTrying`: storage's 403, a part's link run
+ out, is sent again on a fresh link; the site's own refusal, a 403 included, stops the saving and the camera screen
+ says why). Safari can hold on to recorded data, so
  `golive-rec.js` calls `requestData` when nothing has arrived for 4 seconds.
  Safari can write a frame with a length below zero (a number near 2^32, so the file reads as 82 days and Stream
  refuses it with ERR_DURATION_TOO_LONG) when its recorder is paused or stopped as the camera stops: every piece the
@@ -354,7 +369,9 @@ sequenceDiagram
  Otherwise `endLive` sets `end_requested_at` and switches the input off (`switchOff`: the database first, Stream
  best-effort), so the game can't be streamed again. The phone finishes uploading, and completing it closes the row as
  saved (`closeBrowserLive`, `live_saved`). A recording under 60 seconds that slipped past (Stop didn't reach the server,
- or a pause) is dropped after processing instead (`dropShortTest`). The site still takes `cause: "camera"` from pages
+ or a pause) is dropped after processing instead (`dropShortTest`), unless it was carried on: its segments' rows are
+ gone by then (joined, or the first part kept), so `videos.carried_on_at`, set with its first later segment
+ (`insertSegment`), says so, and a first part kept that's under a minute stays the game video. The site still takes `cause: "camera"` from pages
  older than Resume camera.
 - **The camera stopping** (`golive-recam.js`; the phone locks, a call comes, another app takes it: an iPhone ends the
  camera's track, Android may only mute it) ends nothing. While the page is hidden or the camera's track is ended or
@@ -396,7 +413,8 @@ sequenceDiagram
  starts the mix, the live picture and the recording into the segment, as Go live does. The context starts itself again whenever the phone says it has stopped (`statechange`), and
  at any tap (`soundForTaps` in `golive-mixer.js`); each change is a `sound <state>` line in the phone's notes. A
  recording that hands nothing over for 20 seconds while live says so on the camera screen (`golive-watch.js`
- `onRecordingQuiet`) and logs a problem, and the camera screen offers **Reload and carry on**; only real data counts
+ `onRecordingQuiet`) and logs a problem, and the camera screen offers **Reload and carry on** (which takes the
+ streaming page's "leave this page?" question off first, so Android doesn't ask "Reload site?"); only real data counts
  (an empty piece, which Safari can answer `requestData` with, isn't recording), the count starts again when a hold
  ends, and a recording that carries on by itself takes the warning back (`onRecordingBack`). While it's quiet, the
  10-second check's line also says what the recording is made of (the recorder's state, the sound context's, and each
@@ -441,7 +459,10 @@ sequenceDiagram
  every waiting video, the Stream copies step first looks in R2 for `live-<date>.joined.mp4`: that file is the only
  proof trusted (R2 shows a PUT whole or not at all), so a joiner that restarts or forgets loses nothing. If it's
  there, one D1 batch points the video at it and deletes its segments' rows (`replaceSegmentsWith`), the segment
- objects go, the Log gets `video_joined` and Stream is asked for the copy as for any upload. If it isn't, the run asks
+ objects go, the Log gets `video_joined` and Stream is asked for the copy as for any upload. A copy is kept only while
+ the video's `r2_key` is still the file it was made from (`setStreamUid`), so an overlapping run that read the video
+ before the join can't send segment 1 alone: its copy is deleted (`stream_copy_doubled`). If the joined file isn't
+ there, the run asks
  the joiner (`platform/joiner.ts`: the `JOINER` Durable Object binding into the `courtside-join` Worker, `join/`),
  handing it the segments' two-hour links and a PUT link for the joined file, and is answered at once: `running` (begun
  by this ask, `started`, or still going), `done` or `failed` (told once, then forgotten), or `none`. An ask may begin a
@@ -557,18 +578,20 @@ Clips step after ten minutes. The run then takes clips from processing to ready 
 too; everyone sees and downloads them. They aren't linked to games.
 
 1. **On the phone or computer** (`photos.js`; chosen, or dropped on Add photos on a computer, `upload-drop.js`), each
- photo drawn one at a time and sent up to three at once (`photo-queue.js`), the first on its own so a refusal that
- would stop the rest stops before any more go, then three at once only if the first was in within 5 seconds, and
- one at a time after any dropped connection (`uploadLanes`: on a weak signal three share it and none may finish);
- a page left part way says how many weren't sent the next time Photos opens (`photo-unsent.js`, localStorage): when it was taken, from its EXIF DateTimeOriginal
- (`photo-date.js`, reading only the start of the file); then an `<img>` from the file's `blob:` address (so the phone
- turns it upright) drawn on a canvas at most 2560 px along its longer side and saved as a JPEG (quality 0.88), which
- leaves off all the camera's metadata, its location included. `POST /api/photos` sends the JPEG, `takenAt` and `key`
- (a UUID made on the phone for that photo, `newId`, the same each time it's sent) as a form (`apiForm`). Only trouble
- reaching the site is tried again (`isNetworkTrouble`; the site's own 429, with its code, is a refusal); a refusal
- skips that photo and lists it, and being signed out or not allowed, or the day's limit, stops the rest
- (`stopsTheRest` in `photo-queue.js`). The screen stays on and the page busy until they've
- all gone.
+  photo drawn one at a time and sent up to three at once (`photo-queue.js`), the first on its own so a refusal that
+  would stop the rest stops before any more go, then three at once only if the first was in within 5 seconds, and
+  one at a time after any dropped connection (`uploadLanes`: on a weak signal three share it and none may finish);
+  a page left part way says how many weren't sent the next time Photos opens (`photo-unsent.js`, localStorage): when it was taken, from its EXIF DateTimeOriginal
+  (`photo-date.js`, reading only the start of the file); then an `<img>` from the file's `blob:` address (so the phone
+  turns it upright) drawn on a canvas at most 2560 px along its longer side and saved as a JPEG (quality 0.88), which
+  leaves off all the camera's metadata, its location included. `POST /api/photos` sends the JPEG, `takenAt` and `key`
+  (a UUID made on the phone for that photo, `newId`, the same each time it's sent) as a form (`apiForm`). Only trouble
+  reaching the site is tried again (`isNetworkTrouble`; the site's own 429, with its code, is a refusal); a refusal
+  skips that photo and lists it, and being signed out or not allowed, or the day's limit, stops the rest
+  (`stopsTheRest` in `photo-queue.js`). The screen stays on and the page busy from the tap that opens the picker
+  until they've all gone (`awakeOnTap` in `awake.js`: a touch that turns into a scroll, `pointercancel`, lets it go
+  again, as no picker opens). Once they're all in, `location.replace` puts Photos with its thank-you in the page's
+  place, so Back never brings back a page still adding them (from the browser's back/forward cache).
 2. **In the Worker** (`photos-service.ts`, `addPhoto`): the body must be 10 MB or less (Images' limit), and is checked
  as a whole JPEG, with its size read and any metadata segments taken out (`jpeg.ts`: APP1 to APP15 except the ICC
  colour profile, and comments). `taken_at` is the phone's date if it's a real one and not still to come, otherwise
@@ -612,7 +635,9 @@ too; everyone sees and downloads them. They aren't linked to games.
 On an iPhone a download lands in Files rather than Photos, and in the Home Screen app it opens a page with no way back.
 So the page fetches the file itself and hands it to the share menu, whose Save Image or Save Video puts it in Photos
 (`public/share-file.js`): a photo (`photo-save.js`, from `/photos/:id/download`) and a highlight clip (`video-save.js`:
-`/api/clips/:id/download` gives the clip's signed Stream link as JSON, and Stream lets a page fetch it).
+`/api/clips/:id/download` gives the clip's signed Stream link as JSON, and Stream lets a page fetch it). Each button
+saves one at a time (Select photos' Save to Photos too): a second tap while the file is coming does nothing, and the
+share menu asked again while it's open (Safari's `InvalidStateError`) is left be rather than shown as trouble.
 
 A whole game's HD MP4 is 1 to 3 GB (1.67 GB for a 41-minute game), more than a phone can hold for the share menu, so
 it still goes to Files and the page says how to move it to Photos. In the Home Screen app,
@@ -652,8 +677,9 @@ the videos, games and people only that log named.
  looked for in R2 as a joined file, or the joiner is asked about it, instead (every one, every run: an ask is
  answered at once, `join-service.ts`).
 3. **Processing to ready.** Read Stream's details, store the duration, and ask Stream to build the MP4 download. A
- Stream error marks the video `failed`; uploading the game again replaces it (`clearSlot`), nothing needs deleting. A
- team manager's Delete video or Move video gives the game another week from then (`waitAgain`, `waiting_since`).
+  Stream error marks the video `failed`; uploading the game again replaces it (`clearSlot`), nothing needs deleting. A
+  team manager's Delete video or Move video, a removal request's Delete video included, gives the game another week
+  from then (`waitAgain`, `waiting_since`).
 4. **HD MP4s.** For ready videos without `hd_ready_at`, check the download: ready means store the time and log it for
  Notifications; none means ask Stream again (which covers a failed request in step 3). Stream saying it can't make
  it sets `hd_failed_at`, which takes the video out of this step (and out of "busy" and Right now), writes one
@@ -730,7 +756,9 @@ fails the run, and Platform shows the last backup, warning when it's missing, mo
 **The sweep** (`src/jobs/sweep-orphans.ts`) then removes what's left behind:
 
 - Stream videos and clips no team's rows point to any more. Stream and Images hold every team's things, so it reads
- every team's records first, and deletes nothing if any team's can't be read.
+ every team's records first, and deletes nothing if any team's can't be read. A recording made from a stream that's
+ still open is kept however old: an external app's save can wait (on another upload of the game still uploading, say),
+ and no row points at its recordings until it's saved.
 - Live inputs of streams that are no longer open (a test stream's, say), once they're two days old.
 - Images no live photo row points to (a photo whose save failed), also two days on. One whose upload time isn't known
  is kept.
@@ -830,7 +858,9 @@ can't be reopened, and is gone from its members' teams.
 The site emails its admins, a new team's team manager their welcome, and a support ticket's own team manager, and
 nobody else. Emails go through Cloudflare Email Sending (the `ADMIN_MAIL` binding, from `alerts@saints.example` only).
 `features/admin/admin-mail.ts` is the only code that sends, and it takes the recipients from the `admins` table or the
-team's members list when it sends, never from its caller. On staging, an email meant for a team manager goes to the
+team's members list when it sends, never from its caller, and never someone locked (`locked_people`): a locked admin
+gets no admins' email and can't be given a ticket, a locked team manager gets no welcome or ticket reply, and someone
+locked can't be made an admin until they're unlocked. On staging, an email meant for a team manager goes to the
 admin who wrote it instead. Emails are plain text, but for the welcome and the sign-in code: they go in the site's style too, their HTML beside their plain text (`ui/email-layout.ts` is the shared top bar, cards and footer;
 `welcome-message.ts` and `views/welcome-email.ts` build the welcome from the same sections, `auth/sign-in-email.ts`
 the code's). They carry no images. The code email, the welcome, the sign-in page
@@ -947,7 +977,7 @@ section and keeps one More menu open at a time.
 
 - **Insights** (`/admin`, the landing page; `insights-*.ts`, `views/insights-*.ts`) reads the database for its
  figures; only its Alerts ask outside it (Stream, Cloudflare and R2, below). First the Alerts, with what needs an
- admin (`insights-attention.ts`: alerts, support tickets waiting, families'
+ admin (`insights-attention.ts`: alerts, support tickets waiting, feature requests waiting on a line of their own, families'
  removal requests in any team, a running team with no team manager), worst first. Then a scoreboard of the whole site
  with each figure's last 12 weeks, first views week by week, when families watch (a heatmap of days and hours,
  local time), the rest as small charts (`insights-chart.ts`), the teams side by side, and what stands out. Every
@@ -1123,7 +1153,7 @@ erDiagram
 
 | Table | Key columns | Lifecycle |
 | --- | --- | --- |
-| teams | id (`<code>-<season>`: `b12.1-2026`), name, code (`b12.1`; one active team per code), season_start, ask_name (who members are told to ask; null: "your team manager"), status (active/closed/deleted), closed_at, delete_after, deleted_at, budget (its season's, in the club's currency; null: the default, $200) | Closed, then deleted; the row stays as a tombstone |
+| teams | id (`<code>-<season>`: `b12.1-2026`), name, code (`b12.1`; one active team per code), season_start, ask_name (who members are told to ask; null: "your team manager"), status (active/closed/deleted), closed_at, delete_after, deleted_at, budget (its season's, in the club's currency; null: the default, $200), welcome_sent_at (when its welcome last went, for a second tap of Email it again; null if it failed) | Closed, then deleted; the row stays as a tombstone |
 | admins | email (case-insensitive), added_by, added_at, removed_at | The site's admins, managed in the admin area; site-wide |
 | members | team_id, email (unique per team, case-insensitive), name, role (watcher/filmer/coach/manager: Watch only, Watch and film, Coach, Team manager), last_seen_at, hide_scores, hidden (an admin's own way into a team: never listed or counted, no Last seen), removed_at | Soft delete; adding them again brings them back. A person has a row in each team they're in |
 | games | team_id, starts_at, competition, round_label, phase (the league season's: grading1, crossover, grading2, championship; null otherwise, `games/season-phase.ts`), opponent, venue, live_stream (1, or 0: record and upload after), no_video_at (set: No video, which wins), no_video_auto_at (when the site set it, a week on with nothing filmed; cleared when it's set back to Video, or PlayHQ moves the game later), waiting_since (when it was last set from No video back to Video, or a team manager deleted or moved its video: it waits a week from then), playhq_game_id, playhq_fixture_id, playhq_gone_at, score_checked_at, deleted_at | Soft delete, only when the game has no video; the row goes 90 days after, once its last video has |
@@ -1132,12 +1162,12 @@ erDiagram
 | playhq_fixtures | team_id, competition (the league or Tournament), playhq_team_id, url, name, auto_check, game_count, checked_at, last_error, no_video | Hard delete on Remove (its games stay) |
 | recording_segments | team_id, video_id, n (2 up), r2_key, r2_upload_id (NULL once complete), created_at, completed_at: a carried-on recording's later segments; videos also carry join_tries, join_tried_at, join_failed_at |
 | live_streams | team_id, game_id, live_input_uid, started_by, status (open/saved/cancelled), source (camera/app), last_live_at, end_requested_at, end_kept_minutes (minutes still only on the phone at End game, as its page said), recording_video_id, cancel_reason, created_at, finished_at | One open per game (unique index); a test's row is reopened for the next Go live, with its input; closed rows are kept. started_by is whoever's phone is streaming (set when it starts; until then whoever opened Go live for the game) |
-| videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after, hd_ready_at, hd_failed_at, processing_at, join_tries, join_tried_at, join_failed_at, repair_tried_at (a Go live recording Stream refused, sent to be repaired once) | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
+| videos | team_id, game_id, status, stream_uid, r2_key, r2_upload_id, original_name, original_bytes, duration_seconds, failure_reason, uploaded_by, delete_after, deleted_at, deleted_reason, purge_after, hd_ready_at, hd_failed_at, processing_at, join_tries, join_tried_at, join_failed_at, repair_tried_at (a Go live recording Stream refused, sent to be repaired once), carried_on_at (a Go live recording carried on after its page closed: never a test) | One active (not failed) video per game; soft delete (a person's delete keeps the media a day, until `purge_after`; `status` stays as it was when deleted); the row goes 90 days after, unless the download log or a removal request names it |
 | downloads | team_id, video_id, member_id, kind (hd/original), created_at | Audit log, hard-deleted after 2 years |
 | media_downloads | team_id, member_id, kind (photo/clip), item_id (no foreign key: the log outlives the photo or clip), name (the file it came as), created_at | The download log's other half: every photo (each in a zip too) and clip downloaded, with who took it; kept two years, and its people with it when the team is deleted, as `downloads` keeps its own |
 | removal_requests | team_id, video_id, member_id, reason, status (open/video_deleted/kept), note, resolved_by, resolved_at | Kept |
 | roster_families | team_id, surname (unique among current families, any case), removed_at, created_at, away (JSON list of [from week, back week], back null while it's off) | Soft delete; their upcoming duties are cleared and filled again. Added back by the same surname, the row comes back and its time away closes. Weeks before created_at and weeks away count as the family's share of those weeks (`roster-away.ts`), so it isn't caught up |
-| roster_slots | team_id, week (Monday), duty (scoring/lollies/video), position, game_id (the game the duty is at), family_id, by_hand | Every game has its own duties. Filled by Generate roster and when the roster is opened (never at a game that has started); cleared when a week's games go, or a game does; one slot per family per game (unique index), and the roster gives a family one duty a week unless a weekend has more duties than families; by_hand: the team manager picked the family, so Generate keeps it |
+| roster_slots | team_id, week (Monday), duty (scoring/lollies/video), position, game_id (the game the duty is at), family_id, by_hand | Every game has its own duties. Filled by Generate roster and when the roster is opened (never at a game that has started); cleared when a week's games go, or a game does, and at a game still to come when it no longer wants the duty (No video, Scorers only, a duty switched off), while a started game keeps its slots (`syncRoster`); Save week keeps every slot a game that's been played holds (every game of an earlier week), whatever its No video or the team's duties say since, unless a pick replaces it or puts that family on another duty at that game (`wantedFor`), and fills only games still to come; one slot per family per game (unique index), and the roster gives a family one duty a week unless a weekend has more duties than families; by_hand: the team manager picked the family, so Generate keeps it |
 | roster_weeks | team_id, week, extra_off (1: Scorers only this week; 0: All duties this week) | A week's own say over its extra duty; no row: the extra duty is on, except a weekend whose games are all a tournament's, which starts as scorers only |
 | roster_duties | team_id (one row), lollies (on or off), lollies_label (the extra duty's name), lollies_family_id, video, video_family_id (a family who does that duty every week, and no other) | The team's duties beyond its two scorers, set on the Roster page; no row means Lollies and video, shared out |
 | players | team_id, number (one current player each, 0 to 99), name, removed_at | The squad (at most 10), kept on Manage team; shown on Home and in the clip picker; a removed player stays on clips already tagged |

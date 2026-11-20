@@ -4,8 +4,10 @@ import type { AppDeps } from "../app/deps.ts";
 import { isEmail } from "../features/members/members-service.ts";
 import { randomToken, sameText, sha256Hex, sixDigitCode } from "./crypto.ts";
 import { isLocked } from "./locks-repository.ts";
-import { insertSession } from "./session-repository.ts";
-import { claimTry, codeSent, countSignInEvents, forgetSignInEvent, insertCode, latestLiveCode, markCodeUsed, recordSignInEvent, type SignInEvent, voidCode } from "./sign-in-codes-repository.ts";
+import { sessionIfCodeUsedWrite } from "./session-repository.ts";
+import {
+	claimTry, codeSent, countSignInEvents, forgetSignInEvent, insertCode, latestLiveCode, markCodeUsedWrite, recordSignInEvent, type SignInEvent, signedInEventWrite, voidCode,
+} from "./sign-in-codes-repository.ts";
 import { holdIfWrongLimit, isHeld, LIMITS, overCodeLimit, overWrongLimit, since } from "./sign-in-limits.ts";
 import { CODE_MINUTES, sendCodeEmail } from "./sign-in-mail.ts";
 import { loadViewer } from "./viewer.ts";
@@ -115,11 +117,16 @@ export async function verifyCode(deps: AppDeps, rawEmail: string, code: string, 
 		await voidCode(deps.db, live.id, at);
 		return "expired";
 	}
-	if (!(await markCodeUsed(deps.db, live.id, at))) return "expired";
-	await note("signed_in");
-	const token = randomToken();
+	const token = randomToken(), id = await sha256Hex(token);
 	const expiresAt = new Date(now.getTime() + SESSION_DAYS * 24 * HOUR).toISOString();
-	await insertSession(deps.db, { id: await sha256Hex(token), email, device, createdAt: at, expiresAt });
+	// Together: the code is spent only with its session and its event, so a session that can't be saved leaves the
+	// code working for the retry, and of two requests sent at once only the one that used the code gets a session.
+	const [used] = await deps.db.batch([
+		markCodeUsedWrite(deps.db, live.id, at),
+		sessionIfCodeUsedWrite(deps.db, { id, email, device, createdAt: at, expiresAt }),
+		signedInEventWrite(deps.db, { email: storedEmail(email), ip, at, device: deps.device }, id),
+	]);
+	if (used?.meta.changes !== 1) return "expired";
 	log("signin_checked", email, { ok: true, device });
 	return { token, expiresAt };
 }

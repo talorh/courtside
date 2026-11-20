@@ -38,4 +38,5 @@ ${faqItem("g-photos", "Deleting a photo", html`<p>Open the photo and tap <b>Dele
 manager you can delete anyone's photos. Everyone else can delete only their own.</p>`)}
 ${faqItem("g-requests", "A request to remove something", html`<p>Requests show at the top of <b>Manage team</b>, with the reason
 given. Take it off with <b>Delete video</b> (or <b>Delete clip</b>, <b>Delete photo</b>), or leave it with <b>Keep video</b>
-(<b>Keep clip</b>, <b>Keep photo</b>).</p>`)}`;
+(<b>Keep clip</b>, <b>Keep photo</b>). A game whose video you delete waits a week from then for a new upload, as with
+<b>Delete video</b>.</p>`)}`;

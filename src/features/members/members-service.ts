@@ -3,7 +3,7 @@ import type { Role } from "../../auth/permissions.ts";
 import { heldEmails, releaseHold } from "../../auth/sign-in-codes-repository.ts";
 import { localDate } from "../../shared/time.ts";
 import {
-	countActiveManagers, getActiveMember, listActiveMembers, markMemberRemoved, type Member, updateMemberDetails, upsertMembers,
+	countActiveManagers, getActiveMember, LAST_MANAGER, listActiveMembers, markMemberRemoved, type Member, updateMemberDetails, upsertMembers,
 } from "./members-repository.ts";
 
 // No limit on a team's people, nor across teams:
@@ -33,16 +33,19 @@ export function tidyRows(rows: NewPerson[]): NewPerson[] {
 }
 
 /** Adds the new people (or previously removed ones), each with their own name and role. People already on the list are
- * left exactly as they are. Returns who was added. */
+ * left exactly as they are: when they're all there already just as asked (a second tap of Add), nothing's left to do.
+ * Returns who this call added (none for the second of two taps at once). */
 export async function addMembers(db: D1Database, teamId: string, rows: NewPerson[]): Promise<NewPerson[]> {
 	const people = tidyRows(rows);
-	const existing = new Set((await listActiveMembers(db, teamId)).map((m) => m.email.toLowerCase()));
+	const existing = new Map((await listActiveMembers(db, teamId)).map((m) => [m.email.toLowerCase(), m]));
 	const fresh = people.filter((p) => !existing.has(p.email));
+	const asAsked = (p: NewPerson) => existing.get(p.email)?.role === p.role && (!p.name || existing.get(p.email)?.name === p.name);
 	if (fresh.length === 0) {
+		if (people.every(asAsked)) return [];
 		throw conflict("They're already on the list. Change their name or role in the list instead.");
 	}
-	await upsertMembers(db, teamId, fresh);
-	return fresh;
+	const added = await upsertMembers(db, teamId, fresh);
+	return fresh.filter((_, i) => added[i]);
 }
 
 /** A member Manage team lists: an admin's hidden way into the team isn't one, so a team manager can't change it. */
@@ -54,7 +57,7 @@ async function listedMember(db: D1Database, teamId: string, memberId: number): P
 
 /** Refuses to take away a member who is the team's last listed team manager (the SQL guards the same rule against a race). */
 async function keepsAManager(db: D1Database, teamId: string, member: Member): Promise<void> {
-	if (member.role === "manager" && (await countActiveManagers(db, teamId)) <= 1) throw conflict("The team needs at least one team manager.");
+	if (member.role === "manager" && (await countActiveManagers(db, teamId)) <= 1) throw conflict(LAST_MANAGER);
 }
 
 /** Saves a member's name and role, and returns the person as they were before. The team must always keep at least one

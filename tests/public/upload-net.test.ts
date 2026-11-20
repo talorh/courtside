@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 // @ts-expect-error: a browser script (plain JS), tested here on its own.
-import { api, apiForm, HttpError, isNetworkTrouble, needsReload, newId, putPart, timeoutSignal, withRetries } from "../../public/upload-net.js";
+import { api, apiForm, HttpError, isNetworkTrouble, keepTrying, needsReload, newId, putPart, withRetries } from "../../public/upload-net.js";
 
-const realFetch = globalThis.fetch, realTimeout = AbortSignal.timeout;
-afterEach(() => { globalThis.fetch = realFetch; AbortSignal.timeout = realTimeout; vi.useRealTimers(); });
+const realFetch = globalThis.fetch, realTimeout = AbortSignal.timeout, realAny = AbortSignal.any;
+afterEach(() => { globalThis.fetch = realFetch; AbortSignal.timeout = realTimeout; AbortSignal.any = realAny; vi.useRealTimers(); });
 
 /** The test's clock, with AbortSignal.timeout on it (Node's own runs on a real timer the test can't move on). */
 const fakeClock = () => {
@@ -82,16 +82,18 @@ describe("Go live and upload network helpers", () => {
 		await expect(refused).rejects.toMatchObject({ status: 403 });
 		expect(hints).toEqual([]);
 	});
-	it("phones too old for a timeout just get the signal they were given; ids are UUIDs either way", () => {
-		const signal = new AbortController().signal;
-		const timeout = AbortSignal.timeout;
-		(AbortSignal as { timeout?: unknown }).timeout = undefined;
-		try {
-			expect(timeoutSignal(1000, signal)).toBe(signal);
-			expect(timeoutSignal(1000)).toBeUndefined();
-		} finally {
-			AbortSignal.timeout = timeout;
-		}
+	it("an upload's API call, which can be cancelled, still gives up after 30 seconds on a phone without AbortSignal.any", async () => {
+		fakeClock();
+		(AbortSignal as { any?: unknown }).any = undefined;
+		stalled();
+		let settled = false;
+		const call = api("/api/uploads/1/part-urls", { partNumbers: [1] }, new AbortController().signal).catch((err: Error) => err).finally(() => { settled = true; });
+		await vi.advanceTimersByTimeAsync(29_999);
+		expect(settled).toBe(false);
+		await vi.advanceTimersByTimeAsync(1);
+		expect(await call).toMatchObject({ name: "TimeoutError" });
+	});
+	it("ids are UUIDs, on phones too old for crypto.randomUUID too", () => {
 		const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 		expect(newId()).toMatch(uuid);
 		const randomUUID = crypto.randomUUID;
@@ -217,3 +219,68 @@ describe("how long an upload keeps trying", () => {
 		expect(tries()).toBe(101);
 	});
 });
+
+describe("a 403: storage's run-out link is tried again, the site's own refusal isn't", () => {
+	const onPage = () => {
+		vi.useFakeTimers();
+		const listeners = { addEventListener: () => {}, removeEventListener: () => {} };
+		vi.stubGlobal("window", listeners);
+		vi.stubGlobal("document", { ...listeners, visibilityState: "visible" });
+		vi.stubGlobal("navigator", { onLine: true });
+	};
+	afterEach(() => vi.unstubAllGlobals());
+	const answers = (...replies: Array<() => Response>) => {
+		let n = 0;
+		globalThis.fetch = (async () => replies[Math.min(n++, replies.length - 1)]!()) as typeof fetch;
+		return () => n;
+	};
+	const notYours = () => Response.json({ ok: false, error: { code: "forbidden", message: "This upload belongs to someone else." } }, { status: 403 });
+	// Someone not on a team gets the not-on-a-team page, a web page, even at an /api/ address.
+	const notOnTeam = () => new Response("<html>You're not on a team's list</html>", { status: 403, headers: { "Content-Type": "text/html" } });
+	const linkRunOut = () => new Response("<Error><Code>AccessDenied</Code></Error>", { status: 403 });
+	const stored = () => new Response(null, { status: 200, headers: { ETag: '"e1"' } });
+
+	it("an upload's API call answered 403 by the site, in JSON or as a page, is refused at once, not tried again", async () => {
+		onPage();
+		for (const refusal of [notYours, notOnTeam]) {
+			const tries = answers(refusal);
+			const hints: string[] = [];
+			const err = await withRetries(() => api("/api/uploads/41/complete", {}), (h: string) => hints.push(h)).catch((e: Error) => e);
+			expect(err).toMatchObject({ status: 403 });
+			expect([tries(), hints]).toEqual([1, []]);
+		}
+	});
+
+	it("a part storage turns down with 403 (its signed link ran out) is sent again", async () => {
+		onPage();
+		const tries = answers(linkRunOut, stored);
+		const etag = withRetries(() => putPart("https://r2.test/p1", new Blob(["x"])), () => {});
+		await vi.advanceTimersByTimeAsync(10_000);
+		expect([await etag, tries()]).toEqual(['"e1"', 2]);
+	});
+
+	it("Go live keeps sending a part through storage's 403s, but stops at the site's own 403 rather than asking for ever", async () => {
+		onPage();
+		const tries = answers(linkRunOut, linkRunOut, stored);
+		const etag = keepTrying(() => putPart("https://r2.test/p1", new Blob(["x"]), undefined, 300_000), () => {});
+		await vi.advanceTimersByTimeAsync(30_000);
+		expect([await etag, tries()]).toEqual(['"e1"', 3]);
+		for (const refusal of [notYours, notOnTeam]) {
+			const asked = answers(refusal);
+			const refused = keepTrying(() => api("/api/uploads/41/part-urls", { partNumbers: [1] }), () => {}).catch((e: Error) => e);
+			await vi.advanceTimersByTimeAsync(60_000);
+			expect(await refused).toMatchObject({ status: 403 });
+			expect(asked()).toBe(1);
+		}
+	});
+
+	it("a 403 from Cloudflare's own security in front of the site (cf-mitigated) is tried again, not taken as the site's refusal", async () => {
+		onPage();
+		const challenged = () => new Response("<html>Just a moment…</html>", { status: 403, headers: { "cf-mitigated": "challenge" } });
+		const tries = answers(challenged, () => Response.json({ ok: true, data: { urls: { 1: "https://r2.test/p1" } } }));
+		const asked = keepTrying(() => api("/api/uploads/41/part-urls", { partNumbers: [1] }), () => {});
+		await vi.advanceTimersByTimeAsync(30_000);
+		expect([await asked, tries()]).toEqual([{ urls: { 1: "https://r2.test/p1" } }, 2]);
+	});
+});
+

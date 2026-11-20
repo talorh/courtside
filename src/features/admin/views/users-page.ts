@@ -91,7 +91,7 @@ function row(r: UserRow, p: Shown): SafeHtml {
 function addForm(p: Shown): SafeHtml {
 	const v = p.values ?? { email: "", name: "", teamId: p.filters.team, role: "watcher" };
 	const running = p.teams.filter((t) => t.status === "active").map((t) => ({ value: t.id, label: teamLabel(t, { season: p.teams.filter((o) => o.code === t.code).length > 1 }) }));
-	return html`<form class="panel stack" method="post" action="/admin/users" id="add"><h2>Add someone to a team</h2>
+	return html`<form class="panel stack" method="post" action="/admin/users" id="add" data-once><h2>Add someone to a team</h2>
 ${p.error && p.values ? html`<div class="note warn" role="alert">${p.error}</div>` : ""}
 <div class="formgrid"><label>Email<input name="email" type="email" required maxlength="254" autocomplete="off" value="${v.email}"></label>
 <label>Name<input name="name" type="text" maxlength="80" autocomplete="off" value="${v.name}" placeholder="Steph's mum"></label>

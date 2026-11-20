@@ -53,3 +53,30 @@ describe("0012 Request access's tries are sign-in events", () => {
 		expect(db.prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'sign_in_events'").all()).toEqual([{ name: "sign_in_events_at" }]);
 	});
 });
+
+describe("0020 a carried-on recording stays marked once its segments go", () => {
+	it("marks the videos with segments waiting or a joined file, and no other", () => {
+		const db = new DatabaseSync(":memory:");
+		db.exec("PRAGMA foreign_keys = ON");
+		const files = readdirSync("migrations").filter((f) => f.endsWith(".sql")).sort();
+		const apply = (f: string) => db.exec(`BEGIN; ${readFileSync(`migrations/${f}`, "utf8")}; COMMIT;`);
+		for (const f of files.filter((f) => f < "0020")) apply(f);
+		db.exec("INSERT INTO teams (id, name, code, season_start) VALUES ('b12.1-2026', 'Saints B12.1', 'b12.1', 2026)");
+		const video = (key: string, status: string) => {
+			db.exec("INSERT INTO games (team_id, starts_at, competition, opponent) VALUES ('b12.1-2026', '2026-11-13T18:40', 'Practice match', 'TBC')");
+			const gameId = (db.prepare("SELECT MAX(id) AS id FROM games").get() as { id: number }).id;
+			db.exec(`INSERT INTO videos (team_id, game_id, status, r2_key, original_name, original_bytes, delete_after, created_at) VALUES ('b12.1-2026', ${gameId}, '${status}', '${key}', 'n', 0, 'd', 'made-${key}')`);
+			return (db.prepare("SELECT MAX(id) AS id FROM videos").get() as { id: number }).id;
+		};
+		const waiting = video("live.mp4", "uploading");
+		db.exec(`INSERT INTO recording_segments (team_id, video_id, n, r2_key, r2_upload_id, created_at) VALUES ('b12.1-2026', ${waiting}, 2, 'live.2.mp4', 'up', 'now')`);
+		video("live.joined.mp4", "processing");
+		video("game.mov", "ready");
+		for (const f of files.filter((f) => f >= "0020")) apply(f);
+		expect(db.prepare("SELECT r2_key, carried_on_at FROM videos ORDER BY id").all()).toEqual([
+			{ r2_key: "live.mp4", carried_on_at: "made-live.mp4" },
+			{ r2_key: "live.joined.mp4", carried_on_at: "made-live.joined.mp4" },
+			{ r2_key: "game.mov", carried_on_at: null },
+		]);
+	});
+});

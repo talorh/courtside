@@ -1,6 +1,7 @@
-// What needs an admin besides the checks, first on Insights (a landing page): support requests waiting for an answer,
-// the site's own tickets with no team (an alert's ticket shows as its alert instead), families' removal requests waiting
-// in any team (child safety), and a running team with no team manager. Worst first; each says where it's dealt with.
+// What needs an admin besides the checks, first on Insights (a landing page): support requests waiting for an answer
+// and, apart from them, feature requests; the site's own tickets with no team (an alert's ticket shows as its alert
+// instead), families' removal requests waiting in any team (child safety), and a running team with no team manager.
+// Worst first; each says where it's dealt with.
 import { teamLabel } from "../teams/team-code.ts";
 import type { TeamCounts } from "./insights-repository.ts";
 import { plural } from "./insights-service.ts";
@@ -13,6 +14,8 @@ export function needsAttention(p: { teams: TeamCounts[]; siteTickets: number }):
 	const items: Attention[] = [];
 	const support = p.teams.reduce((n, t) => n + t.openSupport, 0);
 	if (support) items.push({ level: "warn", text: `${support} support ${support === 1 ? "request is" : "requests are"} waiting for an answer.`, href: "/admin/support", action: "Open Support" });
+	const features = p.teams.reduce((n, t) => n + t.openFeatures, 0);
+	if (features) items.push({ level: "info", text: `${features} feature ${features === 1 ? "request is" : "requests are"} waiting for an answer.`, href: "/admin/support?type=feature", action: "Open feature requests" });
 	const site = p.siteTickets;
 	if (site) items.push({ level: "warn", text: `${site} ${site === 1 ? "ticket from the site is" : "tickets from the site are"} waiting in Support (access requests, bounced addresses, videos that couldn't be processed).`, href: "/admin/support", action: "Open Support" });
 	for (const t of p.teams) {

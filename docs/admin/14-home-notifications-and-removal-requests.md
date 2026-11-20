@@ -22,7 +22,7 @@ For team managers: what's uploading, processing or waiting for its HD MP4 now, a
 
 *Families can always ask; only a team manager decides. A request stays on record even after what it named has gone.*
 
-Any member can ask for a video, a clip or a photo to be removed, with a reason: a family whose child shouldn't be shown, say. The team manager sees it on Manage team (a photo's request shows the photo) and in Notifications, and the admins see every team's waiting requests on Insights. Deleting closes every open request for it; keeping closes them with the team manager's note. Requests are kept even after what they named has gone.
+Any member can ask for a video, a clip or a photo to be removed, with a reason: a family whose child shouldn't be shown, say. The team manager sees it on Manage team (a photo's request shows the photo) and in Notifications, and the admins see every team's waiting requests on Insights. Deleting closes every open request for it (a video's game, as with Delete video, waits a week from then for a new upload before it goes No video); keeping closes them with the team manager's note. Requests are kept even after what they named has gone.
 
 | Table | Holds |
 | --- | --- |

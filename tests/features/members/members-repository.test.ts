@@ -70,8 +70,10 @@ describe("members repository", () => {
 		const bea = await findActiveMemberByEmail(db, TEAM, "b@x.com");
 		// Both checks passed (two admins), then both writes land: the second one is refused.
 		await updateMemberDetails(db, TEAM, bea!.id, { name: "Bea", role: "watcher" });
-		await expect(updateMemberDetails(db, TEAM, 1, { name: "Sam", role: "watcher" })).rejects.toThrow(/member/);
-		await expect(markMemberRemoved(db, TEAM, 1, "2026-10-15T00:00:00.000Z")).rejects.toThrow(/member/);
+		// Refused as the services refuse it (409, saying why), never a server error.
+		const lastManager = { status: 409, message: "The team needs at least one team manager." };
+		await expect(updateMemberDetails(db, TEAM, 1, { name: "Sam", role: "watcher" })).rejects.toMatchObject(lastManager);
+		await expect(markMemberRemoved(db, TEAM, 1, "2026-10-15T00:00:00.000Z")).rejects.toMatchObject(lastManager);
 		expect(await countActiveManagers(db, TEAM)).toBe(1);
 	});
 	it("throws when a targeted update matches nothing", async () => {

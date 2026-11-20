@@ -7,7 +7,8 @@ export const managerSeason = (h: HelpFor) => html`<h2 class="faqgroup">Notificat
 ${faqItem("g-notifications", "What Notifications shows", html`<p><b>Notifications</b> (in the small links at the top) lists what's
 streaming, uploading or processing now, and the last 30 days: uploads, clips, live streams and removal requests.</p>`)}
 ${faqItem("g-score", "Entering a score", html`<p>Once a game has started, its page has the score: type both, then tap
-<b>Save score</b>. PlayHQ games fill in by themselves when PlayHQ says the game's final.</p>`)}
+<b>Save score</b>. PlayHQ games fill in by themselves when PlayHQ says the game's final. To take off a score you typed,
+tap <b>Clear score</b>, then <b>Yes, clear it</b>.</p>`)}
 <h2 class="faqgroup">End of the season</h2>
 ${faqItem("g-end", "When the season's over", html`<ul class="steps">
 <li>Your team's site stays open, and everything on it is kept, until the end of <b>31 December ${h.season.end}</b> (the end

@@ -87,8 +87,8 @@ function setup(card) {
 		}
 	} });
 	btn("camera").hidden = recordingInTheWay(card, { btn, say, carryOn }); // a recording to carry on or save: no Start camera
-	// A recording that has stopped saving (the page came back from being put away): a fresh page finds it and carries on.
-	btn("reload").onclick = () => location.reload();
+	// A recording that has stopped saving (the page came back from being put away): a fresh page finds it and carries on, not asking "Reload site?".
+	btn("reload").onclick = () => { window.removeEventListener("beforeunload", leaving); location.reload(); };
 
 	btn("camera").onclick = () => run(btn("camera"), async () => {
 		// The screen stays on from this tap (setting up takes minutes; iPhone grants it only straight after a tap, awake.js).
@@ -137,5 +137,4 @@ function setup(card) {
 		});
 		streamingFrom(start);
 	}
-
 }

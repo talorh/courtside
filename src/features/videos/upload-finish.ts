@@ -18,8 +18,9 @@ export async function requestStreamCopy(deps: TeamDeps, video: Video): Promise<v
 		scheduledDeletion: streamDeletionDate(video.deleteAfter, deps.now()),
 		meta: { name: streamName(await videoName(deps, video.gameId)), videoId: String(video.id), gameId: String(video.gameId), teamId: video.teamId },
 	});
-	if (await setStreamUid(deps.db, deps.team.id, video.id, uid)) return;
-	// Another ask got there first (a team manager's Keep the first part as the job ran, say): this copy isn't needed.
+	if (await setStreamUid(deps.db, deps.team.id, video.id, uid, video.r2Key)) return;
+	// Another ask got there first (a team manager's Keep the first part as the job ran, say), or this one read the video
+	// before a join replaced its original (the first segment alone): this copy isn't needed.
 	console.warn(JSON.stringify({ event: "stream_copy_doubled", teamId: deps.team.id, videoId: video.id, uid }));
 	await deps.stream.deleteVideo(uid);
 }

@@ -35,6 +35,6 @@ export async function addFromSheet(deps: TeamDeps, actor: string, json: string):
 	const fresh = (await sheetPeople(deps.db, deps.team.id, tidyRows(people.data))).filter((p) => !p.onTeam);
 	if (fresh.length === 0) return 0;
 	const added = await addMembers(deps.db, deps.team.id, fresh.map(({ email, name, role }) => ({ email, name, role })));
-	await logTeamChange(deps, actor, "member_added", added.map((p) => `${personOf(p)} as ${roleOf(p.role)}`).join(", "));
+	if (added.length) await logTeamChange(deps, actor, "member_added", added.map((p) => `${personOf(p)} as ${roleOf(p.role)}`).join(", "));
 	return added.length;
 }

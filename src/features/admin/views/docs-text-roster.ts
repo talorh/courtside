@@ -47,13 +47,18 @@ and seasons up to 30 weeks, and a whole season takes a few milliseconds.</li></u
 ${rosterChangeDiagram()}
 <ul class="docs-points">
 <li><b>Opening the Roster</b> brings it up to date once Generate roster has been tapped, while the season's on: new
-games' weeks are filled, a week or a game that's gone loses its slots, and from this week on so does a slot the week no
-longer wants (a duty switched off, video in a No video week).</li>
+games' weeks are filled, a week or a game that's gone loses its slots, and at a game still to come so does a slot it no
+longer wants (a duty switched off, video at a No video game, the extra duty on a Scorers only week). A game that's
+started keeps who was down for it, whatever it's set to afterwards (footage lost and the game set to No video the
+next day keeps its video duty).</li>
 <li><b>Generate roster</b> needs families and an upcoming game. It clears next week on, keeping duties set by hand,
 and shares the rest out around them. A duty left with a family that's since been taken off goes to one on the roster.</li>
 <li><b>Change</b> on a week gives each duty a family picked by hand, or leaves it as <b>Roster's pick</b>, showing the
 family the roster chose. A family picked comes off any other duty that week, a family does one duty a game at most, and
-whatever's left is filled fairly. The week then says "Set by hand" for the team manager.</li>
+whatever's left is filled fairly. The week then says "Set by hand" for the team manager. A game that's been played
+(every game of an earlier week) keeps every duty it holds unless a pick replaces it, whatever its No video or the
+team's duties say since (its card and Change show them), and a family picked for a later game keeps the duty it did
+there. Only games still to come are filled.</li>
 <li><b>Time off the roster</b> (a child away or injured): taking a family off starts its time away, and adding the same
 surname back ends it. Its duties at games still to come go to others; a game that's already started (this weekend's
 first game, say) keeps who was down for it, and an empty duty at a started game isn't filled after the event. Each week away, and each week before a family added partway through the season, counts as its
@@ -62,7 +67,8 @@ like everyone else instead of duty after duty to catch up.</li>
 <li><b>A closed season's</b> roster stays exactly as it was.</li></ul>
 <h3>What families see</h3>
 <ul class="docs-points">
-<li><b>Your duty:</b> a member whose last name matches a family sees that family's next duty.</li>
+<li><b>Your duty:</b> a member whose name ends with a family's surname (the longer of two, so "Sam Van Dyke" is Van
+Dyke, not Dyke) sees that family's next duty: the first by tip-off at a game that hasn't started.</li>
 <li><b>The weeks:</b> each week's games and who's on each duty. The next six weeks show; Earlier weeks and Later weeks
 fold the rest, as a season runs to 40 weeks or more.</li>
 <li><b>Roster fairness:</b> a plain verdict ("Fair", or "Not even yet" when families are more than one apart, which

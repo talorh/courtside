@@ -21,7 +21,7 @@ type Values = { topic: string; message: string; contact: string };
 /** The form itself: on Support, and at the end of Running your team on a team manager's Help. Their email is there already. */
 export function supportForm(frame: PageFrame, values?: Values, error?: string): SafeHtml {
 	const v = values ?? { topic: "other", message: "", contact: frame.member.email };
-	return html`<form class="panel stack" method="post" action="/support">
+	return html`<form class="panel stack" method="post" action="/support" data-once>
 <p class="small">For anything Help doesn't answer, or an idea for the site (choose Feature request). It goes to the site's admin, who answers on your <a href="/support">Support</a> page and by email.</p>
 ${error ? html`<div class="note warn" role="alert">${error}</div>` : ""}
 <label>What's it about?<select name="topic">${selectOptions(topics, v.topic)}</select></label>

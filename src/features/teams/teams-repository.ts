@@ -110,3 +110,14 @@ export async function listTeamsIn(db: D1Database, statuses: TeamStatus[]): Promi
 export async function countRunningTeams(db: D1Database): Promise<number> {
 	return (await db.prepare("SELECT COUNT(*) AS n FROM teams WHERE status = 'active'").first<number>("n")) ?? 0;
 }
+
+/** The team's welcome is this request's to send: false when one went (or is going) since `sinceIso`, a second tap. */
+export async function claimWelcome(db: D1Database, id: string, nowIso: string, sinceIso: string): Promise<boolean> {
+	return (await db.prepare("UPDATE teams SET welcome_sent_at = ? WHERE id = ? AND (welcome_sent_at IS NULL OR welcome_sent_at <= ?)")
+		.bind(nowIso, id, sinceIso).run()).meta.changes === 1;
+}
+
+/** A welcome that didn't go: Email it again sends it at once. Only this claim's own mark. */
+export async function releaseWelcome(db: D1Database, id: string, nowIso: string): Promise<void> {
+	await db.prepare("UPDATE teams SET welcome_sent_at = NULL WHERE id = ? AND welcome_sent_at = ?").bind(id, nowIso).run();
+}

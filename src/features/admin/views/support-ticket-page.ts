@@ -71,7 +71,7 @@ export function ticketPage(p: { frame: AdminFrame; ticket: Ticket; messages: Des
 	const lede = `${KIND_LABELS[t.kind].slice(0, -1)}. ${standing}${t.assignedTo ? `, ${t.assignedTo}'s` : ", nobody's yet"}. Asked ${when(t.createdAt)}.`;
 	return adminLayout({ title: `#${t.id} ${ticketTitle(t)}`, current: "support", frame: p.frame, back: { href: t.kind === "feature" ? "/admin/support?type=feature" : "/admin/support", label: t.kind === "feature" ? "Feature requests" : "Support" }, lede, scripts: ["/copy.js"] },
 		html`${notice(p.message)}<div class="ticketgrid"><div class="stack"><ol class="thread">${first}${p.messages.map(message)}</ol>
-<form class="panel stack" method="post" action="/admin/support/${t.id}/message"><label>Write<textarea name="body" rows="5" required maxlength="4000"></textarea></label>
+<form class="panel stack" method="post" action="/admin/support/${t.id}/message" data-once><label>Write<textarea name="body" rows="5" required maxlength="4000"></textarea></label>
 <div class="row-actions">${reply}<button class="btn" name="then" value="note">Add a private note</button></div>
 <p class="small">${to}A private note is for the admins only.</p></form></div>${side(t, p.admins, me)}</div>`);
 }

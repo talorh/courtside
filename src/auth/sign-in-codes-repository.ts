@@ -45,10 +45,10 @@ export async function voidCode(db: D1Database, id: number, nowIso: string): Prom
 	await db.prepare("UPDATE sign_in_codes SET voided_at = COALESCE(voided_at, ?) WHERE id = ?").bind(nowIso, id).run();
 }
 
-/** The code signs a device in once: true if this request used it, false if another had already. */
-export async function markCodeUsed(db: D1Database, id: number, nowIso: string): Promise<boolean> {
-	return (await db.prepare("UPDATE sign_in_codes SET used_at = ? WHERE id = ? AND used_at IS NULL AND voided_at IS NULL").bind(nowIso, id).run()).meta.changes === 1;
-}
+/** The code signs a device in once: it changes the code only if no other request has used it (or it's been voided),
+ * batched first with the session and its event (auth/session-repository.ts `sessionIfCodeUsedWrite`). */
+export const markCodeUsedWrite = (db: D1Database, id: number, nowIso: string) =>
+	db.prepare("UPDATE sign_in_codes SET used_at = ? WHERE id = ? AND used_at IS NULL AND voided_at IS NULL").bind(nowIso, id);
 
 /** `device`: the browser that asked ("iPhone, Safari": shared/device.ts). */
 export interface SignInEventInput { kind: SignInEvent; email: string; ip: string; at: string; device?: string }
@@ -60,6 +60,11 @@ export async function recordSignInEvent(db: D1Database, e: SignInEventInput): Pr
 	if (id === null) throw new Error("Sign-in event wasn't recorded");
 	return id;
 }
+
+/** The signed_in event, written only if its session was: batched after it, so a refused sign-in logs none. */
+export const signedInEventWrite = (db: D1Database, e: Omit<SignInEventInput, "kind">, sessionId: string) => db
+	.prepare("INSERT INTO sign_in_events (kind, email, ip, at, device) SELECT 'signed_in', ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM sessions WHERE id = ?)")
+	.bind(e.email.toLowerCase(), e.ip, e.at, e.device ?? "", sessionId);
 
 /** An event that turned out not to have happened (a code that was refused, or whose email didn't go). */
 export async function forgetSignInEvent(db: D1Database, id: number): Promise<void> {

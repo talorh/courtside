@@ -18,7 +18,7 @@ export function myTicketPage(p: { frame: PageFrame; ticket: MyTicket; replies: P
 ${notice(p.message)}<p class="small"><a href="/support">‹ Your requests</a></p>
 <p class="ticketwhere"><span class="tstat s-${s.cls}">${s.label}</span> ${s.means}</p>
 <ol class="thread">${said("You", t.createdAt, t.message, true)}${replies}</ol>
-<form class="panel stack" method="post" action="/support/${t.id}/reply">${p.error ? html`<div class="note warn" role="alert">${p.error}</div>` : ""}
+<form class="panel stack" method="post" action="/support/${t.id}/reply" data-once>${p.error ? html`<div class="note warn" role="alert">${p.error}</div>` : ""}
 <label>Your reply<textarea name="body" rows="4" required maxlength="2000">${p.body ?? ""}</textarea></label>
 <div class="row-actions"><button class="btn primary">Send</button></div></form>`);
 }

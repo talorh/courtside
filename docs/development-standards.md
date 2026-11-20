@@ -293,10 +293,12 @@ put. The Cloudflare platform rules are in `docs/cloudflare-standards.md`.
  keeps an upload's saved progress; the maintenance page's 503 is waited out with its own words.
 - Network steps retry with backoff and wait for the page to be visible and online before retrying (`upload-net.js`:
  `withRetries`, and `keepTrying` for a live recording's parts). A request that can stall has a timeout where the
- browser supports one (`timeoutSignal` in `upload-net.js`: 30 s for API calls, 2 minutes for a photo, 5 minutes for a
- live recording's part, 15 s for the live picture's WHIP/WHEP offer), and a timeout is retried like a dropped
- connection. What's retried is `withRetries`' rule: a photo takes `isNetworkTrouble` (a refusal, 403 included, is never
- sent again). So every API step a phone retries must be safe to repeat: asking again after it worked answers as done
+ browser supports one (`timeoutSignal` and `fetchWithin` in `net-timeout.js`: 30 s for API calls, 2 minutes for a
+ photo, 5 minutes for a live recording's part, 15 s for the live picture's WHIP/WHEP offer; joined to the request's own
+ cancel by hand where `AbortSignal.any` is missing), and a timeout is retried like a dropped connection. What's retried
+ is `withRetries`' rule: the site's own refusals never are, a 403 included, JSON or not; storage's 403 (a
+ `StorageError` from `putPart`: a part's link run out) is. A photo takes `isNetworkTrouble` (a refusal, 403 included,
+ is never sent again). So every API step a phone retries must be safe to repeat: asking again after it worked answers as done
  (`completeUpload` for an upload already finished, `endLive` once stopped), never a refusal the phone would show as a
  failure.
 - `localStorage` is always inside `try/catch`. A best-effort `catch` logs `console.warn("<area>: …", err)`.

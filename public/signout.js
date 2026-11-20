@@ -4,7 +4,7 @@
 // a plain page with the one button.
 
 /** Asks the site to end this device's session (it clears the cookie). False if the site couldn't be reached, or took
- * longer than 15 seconds: a stalled signal mustn't leave the question stuck on screen. (Not upload-net.js's timeoutSignal:
+ * longer than 15 seconds: a stalled signal mustn't leave the question stuck on screen. (Not net-timeout.js's timeoutSignal:
  * this script loads on the sign-in pages too, where that file isn't open.) */
 export async function endSignIn(fetcher = fetch) {
 	try {

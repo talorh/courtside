@@ -4,7 +4,7 @@ import { compareIso, localDate, localTime } from "../../shared/time.ts";
 import { type GameWithVideo, listGamesWithVideoStatus } from "../games/games-repository.ts";
 import { awayCredit } from "./roster-away.ts";
 import { ALL_DUTIES, type RosterDuties } from "./roster-duties.ts";
-import { type Duty, fillWeeks, sameSlot, type Slot, slotsFor, weekOf, type WeekNeed } from "./roster-plan.ts";
+import { type Duty, fillWeeks, sameSlot, type Slot, slotsFor, wantedFor, weekOf, type WeekNeed } from "./roster-plan.ts";
 import { teamSeason } from "../teams/team-code.ts";
 import type { Team } from "../teams/team.ts";
 import {
@@ -46,8 +46,8 @@ const seasonWeeks = (team: Team) => { const s = teamSeason(team); return { from:
 export const dutiesFor = (week: string, thisWeek: string, duties: RosterDuties) => (week >= thisWeek ? duties : ALL_DUTIES);
 
 /**
- * Brings the slots in line with the fixture and the team's duties: drops slots in weeks with no games left, video slots
- * in weeks with no video, and from this week on a duty the team doesn't have; then fills empty slots from this week on.
+ * Brings the slots in line with the fixture and the team's duties: drops slots for games that are gone, and at games
+ * still to come, video at a No video game and a duty the team doesn't have; then fills empty slots at games to come.
  * `rebuild`: Generate roster, which first clears next week on.
  */
 export async function syncRoster(deps: TeamDeps, rebuild = false): Promise<{ weeks: RosterWeek[]; slots: Slot[]; duties: RosterDuties }> {
@@ -66,20 +66,20 @@ export async function syncRoster(deps: TeamDeps, rebuild = false): Promise<{ wee
 	}
 	const need = new Map(weeks.map((w) => [w.week, w]));
 	let slots = await listSlots(db, deps.team.id, range.from, range.to);
-	// Stale: a week with no games left; a slot for a game that's gone; and from this week on, a slot the week no longer
-	// wants (a dropped duty, video on a No video week). Past weeks keep what was done.
+	// Stale: a week with no games left; a slot for a game that's gone; and at a game that hasn't started, a slot it no
+	// longer wants (a dropped duty, video on a No video game). A game that's started keeps who was down for it.
+	const now = localTime(deps.now());
 	const stale = slots.filter((s) => {
 		const w = need.get(s.week);
-		if (!w) return true;
-		if (!w.games.some((g) => g.game.id === s.gameId)) return true;
-		return s.week >= thisWeek && !slotsFor(needOf(w), dutiesFor(s.week, thisWeek, duties)).some((x) => sameSlot(x, s));
+		const game = w?.games.find((g) => g.game.id === s.gameId)?.game;
+		if (!w || !game) return true;
+		return game.startsAt > now && !slotsFor(needOf(w), dutiesFor(s.week, thisWeek, duties)).some((x) => sameSlot(x, s));
 	});
 	slots = slots.filter((s) => !stale.includes(s));
 	// Time off the roster counts as a fair share of those weeks (roster-away.ts), so a family back isn't caught up.
 	const ids = families.map((f) => f.id);
 	const credit = awayCredit(slots, await familyPresence(db, deps.team.id), ids, duties);
-	// A game that's started keeps who was down for it: an empty duty there isn't filled after the event.
-	const now = localTime(deps.now());
+	// An empty duty at a game that's started isn't filled after the event.
 	const upcoming = weeks.filter((w) => w.week >= thisWeek).map((w) => needOf({ ...w, games: w.games.filter((g) => g.game.startsAt > now) }));
 	const added = fillWeeks(upcoming, ids, slots, duties, credit);
 	const writes = [...stale.map((s) => deleteSlotWrite(db, deps.team.id, s.week, s.duty, s.position, s.gameId)),
@@ -107,7 +107,7 @@ export const pickName = (x: { duty: Duty; position: number; gameId: number }) =>
  * A change by hand to one week. A duty given a family is set by hand, and Generate roster keeps it.
  * One left as the roster's pick keeps its family (so an earlier week stays as it was, even a family since taken off),
  * unless that family is now set by hand to another duty that week: then the roster fills it fairly, as it fills any week.
- * A week before this one holds what was done: only what's picked and what it keeps is written, and nothing is filled.
+ * A week before this one keeps every slot it holds unless a pick replaces it or takes its family; nothing is filled.
  */
 export async function setWeek(deps: TeamDeps, week: string, picks: Partial<Record<string, number>>): Promise<void> {
 	const { db } = deps;
@@ -121,7 +121,11 @@ export async function setWeek(deps: TeamDeps, week: string, picks: Partial<Recor
 	const slots = await listSlots(db, deps.team.id, range.from, range.to);
 	const thisWeek = weekOf(localDate(deps.now()));
 	const duties = dutiesFor(week, thisWeek, await getRosterDuties(db, deps.team.id));
-	const wanted = slotsFor(needOf(w), duties);
+	// A game that's been played (every game of an earlier week) keeps every slot it holds; only games still to come
+	// are filled.
+	const now = localTime(deps.now());
+	const started = new Set(w.games.filter((g) => week < thisWeek || g.game.startsAt <= now).map((g) => g.game.id));
+	const wanted = wantedFor(needOf(w), duties, slots, (id) => started.has(id));
 	const byHand = wanted.flatMap((x) => {
 		const familyId = picks[pickName(x)];
 		return familyId ? [{ ...x, week, familyId, byHand: true }] : [];
@@ -130,10 +134,12 @@ export async function setWeek(deps: TeamDeps, week: string, picks: Partial<Recor
 	// A family once a game (and once among the week's own duties), as the roster itself allows.
 	if (new Set(byHand.map((s) => `${s.gameId}|${s.familyId}`)).size !== byHand.length) throw badRequest("A family can only do one duty a game.");
 	// A family picked by hand comes off any other duty it held that week (the roster fills that one again).
-	const held = (s: Slot) => byHand.some((h) => sameSlot(h, s) || h.familyId === s.familyId);
+	// At a game that's been played, only a pick for that slot, or for the family at that game, replaces what was done.
+	const held = (s: Slot) => byHand.some((h) => sameSlot(h, s) || (h.familyId === s.familyId && (!started.has(s.gameId) || h.gameId === s.gameId)));
 	const kept = slots.filter((s) => s.week === week && wanted.some((x) => sameSlot(x, s)) && !held(s))
 		.map((s) => ({ ...s, byHand: false }));
 	const around = [...slots.filter((s) => s.week !== week), ...byHand, ...kept];
-	const added = week < thisWeek ? [] : fillWeeks([needOf(w)], families, around, duties, awayCredit(around, await familyPresence(db, deps.team.id), families, duties));
+	const toCome = needOf({ ...w, games: w.games.filter((g) => !started.has(g.game.id)) });
+	const added = week < thisWeek ? [] : fillWeeks([toCome], families, around, duties, awayCredit(around, await familyPresence(db, deps.team.id), families, duties));
 	await db.batch([deleteWeekSlotsWrite(db, deps.team.id, week), ...[...byHand, ...kept, ...added].map((s) => insertSlotWrite(db, deps.team.id, s))]);
 }

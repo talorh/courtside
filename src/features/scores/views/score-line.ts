@@ -1,6 +1,6 @@
 import { CLUB } from "../../../club.ts";
 import { html, type SafeHtml } from "../../../shared/html.ts";
-import { postButton } from "../../../ui/components.ts";
+import { confirmButton } from "../../../ui/confirm.ts";
 import type { Game } from "../../games/games-repository.ts";
 import type { Score } from "../scores-repository.ts";
 
@@ -27,5 +27,8 @@ export function scorePanel(game: Game, score: Score | null, hidden: boolean): Sa
 		html`<label>${label}<input name="${name}" type="number" inputmode="numeric" min="0" max="300" required value="${value(n)}"></label>`;
 	return html`<div class="panel"><div class="eyebrow">Final score</div><p class="small">${now}</p>
 <form method="post" action="/games/${game.id}/score" class="scoreform">${box("ours", CLUB.nickname, score?.ours)}${box("opponent", game.opponent === "TBC" ? "Opponent" : game.opponent, score?.opponent)}
-<button class="btn primary">Save score</button></form>${score?.source === "manual" ? postButton(`/games/${game.id}/score/clear`, "Clear score", "btn quiet") : ""}</div>`;
+<button class="btn primary">Save score</button></form>${score?.source === "manual" ? confirmButton({
+		action: `/games/${game.id}/score/clear`, label: "Clear score", question: "Clear this score?", consequence: "The game shows no result until a score is entered again.",
+		yes: "Yes, clear it",
+	}) : ""}</div>`;
 }

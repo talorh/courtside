@@ -175,4 +175,15 @@ describe("Delete video on a live recording", () => {
 		expect((await del()).status).toBe(303);
 		expect(await getVideo(deps.db, deps.team.id, videoId)).toBeNull();
 	});
+	it("deleting it for a removal request is refused the same way while a phone is still streaming it", async () => {
+		const { deps, videoId } = await streaming();
+		await makeClient(deps, "sam@x.com")(`/videos/${videoId}/removal-requests`, form({ reason: "wrong game" }));
+		const requestId = (await deps.db.prepare("SELECT id FROM removal_requests").first<{ id: number }>())!.id;
+		minutesOn(deps, 3);
+		deps.live.connected.add((await deps.db.prepare("SELECT live_input_uid AS uid FROM live_streams").first<{ uid: string }>())!.uid);
+		const res = await makeClient(deps)(`/removal-requests/${requestId}/delete-video`, form({ confirm: "yes" }));
+		expect(res.status).toBe(409);
+		expect(await getVideo(deps.db, deps.team.id, videoId)).not.toBeNull();
+	});
 });
+

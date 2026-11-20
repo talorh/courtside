@@ -11,7 +11,8 @@ ${peopleDiagram()}
 <h3>People</h3>
 <ul class="docs-points">
 <li><b>Add a person</b>, one row at the foot of People: their email, their name and their role (Watch and film unless
-another is picked). An email already on the list never changes that person, and a name with no email, or an address
+another is picked). An email already on the list never changes that person (one already there just as typed, a
+second tap of Add, is taken as added), and a name with no email, or an address
 that isn't one, is refused with nothing added. There's no limit on people: the site signs people in itself, so nobody
 costs a seat.</li>
 <li><b>Add from a spreadsheet</b>, under Add a person: a template to download (${code("/members/sample.csv")}: Name, Email,

@@ -10,6 +10,21 @@ const shareMenu = () => {
 	Object.defineProperty(navigator, "share", { configurable: true, value: async (data) => { window.shared = data.files.map((f) => ({ name: f.name, type: f.type, size: f.size })); } });
 };
 
+// Safari's share menu as it behaves: open for a moment, and asked again while it's open, it refuses (InvalidStateError).
+const slowShareMenu = () => {
+	Object.defineProperty(navigator, "canShare", { configurable: true, value: (data) => Boolean(data?.files?.length) });
+	let open = false;
+	window.shares = 0;
+	Object.defineProperty(navigator, "share", { configurable: true, value: async (data) => {
+		if (open) throw new DOMException("An earlier share has not yet completed.", "InvalidStateError");
+		open = true;
+		window.shares++;
+		await new Promise((resolve) => setTimeout(resolve, 1_000));
+		open = false;
+		window.shared = data.files.map((f) => ({ name: f.name, type: f.type, size: f.size }));
+	} });
+};
+
 /** The Photos page, each photo's download, and the zip, noting what the zip was asked for. */
 function serve(t) {
 	const jpeg = readFileSync("/repo/public/technical-difficulties.jpg");
@@ -83,6 +98,32 @@ export const scenarios = [
 			const files = await t.until(() => t.page.evaluate(() => window.shared), "the share menu to open with the photos");
 			t.check(JSON.stringify(files) === JSON.stringify([9, 7].map((id) => ({ name: `saints-b12-1-2026-10-23-photo-${id}.jpg`, type: "image/jpeg", size: jpeg.length }))), `both in the share menu (got ${JSON.stringify(files)})`);
 			t.check(asked.length === 0 && t.page.url().endsWith("/photos"), "no zip, and the page staying put");
+		},
+	},
+	{
+		name: "Save to Photos tapped twice on an iPhone: the photos are got once and the share menu opens once, with no word of trouble",
+		phones: ["iphone"],
+		init: [slowShareMenu],
+		async run(t) {
+			const { jpeg } = serve(t);
+			let gets = 0;
+			for (const id of [7, 9]) {
+				t.harness.page(`/photos/${id}/download`, async () => {
+					gets++;
+					await new Promise((resolve) => setTimeout(resolve, 300));
+					return { headers: { "Content-Type": "image/jpeg", "Content-Disposition": `attachment; filename="saints-b12-1-2026-10-23-photo-${id}.jpg"` }, body: jpeg };
+				});
+			}
+			await t.page.goto(`${t.harness.url}/photos`);
+			await t.tap("#pick-start");
+			await t.tap("#p9");
+			await t.tap("#p7");
+			await t.page.evaluate(() => { const save = document.getElementById("pick-download"); save.click(); save.click(); });
+			await t.until(() => t.page.evaluate(() => window.shared), "the share menu to open with the photos");
+			await t.page.waitForTimeout(500);
+			const shares = await t.page.evaluate(() => window.shares), hint = await t.text("#pick-hint");
+			t.check(gets === 2 && shares === 1, `each photo got once, and the menu opened once (got ${gets}, opened ${shares})`);
+			t.check(!/Couldn't/.test(hint), `no word of trouble (said "${hint}")`);
 		},
 	},
 ];

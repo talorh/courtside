@@ -121,6 +121,19 @@ describe("orphan sweep (daily)", () => {
 		expect(await sweepOrphans(deps)).toMatchObject({ orphanVideos: 1, orphanInputs: 1, orphansDeleted: 2 });
 	});
 
+	it("keeps an open external app stream's recordings while their save waits, however old, as no row points at them yet", async () => {
+		const deps = createTestDeps();
+		const gameId = await seedGame(deps);
+		await deps.db.prepare("INSERT INTO live_streams (team_id, game_id, live_input_uid, status, created_at, source) VALUES (?, ?, 'app-input', 'open', '2026-10-12T00:00:00.000Z', 'app')").bind(deps.team.id, gameId).run();
+		deps.live.inputs.set("app-input", { name: "B12.1 v Rockets", enabled: true });
+		deps.live.createdAt.set("app-input", "2026-10-12T00:00:00.000Z");
+		stream(deps, "rec-waiting", "2026-10-12T00:00:00.000Z");
+		deps.stream.recordedFrom.set("rec-waiting", "app-input");
+		stream(deps, "left-behind");
+		expect(await sweepOrphans(deps)).toMatchObject({ orphanVideos: 1, orphanInputs: 0 });
+		expect(deps.stream.deleted).toEqual(["left-behind"]);
+	});
+
 	it("removes photos' images the site doesn't show, two days on, and keeps the rest", async () => {
 		const deps = createTestDeps();
 		const manager = (await getActiveMember(deps.db, deps.team.id, 1))!;

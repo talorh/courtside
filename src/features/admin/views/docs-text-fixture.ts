@@ -111,7 +111,7 @@ ${scoresDiagram()}
 the 5-minute job asks PlayHQ for its result (${code("discoverGame")}) from half an hour after tip-off: every run until 3
 hours after tip-off, then about hourly. It enters the score only when PlayHQ's status is FINAL with both scores in, and
 never over one a team manager typed. It stops 3 days after tip-off. A failed ask is logged and tried again later, on the
-same back-off; it never fails the run. A team manager can enter or fix any game's score once it has started, and any member can
+same back-off; it never fails the run. A team manager can enter or fix any game's score once it has started (Clear score, for one typed in, asks first, as a delete does), and any member can
 hide scores everywhere for themselves.</p>
 <p><b>Win pop-up.</b> The first time a member opens a game the club won, once its video is ready to watch, a pop-up says
 so over the game's page for about a second, with confetti in the club's colours, then goes by itself. It never says the

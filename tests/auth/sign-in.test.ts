@@ -189,6 +189,28 @@ describe("checking a code", () => {
 		// The code is spent: the same one again is nothing.
 		expect(await verifyCode(deps, MANAGER, sentCode(deps), "1.2.3.4", "x")).toBe("expired");
 	});
+	it("spends the code only with the session: one that couldn't be saved leaves the same code working, and logs no sign-in", async () => {
+		const { deps } = clocked();
+		await requestCode(deps, MANAGER, "1.2.3.4");
+		const real = deps.db.prepare.bind(deps.db);
+		let blips = 1;
+		deps.db.prepare = ((sql: string) => real(sql.startsWith("INSERT INTO sessions") && blips-- > 0 ? sql.replace("INSERT INTO sessions", "INSERT INTO no_such_table") : sql)) as typeof deps.db.prepare;
+		await expect(verifyCode(deps, MANAGER, sentCode(deps), "1.2.3.4", "x")).rejects.toThrow();
+		const signedIn = () => deps.db.prepare("SELECT COUNT(*) AS n FROM sign_in_events WHERE kind = 'signed_in'").first("n");
+		expect(await signedIn()).toBe(0);
+		expect(await verifyCode(deps, MANAGER, sentCode(deps), "1.2.3.4", "x")).toMatchObject({ token: expect.any(String) });
+		expect(await signedIn()).toBe(1);
+		expect(await deps.db.prepare("SELECT COUNT(*) AS n FROM sessions").first("n")).toBe(1);
+	});
+	it("signs in one device for a code sent twice at once", async () => {
+		const { deps } = clocked();
+		await requestCode(deps, MANAGER, "1.2.3.4");
+		const answers = await Promise.all([1, 2].map(() => verifyCode(deps, MANAGER, sentCode(deps), "1.2.3.4", "x")));
+		expect(answers.filter((a) => typeof a === "object")).toHaveLength(1);
+		expect(answers.filter((a) => a === "expired")).toHaveLength(1);
+		expect(await deps.db.prepare("SELECT COUNT(*) AS n FROM sessions").first("n")).toBe(1);
+		expect(await deps.db.prepare("SELECT COUNT(*) AS n FROM sign_in_events WHERE kind = 'signed_in'").first("n")).toBe(1);
+	});
 	it("a wrong code is wrong until the fifth try, when the code is void; a right one after that is too late", async () => {
 		const { deps } = clocked();
 		await requestCode(deps, MANAGER, "1.2.3.4");

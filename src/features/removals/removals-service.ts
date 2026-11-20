@@ -1,7 +1,9 @@
 import type { TeamDeps } from "../../app/deps.ts";
 import { notFound } from "../../app/errors.ts";
 import { record } from "../activity/activity-service.ts";
+import { waitAgain } from "../games/no-video-repository.ts";
 import type { Member } from "../members/members-repository.ts";
+import { refuseWhileStillComing } from "../videos/upload-abort-service.ts";
 import { deleteVideo } from "../videos/video-removal-service.ts";
 import { getVideo, type Video } from "../videos/videos-repository.ts";
 import { requireVideo } from "../videos/watch-service.ts";
@@ -20,11 +22,17 @@ async function requireOpenRequest(deps: TeamDeps, requestId: number): Promise<nu
 	return videoId;
 }
 
-/** Deletes the video (unless a team manager already did) and closes all open requests for it. */
+/** Deletes the video (unless a team manager already did) and closes all open requests for it. Like Delete video, a
+ * recording a phone may still be sending isn't deleted, and its game waits a week from the delete for a new one before
+ * it goes No video. */
 export async function deleteVideoForRequest(deps: TeamDeps, actor: Member, requestId: number): Promise<void> {
 	const videoId = await requireOpenRequest(deps, requestId);
 	const video = await getVideo(deps.db, deps.team.id, videoId);
-	if (video) await deleteVideo(deps, video, "removal_request");
+	if (video) {
+		await refuseWhileStillComing(deps, video);
+		await deleteVideo(deps, video, "removal_request");
+		await waitAgain(deps.db, deps.team.id, video.gameId, deps.now().toISOString());
+	}
 	await resolveRequestsForVideo(deps.db, deps.team.id, videoId, {
 		status: "video_deleted", note: video ? "" : "Video was already deleted", resolvedBy: actor.id, nowIso: deps.now().toISOString(),
 	});

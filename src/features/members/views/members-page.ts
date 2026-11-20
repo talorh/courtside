@@ -82,7 +82,7 @@ const FILMING = html`<p class="note filmnote">Anyone who'll film games needs <b>
 
 /** Add a person: one row under the list, as Add a player is under the squad (their email, name and role). A new person
  * is Watch and film unless another role is picked. */
-const addPerson = (sort: MemberSort) => html`<form method="post" action="${withSort("/members", sort)}" class="playerform add personadd" id="addperson"><label class="pemail">Email<input name="email" type="email" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="254" required></label>
+const addPerson = (sort: MemberSort) => html`<form method="post" action="${withSort("/members", sort)}" class="playerform add personadd" id="addperson" data-once><label class="pemail">Email<input name="email" type="email" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="254" required></label>
 <label class="pname">Name<input name="name" type="text" maxlength="80"></label>
 <label class="prole">Role<select name="role">${selectOptions(roleOptions, "filmer")}</select></label><button class="btn primary">Add a person</button></form>`;
 

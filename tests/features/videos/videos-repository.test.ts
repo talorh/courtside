@@ -19,7 +19,8 @@ describe("videos repository", () => {
 		const id = await insertUploadVideo(db, upload(teamId, gameId));
 		expect(await getVideo(db, teamId, id)).toMatchObject({ status: "uploading", r2UploadId: "up-1" });
 		await markUploaded(db, teamId, id, "2026-10-15T00:00:00.000Z");
-		await setStreamUid(db, teamId, id, "uid-1");
+		expect(await setStreamUid(db, teamId, id, "uid-1", "originals/b12.1-2026/elsewhere.mov")).toBe(false);
+		await setStreamUid(db, teamId, id, "uid-1", upload(teamId, gameId).r2Key);
 		expect((await listVideosByStatus(db, teamId, "processing")).map((v) => v.id)).toEqual([id]);
 		await markReady(db, teamId, id, 2830);
 		expect(await getActiveVideoForGame(db, teamId, gameId)).toMatchObject({ id, status: "ready", durationSeconds: 2830, r2UploadId: null });

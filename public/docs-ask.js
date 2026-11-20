@@ -1,6 +1,6 @@
 // The Documentation AI assistant (admin area, Documentation): sends the question, shows the answer as plain text, and
 // links each section it was answered from (a link opens that section, as the contents do: docs.js).
-import { timeoutSignal } from "./upload-net.js";
+import { timeoutSignal } from "./net-timeout.js";
 
 // Its longer answer, read from the whole documentation, takes seconds; a link that stalls gives up well after that, so
 // the button can be tapped again.

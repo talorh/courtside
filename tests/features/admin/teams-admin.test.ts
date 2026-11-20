@@ -199,7 +199,7 @@ describe("the team manager's welcome email (onboarding emails them, to get them 
 		expect(deps.email.sent).toEqual([{ to: ["jane@example.com"], ...EMAIL, replyTo: MANAGER }]);
 		const page = await (await makeClient(deps)("/admin/teams/g14.5-2026/welcome?emailed=sent")).text();
 		expect(page).toContain('<div class="note" role="status">Emailed to Jane at jane@example.com. Replies come to you.</div>');
-		expect(page).toContain('<form method="post" action="/admin/teams/g14.5-2026/welcome"><button class="btn">Email it again</button></form>');
+		expect(page).toContain('<form method="post" action="/admin/teams/g14.5-2026/welcome" data-once><button class="btn">Email it again</button></form>');
 		// No address from the page's own address: only fixed words.
 		expect(await (await makeClient(deps)("/admin/teams/g14.5-2026/welcome?emailed=hacked")).text()).not.toContain("hacked");
 	});
@@ -221,6 +221,9 @@ describe("the team manager's welcome email (onboarding emails them, to get them 
 	it("goes only to the team's own team manager, never an admin's hidden way in or a removed one", async () => {
 		const deps = createTestDeps();
 		await onboard(deps);
+		// A minute on: sooner, Email it again is a second tap of the first, already sent.
+		const later = new Date(deps.now().getTime() + 60_000);
+		deps.now = () => later;
 		await deps.db.prepare("UPDATE members SET removed_at = '2026-10-15T00:00:00.000Z' WHERE team_id = 'g14.5-2026'").run();
 		await deps.db.prepare("INSERT INTO members (team_id, email, name, role, hidden) VALUES ('g14.5-2026', ?, 'Sam', 'manager', 1)").bind(MANAGER).run();
 		const again = await makeClient(deps)("/admin/teams/g14.5-2026/welcome", form({}));

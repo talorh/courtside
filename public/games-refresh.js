@@ -1,6 +1,6 @@
 // Watch games: checks every 30 seconds (while the page is on screen) and reloads it when a game card changes, say from
 // Processing to Ready to watch, or a game goes live. Nobody has to keep tapping reload.
-import { timeoutSignal } from "./upload-net.js";
+import { timeoutSignal } from "./net-timeout.js";
 
 // One check at a time, and a stalled one gives up before the next is due, so they never pile up on a weak signal.
 const CHECK_TIMEOUT_MS = 20_000;

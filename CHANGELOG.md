@@ -8,6 +8,25 @@ was wrong), the area in bold, then a plain sentence saying what changed for the 
 where ..."). Every deploy adds its lines at the top of today's date, and the deploy (`npm run release`, then Workers
 Builds) sends the top line, in plain words, as its message.
 
+## 21 Nov 2026
+
+- [Fix] **Go live:** Fixed an issue where the 3am clean-up could delete an external app's stream recordings while their save was still waiting.
+- [Fix] **Roster:** Fixed an issue where saving a week, or opening the Roster, could take away a duty a family had done at a game since set to No video, or after the team's duties changed, or when the family was picked for a later game.
+- [Fix] **Removal requests:** Deleting a video for a removal request now gives its game another week for a new one, and refuses a recording a phone may still be sending.
+- [Fix] **Videos:** Fixed a rare case where two runs at once could send only a carried-on game's first part to Stream, and one where a short first part kept after a failed join was thrown away as a test.
+- [Fix] **Sign in:** Fixed an issue where a hiccup saving the session spent the code and logged a sign-in that didn't happen.
+- [Fix] **Admins:** A locked person can't be made a site admin, and locked people get no admin or team manager emails.
+- [Fix] **Support:** A double tap on Send or a reply now sends once, and Reply and resolve after a reply with the same words still resolves the ticket.
+- [Fix] **Teams and people:** A double tap on Email it again sends the welcome once, and on Add a person adds them once.
+- [Fix] **Insights:** Feature requests no longer count as support requests waiting; they have a line of their own.
+- [Fix] **Users:** The Locked tile counts the people its filter shows.
+- [Fix] **Manage team:** Two team managers taking each other off at once now get the last team manager message, not an error page.
+- [Fix] **Uploads:** On older iPhones the site's requests time out again, and the site's own refusals are no longer retried as if they were storage's (a block from Cloudflare's security still is).
+- [Fix] **Photos:** Back after adding photos no longer shows a stuck picker, a double tap on Save photo saves once, and scrolling past Choose photos doesn't keep the screen on.
+- [Fix] **Go live:** Reload and carry on no longer asks "Reload site?" on Android.
+- [Fix] **Roster:** Your duty now works for two-word surnames and points at the next game still to come.
+- [Fix] **Scores:** Clear score asks first.
+
 ## 20 Nov 2026
 
 - [Fix] **Go live:** Fixed an issue where Save what was recorded could save a game without the minutes still on the filming phone: it sends them first, one part at a time, or saves nothing and says so if the phone's copy can't be read.

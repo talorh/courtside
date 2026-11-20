@@ -89,12 +89,12 @@ describe("members routes", () => {
 		const amy = (await findActiveMemberByEmail(deps.db, deps.team.id, "amy@x.com"))!.id;
 		const client = makeClient(deps);
 		const bySeen = await (await client("/manage?sort=seen")).text();
-		expect(bySeen).toContain('<form method="post" action="/members?sort=seen" class="playerform add personadd" id="addperson">');
+		expect(bySeen).toContain('<form method="post" action="/members?sort=seen" class="playerform add personadd" id="addperson" data-once>');
 		expect(bySeen).toContain(`<form method="post" action="/members/${amy}?sort=seen" id="member-${amy}"`);
 		expect(bySeen).toContain(`<form method="post" action="/members/${amy}/remove?sort=seen" class="confirmpanel">`);
 		// The usual order needs nothing added.
 		const byRole = await (await client("/manage")).text();
-		expect(byRole).toContain('<form method="post" action="/members" class="playerform add personadd" id="addperson">');
+		expect(byRole).toContain('<form method="post" action="/members" class="playerform add personadd" id="addperson" data-once>');
 		expect(byRole).toContain(`<form method="post" action="/members/${amy}" id="member-${amy}"`);
 		expect(byRole).toContain(`<form method="post" action="/members/${amy}/remove" class="confirmpanel">`);
 		const location = async (path: string, init: RequestInit) => (await client(path, init)).headers.get("Location");

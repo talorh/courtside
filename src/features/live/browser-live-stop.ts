@@ -58,10 +58,11 @@ function endWords(page: { cause?: StopCause; keptMinutes?: number }): string {
 
 /**
  * Processing finished: a recording under a minute that wasn't caught at End game (say, a pause made it look
- * longer, or End game didn't reach the server) is dropped the same way. True if it was dropped.
+ * longer, or End game didn't reach the server) is dropped the same way. True if it was dropped. One that was carried
+ * on never is, as at End game: its first part kept alone can be short and still be the game's.
  */
 export async function dropShortTest(deps: TeamDeps, video: Video, durationSeconds: number): Promise<boolean> {
-	if (durationSeconds >= MIN_RECORDING_SECONDS) return false;
+	if (durationSeconds >= MIN_RECORDING_SECONDS || video.carriedOnAt !== null) return false;
 	const live = await getLiveByRecording(deps.db, deps.team.id, video.id);
 	if (!live) return false;
 	await deleteVideo(deps, video, "live_test");

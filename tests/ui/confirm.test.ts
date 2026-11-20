@@ -11,6 +11,7 @@ const DELETES = [
 	"POST /fixture/:id/delete", "POST /fixture/:id/delete-all", "POST /videos/:id/delete", "POST /videos/:id/keep-first", "POST /removal-requests/:id/delete-video",
 	"POST /clips/:id/delete", "POST /clip-removal-requests/:id/delete-clip", "POST /photos/:id/delete", "POST /photos/delete", "POST /photo-removal-requests/:id/delete-photo",
 	"POST /members/:id/remove", "POST /players/:id/remove", "POST /roster/families/:id/remove", "POST /fixture/playhq/:id/remove", "POST /notes/:id/delete",
+	"POST /games/:id/score/clear",
 ];
 
 describe("are you sure", () => {

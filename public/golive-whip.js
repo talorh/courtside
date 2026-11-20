@@ -1,6 +1,6 @@
 // Go live from the browser: sends the camera to the game's live input over WebRTC (WHIP) so families can watch,
 // and reconnects by itself after the signal drops. The recording (golive-rec.js) doesn't depend on this.
-import { timeoutSignal } from "./upload-net.js";
+import { timeoutSignal } from "./net-timeout.js";
 
 // Stream answers in a second or two; a request that hangs longer is given up, so the retry below can run.
 const ANSWER_TIMEOUT_MS = 15_000;

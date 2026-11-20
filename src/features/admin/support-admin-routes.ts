@@ -4,7 +4,7 @@
 import { z } from "zod";
 import type { AdminRouter } from "../../app/admin-router.ts";
 import { htmlResponse, redirect } from "../../app/respond.ts";
-import { listAdmins } from "../../auth/admins-repository.ts";
+import { listAdmins, listUnlockedAdmins } from "../../auth/admins-repository.ts";
 import { doneMessage, idParam, parseForm } from "../../shared/validation.ts";
 import type { TicketKind } from "../support/support-repository.ts";
 import { setKind, setStage } from "./feature-requests-service.ts";
@@ -38,8 +38,10 @@ export function supportAdminRoutes(router: AdminRouter): void {
 	router.get("/admin/support/:id", async ({ deps, frame, params, url }) => {
 		const ticket = await getTicket(deps.db, idParam(params.id, "Ticket"));
 		if (!ticket) throw notFound("Ticket");
-		const [messages, admins] = await Promise.all([listMessages(deps.db, ticket.id), listAdmins(deps.db)]);
-		return htmlResponse(ticketPage({ frame, ticket, messages, admins: admins.map((a) => a.email), message: doneMessage(TICKET_MESSAGES, url) }));
+		const [messages, admins] = await Promise.all([listMessages(deps.db, ticket.id), listUnlockedAdmins(deps.db)]);
+		// Its owner stays in the list though locked since, so Save doesn't let it go unasked.
+		const owners = [...admins.map((a) => a.email), ...(ticket.assignedTo && !admins.some((a) => a.email.toLowerCase() === ticket.assignedTo!.toLowerCase()) ? [ticket.assignedTo] : [])];
+		return htmlResponse(ticketPage({ frame, ticket, messages, admins: owners, message: doneMessage(TICKET_MESSAGES, url) }));
 	});
 	router.post("/admin/support/:id/message", async ({ req, deps, viewer, params }) => {
 		const id = idParam(params.id, "Ticket");

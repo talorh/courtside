@@ -427,6 +427,43 @@ export const scenarios = [
 		},
 	},
 	{
+		name: "a part's link run out (storage's 403) is sent again with a fresh one; the site's own 403 stops the saving and says why",
+		phones: ["android"],
+		async run(t) {
+			let refusals = 0;
+			t.harness.answer(`PUT /r2/${VIDEO_ID}/2`, () => (refusals++ < 1 ? { status: 403, json: {} } : { status: 200, etag: '"etag-2"' }));
+			await t.goLive();
+			await t.until(() => refusals >= 2, "part 2 sent again after storage's 403", 30_000);
+			const links = t.harness.calls(`POST /api/uploads/${VIDEO_ID}/part-urls`).filter((c) => c.json?.partNumbers[0] === 2).length;
+			t.check(links === 2, `a fresh link asked for part 2 the second time (asked ${links} times)`);
+			let asked = 0;
+			t.harness.answer(`POST /api/uploads/${VIDEO_ID}/part-urls`, () => (asked++, { status: 403, json: { ok: false, error: { code: "forbidden", message: "This upload belongs to someone else." } } }));
+			await t.until(async () => /recording has stopped saving: This upload belongs to someone else/.test(await t.text(SEL.status)), "the camera screen to say the site refused it", 30_000);
+			await t.page.waitForTimeout(5_000);
+			t.check(asked === 1, `the site's 403 taken as a refusal, not asked again (asked ${asked} times)`);
+		},
+	},
+	{
+		name: "the recording stopped mid-game: Reload and carry on reloads the page at once, with no Reload site? question",
+		phones: ALL,
+		// The page's recorders, so the test can stop one by itself as a phone's own sometimes does.
+		init: () => {
+			const Real = window.MediaRecorder;
+			if (Real) window.MediaRecorder = class extends Real { constructor(...args) { super(...args); (window.recorders ??= []).push(this); } };
+		},
+		async run(t) {
+			await t.goLive();
+			await t.page.evaluate(() => window.recorders.at(-1).stop());
+			await t.until(() => t.visible('[data-act="reload"]'), "Reload and carry on, once the recording has stopped");
+			const asked = [];
+			t.page.on("dialog", (d) => { asked.push(d.type()); d.dismiss().catch(() => {}); });
+			await t.page.evaluate(() => { window.before = true; });
+			await t.tap('[data-act="reload"]');
+			await t.until(() => t.page.evaluate(() => !window.before).catch(() => false), "the page to reload", 10_000);
+			t.check(asked.length === 0, `no question before reloading (asked: ${asked.join(", ")})`);
+		},
+	},
+	{
 		name: "the live connection is refused twice, then comes back by itself",
 		phones: ["android", "firefox"],
 		async run(t) {

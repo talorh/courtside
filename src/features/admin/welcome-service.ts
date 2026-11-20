@@ -3,13 +3,17 @@ import { logProblem } from "./problem-log.ts";
 import type { AppDeps } from "../../app/deps.ts";
 import { teamLabel } from "../teams/team-code.ts";
 import type { Team } from "../teams/team.ts";
+import { claimWelcome, releaseWelcome } from "../teams/teams-repository.ts";
 import { mailTeamManager } from "./admin-mail.ts";
 import { welcomeEmailHtml } from "./views/welcome-email.ts";
 import { welcomeMessage } from "./welcome-message.ts";
 
 /** Emails the team manager their welcome (welcome-message.ts), formatted in the site's style with its plain text beside it:
- * "sent", or "failed" (logged), as the team stands either way and the welcome page has the message to send another way. */
+ * "sent", or "failed" (logged), as the team stands either way and the welcome page has the message to send another way.
+ * One already sent within the minute (a second tap of Email it again) is "sent", with nothing sent again. */
 export async function emailWelcome(deps: AppDeps, team: Team, admin: string, origin: string): Promise<"sent" | "failed"> {
+	const nowIso = deps.now().toISOString();
+	if (!(await claimWelcome(deps.db, team.id, nowIso, new Date(deps.now().getTime() - 60_000).toISOString()))) return "sent";
 	try {
 		await mailTeamManager(deps, team.id, admin, (manager) => {
 			const w = { team, manager, origin, byEmail: true };
@@ -17,6 +21,7 @@ export async function emailWelcome(deps: AppDeps, team: Team, admin: string, ori
 		});
 		return "sent";
 	} catch (err) {
+		await releaseWelcome(deps.db, team.id, nowIso);
 		console.error(JSON.stringify({ event: "welcome_email_failed", teamId: team.id, error: String(err) }));
 		await logProblem(deps, { kind: "email_failed", teamId: team.id, who: admin, what: "The welcome email to the new team's team manager didn't send", error: err });
 		return "failed";

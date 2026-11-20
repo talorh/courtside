@@ -75,6 +75,16 @@ describe("Insights, the admin area's landing page (graphical, what needs attenti
 		expect(html.indexOf('<ul class="attention"')).toBeLessThan(html.indexOf('<section class="scoreboard"'));
 	});
 
+	it("counts feature requests apart from support requests, with their own line to the feature requests", async () => {
+		const deps = await site();
+		for (const status of ["new", "open", "resolved"]) {
+			await run(deps, "INSERT INTO support_requests (team_id, member_id, kind, topic, message, contact, status, created_at) VALUES (?, 1, 'feature', 'other', 'Idea', 'me', ?, '2026-10-14T00:00:00.000Z')", B12_1.id, status);
+		}
+		const items = [...(await page(deps)).matchAll(/<li class="att (\w+)"><p>(.*?)<\/p><a class="btn" href="([^"]+)">([^<]+)<\/a><\/li>/g)].map((m) => m.slice(1).join(" | "));
+		expect(items).toContain("warn | 1 support request is waiting for an answer. | /admin/support | Open Support");
+		expect(items).toContain("info | 2 feature requests are waiting for an answer. | /admin/support?type=feature | Open feature requests");
+	});
+
 	it("lists the site's own tickets with no team (an access request, a bounced address, a failed video), not the alerts' tickets", async () => {
 		const deps = createTestDeps();
 		const ticket = (kind: string, status = "new") => run(deps, "INSERT INTO support_requests (source, alert_kind, title, topic, message, status, created_at, updated_at) VALUES ('site', ?, 'T', 'platform', 'M', ?, '2026-10-14T00:00:00.000Z', '2026-10-14T00:00:00.000Z')", kind, status);

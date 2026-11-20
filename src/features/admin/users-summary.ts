@@ -14,14 +14,15 @@ const DAY_MS = 86_400_000;
 const within = (iso: string | null, days: number, now: Date) => iso !== null && now.getTime() - Date.parse(iso) <= days * DAY_MS;
 const newest = (a: string | null, b: string | null) => (a && (!b || a > b) ? a : b);
 
-/** `locked`: every locked email, on a team or not. Teams: running ones first, then by code and the newest season. */
-export function summariseUsers(rows: UserRow[], locked: string[], now: Date): UsersSummary {
-	const people = new Map<string, { seen: string | null; teams: number; admin: boolean }>();
+/** Locked: people on a team who are locked, as the tile's filter shows (the page lists locks on no team apart). Teams:
+ * running ones first, then by code and the newest season. */
+export function summariseUsers(rows: UserRow[], now: Date): UsersSummary {
+	const people = new Map<string, { seen: string | null; teams: number; admin: boolean; locked: boolean }>();
 	const teams = new Map<string, TeamCount>();
 	const roles = Object.fromEntries(ROLES.map((r) => [r, 0])) as Record<Role, number>;
 	for (const r of rows) {
-		const p = people.get(r.email) ?? { seen: null, teams: 0, admin: r.isAdmin };
-		people.set(r.email, { seen: newest(r.lastSeenAt, p.seen), teams: p.teams + 1, admin: p.admin });
+		const p = people.get(r.email) ?? { seen: null, teams: 0, admin: r.isAdmin, locked: r.locked };
+		people.set(r.email, { seen: newest(r.lastSeenAt, p.seen), teams: p.teams + 1, admin: p.admin, locked: p.locked });
 		roles[r.role]++;
 		const t = teams.get(r.teamId) ?? { teamId: r.teamId, code: r.code, seasonStart: r.seasonStart, running: r.teamStatus === "active", people: 0, active: 0, never: 0, managers: 0 };
 		t.people++;
@@ -33,7 +34,7 @@ export function summariseUsers(rows: UserRow[], locked: string[], now: Date): Us
 	const all = [...people.values()];
 	return {
 		people: people.size, week: all.filter((p) => within(p.seen, 7, now)).length, month: all.filter((p) => within(p.seen, 30, now)).length,
-		never: all.filter((p) => p.seen === null).length, locked: locked.length, multi: all.filter((p) => p.teams > 1).length,
+		never: all.filter((p) => p.seen === null).length, locked: all.filter((p) => p.locked).length, multi: all.filter((p) => p.teams > 1).length,
 		admins: all.filter((p) => p.admin).length, roles,
 		teams: [...teams.values()].sort((a, b) => Number(b.running) - Number(a.running) || a.code.localeCompare(b.code) || b.seasonStart - a.seasonStart),
 	};

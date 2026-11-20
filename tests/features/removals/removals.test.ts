@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { setUnfilmedNoVideo } from "../../../src/features/games/no-video-after.ts";
 import { getVideo } from "../../../src/features/videos/videos-repository.ts";
 import { form, makeClient } from "../../helpers/app.ts";
 import { createTestDeps } from "../../helpers/fakes.ts";
@@ -41,6 +42,19 @@ describe("removal requests", () => {
 		expect(await openIds(deps)).toEqual([]);
 		await aDayLater(deps);
 		expect(deps.stream.deleted).toEqual(["u1"]);
+	});
+	it("a game whose video goes for a removal request waits a week from the delete for a new one, like Delete video", async () => {
+		const deps = createTestDeps();
+		await deps.db.prepare("INSERT INTO members (team_id, email, role) VALUES (?, 'jo@x.com', 'watcher')").bind(deps.team.id).run();
+		// Played 13 days ago: past its week, kept from No video only by its video.
+		const gameId = await seedGame(deps, { startsAt: "2026-10-02T18:40" });
+		const videoId = await seedVideo(deps, { gameId, streamUid: "u1", r2Key: "originals/a.mov" });
+		await makeClient(deps, "jo@x.com")(`/videos/${videoId}/removal-requests`, form({ reason: "Wrong game" }));
+		const [id] = await openIds(deps);
+		expect((await makeClient(deps)(`/removal-requests/${id}/delete-video`, form({ confirm: "yes" }))).status).toBe(303);
+		expect((await setUnfilmedNoVideo(deps, [deps.team])).noVideoSet).toBe(0);
+		deps.now = () => new Date("2026-10-22T01:00:00Z");
+		expect((await setUnfilmedNoVideo(deps, [deps.team])).noVideoSet).toBe(1);
 	});
 	it("keeping a video closes the request; a video already deleted elsewhere just closes", async () => {
 		const { deps, videoId, jo, admin } = await setup();

@@ -7,12 +7,12 @@ import { TEAM_COLUMNS, type TeamRow, toTeam } from "../teams/teams-repository.ts
 export interface TeamCounts {
 	team: Team; people: number; managers: number; signedIn30: number; gamesPlayed: number; awaitingVideo: number; videos: number; videoSeconds: number;
 	clips: number; photos: number; watchers30: number; downloads30: number; streams: number; appStreams: number; lastUpload: string | null;
-	openRequests: number; openSupport: number; questions30: number;
+	openRequests: number; openSupport: number; openFeatures: number; questions30: number;
 }
 
 interface CountsRow extends TeamRow {
 	people: number; managers: number; signed_in_30: number; games_played: number; awaiting_video: number; videos: number; video_seconds: number; clips: number;
-	photos: number; watchers_30: number; downloads_30: number; streams: number; app_streams: number; last_upload: string | null; open_requests: number; open_support: number; questions_30: number;
+	photos: number; watchers_30: number; downloads_30: number; streams: number; app_streams: number; last_upload: string | null; open_requests: number; open_support: number; open_features: number; questions_30: number;
 }
 
 /** Every team that isn't deleted, current ones first, test runs aside (TEST_RUN below). `since30`: the instant 30 days
@@ -42,14 +42,15 @@ export async function teamCounts(db: D1Database, p: { since30: string; nowLocal:
 				JOIN videos v ON v.team_id = c.team_id AND v.id = c.video_id WHERE c.team_id = r.team_id AND c.id = r.clip_id AND c.deleted_at IS NULL AND v.deleted_at IS NULL))
 			+ (SELECT COUNT(*) FROM photo_removal_requests r WHERE r.team_id = t.id AND r.status = 'open'
 				AND EXISTS (SELECT 1 FROM photos p WHERE p.team_id = r.team_id AND p.id = r.photo_id AND p.deleted_at IS NULL)) AS open_requests,
-		(SELECT COUNT(*) FROM support_requests q WHERE q.team_id = t.id AND q.status IN ('new', 'open')) AS open_support,
+		(SELECT COUNT(*) FROM support_requests q WHERE q.team_id = t.id AND q.kind = 'support' AND q.status IN ('new', 'open')) AS open_support,
+		(SELECT COUNT(*) FROM support_requests q WHERE q.team_id = t.id AND q.kind = 'feature' AND q.status IN ('new', 'open')) AS open_features,
 		(SELECT COALESCE(SUM(a.n), 0) FROM ask_counts a WHERE a.team_id = t.id AND a.day >= ?3) AS questions_30
 		FROM teams t WHERE t.status <> 'deleted' ORDER BY t.status = 'closed', t.season_start DESC, t.code`)
 		.bind(p.since30, p.nowLocal, p.day30).all<CountsRow>();
 	return results.map((r) => ({
 		team: toTeam(r), people: r.people, managers: r.managers, signedIn30: r.signed_in_30, gamesPlayed: r.games_played, awaitingVideo: r.awaiting_video, videos: r.videos,
 		videoSeconds: r.video_seconds, clips: r.clips, photos: r.photos, watchers30: r.watchers_30, downloads30: r.downloads_30, streams: r.streams, appStreams: r.app_streams,
-		lastUpload: r.last_upload, openRequests: r.open_requests, openSupport: r.open_support, questions30: r.questions_30,
+		lastUpload: r.last_upload, openRequests: r.open_requests, openSupport: r.open_support, openFeatures: r.open_features, questions30: r.questions_30,
 	}));
 }
 

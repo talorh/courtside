@@ -29,6 +29,7 @@ export const shareableMany = () => isApple && Boolean(navigator.canShare?.({ fil
 /**
  * Opens the share menu with `file` (or several files): "shared", or "closed" when it was closed. A big file can take longer to get than a
  * tap allows, and the menu then refuses ("tap again"): the caller keeps the file, so the next tap opens it at once.
+ * "open": the menu was open already (a second tap), so there's nothing to do.
  */
 export async function share(file) {
 	try {
@@ -37,6 +38,7 @@ export async function share(file) {
 	} catch (err) {
 		if (err.name === "AbortError") return "closed";
 		if (err.name === "NotAllowedError") return "tap again";
+		if (err.name === "InvalidStateError") return "open";
 		throw err;
 	}
 }

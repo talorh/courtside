@@ -12,7 +12,9 @@ which the filming phone records as it goes (or, from an external app, which Stre
 ${uploadDiagram()}
 <p>Stream makes the playback copy, and the 5-minute job asks it how it's going: about 20 to 25 minutes later the game
 is ready to watch, and its HD MP4 download about 10 to 15 minutes after that. The original in R2 is deleted after
-30 days, as Stream has its own copy by then.</p>
+30 days, as Stream has its own copy by then. A dropped connection, a request that hangs (given up after 30 seconds, on
+older iPhones too), or a part's signed link running out is waited out and tried again, here and in Go live; a refusal
+from the site itself (someone else's upload, or not on the team's list) stops it and says so.</p>
 <h3>Live streaming</h3>
 ${liveDiagram()}
 <ul class="docs-points">
@@ -28,11 +30,12 @@ Pause) is fine too: Safari can then write a frame with an impossible length, whi
 video as too long, so the phone puts every such frame right before anything is kept or sent.</li>
 <li><b>Why a new camera can take over:</b> the phone records the preview drawn onto a canvas and the microphone through
 Web Audio, not the camera itself. The recording is always landscape, whichever way the phone was held when the camera
-started. A recording that hands over nothing for 20 seconds says so on the camera screen with Reload and carry on, and
-takes the warning back if it carries on by itself.</li>
+started. A recording that hands over nothing for 20 seconds says so on the camera screen with Reload and carry on (a
+tap that reloads at once, with no "Reload site?" question), and takes the warning back if it carries on by itself.</li>
 <li><b>Only End game ends a stream, and it's final.</b> Under a minute recorded (pauses left out), or nothing recorded
 at all, counts as a test and is thrown away, so a try at home leaves the game free to stream. A game carried on with
-Carry on streaming is never a test, however soon End game is tapped after it. On a weak signal the page says how many minutes of the
+Carry on streaming is never a test, however soon End game is tapped after it, and nor is its first part kept alone
+when the parts couldn't be joined, however short. On a weak signal the page says how many minutes of the
 game are still only on the phone.</li>
 <li><b>Watching</b> uses short-lived signed links, so only signed-in members can play anything. A picture that freezes
 asks whether the game has ended: if so the page shows the Full time card (the Game Break card's look) within seconds,
@@ -79,7 +82,9 @@ job asks for it and moves on. Every later run looks in R2 for the joined file fi
 video's original, the parts are deleted, and Stream is asked for its copy as for any upload. The Log says so with a
 ${code("video_joined")} line: how many parts, how big, how long it took.</li>
 <li><b>Nothing is deleted on trust.</b> The parts go only once the joined file has been read back from R2, and a joined
-file far smaller than its parts is refused rather than saved.</li>
+file far smaller than its parts is refused rather than saved. A Stream copy is kept only if it was made from the
+file that's the video's original when it's saved, so a run that read the video before its join finished can't make the
+first part alone the game's video: that copy is deleted.</li>
 <li><b>A join that fails</b>, or is lost because the container restarted, is tried again every ten minutes. After six
 tries the site stops: the team manager gets <b>Keep the first part</b> on the game's page, the Log's Problems has a
 line, and the admins get the Video joiner alert as urgent. Keep the first part, or deleting the video, clears it once

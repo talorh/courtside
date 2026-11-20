@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { insertSegment, listSegments, segmentKey } from "../../../src/features/live/recording-segments-repository.ts";
 import { deleteVideo } from "../../../src/features/videos/video-removal-service.ts";
 import { getVideo } from "../../../src/features/videos/videos-repository.ts";
+import { runSync } from "../../../src/jobs/sync-videos.ts";
 import { form, makeClient } from "../../helpers/app.ts";
 import { createTestDeps } from "../../helpers/fakes.ts";
 import { seedGame, seedVideo } from "../../helpers/seed.ts";
@@ -59,6 +60,15 @@ describe("Keep the first part", () => {
 		expect(await level()).toBe("urgent");
 		await deleteVideo(other, (await getVideo(deps.db, other.team.id, theirs))!, "admin");
 		expect(await level()).toBe("ok");
+	});
+	it("a first part under a minute is kept as the game video once processed, never thrown away as a test", async () => {
+		const { deps, gameId, videoId } = await failedJoin();
+		await deps.db.prepare("INSERT INTO live_streams (team_id, game_id, live_input_uid, status, created_at, recording_video_id, finished_at) VALUES (?, ?, 'in-1', 'saved', '2026-10-14T07:40:00.000Z', ?, '2026-10-14T09:00:00.000Z')").bind(deps.team.id, gameId, videoId).run();
+		expect((await makeClient(deps)(`/videos/${videoId}/keep-first`, form({ confirm: "yes" }))).status).toBe(303);
+		deps.stream.videos.set("uid-1", { readyToStream: true, state: "ready", errorReason: "", durationSeconds: 40 });
+		await runSync(deps);
+		expect(await getVideo(deps.db, deps.team.id, videoId)).toMatchObject({ status: "ready", durationSeconds: 40 });
+		expect(await deps.db.prepare("SELECT status FROM live_streams WHERE recording_video_id = ?").bind(videoId).first("status")).toBe("saved");
 	});
 	it("refuses while the join hasn't given up", async () => {
 		const { deps, videoId } = await failedJoin();

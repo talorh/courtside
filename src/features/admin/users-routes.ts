@@ -26,7 +26,7 @@ async function page(deps: AppDeps, frame: AdminFrame, you: string, url: URL, ext
 	const filters = parseUserFilters(url);
 	const onTeams = new Set(rows.map((r) => r.email));
 	return htmlResponse(usersPage({
-		frame, now, you, rows, filters, teams, shown: filterUsers(rows, filters, now), summary: summariseUsers(rows, locks.map((l) => l.email), now),
+		frame, now, you, rows, filters, teams, shown: filterUsers(rows, filters, now), summary: summariseUsers(rows, now),
 		strays: locks.filter((l) => !onTeams.has(l.email.toLowerCase())), message: doneMessage(USERS_MESSAGES, url), ...extra,
 	}), status);
 }

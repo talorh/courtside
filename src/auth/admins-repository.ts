@@ -16,6 +16,13 @@ export async function listAdmins(db: D1Database): Promise<Admin[]> {
 	return results;
 }
 
+/** The admins the site may email or give a ticket to: every admin but one who's locked (auth/locks-repository.ts). */
+export async function listUnlockedAdmins(db: D1Database): Promise<Admin[]> {
+	const { results } = await db.prepare(`SELECT email, added_by AS addedBy, added_at AS addedAt FROM admins WHERE removed_at IS NULL
+		AND NOT EXISTS (SELECT 1 FROM locked_people l WHERE l.email = admins.email) ORDER BY added_at, email`).all<Admin>();
+	return results;
+}
+
 /** Adds `email`, or brings back an admin removed before. No change: an admin already. */
 export const addAdminWrite = (db: D1Database, email: string, by: string, nowIso: string) => db
 	.prepare(`INSERT INTO admins (email, added_by, added_at) VALUES (?, ?, ?)

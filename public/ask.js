@@ -1,6 +1,7 @@
 // Ask Virtual Team Manager (Help page): sends the question, shows the answer as plain text.
 import { helperName } from "./team.js";
-import { teamHeaders, timeoutSignal } from "./upload-net.js";
+import { timeoutSignal } from "./net-timeout.js";
+import { teamHeaders } from "./upload-net.js";
 
 // The site's AI answer takes seconds; a link that stalls gives up well after that, so the button can be tapped again.
 const ASK_TIMEOUT_MS = 60_000;

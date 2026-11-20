@@ -1,18 +1,12 @@
 // Network helpers for the uploader (and Photos): JSON API calls, form posts, part PUTs to R2, and retrying through
 // dropped connections.
+import { fetchWithin } from "./net-timeout.js";
+
 const MAX_ROUNDS = 40;
-// A small request that hangs (a weak signal can stall one for minutes) is given up and tried again instead.
+// A small request that hangs is given up and tried again instead (net-timeout.js).
 const API_TIMEOUT_MS = 30_000;
 // A photo (a few MB) takes longer on a weak signal at the stadium.
 const FORM_TIMEOUT_MS = 120_000;
-
-/** `signal`, plus giving up after `ms`, where the browser can do that (older phones: just `signal`). Gives "TimeoutError". */
-export function timeoutSignal(ms, signal) {
-	if (!AbortSignal.timeout) return signal;
-	const timeout = AbortSignal.timeout(ms);
-	if (!signal) return timeout;
-	return AbortSignal.any ? AbortSignal.any([signal, timeout]) : signal;
-}
 
 /** A random id (UUID v4) for a request that may be sent again, on phones too old for crypto.randomUUID too. */
 export const newId = () => (crypto.randomUUID ? crypto.randomUUID()
@@ -27,14 +21,21 @@ export class HttpError extends Error {
 	}
 }
 
+/** Storage turning down a part (putPart). Its 403 is the part's signed link run out: the next try asks for a fresh one. */
+export class StorageError extends HttpError {}
+const linkRunOut = (err) => err instanceof StorageError && err.status === 403;
+// A block or challenge from Cloudflare's security in front of the site (it marks its answer cf-mitigated), not the
+// site's own refusal: it can pass, so it's tried again.
+const zoneBlock = (err) => err instanceof HttpError && err.mitigated === true;
+
 /** The site asks for a reload: the page is from before an update, or for a team you've left. Trying again
  * can't help, and saved progress is kept for after the reload. */
 export const needsReload = (err) => err?.code === "site_updated" || err?.code === "team_changed" || err?.code === "choose_team";
 
-// Network failures, timeouts, server errors, throttling and expired part links (403) are worth retrying; other 4xx are
-// not. A cancelled upload (AbortError) is never retried.
+// Network failures, timeouts, server errors, throttling and storage's expired part links are worth retrying; other 4xx
+// are not, the site's own 403 included. A cancelled upload (AbortError) is never retried.
 const isRetryable = (err) =>
-	err?.name !== "AbortError" && (!(err instanceof HttpError) || err.status >= 500 || err.status === 429 || err.status === 403);
+	err?.name !== "AbortError" && (!(err instanceof HttpError) || err.status >= 500 || err.status === 429 || linkRunOut(err) || zoneBlock(err));
 
 /** For a photo (photos.js): only trouble reaching the site is tried again; a refusal (any 4xx but 429) isn't. A 429 with
  * the site's own code is a day's limit reached, not the zone slowing things down, so it's a refusal too. */
@@ -46,7 +47,11 @@ async function answer(res, signedOut) {
 	// An expired sign-in answers with a redirect to the sign-in page.
 	if (res.type === "opaqueredirect") throw new HttpError(signedOut, 401);
 	const json = await res.json().catch(() => null);
-	if (!res.ok || !json?.ok) throw new HttpError(json?.error?.message ?? `The site didn't answer (HTTP ${res.status}). Try again.`, res.status, json?.error?.code ?? null);
+	if (!res.ok || !json?.ok) {
+		const err = new HttpError(json?.error?.message ?? `The site didn't answer (HTTP ${res.status}). Try again.`, res.status, json?.error?.code ?? null);
+		err.mitigated = res.headers?.get?.("cf-mitigated") != null;
+		throw err;
+	}
 	return json.data;
 }
 
@@ -61,25 +66,24 @@ export function teamHeaders() {
 
 export async function api(path, body, signal, { keepalive = false } = {}) {
 	// keepalive: the request outlives the page (a page that's hiding or closing sends its last words with it).
-	const res = await fetch(path, {
-		method: "POST", headers: { "Content-Type": "application/json", ...teamHeaders() }, body: JSON.stringify(body), redirect: "manual",
-		signal: timeoutSignal(API_TIMEOUT_MS, signal), keepalive,
-	});
+	const res = await fetchWithin(API_TIMEOUT_MS, path, {
+		method: "POST", headers: { "Content-Type": "application/json", ...teamHeaders() }, body: JSON.stringify(body), redirect: "manual", keepalive,
+	}, signal);
 	return answer(res, "You've been signed out. Reload the page and sign in, then choose the same video");
 }
 
 /** Posts a form (a photo and its fields) to the API, answered as api() is. */
 export async function apiForm(path, form, signal) {
-	const res = await fetch(path, { method: "POST", headers: teamHeaders(), body: form, redirect: "manual", signal: timeoutSignal(FORM_TIMEOUT_MS, signal) });
+	const res = await fetchWithin(FORM_TIMEOUT_MS, path, { method: "POST", headers: teamHeaders(), body: form, redirect: "manual" }, signal);
 	return answer(res, "You've been signed out. Reload the page and sign in, then choose the photos again");
 }
 
 /** `timeoutMs`: give up on a part that takes longer (the live recording's parts; a file's parts can take a while). */
 export async function putPart(url, blob, signal, timeoutMs) {
-	const res = await fetch(url, { method: "PUT", body: blob, signal: timeoutMs ? timeoutSignal(timeoutMs, signal) : signal });
-	if (!res.ok) throw new HttpError(`storage returned HTTP ${res.status}`, res.status);
+	const res = timeoutMs ? await fetchWithin(timeoutMs, url, { method: "PUT", body: blob }, signal) : await fetch(url, { method: "PUT", body: blob, signal });
+	if (!res.ok) throw new StorageError(`storage returned HTTP ${res.status}`, res.status);
 	const etag = res.headers.get("ETag");
-	if (!etag) throw new HttpError("storage didn't return an ETag", 500);
+	if (!etag) throw new StorageError("storage didn't return an ETag", 500);
 	return etag;
 }
 
@@ -128,13 +132,14 @@ export async function withRetries(step, hint, signal, retryable = isRetryable, p
 	}
 }
 
-/** A live game can't give up on a part: keeps going through any outage. Only a refusal (signed out, upload gone) stops it. */
+/** A live game can't give up on a part: keeps going through any outage. Only a refusal (signed out, upload gone, the
+ * site's own 403) stops it; storage's 403 is a run-out link, and the next try asks for a fresh one. */
 export async function keepTrying(step, hint) {
 	for (;;) {
 		try {
 			return await withRetries(step, hint);
 		} catch (err) {
-			const refused = err instanceof HttpError && err.status < 500 && err.status !== 429 && err.status !== 403;
+			const refused = err instanceof HttpError && err.status < 500 && err.status !== 429 && !linkRunOut(err) && !zoneBlock(err);
 			const network = err instanceof HttpError || err instanceof TypeError || err?.name === "TimeoutError";
 			if (refused || !network) throw err;
 		}

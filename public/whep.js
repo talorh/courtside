@@ -2,7 +2,7 @@
 // Keeps trying while the stream hasn't started, and starts over when the picture stops arriving or the connection
 // drops, so it needs no taps. An external app's stream plays in Stream's own player; for both, the page moves on by
 // itself once the stream is over.
-import { timeoutSignal } from "./upload-net.js";
+import { timeoutSignal } from "./net-timeout.js";
 import { watchReporter } from "./watch-report.js";
 import { frozenClock, playOnTap, reloadWhenOver, waitCard } from "./whep-wait.js";
 
@@ -88,8 +88,10 @@ function watch(video, url, over) {
 		if (Date.now() - opened > RELOAD_AFTER_MS) return location.reload();
 		console.warn(`live player: ${why}, trying again in ${wait / 1000}s`);
 		if (why !== "no picture yet") report.trouble(why);
-		pc?.close();
+		// Let go of it first: a browser that says "closed" as it closes mustn't start this over a second time.
+		const old = pc;
 		pc = null;
+		old?.close();
 		setTimeout(attempt, wait);
 		wait = Math.min(wait * 2, 8000);
 	};

@@ -6,13 +6,13 @@ import { logProblem } from "./problem-log.ts";
 import { ownOrigin } from "../../app/config.ts";
 import type { AppDeps } from "../../app/deps.ts";
 import { badRequest, conflict, notFound } from "../../app/errors.ts";
-import { isAdmin } from "../../auth/admins-repository.ts";
+import { listUnlockedAdmins } from "../../auth/admins-repository.ts";
 import type { TicketStatus } from "../support/support-repository.ts";
 import { adminLogStatement } from "./admin-log-repository.ts";
 import { mailAdmin, mailAdmins, mailTicketManager } from "./admin-mail.ts";
 import { messageEmail, newTicketEmail, siteTicketEmail } from "./support-emails.ts";
 import {
-	findOpenSiteTicket, getMessage, getTicket, messageStatement, type Ticket, ticketStatement,
+	findOpenSiteTicket, getMessage, getTicket, messageStatement, resolveOnceStatement, type Ticket, ticketStatement,
 } from "./support-desk-repository.ts";
 import { claimEmail, listUnsent, releaseEmail } from "./support-email-repository.ts";
 
@@ -79,19 +79,25 @@ export async function adminWrites(deps: AppDeps, admin: string, id: number, text
 	const closed = t.kind === "feature" ? t.stage === "shipped" || t.stage === "declined" : then === "resolve";
 	const status: TicketStatus = then === "note" ? (t.status === "new" ? "open" : t.status) : closed ? "resolved" : "waiting";
 	const owner = then === "note" ? t.assignedTo : t.assignedTo ?? admin;
-	const log = (action: "support_replied" | "support_status", detail: string) => adminLogStatement(db, { device: deps.device, adminEmail: admin, teamId: t.teamId, action, detail, at: nowIso });
-	const [, reply] = await db.batch([
-		ticketStatement(db, id, { status, assignedTo: owner, by: admin, nowIso }),
-		messageStatement(db, { ticket: t, kind: then === "note" ? "note" : "reply", adminEmail: admin, body: b, emailTo: then === "note" ? null : "manager", nowIso }),
+	const log = (action: "support_replied" | "support_status", detail: string) => adminLogStatement(db, { device: deps.device, adminEmail: admin, teamId: t.teamId, action, detail, at: nowIso }, true);
+	// The message first, and the rest only with it: the same words again within a minute (a second tap) change nothing.
+	const onceSince = new Date(deps.now().getTime() - 60_000).toISOString();
+	const [reply] = await db.batch([
+		messageStatement(db, { ticket: t, kind: then === "note" ? "note" : "reply", adminEmail: admin, body: b, emailTo: then === "note" ? null : "manager", nowIso, onceSince }),
+		ticketStatement(db, id, { status, assignedTo: owner, by: admin, nowIso }, true),
 		...(then === "note" ? [] : [log("support_replied", `#${id}`)]), ...(then === "resolve" && t.kind === "support" ? [log("support_status", `#${id} resolved`)] : []),
 	]);
-	if (then !== "note") await trySend(deps, "message", reply?.meta.last_row_id ?? 0);
+	if (then !== "note" && reply?.meta.changes === 1) await trySend(deps, "message", reply.meta.last_row_id);
+	// The same words sent again, but now to resolve it: nothing more is sent, and the ticket is resolved.
+	else if (then === "resolve" && t.kind === "support") await db.batch([resolveOnceStatement(db, id, admin, nowIso), log("support_status", `#${id} resolved`)]);
 }
 
 /** Taking a ticket (`to` the admin themselves), giving it to another admin (emailed to them), or letting it go (null). */
 export async function assignTicket(deps: AppDeps, admin: string, id: number, to: string | null): Promise<void> {
 	const t = await ticketOr404(deps, id);
-	if (to !== null && !(await isAdmin(deps.db, to))) throw badRequest("Only one of the site's admins can have a ticket.");
+	// A locked admin (auth/locks-repository.ts) can't sign in, so isn't given one.
+	const allowed = to === null || to.toLowerCase() === t.assignedTo?.toLowerCase() || (await listUnlockedAdmins(deps.db)).some((a) => a.email.toLowerCase() === to.toLowerCase());
+	if (!allowed) throw badRequest("Only one of the site's admins who isn't locked can have a ticket.");
 	const nowIso = deps.now().toISOString(), db = deps.db, mine = to?.toLowerCase() === admin.toLowerCase();
 	const words = to === null ? `${admin} let it go.` : mine ? `${admin} took it.` : `${admin} gave it to ${to}.`;
 	const [, event] = await db.batch([

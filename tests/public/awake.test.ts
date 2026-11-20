@@ -52,3 +52,44 @@ describe("keeping the screen on", () => {
 		expect(p.locks[0]!.released).toBe(true);
 	});
 });
+
+describe("the screen kept on from the tap that opens a picker", () => {
+	/** A page whose html.busy is noted, and a picker button whose listeners the test fires. */
+	function picker() {
+		const html = { busy: false };
+		vi.stubGlobal("document", {
+			visibilityState: "visible", addEventListener: () => {}, removeEventListener: () => {},
+			documentElement: { classList: { toggle: (_name: string, on: boolean) => { html.busy = on; } } },
+		});
+		vi.stubGlobal("navigator", {});
+		const on = new Map<string, () => void>();
+		const button = { addEventListener: (type: string, fn: () => void) => on.set(type, fn) };
+		return { html, button, fire: (type: string) => on.get(type)?.() };
+	}
+
+	it("a touch that turns into a scroll lets the screen go again, so pull to refresh isn't blocked by a picker never opened", async () => {
+		const p = picker();
+		// @ts-expect-error: a browser script (plain JS), tested here on its own.
+		const { awakeOnTap } = await import("../../public/awake.js");
+		awakeOnTap(p.button, () => true);
+		p.fire("pointerdown");
+		expect(p.html.busy).toBe(true);
+		p.fire("pointercancel");
+		expect(p.html.busy).toBe(false);
+	});
+
+	it("held from the tap until the job's done, and a stray cancelled touch meanwhile doesn't let go of it", async () => {
+		const p = picker();
+		// @ts-expect-error: a browser script (plain JS), tested here on its own.
+		const { awakeOnTap } = await import("../../public/awake.js");
+		let idle = true;
+		const screen = awakeOnTap(p.button, () => idle);
+		p.fire("pointerdown");
+		screen.hold();
+		idle = false;
+		p.fire("pointercancel");
+		expect(p.html.busy).toBe(true);
+		screen.release();
+		expect(p.html.busy).toBe(false);
+	});
+});

@@ -15,9 +15,13 @@ export const segmentKey = (r2Key: string, n: number) => r2Key.replace(/(\.[a-z0-
 /** Where the joined file goes, beside the segments. */
 export const joinedKey = (r2Key: string) => r2Key.replace(/(\.[a-z0-9]+)$/i, ".joined$1");
 
+/** A new segment, and the video marked carried on (the first time): one write, as the mark outlives the segments. */
 export async function insertSegment(db: D1Database, s: { teamId: string; videoId: number; n: number; r2Key: string; r2UploadId: string; nowIso: string }): Promise<void> {
-	await db.prepare("INSERT INTO recording_segments (team_id, video_id, n, r2_key, r2_upload_id, created_at) VALUES (?, ?, ?, ?, ?, ?)")
-		.bind(s.teamId, s.videoId, s.n, s.r2Key, s.r2UploadId, s.nowIso).run();
+	await db.batch([
+		db.prepare("INSERT INTO recording_segments (team_id, video_id, n, r2_key, r2_upload_id, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+			.bind(s.teamId, s.videoId, s.n, s.r2Key, s.r2UploadId, s.nowIso),
+		db.prepare("UPDATE videos SET carried_on_at = COALESCE(carried_on_at, ?) WHERE team_id = ? AND id = ?").bind(s.nowIso, s.teamId, s.videoId),
+	]);
 }
 
 export async function listSegments(db: D1Database, teamId: string, videoId: number): Promise<Segment[]> {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { insertSegment, listSegments, segmentKey } from "../../../src/features/live/recording-segments-repository.ts";
+import { insertSegment, listSegments, replaceSegmentsWith, segmentKey } from "../../../src/features/live/recording-segments-repository.ts";
+import { requestStreamCopy } from "../../../src/features/videos/upload-finish.ts";
 import { getVideo } from "../../../src/features/videos/videos-repository.ts";
 import { runSync } from "../../../src/jobs/sync-videos.ts";
 import { createTestDeps, type TestDeps } from "../../helpers/fakes.ts";
@@ -175,6 +176,16 @@ describe("the join step", () => {
 		await addWaiting(deps, "2026-10-16", nowIso());
 		await runSync(deps);
 		expect(deps.joiner.started).toHaveLength(2);
+	});
+	it("a run that read the video before the join finished never sends its first segment alone: the copy made from it is deleted", async () => {
+		const { deps, videoId, joined } = await waiting();
+		const stale = (await video(deps, videoId))!;
+		await replaceSegmentsWith(deps.db, deps.team.id, videoId, joined);
+		await requestStreamCopy(deps, stale);
+		expect(await video(deps, videoId)).toMatchObject({ r2Key: joined, streamUid: null });
+		expect(deps.stream.deleted).toEqual(["uid-1"]);
+		await requestStreamCopy(deps, (await video(deps, videoId))!);
+		expect(await video(deps, videoId)).toMatchObject({ streamUid: "uid-2" });
 	});
 	it("without a joiner (cf dev) the step leaves the video waiting", async () => {
 		const { deps, videoId } = await waiting();

@@ -6,6 +6,7 @@ import { logProblem } from "./problem-log.ts";
 import type { AppDeps } from "../../app/deps.ts";
 import { badRequest, conflict, notFound } from "../../app/errors.ts";
 import { addAdminWrite, isAdmin, removeAdminWrite } from "../../auth/admins-repository.ts";
+import { isLocked } from "../../auth/locks-repository.ts";
 import { isEmail } from "../members/members-service.ts";
 import { adminLogStatement } from "./admin-log-repository.ts";
 import { mailAdmins } from "./admin-mail.ts";
@@ -28,11 +29,13 @@ async function tellAdmins(deps: AppDeps, actor: string, action: "admin_added" | 
 	await adminLogStatement(deps.db, { device: deps.device, adminEmail: actor, teamId: null, action, detail: `${email}${note}`, at: deps.now().toISOString() }).run();
 }
 
-/** A real email, typed twice to be sure; someone removed before comes back. They're an admin on their next request. */
+/** A real email, typed twice to be sure; someone removed before comes back. They're an admin on their next request.
+ * Never someone locked: they'd get every admin's email while they can't sign in. */
 export async function addAdmin(deps: AppDeps, actor: string, input: { email: string; again: string }): Promise<string> {
 	const email = input.email.trim().toLowerCase();
 	if (!isEmail(email)) throw badRequest(`"${input.email.trim()}" isn't an email address.`);
 	if (email !== input.again.trim().toLowerCase()) throw badRequest("The two emails don't match.");
+	if (await isLocked(deps.db, email)) throw conflict(`${email} is locked: unlock them on Users first, then add them.`);
 	if (!(await addAdminWrite(deps.db, email, actor, deps.now().toISOString())).meta.changes) throw conflict(`${email} is an admin already.`);
 	await tellAdmins(deps, actor, "admin_added", email);
 	return email;

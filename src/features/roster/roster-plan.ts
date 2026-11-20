@@ -37,6 +37,19 @@ export function slotsFor(need: WeekNeed, duties: RosterDuties = ALL_DUTIES): Wan
 	]);
 }
 
+/** A week's duties, game by game: a game still to come wants what `duties` say now; a game that's been played
+ * (`played`) wants that and every slot it holds as well, so what was done stays on its card and in its Change, and is
+ * kept by Save week, whatever the game's No video or the team's duties say since. */
+export function wantedFor(need: WeekNeed, duties: RosterDuties, held: Slot[], played: (gameId: number) => boolean): Wanted[] {
+	return need.games.flatMap((g) => {
+		const own = slotsFor({ ...need, games: [g] }, duties);
+		if (!played(g.id)) return own;
+		const done = held.filter((s) => s.week === need.week && s.gameId === g.id && !own.some((x) => sameSlot(x, s)));
+		const order = (x: Wanted) => ["video", "scoring", "lollies"].indexOf(x.duty) * 10 + x.position;
+		return [...own, ...done.map(({ duty, position, gameId }) => ({ duty, position, gameId }))].sort((a, b) => order(a) - order(b));
+	});
+}
+
 export interface Tally { duty: Record<Duty, number>; total: number; last: string }
 
 /**

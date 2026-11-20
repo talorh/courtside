@@ -41,7 +41,14 @@ describe("scores", () => {
 			await deps.db.prepare("INSERT INTO members (team_id, email, name, role) VALUES (?, ?, 'Someone', ?)").bind(deps.team.id, email, role).run();
 			expect((await makeClient(deps, email)(`/games/${gameId}/score`, form({ ours: "1", opponent: "0" }))).status).toBe(403);
 		}
-		await manager(`/games/${gameId}/score/clear`, form({}));
+		// Clear score asks first: one tap clears nothing.
+		const page = await (await manager(`/games/${gameId}`)).text();
+		expect(page).toContain(`<details class="confirm"><summary class="btn quiet">Clear score</summary><form method="post" action="/games/${gameId}/score/clear" class="confirmpanel">`);
+		expect(page).toContain("<b>Clear this score?</b>");
+		expect((await manager(`/games/${gameId}/score/clear`, form({}))).status).toBe(400);
+		expect(await scoreOf(deps, gameId)).toMatchObject({ ours: 34, opponent: 30 });
+		expect((await makeClient(deps, "c@x.com")(`/games/${gameId}/score/clear`, form({ confirm: "yes" }))).status).toBe(403);
+		expect((await manager(`/games/${gameId}/score/clear`, form({ confirm: "yes" }))).headers.get("Location")).toBe(`/games/${gameId}?done=scorecleared`);
 		expect(await scoreOf(deps, gameId)).toBeNull();
 	});
 

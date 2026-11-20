@@ -38,4 +38,18 @@ export const scenarios = [
 			t.check(/every game has its video/i.test(await t.text("#hint")), `the page saying so (said "${await t.text("#hint")}")`);
 		},
 	},
+	{
+		name: "a scroll that starts on Choose the video lets the screen sleep again, so the page can still be pulled to refresh",
+		phones: ["android", "iphone"],
+		async run(t) {
+			t.harness.page("/upload", () => uploadTestPage(1));
+			await t.page.goto(`${t.harness.url}/upload`);
+			const busy = () => t.page.evaluate(() => document.documentElement.classList.contains("busy"));
+			await t.page.dispatchEvent("#file", "pointerdown", { pointerType: "touch", isPrimary: true, bubbles: true });
+			t.check(await busy(), "the screen kept on from the touch");
+			await t.page.dispatchEvent("#file", "pointercancel", { pointerType: "touch", isPrimary: true, bubbles: true });
+			t.check(!(await busy()), "the page no longer busy once the touch became a scroll");
+			t.check(!(await t.visible("#awake")), "no note about the screen for a picker never opened");
+		},
+	},
 ];

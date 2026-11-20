@@ -1,7 +1,7 @@
 // The photo pages a swipe moves between (photo-swipe.js): each one's facts, read in advance or on arrival, and putting a
 // page's own parts (its caption, Newer and Older, All photos, and the side panel with its buttons) in place of the ones
 // showing.
-import { timeoutSignal } from "./upload-net.js";
+import { timeoutSignal } from "./net-timeout.js";
 
 // A page that hasn't come in this long (a weak signal) is given up, so the swipe opens the photo as usual instead.
 const READ_MS = 8000;

@@ -2,7 +2,7 @@
 // A dropped connection pauses the upload and it carries on by itself (see upload-net.js).
 // Progress is also remembered per file (name + size + game), so choosing the same file again after a reload resumes.
 // The screen is kept awake while uploading: phones pause the upload when the screen locks.
-import { keepAwake } from "./awake.js";
+import { awakeOnTap } from "./awake.js";
 import { enableDrop } from "./upload-drop.js";
 import { needsReload } from "./upload-net.js";
 import { progressOf, progressWords, reportProblem } from "./problems.js";
@@ -30,13 +30,10 @@ function main() {
 	const form = $("upload");
 	if (!form) return;
 	const fileInput = $("file"), gameSelect = $("game"), pickText = $("pick-text"), cancel = $("cancel");
-	let busy = false, controller = null, awake = null;
+	let busy = false, controller = null;
 	// If the phone won't keep the screen on, the upload still runs, but say how to stop it locking.
 	// iPhone only grants it straight after a tap, so it's asked for on the tap that opens the video picker.
-	const awakeNote = (held) => { $("awake").hidden = held; };
-	const stayAwake = () => { awake ??= keepAwake(awakeNote); };
-	const sleepOk = () => { awake?.release(); awake = null; $("awake").hidden = true; };
-	$("pick").addEventListener("pointerdown", () => { if (!busy) stayAwake(); });
+	const { hold: stayAwake, release: sleepOk } = awakeOnTap($("pick"), () => !busy, (held) => { $("awake").hidden = held; }, () => { $("awake").hidden = true; });
 	const warn = (e) => { e.preventDefault(); e.returnValue = ""; };
 
 	form.addEventListener("submit", (e) => e.preventDefault());

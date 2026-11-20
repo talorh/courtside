@@ -46,7 +46,7 @@ export function registerRosterRoutes(router: Router): void {
 		const ids = families.map((f) => f.id);
 		return htmlResponse(rosterPage({
 			frame, weeks, slots, families, duties, names: await familyNames(deps.db, deps.team.id),
-			fair: fairness(slots, ids), away: awayCredit(slots, await familyPresence(deps.db, deps.team.id), ids, duties), thisWeek: weekOf(localDate(deps.now())), season: teamSeason(deps.team).label,
+			fair: fairness(slots, ids), away: awayCredit(slots, await familyPresence(deps.db, deps.team.id), ids, duties), thisWeek: weekOf(localDate(deps.now())), now: localTime(deps.now()), season: teamSeason(deps.team).label,
 			message: doneMessage(ROSTER_MESSAGES, url),
 		}));
 	});

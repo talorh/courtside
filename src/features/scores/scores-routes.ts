@@ -25,10 +25,11 @@ export function registerScoreRoutes(router: Router): void {
 		return redirect(`/games/${gameId}?done=score`);
 	});
 
+	// Clear score asks first, as a delete does; like Save score, it's not for a season that's over.
 	router.post("/games/:id/score/clear", "manager", async ({ params, deps }) => {
 		const gameId = idParam(params.id, "Game");
 		await requireGame(deps.db, deps.team.id, gameId);
 		await clearScore(deps.db, deps.team.id, gameId);
 		return redirect(`/games/${gameId}?done=scorecleared`);
-	});
+	}, { confirm: true, closedTeams: false });
 }

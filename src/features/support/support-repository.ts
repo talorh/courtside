@@ -26,10 +26,24 @@ export interface PublicReply { fromManager: boolean; adminEmail: string | null; 
 
 const MINE = "SELECT id, kind, stage, topic, message, status, created_at AS createdAt, updated_at AS updatedAt FROM support_requests WHERE team_id = ? AND member_id = ? AND source = 'team'";
 
-export async function insertSupport(db: D1Database, teamId: string, memberId: number, r: SupportInput, nowIso: string): Promise<number> {
-	const result = await db.prepare("INSERT INTO support_requests (team_id, member_id, kind, topic, message, contact, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-		.bind(teamId, memberId, r.kind, r.topic, r.message, r.contact, nowIso, nowIso).run();
-	return result.meta.last_row_id;
+// The same ticket from the same person since ?7: a second tap of Send.
+const SAME_TICKET = `SELECT id FROM support_requests WHERE team_id = ?1 AND member_id = ?2 AND kind = ?3 AND topic = ?4 AND message = ?5
+	AND contact = ?6 AND created_at > ?7`;
+
+/** The ticket this person sent with these same words since `sinceIso`, if any. */
+export const findSameSupport = (db: D1Database, teamId: string, memberId: number, r: SupportInput, sinceIso: string) =>
+	db.prepare(`${SAME_TICKET} ORDER BY id DESC LIMIT 1`).bind(teamId, memberId, r.kind, r.topic, r.message, r.contact, sinceIso).first<number>("id");
+
+/** The new ticket's id (`added`), or the same one's sent since `sinceIso`. One statement, so two taps at once still add
+ * it once. */
+export async function insertSupportOnce(db: D1Database, teamId: string, memberId: number, r: SupportInput, nowIso: string, sinceIso: string): Promise<{ id: number; added: boolean }> {
+	const id = await db.prepare(`INSERT INTO support_requests (team_id, member_id, kind, topic, message, contact, created_at, updated_at)
+		SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?8, ?8 WHERE NOT EXISTS (${SAME_TICKET}) RETURNING id`)
+		.bind(teamId, memberId, r.kind, r.topic, r.message, r.contact, sinceIso, nowIso).first<number>("id");
+	if (id !== null) return { id, added: true };
+	const same = await findSameSupport(db, teamId, memberId, r, sinceIso);
+	if (same === null) throw new Error("Support request wasn't saved");
+	return { id: same, added: false };
 }
 
 /** How many this person has asked since `sinceIso`. */
@@ -59,13 +73,16 @@ export async function countRepliesSince(db: D1Database, teamId: string, memberId
 		.bind(teamId, memberId, sinceIso).first<number>("n")) ?? 0;
 }
 
-/** The team manager's reply, for the admins, and their ticket open again (a new one stays new); the reply's id. */
-export async function replyAsManager(db: D1Database, teamId: string, memberId: number, ticketId: number, body: string, nowIso: string): Promise<number> {
-	const [, insert] = await db.batch([
+/** The team manager's reply, for the admins, and their ticket open again (a new one stays new); the reply's id, or null
+ * when they sent the same reply since `sinceIso` (a second tap), which changes nothing. */
+export async function replyAsManager(db: D1Database, teamId: string, memberId: number, ticketId: number, body: string, nowIso: string, sinceIso: string): Promise<number | null> {
+	const [insert] = await db.batch([
+		db.prepare(`INSERT INTO support_messages (request_id, team_id, kind, member_id, body, email_to, created_at) SELECT ?1, ?2, 'reply', ?3, ?4, 'admins', ?5
+			WHERE NOT EXISTS (SELECT 1 FROM support_messages WHERE team_id = ?2 AND request_id = ?1 AND kind = 'reply' AND member_id = ?3 AND body = ?4 AND created_at > ?6)`)
+			.bind(ticketId, teamId, memberId, body, nowIso, sinceIso),
+		// Only with a reply: changes() is the insert's.
 		db.prepare(`UPDATE support_requests SET status = CASE status WHEN 'new' THEN 'new' ELSE 'open' END, resolved_at = NULL, resolved_by = NULL, updated_at = ?
-			WHERE team_id = ? AND member_id = ? AND id = ?`).bind(nowIso, teamId, memberId, ticketId),
-		db.prepare("INSERT INTO support_messages (request_id, team_id, kind, member_id, body, email_to, created_at) VALUES (?, ?, 'reply', ?, ?, 'admins', ?)")
-			.bind(ticketId, teamId, memberId, body, nowIso),
+			WHERE team_id = ? AND member_id = ? AND id = ? AND changes() = 1`).bind(nowIso, teamId, memberId, ticketId),
 	]);
-	return insert?.meta.last_row_id ?? 0;
+	return insert?.meta.changes === 1 ? insert.meta.last_row_id : null;
 }

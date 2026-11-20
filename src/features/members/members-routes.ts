@@ -54,7 +54,8 @@ export function registerMembersRoutes(router: Router): void {
 	router.post("/members", "manager", async ({ req, url, viewer, deps }) => {
 		const form = await parseForm(req, addSchema);
 		const added = await addMembers(deps.db, deps.team.id, [form]);
-		await logTeamChange(deps, viewer.email, "member_added", added.map((p) => `${personOf(p)} as ${roleOf(p.role)}`).join(", "));
+		// None added: a second tap, answered as the first was.
+		if (added.length) await logTeamChange(deps, viewer.email, "member_added", added.map((p) => `${personOf(p)} as ${roleOf(p.role)}`).join(", "));
 		return redirect(`${withSort("/manage?done=added", sortOf(url))}#people`);
 	});
 

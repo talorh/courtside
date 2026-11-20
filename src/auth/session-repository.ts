@@ -23,6 +23,12 @@ export async function insertSession(db: D1Database, s: Omit<Session, "lastSeenAt
 		.bind(s.id, s.email.toLowerCase(), s.device, s.createdAt, s.expiresAt).run();
 }
 
+/** A session from a code: written only if the statement before it in the batch used the code (`changes()` is that
+ * statement's), so a code is spent only with its session, and a code sent twice at once signs in one device. */
+export const sessionIfCodeUsedWrite = (db: D1Database, s: Omit<Session, "lastSeenAt" | "view" | "countedWeek">) => db
+	.prepare("INSERT INTO sessions (id, email, device, created_at, expires_at) SELECT ?, ?, ?, ?, ? WHERE changes() = 1")
+	.bind(s.id, s.email.toLowerCase(), s.device, s.createdAt, s.expiresAt);
+
 /** The session with this id (the token's hash) if it's still good: not signed out, and not past its 30 days. */
 export async function findLiveSession(db: D1Database, id: string, nowIso: string): Promise<Session | null> {
 	const row = await db.prepare(`SELECT ${COLUMNS} FROM sessions WHERE id = ? AND ended_at IS NULL AND expires_at > ?`).bind(id, nowIso).first<Row>();

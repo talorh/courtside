@@ -7,6 +7,8 @@ type Happening = { target: unknown; preventDefault: () => void };
 type Listener = (e: Happening) => void;
 type Heard = Record<string, Listener[]>;
 const hear = (heard: Heard) => (type: string, fn: Listener) => { (heard[type] ??= []).push(fn); };
+/** Whether a selector list (".confirm form, form[data-once]") names `one`, as closest() and querySelectorAll() read it. */
+const names = (q: string, one: string) => q.split(",").map((s) => s.trim()).includes(one);
 
 afterEach(() => {
 	vi.useRealTimers();
@@ -18,20 +20,30 @@ afterEach(() => {
 function makeQuestion() {
 	const details = { open: true };
 	const dataset: Record<string, string> = {};
-	const yes = { disabled: false, heard: {} as Heard, closest: (q: string): unknown => (q === ".confirm form" ? form : null) };
+	const yes = { disabled: false, heard: {} as Heard, closest: (q: string): unknown => (names(q, ".confirm form") ? form : null) };
 	const keep = { disabled: false, heard: {} as Heard, addEventListener(type: string, fn: Listener) { hear(keep.heard)(type, fn); },
-		closest: (q: string): unknown => (q === ".confirm [data-keep]" ? keep : q === "details" ? details : q === ".confirm form" ? form : null) };
+		closest: (q: string): unknown => (q === ".confirm [data-keep]" ? keep : q === "details" ? details : names(q, ".confirm form") ? form : null) };
 	const form = { dataset, heard: {} as Heard, addEventListener(type: string, fn: Listener) { hear(form.heard)(type, fn); },
-		querySelectorAll: (q: string) => (q.includes(":not([data-keep])") ? [yes] : [yes, keep]), closest: (q: string): unknown => (q === ".confirm form" ? form : null) };
+		querySelectorAll: (q: string) => (q.includes(":not([data-keep])") ? [yes] : [yes, keep]), closest: (q: string): unknown => (names(q, ".confirm form") ? form : null) };
 	return { details, form, yes, keep };
+}
+
+/** A form marked data-once (Send, Add a person), with its one button. */
+function makeOnce() {
+	const button = { disabled: false };
+	const form = { dataset: { once: "" } as Record<string, string>, heard: {} as Heard, querySelectorAll: () => [button],
+		closest: (q: string): unknown => (names(q, "form[data-once]") ? form : null) };
+	return { form, button };
 }
 
 /** A page standing in for the browser's: what happens on an element goes to its own listeners, then up to the document's. */
 async function open(questionsAtLoad = 1) {
 	const onDocument: Heard = {}, onWindow: Heard = {};
 	const questions: Array<ReturnType<typeof makeQuestion>> = [];
+	const onces: Array<ReturnType<typeof makeOnce>> = [];
 	const question = () => { const made = makeQuestion(); questions.push(made); return made; };
-	const all = (q: string) => (q === ".confirm form" ? questions.map((x) => x.form) : q === ".confirm [data-keep]" ? questions.map((x) => x.keep) : []);
+	const all = (q: string) => [...(names(q, ".confirm form") ? questions.map((x) => x.form) : []), ...(names(q, "form[data-once]") ? onces.map((x) => x.form) : []),
+		...(q === ".confirm [data-keep]" ? questions.map((x) => x.keep) : [])];
 	vi.stubGlobal("document", { querySelectorAll: all, addEventListener: hear(onDocument) });
 	vi.stubGlobal("window", { addEventListener: hear(onWindow) });
 	for (let i = 0; i < questionsAtLoad; i++) question();
@@ -46,7 +58,8 @@ async function open(questionsAtLoad = 1) {
 		vi.runAllTimers();
 		return e.preventDefault.mock.calls.length > 0;
 	};
-	return { question, first: questions[0]!, fire, back: (persisted: boolean) => (onWindow.pageshow ?? []).forEach((fn) => fn({ persisted } as unknown as Happening)) };
+	const once = () => { const made = makeOnce(); onces.push(made); return made; };
+	return { question, once, first: questions[0]!, fire, back: (persisted: boolean) => (onWindow.pageshow ?? []).forEach((fn) => fn({ persisted } as unknown as Happening)) };
 }
 
 describe("the confirm question", () => {
@@ -87,6 +100,15 @@ describe("the confirm question", () => {
 		page.fire("click", later.keep);
 		expect(later.details.open).toBe(false);
 		expect([page.fire("submit", later.form), page.fire("submit", later.form)]).toEqual([false, true]);
+	});
+	it("a form marked data-once posts once, however many taps, and again after Back", async () => {
+		const page = await open();
+		const send = page.once();
+		expect([page.fire("submit", send.form), page.fire("submit", send.form)]).toEqual([false, true]);
+		expect(send.button.disabled).toBe(true);
+		page.back(true);
+		expect([send.button.disabled, send.form.dataset.sent]).toEqual([false, undefined]);
+		expect(page.fire("submit", send.form)).toBe(false);
 	});
 	it("leaves every other form and button alone, and a tap that lands on no element", async () => {
 		const page = await open();

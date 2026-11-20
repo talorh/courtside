@@ -117,7 +117,7 @@ Replying to this email goes to ${JANE}.`,
 
 	it("refuses a sixth in a day from one person, and a message that's empty or too long", async () => {
 		const deps = await setup();
-		for (let i = 0; i < 5; i++) expect((await jane(deps)("/support", form(ASK))).status).toBe(303);
+		for (let i = 0; i < 5; i++) expect((await jane(deps)("/support", form({ ...ASK, message: `${ASK.message} (${i})` }))).status).toBe(303);
 		const sixth = await jane(deps)("/support", form(ASK));
 		expect(sixth.status).toBe(429);
 		expect(await sixth.text()).toContain("That&#39;s a lot for one day. We&#39;ll get back to you about the others first.");

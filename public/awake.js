@@ -50,3 +50,17 @@ export function keepAwake(onChange = () => {}) {
 		},
 	};
 }
+
+/**
+ * The screen kept on from the tap on `button`, the one that opens a file picker (iPhone grants it only straight after a
+ * tap), while `idle()`. A touch that turns into a scroll (pointercancel) opens no picker, so the screen and the page's
+ * busy mark go again. `hold()` keeps it on for the job the picker starts; `release()` lets it go, then `onRelease()`.
+ */
+export function awakeOnTap(button, idle, onChange, onRelease = () => {}) {
+	let awake = null;
+	const hold = () => { awake ??= keepAwake(onChange); };
+	const release = () => { awake?.release(); awake = null; onRelease(); };
+	button.addEventListener("pointerdown", () => { if (idle()) hold(); });
+	button.addEventListener("pointercancel", () => { if (idle()) release(); });
+	return { hold, release };
+}

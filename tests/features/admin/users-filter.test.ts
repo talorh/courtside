@@ -64,13 +64,13 @@ describe("the Users page's filters", () => {
 
 describe("the Users page's dashboard", () => {
 	it("counts each person once: who uses the site, who hasn't signed in, who's locked, on two teams or an admin", () => {
-		const s = summariseUsers(ROWS, ["magic@example.com", "gone@example.com"], NOW);
-		expect(s).toMatchObject({ people: 4, week: 1, month: 2, never: 1, locked: 2, multi: 1, admins: 1 });
-		expect(s.roles).toEqual({ watcher: 2, filmer: 1, coach: 1, manager: 1 });
+		const s = summariseUsers([...ROWS, user({ memberId: 6, teamId: "b14.3-2026", code: "B14.3", email: "magic@example.com", lastSeenAt: null, locked: true })], NOW);
+		expect(s).toMatchObject({ people: 4, week: 1, month: 2, never: 1, locked: 1, multi: 2, admins: 1 });
+		expect(s.roles).toEqual({ watcher: 3, filmer: 1, coach: 1, manager: 1 });
 	});
 
 	it("gives each team its people, who used it this month, who hasn't signed in and its team managers, running teams first", () => {
-		expect(summariseUsers(ROWS, [], NOW).teams.map((t) => [t.code, t.seasonStart, t.running, t.people, t.active, t.never, t.managers])).toEqual([
+		expect(summariseUsers(ROWS, NOW).teams.map((t) => [t.code, t.seasonStart, t.running, t.people, t.active, t.never, t.managers])).toEqual([
 			["B12.1", 2026, true, 3, 2, 1, 1], ["B14.3", 2026, true, 1, 0, 0, 0], ["B12.1", 2025, false, 1, 0, 0, 0],
 		]);
 	});

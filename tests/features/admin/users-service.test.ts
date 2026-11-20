@@ -57,7 +57,10 @@ describe("the Users page's actions", () => {
 		await addToTeam(deps, MANAGER, { email: "Magic@Example.com", name: "Magic", teamId: G14_5.id, role: "coach" });
 		expect((await loadViewer(deps.db, "magic@example.com", deps.now())).memberships.map((m) => [m.team.id, m.member.role])).toEqual([[G14_5.id, "coach"]]);
 		expect(await log(deps)).toEqual([{ admin_email: MANAGER, team_id: G14_5.id, action: "member_added", detail: "Magic (magic@example.com) as coach" }]);
-		await expect(addToTeam(deps, MANAGER, { email: "magic@example.com", name: "", teamId: G14_5.id, role: "coach" })).rejects.toThrow("already on the list");
+		// Already there just as asked (a second tap) is done; as anything else, refused.
+		expect(await addToTeam(deps, MANAGER, { email: "magic@example.com", name: "", teamId: G14_5.id, role: "coach" })).toEqual({ locked: false });
+		await expect(addToTeam(deps, MANAGER, { email: "magic@example.com", name: "", teamId: G14_5.id, role: "watcher" })).rejects.toThrow("already on the list");
+		expect(await log(deps)).toHaveLength(1);
 		// Adding someone locked keeps them locked, and says so.
 		await lockPerson(deps, MANAGER, "steph@example.com");
 		await deps.db.prepare("UPDATE members SET removed_at = 'x' WHERE email = 'steph@example.com' AND team_id = ?").bind(G14_5.id).run();

@@ -219,7 +219,7 @@ member starred with **☆ Favourite** (on a game's page and on each clip), each 
  they're saved and in the Log; an emptied box goes back to the club's.
 - **Scores:** during the game's hour it says **In progress**. The final score ("Won 34 to 28", "Lost 28 to 34", "Drew 30
  all") shows on the game's page, Watch games, the Fixture and Home's latest game. A team manager enters or fixes it once
- the game has started (**Save score**, and **Clear score** for one typed in). For a PlayHQ game, the site asks PlayHQ
+ the game has started (**Save score**, and **Clear score** for one typed in, which asks first, as a delete does). For a PlayHQ game, the site asks PlayHQ
  from half an hour after tip-off and enters it when PlayHQ says it's final, which ends In progress straight away
  (a fixture's Check now asks at once). A game with a final score, either way, is never
  asked about again.
@@ -277,7 +277,7 @@ game with no time yet, and a game a fixture page gives no time for, get it too.
  **Waiting for video** for a week after tip-off; with nothing uploaded or streamed by then, the 5-minute job sets it
  to No video, with a line in the Log by the site (a Go live that was only opened is closed). A team manager who sets
  the game back to Video, to upload it after all, gives it another week from then, and so does a team manager's
- Delete video or Move video, from the delete or move. A deleted video doesn't count (a recording that was lost and
+ Delete video or Move video (a removal request's Delete video too), from the delete or move. A deleted video doesn't count (a recording that was lost and
  deleted doesn't keep the game waiting). If PlayHQ moves a game the site set to No video to a later time, it goes back
  to waiting for video. A week's or a PlayHQ fixture's Video switch leaves the site's No video as it is (Edit undoes
  it, one game at a time).
@@ -327,7 +327,9 @@ families scoring, one on lollies and one on video. There's no video duty when ev
  the weeks from next week on again. **No video this week** marks a week's games No video (a tournament that doesn't
  allow filming, say). **Scorers only this week** drops the extra duty for that week as well as marking its games No video,
  so a tournament weekend has its two scorers and nothing else; **All duties this week** undoes it. The week's card,
- the match day message and the spreadsheet say "No lollies" (or the duty's own name) for it.
+ the match day message and the spreadsheet say "No lollies" (or the duty's own name) for it. A game that's already
+ started keeps who was down for it, whatever its No video, its week's Scorers only or the team's duties say
+ afterwards (a game filmed whose footage was lost, set to No video the next day, keeps its video duty).
 - **Generate roster:** the team manager adds families by surname, a row each like Add people, and taps **Generate roster**. Every week from next
  week on is shared out fairly: each slot to the family with the fewest of that duty, then the fewest overall, then the
  longest since their last duty, never two duties in a week unless a weekend has more duties than families (then a
@@ -351,9 +353,12 @@ families scoring, one on lollies and one on video. There's no video duty when ev
  duty it leaves is filled fairly, this week or later: saving an earlier week changes only the duties picked, and
  nothing is shared out for it. Generate keeps duties set by hand and shares out the rest around them, and the week
  says "Set by hand: Video." for the team manager. **Save week** changes only the duties picked (and any a picked family
- leaves), so an earlier week stays as it was, even with a family since taken off. Generate gives a duty left with a
+ leaves), so an earlier week stays as it was, even with a family since taken off or a game since set to No video (its
+ card and its Change show every duty it holds), and this week's game that's started keeps its duties the same way.
+ Generate gives a duty left with a
  family that's off the roster to one on it.
-- **Your duty:** a member whose last name matches a family sees that family's next duty.
+- **Your duty:** a member whose name ends with a family's surname (the longer of two, so "Sam Van Dyke" is Van Dyke,
+ not Dyke) sees that family's next duty: the first by tip-off at a game that hasn't started.
 - **Roster fairness**, for everyone at the bottom (after the team manager's families panel): a plain verdict ("Fair:
  every family has as close as possible to an equal share of duties", or "Not even yet" when families are more than
  one apart, which tells the team manager to Generate roster), a short "How duties are shared" in plain words
@@ -567,7 +572,8 @@ counts beside Insights (alerts that aren't ok) and Support (tickets waiting). An
   seen), filtered by team, role, status or words and sorted by any column. Each row's More **locks** or unlocks the
   person (signed out on every device and refused a code on every team until unlocked; never a site admin or yourself)
   or takes them off that team (never its last team manager); **Add someone** puts a person on a running team with a
-  role. Each change is a line in the Log.
+  role. Each change is a line in the Log. A locked person can't be made a site admin, and the site emails nobody
+ locked: no admins' email, no ticket given to them, no reply to their ticket and no team's welcome.
 - **Support** (`/admin/support`): a ticket queue (what needs an answer, yours, waiting on the team manager, resolved,
  all), each ticket's conversation, reply, private notes, owner and status, and the site's own tickets from its
  monitoring.

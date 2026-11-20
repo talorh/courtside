@@ -6,7 +6,7 @@ export const tasks = (): DocSection => ({ id: "tasks", title: "Common admin task
 <p>Most of an admin's work is done from Insights, Teams and Support. Everything here is in the admin area; nothing needs the
 command line except the maintenance page.</p>
 ${table(["Task", "Where and how", "What the site does"], [
-		["Onboard a team", "Teams, Onboard a team: the team's code (B12.1), its season (this or next), the team manager's name and email, and who members are told to ask.", "Makes the team, emails the team manager a welcome (Reply-To you) and shows it to copy or send again. The team manager then adds people and players, the fixture and the roster: the setup checklist."],
+		["Onboard a team", "Teams, Onboard a team: the team's code (B12.1), its season (this or next), the team manager's name and email, and who members are told to ask.", "Makes the team, emails the team manager a welcome (Reply-To you) and shows it to copy or send again (Email it again sends it once however many taps, and again after a minute). The team manager then adds people and players, the fixture and the roster: the setup checklist."],
 		["Help a team manager", "Teams, Open: you're in the team as its team manager, with a strip saying so and Back to Admin.", "Everything a team manager can do, logged as you in the Log."],
 		["See what a family sees", "Teams, More, View as Watch only (or Watch and film, coach, team manager).", "The team's pages as that role, with Stop in the strip. It isn't read-only: anything changed there is done, and logged, as you."],
 		["Answer a ticket", "Support, Tickets: open it, reply, add a private note, set the status or owner.", "The reply is saved, then emailed to the team manager; their reply comes back to the ticket and emails you."],

@@ -6,7 +6,7 @@
 // skipped and listed, unless the rest would be turned down too (signed out, the day's photos all added), which stops
 // there and says why. The screen is kept on (and the page marked busy) until they're all sent; a page left before then
 // says so next time (photo-unsent.js).
-import { keepAwake } from "./awake.js";
+import { awakeOnTap } from "./awake.js";
 import { takenAt } from "./photo-date.js";
 import { oneAtATime, sendPhotos, stopsTheRest, uploadLanes } from "./photo-queue.js";
 import { leftWords, unsentNote } from "./photo-unsent.js";
@@ -88,17 +88,16 @@ function main() {
 		show(left.added, left.total);
 		hint(leftWords(left));
 	}
-	let awake = null;
 	// An iPhone keeps the screen on only when asked straight after a tap: the one that opens the photo picker.
-	input.addEventListener("pointerdown", () => { if (!input.disabled) awake ??= keepAwake(); });
-	input.addEventListener("cancel", () => { awake?.release(); awake = null; });
+	const screen = awakeOnTap(input, () => !input.disabled);
+	input.addEventListener("cancel", screen.release);
 
 	// Choosing photos and dropping them (on a computer) both start here.
 	async function start(chosen) {
 		const files = [...(chosen ?? [])];
 		if (input.disabled || !files.length) return;
 		input.disabled = true;
-		awake ??= keepAwake();
+		screen.hold();
 		window.addEventListener("beforeunload", warn);
 		$("photo-progress").hidden = false;
 		label.textContent = "Adding photos…";
@@ -115,9 +114,9 @@ function main() {
 		const { added, skipped, stopped } = await sendPhotos(files, sendOne, count, stopsTheRest);
 		note.finished();
 		window.removeEventListener("beforeunload", warn);
-		awake?.release();
-		awake = null;
-		if (added === files.length) return location.assign("/photos?done=added");
+		screen.release();
+		// In place of this page, not after it: Back would bring it from the browser's cache, still adding photos and stuck.
+		if (added === files.length) return location.replace("/photos?done=added");
 		show(added + skipped.length, files.length);
 		$("photo-count").textContent = `Added ${added} of ${files.length}`;
 		const names = skipped.map(({ file, error }) => `${file.name || `photo ${files.indexOf(file) + 1}`} (${String(error.message).replace(/\.$/, "")})`);

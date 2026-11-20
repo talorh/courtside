@@ -14,9 +14,11 @@ export type AdminAction = "team_onboarded" | "team_edited" | "team_closed" | "te
 /** `device`: the request's (AppDeps.device); the site's own lines (`adminEmail` "site") are written without one. */
 export interface AdminLogEntry { adminEmail: string; teamId: string | null; action: AdminAction; detail?: string; at: string; device: string }
 
-/** The log line, to batch with the change it records, so neither happens without the other. */
-export const adminLogStatement = (db: D1Database, e: AdminLogEntry) => db
-	.prepare("INSERT INTO admin_log (admin_email, team_id, action, detail, created_at, device) VALUES (?, ?, ?, ?, ?, ?)")
+/** The log line, to batch with the change it records, so neither happens without the other. `afterChange`: written only
+ * if the statement before it in the batch changed a row (`changes()` is that statement's), for a change made at most once. */
+export const adminLogStatement = (db: D1Database, e: AdminLogEntry, afterChange = false) => db
+	.prepare(afterChange ? "INSERT INTO admin_log (admin_email, team_id, action, detail, created_at, device) SELECT ?, ?, ?, ?, ?, ? WHERE changes() = 1"
+		: "INSERT INTO admin_log (admin_email, team_id, action, detail, created_at, device) VALUES (?, ?, ?, ?, ?, ?)")
 	.bind(e.adminEmail, e.teamId, e.action, e.detail ?? "", e.at, e.adminEmail === "site" ? "" : e.device);
 
 export interface AdminLogLine { adminEmail: string; action: AdminAction; detail: string; at: string; device: string; team: { code: string; seasonStart: number } | null }

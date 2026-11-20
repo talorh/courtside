@@ -78,7 +78,7 @@ export const ROUTES: RouteCase[] = [
 	post("/me/scores", () => "/me/scores", () => form({ hide: "1", back: "/games" }), { ownOnly: true }),
 	post("/manage/game-lines", () => "/manage/game-lines", () => form({}), { ownOnly: true }),
 	post("/games/:id/score", (s) => `/games/${s.gameId}/score`, () => form({ ours: "50", opponent: "40" })),
-	post("/games/:id/score/clear", (s) => `/games/${s.gameId}/score/clear`),
+	post("/games/:id/score/clear", (s) => `/games/${s.gameId}/score/clear`, () => form({ confirm: "yes" })),
 	post("/games/:id/favourite", (s) => `/games/${s.gameId}/favourite`, () => form({ on: "1", back: "/games" })),
 	post("/clips/:id/favourite", (s) => `/clips/${s.clipId}/favourite`, () => form({ on: "1", back: "/games" })),
 	post("/api/photos", () => "/api/photos", () => ({ method: "POST", body: new FormData() }), { ownOnly: true }),

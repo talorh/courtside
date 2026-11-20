@@ -43,7 +43,10 @@ export async function sweepOrphans(deps: AppDeps) {
 	// Stream gives a live recording (an external app's) only a name: it's staging's when the input it came from is.
 	const inputSite = new Map(inputs.map((i) => [i.uid, i.site]));
 	const videos = listed.map((v) => ({ ...v, site: v.site ?? (v.liveInput ? inputSite.get(v.liveInput) ?? null : null) }));
-	const oldVideos = videos.filter((v) => old(v.created, v) && !known.inUse.has(v.uid));
+	// A recording from a stream still open is kept however old: an external app's save can wait (on another upload of
+	// the game, say), and until it's saved no row points at it.
+	const fromOpenStream = (v: { liveInput: string | null }) => v.liveInput !== null && known.openInputs.has(v.liveInput);
+	const oldVideos = videos.filter((v) => old(v.created, v) && !known.inUse.has(v.uid) && !fromOpenStream(v));
 	// An external app's input stays while a recording made from it is in use: Stream doesn't say a deleted input keeps
 	// its recordings, and once the recording has gone the input goes too.
 	const recordingInputs = new Set(videos.filter((v) => v.liveInput && known.inUse.has(v.uid)).map((v) => v.liveInput));
